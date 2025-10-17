@@ -7,7 +7,7 @@ const messageSchema = new mongoose.Schema(
     content: { type: String, trim: true },
     message_type: { type: String, enum: ["text", "image", "file"], default: "text" },
     attachment_url: { type: String, trim: true }, // for images/files
-    status: { type: String, enum: ["read", "unread"] }
+    status: { type: String, enum: ["read", "unread"] },
   },
   { timestamps: true }
 );
