@@ -23,13 +23,13 @@ export const sendVerificationEmail = async (email, verificationToken) => {
   }
 };
 
-export const sendVerificationEmailUpdateProfile = async (email, verificationToken) => {
+export const sendVerificationEmailUpdateProfile = async (email, otp) => {
   try {
     const response = await transporter.sendMail({
       from: `"${sender.name}" <${sender.email}>`,
       to: email,
       subject: "Verify Your Email",
-      html: VERIFICATION_EMAIL_UPDATEPROFILE_TEMPLATE.replace("{verificationCode}", verificationToken),
+      html: VERIFICATION_EMAIL_UPDATEPROFILE_TEMPLATE.replace("{verificationCode}", otp),
     });
 
     console.log("Verification email sent successfully", response);

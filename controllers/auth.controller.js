@@ -16,16 +16,9 @@ import Tasker from "../models/taskers.js";
 
 export const signup = async (req, res) => {
   try {
-    const { full_name, email, phone_number, identification, username, password, role } = req.body;
-    if (
-      !full_name ||
-      !email ||
-      !phone_number ||
-      !identification ||
-      !username ||
-      !password ||
-      !role
-    ) {
+    const { full_name, email, phone_number, identification, password, role } = req.body;
+    // check validation
+    if (!full_name || !email || !phone_number || !identification || !password || !role) {
       throw new Error("All fields are required");
     }
 
@@ -34,10 +27,12 @@ export const signup = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid email format" });
     }
 
+    if (identification.length != 12) {
+      return res.status(400).json({ success: false, message: "Identification must includes only 12 numbers." });
+    }
+
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Password must be at least 6 characters long" });
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
     const userAlreadyExists = await Account.findOne({ email });
@@ -48,6 +43,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcryptjs.hash(password, 10);
     const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // insert user general information first
     const user = new User({
       full_name: full_name,
       phone_number: phone_number,
@@ -55,9 +51,10 @@ export const signup = async (req, res) => {
     });
     await user.save();
 
+    // insert account information
     const account = new Account({
       user_id: user._id,
-      username: username,
+      email: email,
       password_hash: hashedPassword,
       role: role,
       verificationToken,
@@ -68,28 +65,23 @@ export const signup = async (req, res) => {
     user.account_id = account._id;
     await user.save();
 
-        if (role == "customer") {
+    // insert the others information, clarify by customer or tasker
+    if (role == "customer") {
       const customer = new Customer({ user_id: user._id });
       await customer.save();
     } else if (role == "tasker") {
-      const { working_year, hourly_rate, introduction, working_area } = req.body;
-      if (!working_year || !hourly_rate) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid working year or hourly rate" });
-      }
+      const { introduction, working_area } = req.body;
 
       const tasker = new Tasker({
         user_id: user._id,
-        working_year: working_year,
-        hourly_rate: hourly_rate,
         introduction: introduction,
         working_area: working_area,
       });
       await tasker.save();
     }
 
-    await sendVerificationEmail(user.email, verificationToken);
+    // send mail to verify email 
+    await sendVerificationEmail(account.email, verificationToken);
 
     res.status(201).json({
       success: true,
@@ -104,6 +96,7 @@ export const signup = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   try {
+    // code is the otp code sent in email
     const { code } = req.body;
     if (!code) {
       throw new Error("All fields are required");
@@ -113,12 +106,12 @@ export const verifyEmail = async (req, res) => {
       verificationToken: code,
       verificationTokenExpiresAt: { $gt: new Date() },
     }).select("-password_hash");
+
     if (!account) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or expired verification code" });
+      return res.status(400).json({ success: false, message: "Invalid or expired verification code" });
     }
 
+    // verify successfully
     account.status = "active";
     account.is_verified = true;
     account.verificationToken = undefined;
@@ -128,11 +121,8 @@ export const verifyEmail = async (req, res) => {
     const user = await User.findById(account.user_id);
     sendWelcomeEmail(account.email, user.full_name);
 
-    res.status(200).json({
-      success: true,
-      message: "Email verified successfully",
-      user,
-    });
+    res.status(200).json({ success: true, message: "Email verified successfully", user });
+
   } catch (error) {
     console.error("Verify email error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -147,25 +137,27 @@ export const login = async (req, res) => {
     }
 
     const account = await Account.findOne({ email });
+    if (!account) {
+      return res.status(400).json({ success: false, message: "Invalid email!" });
+    }
+
+    const user = await User.findById(account.user_id);
     if (!user) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Invalid user_id in account record." });
     }
 
     const isPasswordCorrect = await bcryptjs.compare(password, account.password_hash);
     if (!isPasswordCorrect) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: "Wrong password!" });
     }
 
-    generateTokenAndSetCookie(res, user._id);
+    generateTokenAndSetCookie(res, user._id, account.role);
 
     account.last_login = new Date();
     await account.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Logged in successfully",
-      user,
-    });
+    res.status(200).json({ success: true, message: "Logged in successfully", user });
+
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -185,7 +177,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     const account = await Account.findOne({ email });
-    if (!user) {
+    if (!account) {
       return res.status(400).json({ success: false, message: "Account not found" });
     }
 
@@ -201,10 +193,8 @@ export const forgotPassword = async (req, res) => {
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Password reset link sent to your email",
-    });
+    res.status(200).json({ success: true, message: "Password reset link sent to your email" });
+
   } catch (error) {
     console.error("Forgot password error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
@@ -216,7 +206,7 @@ export const resetPassword = async (req, res) => {
     const { token } = req.params;
     const { password } = req.body;
     if (!password) {
-      throw new Error("All fields are required");
+      return res.status(400).json({ success: false, message: "Password is required!" });
     }
 
     const account = await Account.findOne({
@@ -228,9 +218,7 @@ export const resetPassword = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Password must be at least 6 characters long" });
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -240,6 +228,7 @@ export const resetPassword = async (req, res) => {
     account.resetPasswordTokenExpiresAt = undefined;
     await account.save();
 
+    const user = await User.findById(account.user_id);
     sendResetSuccessEmail(account.email);
 
     res.status(200).json({
@@ -250,6 +239,7 @@ export const resetPassword = async (req, res) => {
         password: undefined,
       },
     });
+    
   } catch (error) {
     console.error("Reset password error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });

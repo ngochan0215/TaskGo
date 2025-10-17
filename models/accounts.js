@@ -9,15 +9,20 @@ const accountSchema = new mongoose.Schema(
     status: { type: String, enum: ["active", "inactive", "suspended"], default: "inactive" },
     is_verified: { type: Boolean, default: false },
     last_login: { type: Date, default: Date.now },
+
     verificationToken: String,
     verificationTokenExpiresAt: Date,
+
     resetPasswordToken: String,
     resetPasswordTokenExpiresAt: Date,
+
     changeEmailOTP: String,
     changeEmailAddress: String,
     changeEmailOTPExpiresAt: Date,
   },
-  { timestamps: true }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" }, 
+  }
 );
 
 const Account = mongoose.models.Account || mongoose.model("Account", accountSchema);
