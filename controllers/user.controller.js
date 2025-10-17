@@ -83,13 +83,12 @@ export const updateUserProfile = async (req, res) => {
         return res.status(400).json({ success: false, message: "Tasker not found" });
       }
 
-      const { working_year, hourly_rate, introduction, working_area } = req.body;
-      if (!working_year && !hourly_rate && !introduction && !working_area) {
+      const { working_year, introduction, working_area } = req.body;
+      if (!working_year && !introduction && !working_area) {
         throw new Error("At least one field is required to update");
       }
 
       if (working_year) tasker.working_year = working_year;
-      if (hourly_rate) tasker.hourly_rate = hourly_rate;
       if (introduction) tasker.introduction = introduction;
       if (working_area) tasker.working_area = working_area;
       await tasker.save();
