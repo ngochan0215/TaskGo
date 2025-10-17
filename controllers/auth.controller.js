@@ -11,11 +11,21 @@ import {
 
 import User from "../models/users.js";
 import Account from "../models/accounts.js";
+import Customer from "../models/customers.js";
+import Tasker from "../models/taskers.js";
 
 export const signup = async (req, res) => {
   try {
-    const { full_name, email, phone_number, identification, username, password } = req.body;
-    if (!full_name || !email || !phone_number || !identification || !username || !password) {
+    const { full_name, email, phone_number, identification, username, password, role } = req.body;
+    if (
+      !full_name ||
+      !email ||
+      !phone_number ||
+      !identification ||
+      !username ||
+      !password ||
+      !role
+    ) {
       throw new Error("All fields are required");
     }
 
@@ -50,6 +60,7 @@ export const signup = async (req, res) => {
       user_id: user._id,
       username: username,
       password_hash: hashedPassword,
+      role: role,
       verificationToken,
       verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
@@ -58,7 +69,26 @@ export const signup = async (req, res) => {
     user.account_id = account._id;
     await user.save();
 
-    generateTokenAndSetCookie(res, account._id); // Generate a token for automatic login
+    if (role == "customer") {
+      const customer = new Customer({ user_id: user._id });
+      await customer.save();
+    } else if (role == "tasker") {
+      const { working_year, hourly_rate, introduction, working_area } = req.body;
+      if (!working_year || !hourly_rate) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Invalid working year or hourly rate" });
+      }
+
+      const tasker = new Tasker({
+        user_id: user._id,
+        working_year: working_year,
+        hourly_rate: hourly_rate,
+        introduction: introduction,
+        working_area: working_area,
+      });
+      await tasker.save();
+    }
 
     await sendVerificationEmail(user.email, verificationToken);
 
@@ -68,7 +98,7 @@ export const signup = async (req, res) => {
       user,
     });
   } catch (error) {
-    console.error("Verify email error:", error);
+    console.error("Signup error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
@@ -90,6 +120,7 @@ export const verifyEmail = async (req, res) => {
         .json({ success: false, message: "Invalid or expired verification code" });
     }
 
+    account.status = "active";
     account.is_verified = true;
     account.verificationToken = undefined;
     account.verificationTokenExpiresAt = undefined;
@@ -127,7 +158,7 @@ export const login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    generateTokenAndSetCookie(res, account._id);
+    generateTokenAndSetCookie(res, user._id);
 
     account.last_login = new Date();
     await account.save();
