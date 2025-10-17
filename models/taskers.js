@@ -7,6 +7,8 @@ const taskerSchema = new mongoose.Schema(
     hourly_rate: { type: Number, required: true },
     introduction: { type: String, trim: true },
     working_area: [{ type: String, trim: true }],
+    status: { type: String, enum: ["working", "resign"], default: "working" },
+    working_status: { type: String, enum: ["available", "busy", "inactive"], default: "available" }
   },
   { timestamps: true }
 );

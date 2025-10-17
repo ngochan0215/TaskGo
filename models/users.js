@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    account_id: { type: mongoose.Schema.Types.ObjectId, ref: "Account" },
+    account_id: { type: mongoose.Schema.Types.ObjectId, ref: "Account", required: true, unique: true },
     full_name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     phone_number: { type: String, required: true, unique: true, trim: true },
     identification: { type: String, required: true, unique: true, trim: true, select: false },
     avatar_url: { type: String, trim: true },

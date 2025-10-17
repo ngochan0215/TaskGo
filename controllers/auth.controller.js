@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
         .json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
-    const userAlreadyExists = await User.findOne({ email });
+    const userAlreadyExists = await Account.findOne({ email });
     if (userAlreadyExists) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
@@ -40,7 +40,6 @@ export const signup = async (req, res) => {
 
     const user = new User({
       full_name: full_name,
-      email: email,
       phone_number: phone_number,
       identification: identification,
     });
@@ -50,6 +49,7 @@ export const signup = async (req, res) => {
       user_id: user._id,
       username: username,
       password_hash: hashedPassword,
+      email: email,
       verificationToken,
       verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
     });
@@ -60,7 +60,7 @@ export const signup = async (req, res) => {
 
     generateTokenAndSetCookie(res, account._id); // Generate a token for automatic login
 
-    await sendVerificationEmail(user.email, verificationToken);
+    await sendVerificationEmail(account.email, verificationToken);
 
     res.status(201).json({
       success: true,
@@ -96,7 +96,7 @@ export const verifyEmail = async (req, res) => {
     await account.save();
 
     const user = await User.findById(account.user_id);
-    sendWelcomeEmail(user.email, user.full_name);
+    sendWelcomeEmail(account.email, user.full_name);
 
     res.status(200).json({
       success: true,
@@ -116,12 +116,11 @@ export const login = async (req, res) => {
       throw new Error("All fields are required");
     }
 
-    const user = await User.findOne({ email });
+    const account = await Account.findOne({ email });
     if (!user) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
     }
 
-    const account = await Account.findById(user.account_id);
     const isPasswordCorrect = await bcryptjs.compare(password, account.password_hash);
     if (!isPasswordCorrect) {
       return res.status(400).json({ success: false, message: "Invalid credentials" });
@@ -155,21 +154,20 @@ export const forgotPassword = async (req, res) => {
       throw new Error("All fields are required");
     }
 
-    const user = await User.findOne({ email });
+    const account = await Account.findOne({ email });
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: "Account not found" });
     }
 
     const resetToken = crypto.randomBytes(20).toString("hex");
     const resetTokenExpiresAt = new Date(Date.now() + 1 * 60 * 60 * 1000);
 
-    const account = await Account.findById(user.account_id);
     account.resetPasswordToken = resetToken;
     account.resetPasswordTokenExpiresAt = resetTokenExpiresAt;
     await account.save();
 
     await sendPasswordResetEmail(
-      user.email,
+      account.email,
       `${process.env.CLIENT_URL}/reset-password/${resetToken}`
     );
 
@@ -212,8 +210,7 @@ export const resetPassword = async (req, res) => {
     account.resetPasswordTokenExpiresAt = undefined;
     await account.save();
 
-    const user = await User.findById(account.user_id);
-    sendResetSuccessEmail(user.email);
+    sendResetSuccessEmail(account.email);
 
     res.status(200).json({
       success: true,

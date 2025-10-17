@@ -1,6 +1,7 @@
 import { transporter, sender } from "./gmail.config.js";
 import {
   VERIFICATION_EMAIL_TEMPLATE,
+  VERIFICATION_EMAIL_UPDATEPROFILE_TEMPLATE,
   WELCOME_EMAIL_TEMPLATE,
   PASSWORD_RESET_REQUEST_TEMPLATE,
   PASSWORD_RESET_SUCCESS_TEMPLATE,
@@ -13,6 +14,22 @@ export const sendVerificationEmail = async (email, verificationToken) => {
       to: email,
       subject: "Verify Your Email",
       html: VERIFICATION_EMAIL_TEMPLATE.replace("{verificationCode}", verificationToken),
+    });
+
+    console.log("Verification email sent successfully", response);
+  } catch (error) {
+    console.error("Error sending verification email:", error);
+    throw new Error("Failed to send verification email");
+  }
+};
+
+export const sendVerificationEmailUpdateProfile = async (email, verificationToken) => {
+  try {
+    const response = await transporter.sendMail({
+      from: `"${sender.name}" <${sender.email}>`,
+      to: email,
+      subject: "Verify Your Email",
+      html: VERIFICATION_EMAIL_UPDATEPROFILE_TEMPLATE.replace("{verificationCode}", verificationToken),
     });
 
     console.log("Verification email sent successfully", response);
