@@ -6,7 +6,7 @@ const accountSchema = new mongoose.Schema(
     password_hash: { type: String, required: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     role: { type: String, enum: ["tasker", "admin", "customer"], default: "customer" },
-    status: { type: String, enum: ["active", "inactive", "suspended"], default: "active" },
+    status: { type: String, enum: ["active", "inactive", "suspended"], default: "inactive" },
     is_verified: { type: Boolean, default: false },
     last_login: { type: Date, default: Date.now },
     verificationToken: String,
