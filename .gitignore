@@ -1,3 +1,5 @@
-\node_modules
+node_modules/
 .env
 .prettierrc
+### macOS ###
+*.DS_Store
