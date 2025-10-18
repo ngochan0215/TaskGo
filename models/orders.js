@@ -2,15 +2,32 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    tasker_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
+    customer_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    tasker_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      //   required: true,
+    },
+    task_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Task",
+      required: true,
+    },
 
     scheduled_at: { type: Date, required: true },
     completed_at: { type: Date },
 
+    location: { type: String, required: true },
+    note: { type: String },
+
     voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
     discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
+
+    quantity: { type: Number },
 
     base_fee: { type: Number, required: true },
     discount_amount: { type: Number, default: 0 },
@@ -22,6 +39,9 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "in_progress", "completed", "cancelled"],
       default: "pending",
     },
+    cancelReason:{
+        type: String,
+    }
   },
   { timestamps: true }
 );

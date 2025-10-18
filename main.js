@@ -4,9 +4,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import connectDB from "./config/db.js";
-import authRoutes from "./routes/auth.route.js";
-import userRoutes from "./routes/user.route.js";
-import adminRoutes from "./routes/admin.route.js";
+import initRoute from './routes/index.route.js';
 
 dotenv.config();
 
@@ -17,9 +15,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/user", userRoutes);
-app.use("/api/admin", adminRoutes);
+initRoute(app)
 
 app.listen(PORT, () => {
   connectDB();
