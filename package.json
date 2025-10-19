@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/ngochan0215/TaskGo#readme",
   "dependencies": {
+    "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -28,7 +29,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.1",
-    "nodemailer": "^7.0.9"
+    "nodemailer": "^7.0.9",
+    "request": "^2.88.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
