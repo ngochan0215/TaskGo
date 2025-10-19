@@ -151,12 +151,11 @@ export const login = async (req, res) => {
       return res.status(400).json({ success: false, message: "Wrong password!" });
     }
 
-    generateTokenAndSetCookie(res, user._id, account.role);
-
+    const token = await generateTokenAndSetCookie(res, user._id, account.role);
     account.last_login = new Date();
     await account.save();
 
-    res.status(200).json({ success: true, message: "Logged in successfully", user });
+    res.status(200).json({ success: true, message: "Logged in successfully", token });
 
   } catch (error) {
     console.error("Login error:", error);
