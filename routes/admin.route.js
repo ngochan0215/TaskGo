@@ -5,7 +5,8 @@ import { getAllTaskers, getAllCustomers, updateTaskerProfile, getAllOrders , del
 
 const router = express.Router();
 router.get("/tasker", verifyToken, isAdmin, getAllTaskers);
-router.get("/customer", verifyToken, isAdmin, getAllCustomers);
+// router.get("/customer", verifyToken, isAdmin, getAllCustomers);
+router.get("/customer", getAllCustomers);
 router.get("/order", verifyToken, isAdmin, getAllOrders) /*(query: ?customerId=...&status=...&page=...&limit=...)*/
 router.delete("/order/:id", verifyToken, isAdmin, deleteOrderById)
 router.patch("/tasker/update/:taskerId", verifyToken, isAdmin, updateTaskerProfile);

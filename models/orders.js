@@ -39,9 +39,12 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "accepted", "in_progress", "completed", "cancelled"],
       default: "pending",
     },
-    cancelReason:{
-        type: String,
-    }
+    cancelReason: {
+      type: String,
+    },
+    cancelledAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );

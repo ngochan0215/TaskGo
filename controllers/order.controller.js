@@ -30,7 +30,7 @@ export const getAllOrdersByCustomerId = async (req, res) => {
       .skip(skip)
       .limit(Number(limit));
 
-    return res.status(200).json({ succes: true, orders });
+    return res.status(200).json({ success: true, orders });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "Lỗi server" });
