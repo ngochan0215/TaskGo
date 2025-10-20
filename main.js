@@ -2,11 +2,14 @@ import express from "express";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import http from "http";
 
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
 import adminRoutes from "./routes/admin.route.js";
+
+import { initSocket } from "./sockets/index.js";
 
 dotenv.config();
 
@@ -21,7 +24,15 @@ app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-app.listen(PORT, () => {
+// Wrap express server in httpServer
+const httpServer = http.createServer(app);
+
+const io = initSocket(httpServer);      
+
+httpServer.listen(PORT, () => {
   connectDB();
-  console.log(`Server is running on port: ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
+
+
+
