@@ -8,14 +8,15 @@ export const getOrderById = async (req, res) => {
     if (!order)
       return res
         .status(404)
-        .json({ success: false, message: "Order không tồn tại" });
+        .json({ success: false, message: "Order not found." });
     return res.status(200).json({ success: true, order });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
   }
 };
 
+// get all orders of a specific customer, for customer and admin
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
     const { customerId, limit = 50, page = 1, status } = req.query;
@@ -33,7 +34,7 @@ export const getAllOrdersByCustomerId = async (req, res) => {
     return res.status(200).json({ success: true, orders });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
   }
 };
 

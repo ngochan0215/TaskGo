@@ -5,6 +5,7 @@ import Voucher from "../models/vouchers.js";
 import Discount from "../models/discounts.js";
 import User from "../models/users.js";
 
+// customer posts order
 export const createOrderByCustomer = async (req, res) => {
   try {
     const {
@@ -23,17 +24,17 @@ export const createOrderByCustomer = async (req, res) => {
     } = req.body;
 
     if (!customer_id || !task_id || !scheduled_at || !base_fee || !quantity)
-      return res.status(400).json({ message: "Thiếu input đầu vào" });
+      return res.status(400).json({ message: "Inputs are required." });
 
     const customer = await User.findById(customer_id);
     if (!customer)
-      return res.status(404).json({ message: "Customer không tồn tại" });
+      return res.status(404).json({ message: "Customer not found." });
 
     const task = await Task.findById(task_id);
     if (!task)
-      return res.status(404).json({ message: "Task không tồn tại" });
+      return res.status(404).json({ message: "Task not found." });
 
-    // Chỉ tìm voucher/discount nếu có ID hợp lệ
+    // only find if voucher/discount id is valid
     const voucher = voucher_id ? await Voucher.findById(voucher_id) : null;
     const discount = discount_id ? await Discount.findById(discount_id) : null;
 
@@ -62,12 +63,12 @@ export const createOrderByCustomer = async (req, res) => {
     return res.status(201).json({ success: true, order });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
   }
 };
 
 
-// Hủy order (khách yêu cầu)
+// customer cancels order
 export const cancelOrderByCustomer = async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,16 +78,16 @@ export const cancelOrderByCustomer = async (req, res) => {
     if (!order)
       return res
         .status(404)
-        .json({ success: false, message: "Order không tồn tại" });
+        .json({ success: false, message: "Order not found." });
 
-    // Nếu cung cấp customerId thì kiểm tra quyền
+    // ensure customer identification
     if (customerId && String(order.customer_id) !== String(customerId)) {
       return res
         .status(403)
-        .json({ success: false, message: "Không có quyền hủy order này" });
+        .json({ success: false, message: "User doesn't have the right to do this." });
     }
 
-    // Cập nhật trạng thái
+    // update order status
     order.status = "cancelled";
     order.cancelReason = reason || null;
     order.cancelledAt = new Date();
@@ -95,6 +96,6 @@ export const cancelOrderByCustomer = async (req, res) => {
     return res.status(200).json({ success: true, order });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ success: false, message: "Lỗi server" });
+    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
   }
 };
