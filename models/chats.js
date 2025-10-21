@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const chatSchema = new mongoose.Schema(
   {
+    order_id: { type: String, ref: "Order", required: true, unique: true },
     participants: [
       {
         user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
