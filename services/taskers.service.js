@@ -7,9 +7,10 @@ import Order from "../models/orders.js";
 import Customer from "../models/customers.js";
 const DEFAULT_TASKER_BATCH_SIZE = 10;
 
-
+// save the route for later use
 const routeCache = new Map();
 
+// create the unique key for each route
 function makeCacheKey(origin, destination) {
   return `${origin}->${destination}`;
 }
@@ -17,15 +18,19 @@ function makeCacheKey(origin, destination) {
 async function getCachedRouteSummary(origin, destination) {
   const key = makeCacheKey(origin, destination);
 
+  // if route is stored already, just get it
   if (routeCache.has(key)) {
     return routeCache.get(key);
   }
 
+  // if not, create one
   const summary = await getRouteSummary(origin, destination);
   routeCache.set(key, summary);
   return summary;
 }
+// summary contains moving time and distance
 
+// return 
 const buildTaskerRanking = async (customerId) => {
   const addressModel = Address;
   const taskerModel = Tasker;
@@ -38,11 +43,13 @@ const buildTaskerRanking = async (customerId) => {
   const userAddress = await addressModel.findOne({ user_id: userId }).lean();
   if (!userAddress) throw new Error("User address not found");
 
+  // find available taskers
   const availableTaskers = await taskerModel.find({ working_status: "available" }).lean();
   if (!availableTaskers.length) return [];
 
   const taskerIds = availableTaskers.map(({ user_id }) => user_id);
 
+  // get each tasker's distance and reputation score, then store 
   const [taskerAddresses, userReputations] = await Promise.all([
     addressModel.find({ user_id: { $in: taskerIds } }).lean(),
     userModel.find({ _id: { $in: taskerIds } }).select("reputation_score").lean(),
@@ -51,6 +58,7 @@ const buildTaskerRanking = async (customerId) => {
   const addressByUserId = new Map(taskerAddresses.map((a) => [String(a.user_id), a]));
   const reputationByUserId = new Map(userReputations.map((u) => [String(u.user_id), u.reputation_score ?? 0]));
   
+  // calculate the distance between customer and tasker
   const origin = `${userAddress.latitude},${userAddress.longtitude}`;
 
   const ranked = (
@@ -102,6 +110,7 @@ export const suggestTasker = async (userId, { excludedTaskerIds = [] } = {}) => 
       offset: DEFAULT_TASKER_BATCH_SIZE,
     });
   }
+  
   const cache = rankingCache.get(key);
   const skip = new Set(excludedTaskerIds.map(String));
 

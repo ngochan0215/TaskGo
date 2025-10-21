@@ -1,5 +1,7 @@
 import { getToken } from "../utils/generateHereAccessToken.js"
 import axios from "axios";
+
+// calculate then return the moving distance and time
 export const getRouteSummary = async (origin, destination) => {
   const token = await getToken(); 
 
