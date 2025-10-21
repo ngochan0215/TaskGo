@@ -3,7 +3,7 @@ import Message from "../models/messages.js";
 import Order from "../models/orders.js";
 import Account from "../models/accounts.js";
 import mongoose from "mongoose";
-import * as chatService from "../services/chatService.js";
+import * as chatService from "../services/chat.service.js";
 
 const max_message_length = 2000;
 const num_of_msg_per_load = 10;
