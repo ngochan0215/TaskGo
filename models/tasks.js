@@ -2,7 +2,11 @@ import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema(
   {
-    service_id: { type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true },
+    service_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+      required: true,
+    },
     task_name: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     pricing: {
