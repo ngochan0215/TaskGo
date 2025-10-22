@@ -6,8 +6,8 @@ import { acceptTask, confirmDeparture, denyTask} from "../controllers/taskers.co
 const router = express.Router();
 router.use(verifyToken, isTasker);
 
-router.put("/:orderId/accept",acceptTask);
-router.put("/:orderId/deny",denyTask);
-router.put("/:orderId/confirm-departure",confirmDeparture);
+router.put("/accept/:orderId",acceptTask);
+router.put("/deny/:orderId",denyTask);
+router.put("/confirm-departure/:orderId",confirmDeparture);
 
 export default router;

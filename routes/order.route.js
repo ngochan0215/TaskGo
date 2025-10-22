@@ -1,35 +1,21 @@
 import express from "express";
-import {
-  createOrderByCustomer,
-  cancelOrderByCustomer,
-} from "../controllers/customer.controller.js";
-import {
-  getOrderById,
-  getAllOrdersByCustomerId,
-} from "../controllers/order.controller.js";
+import { verifyToken } from "../middleware/verifyToken.js";
+import { isAdmin } from "../middleware/verifyRole.js";
+import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById } from "../controllers/order.controller.js";
+import { createOrder, cancelOrder } from "../controllers/order.controller.js";
 
 const router = express.Router();
 
-// Nếu có middleware auth, import và dùng ở đây
-// const auth = require('../middleware/auth');
-
-// Route xử lý đơn hàng
-// // GET /api/orders/:id
-router.get("/:id", /* auth, */ getOrderById);
+router.get("/:id",verifyToken, getOrderById);
 
 // // GET /api/orders?customer=...? // Truyền query customer, limit, page, status
-router.get("/", /* auth, */ getAllOrdersByCustomerId);
+router.get("/", verifyToken, getAllOrdersByCustomerId);
 
+router.post("/customer/create-order",verifyToken, createOrder);
+router.put("/customer/cancel-order/:id",verifyToken, cancelOrder);
 
-// Route đặt dịch vụ với khách hàng
-
-// POST /api/orders/schedule
-router.post("/customer/createOrder", /* auth, */ createOrderByCustomer);
-
-// PUT /api/order/customer/cancelOrder/{orderId}
-router.put("/customer/cancelOrder/:id", /* auth, */ cancelOrderByCustomer);
-
-
-// Router nhận dịch vụ của tasker
+// ADMIN manage orders
+router.get("/order", verifyToken, isAdmin, getAllOrders);
+router.delete("/order/delete/:orderId", verifyToken, isAdmin, deleteOrderById);
 
 export default router;

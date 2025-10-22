@@ -9,19 +9,23 @@ import {
 	updateTask,
 	deleteTask,
 } from "../controllers/task.controller.js";
+import { isAdmin } from "../middleware/verifyRole.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
 
-// Service (category)
-router.post('/service', createService);
-router.patch('/service/:id', updateService);
-router.delete('/service/:id', deleteService);
+// admin manage service category
+router.post('/service/new', verifyToken, isAdmin, createService);
+router.patch('/service/update/:id', verifyToken, isAdmin, updateService);
+router.delete('/service/delete/:id', verifyToken, isAdmin, deleteService);
 
-// Tasks
-router.post('/', createTask);
-router.get('/', listTasks);
-router.get('/:id', getTaskById);
-router.patch('/:id', updateTask);
-router.delete('/:id', deleteTask);
+// admin manage tasks
+router.post('/task/new', verifyToken, isAdmin, createTask);
+router.patch('/task/update/:id', verifyToken, isAdmin, updateTask);
+router.delete('/task/delete/:id', verifyToken, isAdmin, deleteTask);
+
+// users can see all tasks and services
+router.get('/task', listTasks);
+router.get('/task/:id', getTaskById);
 
 export default router;

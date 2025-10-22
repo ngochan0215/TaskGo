@@ -99,6 +99,7 @@ function getNextBatch(allRanked, offset) {
   return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
 }
 
+// get the best suitable tasker list for this one customer
 export const suggestTasker = async (userId, { excludedTaskerIds = [] } = {}) => {
     const key = String(userId);
     if (!rankingCache.has(key)) {

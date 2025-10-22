@@ -5,10 +5,10 @@
 // Toàn bộ những công việc này chỉ ADMIN được phép làm
 // Các hàm trả về JSON và có validate cơ bản
 
-
 import Service from "../models/services.js";
 import Task from "../models/tasks.js";
 
+// SERVICE
 // Create a new service (category)
 export const createService = async (req, res) => {
 	try {
@@ -76,6 +76,40 @@ export const deleteService = async (req, res) => {
 	}
 };
 
+// Get all services (optionally paginated)
+export const getAllServices = async (req, res) => {
+	try {
+		const { page = 1, limit = 50, search } = req.query;
+		const q = {};
+		if (search) {
+			q.category_name = { $regex: search, $options: 'i' };
+		}
+
+		const skip = (Number(page) - 1) * Number(limit);
+
+		const services = await Service.find(q)
+			.sort({ createdAt: -1 })
+			.skip(skip)
+			.limit(Number(limit))
+			.lean();
+
+		const total = await Service.countDocuments(q);
+
+		return res.status(200).json({
+			success: true,
+			total,
+			page: Number(page),
+			limit: Number(limit),
+			services
+		});
+
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+	}
+};
+
+// TASK
 // Create a new task under a service
 export const createTask = async (req, res) => {
 	try {
@@ -108,7 +142,7 @@ export const getTaskById = async (req, res) => {
 		return res.status(200).json({ success: true, task });
 	} catch (err) {
 		console.error(err);
-		return res.status(500).json({ success: false, message: "Lỗi server" });
+    	return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
 	}
 };
 
@@ -123,7 +157,7 @@ export const listTasks = async (req, res) => {
 		return res.status(200).json({ success: true, tasks });
 	} catch (err) {
 		console.error(err);
-		return res.status(500).json({ success: false, message: "Lỗi server" });
+    	return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
 	}
 };
 

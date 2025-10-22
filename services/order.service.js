@@ -1,15 +1,14 @@
-//Controller tạo đơn hàng ngay hoặc đặt trước, thực hiện hủy đơn hàng
-import Order from "../models/orders.js";
 import Task from "../models/tasks.js";
 import Voucher from "../models/vouchers.js";
 import Discount from "../models/discounts.js";
 import User from "../models/users.js";
+import Order from  "../models/orders.js";
+import { suggestTasker } from "../services/taskers.service.js";
 
 // customer posts order
-export const createOrderByCustomer = async (req, res) => {
+export const createOrderByCustomer = async (customer_id, data) => {
   try {
     const {
-      customer_id,
       task_id,
       scheduled_at,
       location,
@@ -21,7 +20,7 @@ export const createOrderByCustomer = async (req, res) => {
       discount_amount = 0,
       tip_amount = 0,
       total_amount
-    } = req.body;
+    } = data;
 
     if (!customer_id || !task_id || !scheduled_at || !base_fee || !quantity)
       return res.status(400).json({ message: "Inputs are required." });
@@ -58,9 +57,21 @@ export const createOrderByCustomer = async (req, res) => {
       status: "pending",
     };
 
-    const order = await Order.create(orderData);
+    // Check if it's immediate (within ~15 mins)
+    const isImmediate = new Date(scheduled_at).getTime() <= Date.now() + 15 * 60 * 1000;
 
+    // If immediate, then assign a tasker
+    if (isImmediate) {
+      const suggestion = await suggestTasker(customer_id);
+      if (!suggestion) throw new Error("No available tasker at the moment");
+
+      orderData.tasker_id = suggestion.taskerId;
+      // Keep status 'pending' until tasker accepts
+    }
+
+    const order = await Order.create(orderData);
     return res.status(201).json({ success: true, order });
+    
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
@@ -69,12 +80,9 @@ export const createOrderByCustomer = async (req, res) => {
 
 
 // customer cancels order
-export const cancelOrderByCustomer = async (req, res) => {
+export const cancelOrderByCustomer = async (orderId, customerId, reason) => {
   try {
-    const { id } = req.params;
-    const { customerId, reason } = req.body;
-
-    const order = await Order.findById(id);
+    const order = await Order.findById(orderId);
     if (!order)
       return res
         .status(404)
@@ -87,13 +95,18 @@ export const cancelOrderByCustomer = async (req, res) => {
         .json({ success: false, message: "User doesn't have the right to do this." });
     }
 
+    if (order.status === "cancelled" || order.status === "completed") {
+        throw new Error("Order cannot be cancelled.");
+    }
+
     // update order status
     order.status = "cancelled";
     order.cancelReason = reason || null;
     order.cancelledAt = new Date();
-    await order.save();
 
+    await order.save();
     return res.status(200).json({ success: true, order });
+    
   } catch (err) {
     console.error(err);
     return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
