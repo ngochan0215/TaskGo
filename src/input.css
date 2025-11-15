@@ -1,9 +1,5 @@
-@import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Custom styles can be added here */
-.btn-primary {
-    @apply bg-blue-500 text-white p-3 rounded;
-}
