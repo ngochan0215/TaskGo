@@ -1,112 +1,84 @@
-import Order from "../models/orders.js";
-import { createOrderByCustomer, cancelOrderByCustomer } from "../services/order.service.js";
+import { Order, Task } from "../models/index.js";
+import { createOrderByCustomer, cancelOrderByCustomer,
+  getAllOrdersService, deleteOrderByIdService, getOrderByIdService, getAllOrdersByCustomerIdService,
+ } from "../services/order.service.js";
 
-// List all orders with optional filters (customer_id, tasker_id, status) and pagination
-// only for ADMIN
 export const getAllOrders = async (req, res) => {
   try {
-    const { customer_id, tasker_id, status, page = 1, limit = 50 } = req.query;
-    const q = {};
-    if (customer_id) q.customer_id = customer_id;
-    if (tasker_id) q.tasker_id = tasker_id;
-    if (status) q.status = status;
-    const skip = (Number(page) - 1) * Number(limit);
-    const orders = await Order.find(q)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit))
-      .lean();
-    return res.status(200).json({ success: true, orders });
+    const orders = await getAllOrdersService(req.query);
+    res.status(200).json({ success: true, orders });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// Delete a specific order, only for ADMIN
 export const deleteOrderById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const order = await Order.findByIdAndDelete(id);
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found." });
-    return res
-      .status(200)
-      .json({ success: true, message: "Delete order successfully." });
+    const deleted = await deleteOrderByIdService(req.params.orderId);
+    res.status(200).json({ success: true, deleted });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// Get order by id
 export const getOrderById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const order = await Order.findById(id).lean();
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found." });
-    return res.status(200).json({ success: true, order });
+    const order = await getOrderByIdService(req.params.id);
+    res.status(200).json({ success: true, order });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+    res.status(404).json({ success: false, message: err.message });
   }
 };
 
-// get all orders of a specific customer, for customer and admin
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
-    const { customerId, limit = 50, page = 1, status } = req.query;
-    const q = {};
-    if (customerId) q.customer = customerId;
-    if (status) q.status = status;
-
-    const skip = (Number(page) - 1) * Number(limit);
-    const orders = await Order.find(q)
-      .populate("service provider")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(Number(limit));
-
-    return res.status(200).json({ success: true, orders });
+    const { customerId } = req.params;
+    const orders = await getAllOrdersByCustomerIdService({
+      customerId, 
+      ...req.query
+    });
+    res.status(200).json({ success: true, orders });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
-// customer creates order
+// create order by customer
 export const createOrder = async (req, res) => {
   try {
-    const userId = req.userId; // customer ID
-    const orderData = req.body; // contains task_id, location, scheduled_at, etc.
+    const result = await createOrderService({
+      customerId: req.userId,
+      ...req.body,
+    });
 
-    const order = await createOrderByCustomer(userId, orderData);
-
-    res.status(201).json({ success: true, order });
+    return res.status(201).json({
+      success: true,
+      message: "Order created successfully.",
+      order: result.order,
+      assignedTasker: result.assignedTasker,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ success: false, message: err.message });
+    return res.status(400).json({
+      success: false,
+      message: err.message,
+    });
   }
 };
 
 // customer delete order
-export const cancelOrder = async (req, res) => {
+export const cancelOrderByCustomer = async (req, res) => {
   try {
-    const { id } = req.params; // order ID
-    const customerId = req.userId;
-    const { reason } = req.body;
+    const { orderId } = req.params;
 
-    const order = await cancelOrderByCustomer(id, customerId, reason);
-    res.status(200).json({ success: true, order });
+    const order = await cancelOrderByCustomerService({
+      orderId,
+      customerId: req.userId,  
+      reason: req.body.reason
+    });
+
+    return res.status(200).json({ success: true, order });
 
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ success: false, message: err.message });
+    return res.status(400).json({ success: false, message: err.message });
   }
 };
-

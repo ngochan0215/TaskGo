@@ -5,8 +5,7 @@
 // Toàn bộ những công việc này chỉ ADMIN được phép làm
 // Các hàm trả về JSON và có validate cơ bản
 
-import Service from "../models/services.js";
-import Task from "../models/tasks.js";
+import { Service, Task } from "../models/index.js";
 
 // SERVICE
 // Create a new service (category)

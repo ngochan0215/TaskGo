@@ -12,11 +12,12 @@ import adminRoutes from "./routes/admin.route.js";
 import orderRoutes from "./routes/order.route.js";
 import taskRoutes from "./routes/task.route.js";
 import taskerRoutes from "./routes/tasker.route.js";
+import discountRoutes from "./routes/discount.route.js";
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -25,9 +26,10 @@ app.use(cors({ origin: true, credentials: true }));
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/tasks", taskRoutes);
+app.use("/api/order", orderRoutes);
+app.use("/api/task", taskRoutes);
 app.use("/api/tasker", taskerRoutes);
+app.use("/api/discount", discountRoutes);
 
 // Wrap express server in httpServer
 const httpServer = http.createServer(app);

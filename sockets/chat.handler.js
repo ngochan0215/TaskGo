@@ -1,20 +1,21 @@
 import Chat from "../models/chats.js";
 import Message from "../models/messages.js";
 import Order from "../models/orders.js";
-import Account from "../models/accounts.js";
 import mongoose from "mongoose";
 import * as chatService from "../services/chat.service.js";
 
 const max_message_length = 2000;
 const num_of_msg_per_load = 10;
 
-export default function registerHandlers(io) {
+export default function registerChatHandlers(io) {
+  // this run whenever client connects
   io.on("connection", (socket) => {
     const userId = String(socket.user.userId);
     console.log("socket connected:", socket.id, "- user:", userId);
 
     socket.join(`user:${userId}`);
 
+    // join to chat room of a specific order
     socket.on("join-room", async (payload = {}, ack) => {
       try {
         const { order_id } = payload || {};
@@ -41,12 +42,14 @@ export default function registerHandlers(io) {
 
         socket.join(`chat:${String(targetChat._id)}`);
         return ack && ack({ ok: true, chatId: String(targetChat._id) });
+
       } catch (err) {
         console.error("join-room error", err);
         return ack && ack({ ok: false, error: "server_error" });
       }
     });
 
+    // send message
     socket.on("send-message", async (payload = {}, ack) => {
       try {
         const { to_order_id, content } = payload || {};
@@ -169,6 +172,8 @@ export default function registerHandlers(io) {
           ack({ ok: false, error: "server_error" });
       }
     });
+
+    // get old messages
     socket.on("get-messages", async (payload = {}, ack) => {
       try {
         const { target_order_id, before } = payload || {};

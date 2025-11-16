@@ -1,7 +1,4 @@
-import User from "../models/users.js";
-import Account from "../models/accounts.js";
-import Tasker from "../models/taskers.js";
-import Customer from "../models/customers.js";
+import { User, Account, Tasker, Customer } from "../models/index.js";
 
 // Show all taskers in the system along with their information
 export const getAllTaskers = async (req, res) => {

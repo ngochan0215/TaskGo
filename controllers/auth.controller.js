@@ -1,6 +1,6 @@
 import bcryptjs from "bcryptjs";
 import crypto from "crypto";
-
+import { User, Account, Tasker, Customer } from "../models/index.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
 import {
   sendVerificationEmail,
@@ -8,11 +8,6 @@ import {
   sendPasswordResetEmail,
   sendResetSuccessEmail,
 } from "../gmail/email.js";
-
-import User from "../models/users.js";
-import Account from "../models/accounts.js";
-import Customer from "../models/customers.js";
-import Tasker from "../models/taskers.js";
 
 export const signup = async (req, res) => {
   try {
@@ -90,7 +85,7 @@ export const signup = async (req, res) => {
     });
   } catch (error) {
     console.error("Signup error:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "SERVER ERROR: ", error });
   }
 };
 

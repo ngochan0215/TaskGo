@@ -143,15 +143,21 @@ export const acceptTaskRequest = async (taskerId, orderId) =>{
     if (!order) {
         throw new Error("Order not found")
     }
-    if (order.status !== "pending") {
-        throw new Error("Order is not pending")
+    if (order.status !== "assigned") {
+        throw new Error("Order is not assigned yet!");
     }
-    if (order.tasker_id.toString() !== tasker._id.toString()) {
-        throw new Error("You are not assigned to this order")
+
+    if (!order.tasker_id) {
+        order.tasker_id = taskerId;
+    } 
+    else if (order.tasker_id.toString() !== taskerId.toString()) {
+        throw new Error("You are not assigned to this order");
     }
+
     await orderModel.updateOne({
         _id: orderId
     },{
+        tasker_id: taskerId,
         status: "accepted",
     },{
         runValidators: true
@@ -159,12 +165,13 @@ export const acceptTaskRequest = async (taskerId, orderId) =>{
     await taskerModel.updateOne({
         user_id: taskerId
     },{
-        working_status: "pending" 
+        working_status: "busy" 
     },{
         runValidators: true
     })
     rankingCache.delete(String(order.user_id));
-}
+};
+
 export const denyTaskRequest = async (taskerId, orderId) =>{
     const taskerModel = Tasker;
     const orderModel = Order;
@@ -177,29 +184,47 @@ export const denyTaskRequest = async (taskerId, orderId) =>{
     if (!order) {
         throw new Error("Order not found")
     }
-    if (order.tasker_id.toString() !== tasker._id.toString()) {
+    if (order.tasker_id.toString() !== taskerId.toString()) {
         throw new Error("You are not assigned to this order")
     }
-    if (order.status !== "pending") {
-        throw new Error("Order is not pending")
+    if (order.status !== "assigned") {
+        throw new Error("Order must be in assigned state to be denied")
     }
+
+     await Order.updateOne(
+        { _id: orderId },
+        {
+            status: "pending",
+            tasker_id: null
+        },
+        { runValidators: true }
+    );
+
     const newTasker = await suggestTasker(order.customer_id, {
         excludedTaskerIds: [tasker._id]
     })
-    await orderModel.updateOne({
-        _id: orderId
-    },{
-        tasker_id: newTasker.taskerId
-    },{
-        runValidators: true
-    })
+
+    if (newTasker) {
+        await orderModel.updateOne({
+            _id: orderId
+        },{
+            tasker_id: newTasker.taskerId,
+            status: "assigned"
+        },{
+            runValidators: true
+        })
+    }
+    
+    if (order.customer_id) rankingCache.delete(String(order.customer_id));
     return newTasker;
-}
+};
+
 export const confirmDepartureTask = async (taskerId, orderId) =>{
     const taskerModel = Tasker;
     const orderModel = Order;
     console.log(taskerId, orderId);
     const tasker = await taskerModel.findOne({ user_id: taskerId })
+
     if (!tasker) {
         throw new Error("Tasker not found")
     }
@@ -207,7 +232,7 @@ export const confirmDepartureTask = async (taskerId, orderId) =>{
     if (!order) {
         throw new Error("Order not found")
     }
-    if (order.tasker_id.toString() !== tasker._id.toString()) {
+    if (order.tasker_id.toString() !== taskerId.toString()) {
         throw new Error("You are not assigned to this order")
     }
     if (order.status !== "accepted") {
@@ -216,7 +241,8 @@ export const confirmDepartureTask = async (taskerId, orderId) =>{
     await orderModel.updateOne({
         _id: orderId
     },{
-        status: "in_progress",
+        departed_at: new Date(),
+        status: "departed",
     },{
         runValidators: true
     })
@@ -227,4 +253,69 @@ export const confirmDepartureTask = async (taskerId, orderId) =>{
     },{
         runValidators: true
     })
-}
+};
+
+export const confirmArriving = async (taskerId, orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    if (order.tasker_id.toString() !== taskerId.toString())
+    throw new Error("You are not assigned to this order");
+
+    if (order.status !== "accepted")
+    throw new Error("Order must be accepted before arriving");
+
+    await Order.updateOne(
+    { _id: orderId },
+    {
+        arrived_at: new Date(),
+        status: "arrived",
+    },
+    { runValidators: true }
+    );
+
+    return { success: true };
+};
+
+export const confirmStart = async (taskerId, orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    if (order.tasker_id.toString() !== taskerId.toString())
+    throw new Error("You are not assigned to this order");
+
+    if (order.status !== "arrived")
+    throw new Error("Tasker must be arrived before starting the task.");
+
+    await Order.updateOne(
+    { _id: orderId },
+    {
+        started_at: new Date(),
+        status: "in_progress",
+    }
+    );
+
+    return { success: true };
+};
+
+export const confirmComplete = async (taskerId, orderId) => {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
+
+    if (order.tasker_id.toString() !== taskerId.toString())
+    throw new Error("You are not assigned to this order");
+
+    if (order.status !== "in_progress")
+    throw new Error("Order's status must be in progress to be completed.");
+
+    await Order.updateOne(
+        { _id: orderId },
+        {
+            completed_at: new Date(),
+            status: "completed"
+        }
+    );
+
+    if (order.customer_id) rankingCache.delete(String(order.customer_id));
+    return { success: true };
+};

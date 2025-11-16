@@ -1,7 +1,4 @@
-import User from "../models/users.js";
-import Account from "../models/accounts.js";
-import Customer from "../models/customers.js";
-import Tasker from "../models/taskers.js";
+import { User, Account, Tasker, Customer } from "../models/index.js";
 
 import bcrypt from "bcrypt";
 import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";

@@ -1,102 +1,185 @@
-import Task from "../models/tasks.js";
-import Voucher from "../models/vouchers.js";
-import Discount from "../models/discounts.js";
-import User from "../models/users.js";
-import Order from  "../models/orders.js";
+
+import { Task, Voucher, Discount, User, Order } from "../models/index.js";
 import { suggestTasker } from "../services/taskers.service.js";
 
-// customer posts order
-export const createOrderByCustomer = async (customer_id, data) => {
+// Get all orders with optional filters + pagination
+export async function getAllOrdersService({ customer_id, tasker_id, status, page = 1, limit = 50 }) {
   try {
-    const {
+    const q = {};
+    if (customer_id) q.customer_id = customer_id;
+    if (tasker_id) q.tasker_id = tasker_id;
+    if (status) q.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+// Delete a specific order, only for ADMIN
+export async function deleteOrderByIdService(orderId) {
+  try {
+
+    const deleted = await Order.findByIdAndDelete(orderId);
+    if (!deleted) throw new Error("Order not found");
+    return deleted;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+// Get order by id
+export async function getOrderByIdService(orderId) {
+  try {
+    const order = await Order.findById(orderId).lean();
+    if (!order) throw new Error("Order not found");
+    return order;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
+// Get all orders of a customer, with pagination + filter by status
+export async function getAllOrdersByCustomerIdService({ customerId, status, page = 1, limit = 50 }) {
+  try {
+
+    const q = {};
+    if (customerId) q.customer = customerId;
+    if (status) q.status = status;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate("task_id")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    return orders;
+
+  } catch (err) {
+    throw new Error(err.message);
+  }
+};
+
+export async function createOrderService({
+  customerId,
+  task_id,
+  voucher_id,
+  discount_id,
+  scheduled_at,
+  type,
+  location,
+  note,
+  quantity,
+  total_amount
+}) {
+  try {
+    if (!task_id || !type || !quantity || !location) {
+      throw new Error("Please fill all the required information.");
+    }
+
+    scheduleDate = new Date(scheduled_at);
+    if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date()) {
+      throw new Error("Invalid or past scheduled date.");
+    }
+
+    const task = await Task.findById(task_id);
+    if (!task) {
+      throw new Error("Task not found.");
+    }
+
+    let base_fee = task.pricing.amount * quantity;
+
+    let discount_percent = 0;
+    if (discount_id) {
+      const discount = await Discount.findById(discount_id);
+      discount_percent += discount?.percent || 0;
+    }
+
+    let voucher_percent = 0;
+    if (voucher_id) {
+      const voucher = await Voucher.findById(voucher_id);
+      voucher_percent += voucher?.percent || 0;
+    }
+
+    const discount_amount = (base_fee * discount_percent) / 100;
+    const voucher_amount = (base_fee * voucher_percent) / 100;
+
+    const expected_total = Math.max(base_fee - discount_amount - voucher_amount, 0);
+
+    if (Number(total_amount) !== expected_total) {
+      throw new Error("Invalid total bill. Please refresh and confirm again.");
+    }
+
+    const newOrder = await Order.create({
+      customer_id: customerId,
       task_id,
-      scheduled_at,
+      type,
+      scheduled_at: scheduleDate,
       location,
       note,
       voucher_id,
       discount_id,
       quantity,
       base_fee,
-      discount_amount = 0,
-      tip_amount = 0,
-      total_amount
-    } = data;
-
-    if (!customer_id || !task_id || !scheduled_at || !base_fee || !quantity)
-      return res.status(400).json({ message: "Inputs are required." });
-
-    const customer = await User.findById(customer_id);
-    if (!customer)
-      return res.status(404).json({ message: "Customer not found." });
-
-    const task = await Task.findById(task_id);
-    if (!task)
-      return res.status(404).json({ message: "Task not found." });
-
-    // only find if voucher/discount id is valid
-    const voucher = voucher_id ? await Voucher.findById(voucher_id) : null;
-    const discount = discount_id ? await Discount.findById(discount_id) : null;
-
-    // Build order object
-    const orderData = {
-      customer_id: customer._id,
-      service_id: task.service_id || null,
-      tasker_id: null,
-      task_id: task._id,
-      scheduled_at,
-      completed_at: null,
-      location: location || null,
-      note: note || "",
-      voucher_id: voucher ? voucher._id : null,
-      discount_id: discount ? discount._id : null,
-      quantity,
-      base_fee,
       discount_amount,
-      tip_amount,
+      voucher_amount,
       total_amount,
       status: "pending",
-    };
+    });
 
     // Check if it's immediate (within ~15 mins)
-    const isImmediate = new Date(scheduled_at).getTime() <= Date.now() + 15 * 60 * 1000;
+    const isImmediate = new Date(scheduleDate).getTime() <= Date.now() + 15 * 60 * 1000;
 
     // If immediate, then assign a tasker
     if (isImmediate) {
       const suggestion = await suggestTasker(customer_id);
       if (!suggestion) throw new Error("No available tasker at the moment");
 
-      orderData.tasker_id = suggestion.taskerId;
-      // Keep status 'pending' until tasker accepts
+      await Order.updateOne(
+        { _id: newOrder._id },
+        {
+          tasker_id: suggestion.taskerId,
+          status: "assigned",
+        }
+      );
+
+      const updated = await Order.findById(newOrder._id);
+      return { order: updated, assignedTasker: suggestion }      
     }
 
-    const order = await Order.create(orderData);
-    return res.status(201).json({ success: true, order });
-    
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
-  }
-};
+    // if scheduled order, not assign yet
+    return { order: newOrder, assignedTasker: null };
 
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
 
 // customer cancels order
-export const cancelOrderByCustomer = async (orderId, customerId, reason) => {
+export async function cancelOrderByCustomerService({ orderId, customerId, reason }) {
   try {
     const order = await Order.findById(orderId);
-    if (!order)
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found." });
+    if (!order) {
+      throw new Error("Order not found.");
+    }
 
-    // ensure customer identification
     if (customerId && String(order.customer_id) !== String(customerId)) {
-      return res
-        .status(403)
-        .json({ success: false, message: "User doesn't have the right to do this." });
+      throw new Error("User doesn't have the right to cancel this order.");
     }
 
     if (order.status === "cancelled" || order.status === "completed") {
-        throw new Error("Order cannot be cancelled.");
+      throw new Error("Order cannot be cancelled.");
     }
 
     // update order status
@@ -105,10 +188,9 @@ export const cancelOrderByCustomer = async (orderId, customerId, reason) => {
     order.cancelledAt = new Date();
 
     await order.save();
-    return res.status(200).json({ success: true, order });
-    
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+    return order;
+
+  } catch (error) {
+    throw new Error(error.message);
   }
-};
+}
