@@ -87,8 +87,8 @@ export async function createOrderService({
     if (!task_id || !type || !quantity || !location) {
       throw new Error("Please fill all the required information.");
     }
-
-    scheduleDate = new Date(scheduled_at);
+    
+    const scheduleDate = new Date(scheduled_at);
     if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date()) {
       throw new Error("Invalid or past scheduled date.");
     }
@@ -140,10 +140,9 @@ export async function createOrderService({
 
     // Check if it's immediate (within ~15 mins)
     const isImmediate = new Date(scheduleDate).getTime() <= Date.now() + 15 * 60 * 1000;
-
     // If immediate, then assign a tasker
     if (isImmediate) {
-      const suggestion = await suggestTasker(customer_id);
+      const suggestion = await suggestTasker(newOrder._id, {});
       if (!suggestion) throw new Error("No available tasker at the moment");
 
       await Order.updateOne(

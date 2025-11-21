@@ -149,7 +149,7 @@ export const denyTask = async (req, res) =>{
     }
 };
 
-export const confirmArriving = async (req, res) => {
+export const confirmArrive = async (req, res) => {
     const { orderId } = req.params;
     try {
         await confirmArriving(req.userId, orderId);
@@ -177,7 +177,7 @@ export const confirmArriving = async (req, res) => {
     }
 };
 
-export const confirmStart = async (req, res) => {
+export const confirmStartTask = async (req, res) => {
     const { orderId } = req.params;
     try {
         await confirmStart(req.userId, orderId);
@@ -206,7 +206,7 @@ export const confirmStart = async (req, res) => {
     }
 };
 
-export const confirmComplete = async (req, res) => {
+export const confirmCompleteTask = async (req, res) => {
     const { orderId } = req.params;
     try {
         await confirmComplete(req.userId, orderId);
