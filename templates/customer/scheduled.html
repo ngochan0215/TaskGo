@@ -19,7 +19,7 @@
                 <a href=""><img src="/public/images/taskgo-logo.png" alt=""></a>
             </div>
 
-            <h1 class="font-bold text-xl text-dark-900">Đặt ngay</h1>
+            <h1 class="font-bold text-xl text-dark-900">Đặt lịch trước</h1>
             <div class="w-10 h-10 flex items-center justify-center">
                 <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
             </div>
@@ -27,8 +27,39 @@
     </header>
 
     <main class="p-4 space-y-4 pb-20">
+        <!-- Work time section -->
         <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+            <div class="flex items-center justify-between border-b pb-2">
+                <h2 class="text-2xl font-bold text-primary-500">Thời gian làm việc</h2>
+            </div>
 
+            <p class="text-xs mb-4">
+                Chọn thời gian làm việc
+            </p>
+
+            <div class="bg-white rounded-lg">
+                <div class="flex items-center justify-between space-x-2 mb-4">
+                    <label for="workdate" class="w-full text-xl whitespace-nowrap flex-shrink-0">
+                        Nhập thời gian:
+                    </label>
+                    <input type="datetime-local" id="workdate" name="workdate"
+                        class="w-full text-lg font-medium focus:border-primary-500" />
+                </div>
+
+                <div class="flex space-x-4 pt-4">
+                    <button class="action-btn action-btn-hover">
+                        Chọn lại
+                    </button>
+
+                    <button class="action-btn action-btn-hover">
+                        Đặt hôm nay
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Note section -->
+        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
             <div class="flex items-center justify-between border-b pb-2">
                 <h2 class="text-2xl font-bold text-primary-500">Ghi chú cho Tasker</h2>
             </div>
