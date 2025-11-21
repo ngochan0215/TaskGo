@@ -3,7 +3,9 @@ import { getRouteSummary } from "./location.service.js";
 import Address from "../models/addresses.js";
 import User from "../models/users.js";
 import Tasker from "../models/taskers.js";
+import Task from "../models/tasks.js";
 import Order from "../models/orders.js";
+import Service from "../models/services.js";
 import Customer from "../models/customers.js";
 const DEFAULT_TASKER_BATCH_SIZE = 10;
 
@@ -31,20 +33,41 @@ async function getCachedRouteSummary(origin, destination) {
 // summary contains moving time and distance
 
 // return 
-const buildTaskerRanking = async (customerId) => {
+const buildTaskerRanking = async (orderId) => {
   const addressModel = Address;
   const taskerModel = Tasker;
+  const serviceModel = Service;
+  const taskModel = Task;
+  const orderModel = Order;
   const customerModel = Customer;
   const userModel = User;
-  const customer = await customerModel.findById(customerId);
+
+  const order = await orderModel.findById(orderId);
+  if (!order) throw new Error("Order not found");
+
+  const task = await taskModel.findById(order.task_id);
+  if (!task) throw new Error("Task not found");
+
+  const customer = await customerModel.findOne({
+        user_id: order.customer_id
+    });
   if (!customer) throw new Error("Customer not found");
 
   const userId = customer.user_id;
-  const userAddress = await addressModel.findOne({ user_id: userId }).lean();
-  if (!userAddress) throw new Error("User address not found");
+  const orderAddress = { 
+    longitude: order.location.longtitude,
+    latitude: order.location.latitude
+  };
+  if (!orderAddress) throw new Error("Order address not found");
 
-  // find available taskers
-  const availableTaskers = await taskerModel.find({ working_status: "available" }).lean();
+  const service = await serviceModel.findById(task.service_id).lean();
+  if (!service) throw new Error("Service not found");
+
+  // find available taskers for the assigned service
+  const availableTaskers = await taskerModel.find({ 
+    working_status: "available",
+    working_area: { $in: [service.category_name] }
+   }).lean();
   if (!availableTaskers.length) return [];
 
   const taskerIds = availableTaskers.map(({ user_id }) => user_id);
@@ -56,10 +79,10 @@ const buildTaskerRanking = async (customerId) => {
   ]);
 
   const addressByUserId = new Map(taskerAddresses.map((a) => [String(a.user_id), a]));
-  const reputationByUserId = new Map(userReputations.map((u) => [String(u.user_id), u.reputation_score ?? 0]));
+  const reputationByUserId = new Map(userReputations.map((u) => [String(u._id), u.reputation_score ?? 0]));
   
   // calculate the distance between customer and tasker
-  const origin = `${userAddress.latitude},${userAddress.longtitude}`;
+  const origin = `${orderAddress.latitude},${orderAddress.longitude}`;
 
   const ranked = (
     await Promise.all(
@@ -100,11 +123,11 @@ function getNextBatch(allRanked, offset) {
 }
 
 // get the best suitable tasker list for this one customer
-export const suggestTasker = async (userId, { excludedTaskerIds = [] } = {}) => {
-    const key = String(userId);
+export const suggestTasker = async (orderId, { excludedTaskerIds = [] } = {}) => {
+    const key = String(orderId);
     if (!rankingCache.has(key)) {
     console.log("NO CACHE for user, Creating new list", key);
-    const ranked = await buildTaskerRanking(userId);
+    const ranked = await buildTaskerRanking(orderId);
     rankingCache.set(key, {
       allRanked: ranked,
       currentBatch: ranked.slice(0, DEFAULT_TASKER_BATCH_SIZE),
@@ -200,7 +223,7 @@ export const denyTaskRequest = async (taskerId, orderId) =>{
         { runValidators: true }
     );
 
-    const newTasker = await suggestTasker(order.customer_id, {
+    const newTasker = await suggestTasker(orderId, {
         excludedTaskerIds: [tasker._id]
     })
 
