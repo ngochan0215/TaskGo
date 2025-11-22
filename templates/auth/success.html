@@ -14,10 +14,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Đảm bảo màu sắc đồng nhất */
         :root {
-            --primary-color: #68A776; /* Màu xanh lá đậm */
-            --accent-color: #ACCFB2; /* Màu xanh lá nhạt */
+            --primary-color: #68A776;
+            --accent-color: #ACCFB2;
         }
     </style>
 </head>
@@ -70,14 +69,14 @@
             backLink: 'otp.html'
         },
 
-        'su-auth': { // Loại MỚI: Đăng ký + OTP thành công
+        'su-auth': {
             pageTitle: 'Xác thực thành công',
             mainTitle: 'Đã xác thực thành công',
             description: 'Đã xác thực thành công. <br>Nhấn tiếp tục để đặt mật khẩu.',
             buttonText: 'Tiếp tục',
             buttonLink: 'set-password.html',
-            icon: 'none', // Giữ bố cục Form/List, không có icon
-            backLink: 'otp.html' // Quay lại trang OTP nếu cần
+            icon: 'none',
+            backLink: 'otp.html'
         }
     };
 
@@ -116,7 +115,6 @@
         const successIconSvg = document.getElementById('success-icon');
 
         if (data.icon === 'taskgo') {
-            // Hiển thị icon TaskGo ở đầu Card, căn giữa
             logoIconContainer.classList.remove('hidden');
             logoIconContainer.classList.remove('justify-start');
             logoIconContainer.classList.add('justify-center');
