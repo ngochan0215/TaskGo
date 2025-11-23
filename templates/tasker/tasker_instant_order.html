@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../public/favicons/favicon.ico"
+    />
+
+    <title>TaskGo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+  </head>
+
+  <body
+    class="bg-gray-900 flex justify-center py-8 font-montserrat min-h-screen"
+  >
+    <div
+      class="w-full max-w-xs bg-primary-100 rounded-3xl shadow-xl overflow-hidden flex flex-col"
+    >
+      <header
+        class="bg-primary-200 px-4 py-3 flex items-center justify-between"
+      >
+        <div class="flex items-center">
+          <div
+            class="rounded-full bg-white flex items-center justify-center overflow-hidden"
+            style="width: 100px; height: 100px"
+          >
+            <img
+              src="/public/images/taskgo-logo.png"
+              alt="TaskGo logo"
+              class="object-contain"
+              style="width: 100px; height: 100px"
+            />
+          </div>
+        </div>
+
+        <h1 class="text-base font-bold text-dark-900">Đơn đặt liền</h1>
+
+        <div class="w-10 h-10 flex items-center justify-center">
+          <a href=""
+            ><span class="material-symbols-outlined text-primary-500 text-4xl"
+              >menu</span
+            ></a
+          >
+        </div>
+      </header>
+      <main class="flex-1 px-4 pt-6 pb-5 flex flex-col gap-4">
+        <section
+          class="bg-white rounded-2xl shadow-md px-4 py-5 flex flex-col gap-4"
+        >
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">Nguyễn Minh An</h2>
+          </div>
+
+          <div class="border-t border-gray-100"></div>
+
+          <div class="flex flex-col gap-3 text-sm text-gray-700">
+            <div class="flex items-start gap-3">
+              <span
+                class="material-symbols-outlined text-primary-400 text-xl mt-[1px]"
+              >
+                location_on
+              </span>
+              <p>45 Nguyễn Văn Linh, Q.7</p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span
+                class="material-symbols-outlined text-primary-400 text-xl mt-[1px]"
+              >
+                cleaning_services
+              </span>
+              <p>Dọn dẹp nhà</p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span
+                class="material-symbols-outlined text-primary-400 text-xl mt-[1px]"
+              >
+                schedule
+              </span>
+              <p>14:30 - 16:30 hôm nay</p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span
+                class="material-symbols-outlined text-primary-400 text-xl mt-[1px]"
+              >
+                payments
+              </span>
+              <p>100.000 VND/2h</p>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <span
+                class="material-symbols-outlined text-primary-400 text-xl mt-[1px]"
+              >
+                description
+              </span>
+              <p>Mang theo cây lau nhà</p>
+            </div>
+          </div>
+        </section>
+        <div class="bg-white rounded-2xl shadow-md py-3 px-4 text-center">
+          <p class="text-sm text-gray-900">
+            Còn <span class="font-semibold">60s</span> để phản hồi
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            class="w-full bg-primary-400 text-white py-3 rounded-2xl text-base font-semibold hover:bg-primary-500 transition-colors"
+          >
+            Nhận đơn
+          </button>
+          <button
+            class="w-full bg-primary-400 text-white py-3 rounded-2xl text-base font-semibold hover:bg-primary-500 transition-colors"
+          >
+            Từ chối
+          </button>
+        </div>
+      </main>
+
+      <footer class="bg-primary-200 border-t border-primary-400">
+        <nav class="flex justify-around py-2 text-xs">
+          <a href="#" class="flex flex-col items-center text-white">
+            <span class="material-symbols-outlined text-2xl">house</span>
+            Trang chủ
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-2xl">news</span>
+            Hoạt động
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-2xl">chat</span>
+            Tin nhắn
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-2xl"
+              >notifications</span
+            >
+            Thông báo
+          </a>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
