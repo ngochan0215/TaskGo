@@ -20,6 +20,7 @@ module.exports = {
           500: '#FFBE18', //warning yellow
         },
         gray: {
+          100: '#60655C',
           400: '#969496',
         },
         dark: {

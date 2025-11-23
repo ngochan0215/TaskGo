@@ -28,3 +28,12 @@
   @apply hover:bg-primary-500 hover:shadow-xl;
   transition: all 0.3s ease;
 }
+
+.quantity-action-btn {
+  @apply w-6 h-6 px-4 rounded-full text-gray-400 bg-white flex items-center justify-center border text-lg;
+}
+
+.quantity-action-btn-hover {
+  @apply hover:bg-gray-400 hover:text-white;
+  transition: all 0.3s ease;
+}
