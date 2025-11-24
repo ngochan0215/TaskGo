@@ -20,6 +20,7 @@
   "homepage": "https://github.com/ngochan0215/TaskGo#readme",
   "dependencies": {
     "@tailwindcss/cli": "^4.1.16",
+    "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.2",
