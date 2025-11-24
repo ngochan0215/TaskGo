@@ -27,58 +27,33 @@
     </header>
 
     <main class="p-4 space-y-4 pb-32">
-        <!-- Địa chỉ -->
-        <a href="./address_change.html"
-            class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 text-gray-400 font-medium hover:bg-gray-50">
-            <span class="flex items-center space-x-2">
-                <span class="material-symbols-outlined text-gray-100 text-xl">location_on</span>
-                <span>Địa chỉ</span>
-            </span>
-            <span class="material-symbols-outlined text-gray-400">chevron_right</span>
-        </a>
-        
-        <!-- Phương thức thanh toán -->
-        <a href="./method_change.html"
-            class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 text-gray-400 font-medium hover:bg-gray-50">
-            <span class="flex items-center space-x-2">
-                <span class="material-symbols-outlined text-gray-100 text-xl">credit_card</span>
-                <span>Phương thức thanh toán</span>
-            </span>
-            <span class="material-symbols-outlined text-gray-400">chevron_right</span>
-        </a>
+        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+            <div class="flex justify-between items-center relative">
 
-        <!-- Tổng tiền -->
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-2 text-base">
-            <!-- Tổng tiền dịch vụ -->
-            <div class="flex justify-between">
-                <span class="text-gray-100">Tổng tiền dịch vụ</span>
-                <span class="font-semibold text-gray-100">500.000</span>
+                <a href="./payment_confirmation.html" class="text-gray-100 font-medium hover:text-primary-darker">
+                    Thoát
+                </a>
+
+                <h2 class="text-lg font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2">
+                    Thay đổi địa chỉ
+                </h2>
+
+                <a href="./payment_confirmation.html" class="text-secondary-100 font-bold">
+                    Lưu
+                </a>
+
+            </div>
+            <!-- Nhập địa chỉ -->
+            <div class="flex justify-between items-center space-x-4">
+                <input type="text" placeholder="Nhập địa chỉ"
+                    class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-primary-500" />
             </div>
 
-            <!-- Voucher -->
-            <div class="flex justify-between">
-                <span class="text-gray-100">Mã giảm</span>
-                <span class="font-semibold text-gray-100">-40.000</span>
-            </div>
-
-            <!-- Phí dịch vụ -->
-            <div class="flex justify-between border-b border-gray-400 pb-2">
-                <span class="text-gray-100">Phí dịch vụ (nếu có)</span>
-                <span class="font-semibold text-gray-100">+30.000</span>
-            </div>
-
-            <div class="flex justify-between text-base pt-2">
-                <span class="font-bold text-dark-900">Tổng tiền</span>
-                <span class="font-bold text-dark-900">490.000</span>
-            </div>
-
-            <div class="flex justify-between items-center space-y-4 space-x-4">
-
-                <p class="text-2xl font-bold text-dark-900">490.000 VND</p>
-
-                <button class="action-btn action-btn-hover">
-                    Xác nhận thanh toán
-                </button>
+            <!-- Nhúng bản đồ -->
+            <div class="rounded-xl shadow-lg overflow-hidden h-64">
+                <iframe
+                    src="https://www.openstreetmap.org/export/embed.html?bbox=106.60%2C10.70%2C106.80%2C10.85&amp;layer=mapnik"
+                    class="w-full h-full" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
             </div>
         </div>
     </main>
