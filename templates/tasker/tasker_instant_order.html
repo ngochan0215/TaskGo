@@ -12,6 +12,7 @@
     />
 
     <title>TaskGo</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -25,14 +26,14 @@
   </head>
 
   <body
-    class="bg-gray-900 flex justify-center py-8 font-montserrat min-h-screen"
+    class="bg-[#95DA97] flex justify-center py-8 font-montserrat min-h-screen"
   >
+    <!-- Khung "điện thoại" -->
     <div
-      class="w-full max-w-xs bg-primary-100 rounded-3xl shadow-xl overflow-hidden flex flex-col"
+      class="w-full max-w-xs bg-[#EAFED9] rounded-3xl shadow-xl overflow-hidden flex flex-col"
     >
-      <header
-        class="bg-primary-200 px-4 py-3 flex items-center justify-between"
-      >
+      <!-- HEADER -->
+      <header class="bg-[#95DA97] px-4 py-3 flex items-center justify-between">
         <div class="flex items-center">
           <div
             class="rounded-full bg-white flex items-center justify-center overflow-hidden"
@@ -47,109 +48,135 @@
           </div>
         </div>
 
-        <h1 class="text-base font-bold text-dark-900">Đơn đặt liền</h1>
+        <h1 class="text-base font-bold text-[#16411F]">Đơn đặt liền</h1>
 
         <div class="w-10 h-10 flex items-center justify-center">
-          <a href=""
-            ><span class="material-symbols-outlined text-primary-500 text-4xl"
-              >menu</span
-            ></a
-          >
+          <a href="#">
+            <span class="material-symbols-outlined text-[#16411F] text-3xl">
+              menu
+            </span>
+          </a>
         </div>
       </header>
-      <main class="flex-1 px-4 pt-6 pb-5 flex flex-col gap-4">
+
+      <!-- MAIN -->
+      <main class="flex-1 pt-6 pb-6 flex flex-col gap-4">
+        <!-- CARD ĐƠN -->
         <section
-          class="bg-white rounded-2xl shadow-md px-4 py-5 flex flex-col gap-4 max-w-xs mx-auto"
+          class="bg-[#FFFFFF] rounded-[32px] shadow-md px-5 py-5 flex flex-col gap-4 w-[90%] mx-auto"
         >
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary-400 text-xl">
+            <span class="material-symbols-outlined text-[#16411F] text-xl">
               person
             </span>
-            <h2 class="text-lg font-bold text-gray-900">Nguyễn Minh An</h2>
+            <h2 class="text-lg font-bold text-[#16411F]">Nguyễn Minh An</h2>
           </div>
 
           <div class="border-t border-gray-100"></div>
 
-          <div class="flex flex-col gap-3 text-sm text-gray-700">
+          <div class="flex flex-col gap-3 text-sm text-gray-800">
+            <div class="flex items-center gap-3">
+              <span
+                class="material-symbols-outlined text-[#16411F] text-xl mt-[1px]"
+              >
+                location_on
+              </span>
+              <p class="text-sm text-gray-700 flex-1">
+                45 Nguyễn Văn Linh, Quận 7
+              </p>
+            </div>
 
-<div class="flex items-center gap-3">
-  <span class="material-symbols-outlined text-primary-400 text-xl w-5 text-center">
-    location_on
-  </span>
-  <p class="text-sm text-gray-700 flex-1">
-    45 Nguyễn Văn Linh, Quận 7
-  </p>
-</div>
+            <div class="flex items-center gap-3">
+              <span
+                class="material-symbols-outlined text-[#16411F] text-xl mt-[1px]"
+              >
+                cleaning_services
+              </span>
+              <p class="text-sm text-gray-700 flex-1">Dọn dẹp nhà</p>
+            </div>
 
-<div class="flex items-center gap-3">
-  <span class="material-symbols-outlined text-primary-400 text-xl w-5 text-center">
-    cleaning_services
-  </span>
-  <p class="text-sm text-gray-700 flex-1">
-    Dọn dẹp nhà
-  </p>
-</div>
+            <div class="flex items-center gap-3">
+              <span
+                class="material-symbols-outlined text-[#16411F] text-xl mt-[1px]"
+              >
+                schedule
+              </span>
+              <p class="text-sm text-gray-700 flex-1">14:30 – 16:30 hôm nay</p>
+            </div>
 
-<div class="flex items-center gap-3">
-  <span class="material-symbols-outlined text-primary-400 text-xl w-5 text-center">
-    schedule
-  </span>
-  <p class="text-sm text-gray-700 flex-1">
-    9:00 – 11:00 | 20/10/2025
-  </p>
-</div>
+            <div class="flex items-center gap-3">
+              <span
+                class="material-symbols-outlined text-[#16411F] text-xl mt-[1px]"
+              >
+                payments
+              </span>
+              <p class="text-sm text-gray-700 flex-1">100.000 VND/2h</p>
+            </div>
 
-<div class="flex items-center gap-3">
-  <span class="material-symbols-outlined text-primary-400 text-xl w-5 text-center">
-    payments
-  </span>
-  <p class="text-sm text-gray-700 flex-1">
-    100.000 VND/2h
-  </p>
-</div>
-
-<div class="flex items-center gap-3">
-  <span class="material-symbols-outlined text-primary-400 text-xl w-5 text-center">
-    description
-  </span>
-  <p class="text-sm text-gray-700 flex-1">
-    Lau cửa sổ, mang cây lau nhà
-  </p>
-</div>
-
-
-          <div class="grid grid-cols-2 gap-3 pt-2">
-            <button
-              class="w-full bg-primary-400 text-white py-3 rounded-2xl text-base font-semibold hover:bg-primary-500 transition-colors"
-            >
-              Nhận đơn
-            </button>
-            <button
-              class="w-full bg-primary-400 text-white py-3 rounded-2xl text-base font-semibold hover:bg-primary-500 transition-colors"
-            >
-              Từ chối
-            </button>
+            <div class="flex items-center gap-3">
+              <span
+                class="material-symbols-outlined text-[#16411F] text-xl mt-[1px]"
+              >
+                description
+              </span>
+              <p class="text-sm text-gray-700 flex-1">Mang theo cây lau nhà</p>
+            </div>
           </div>
         </section>
+        <br />
+        <div
+          class="bg-[#FFFFFF] rounded-full shadow-md px-4 py-3 w-[70%] mx-auto text-center"
+        >
+          <p class="text-sm text-gray-800">
+            Còn <span class="font-semibold">60s</span> để phản hồi
+          </p>
+        </div>
+        <br />
+        <div class="flex justify-between gap-4 pt-1 w-[90%] mx-auto">
+          <button
+            class="w-[47%] bg-[#5C956C] text-[#FFFFFF] py-3 rounded-full text-base font-semibold shadow-md hover:bg-[#3B5F43] transition-colors"
+          >
+            Nhận đơn
+          </button>
+          <button
+            class="w-[47%] bg-[#5C956C] text-[#FFFFFF] py-3 rounded-full text-base font-semibold shadow-md hover:bg-[#3B5F43] transition-colors"
+          >
+            Từ chối
+          </button>
+        </div>
       </main>
-      <footer class="bg-primary-200 border-t border-primary-400">
+
+      <!-- FOOTER -->
+      <footer class="bg-[#95DA97] border-t border-[#5C956C]">
         <nav class="flex justify-around py-2 text-xs">
-          <a href="#" class="flex flex-col items-center text-white">
-            <span class="material-symbols-outlined text-2xl">house</span>
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">home</span>
             Trang chủ
           </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
+          <a
+            href="#"
+            class="flex flex-col items-center text-white font-semibold no-underline"
+          >
             <span class="material-symbols-outlined text-2xl">news</span>
             Hoạt động
           </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
             <span class="material-symbols-outlined text-2xl">chat</span>
             Tin nhắn
           </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
-            <span class="material-symbols-outlined text-2xl"
-              >notifications</span
-            >
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">
+              notifications
+            </span>
             Thông báo
           </a>
         </nav>
