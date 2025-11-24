@@ -9,15 +9,6 @@
 .mx-auto {
   margin-inline: auto;
 }
-.mt-\[1px\] {
-  margin-top: 1px;
-}
-.mt-\[2px\] {
-  margin-top: 2px;
-}
-.mt-auto {
-  margin-top: auto;
-}
 .flex {
   display: flex;
 }
@@ -26,9 +17,6 @@
 }
 .hidden {
   display: none;
-}
-.h-full {
-  height: 100%;
 }
 .min-h-screen {
   min-height: 100vh;
@@ -39,29 +27,17 @@
 .flex-1 {
   flex: 1;
 }
-.flex-shrink {
-  flex-shrink: 1;
-}
-.flex-shrink-0 {
-  flex-shrink: 0;
-}
 .grid-cols-2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-.grid-cols-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
 .flex-col {
   flex-direction: column;
 }
 .items-center {
   align-items: center;
-}
-.items-start {
-  align-items: flex-start;
 }
 .justify-around {
   justify-content: space-around;
@@ -77,10 +53,6 @@
 }
 .rounded-full {
   border-radius: calc(infinity * 1px);
-}
-.border {
-  border-style: var(--tw-border-style);
-  border-width: 1px;
 }
 .border-2 {
   border-style: var(--tw-border-style);
@@ -108,9 +80,6 @@
 }
 .opacity-70 {
   opacity: 70%;
-}
-.opacity-80 {
-  opacity: 80%;
 }
 .transition-colors {
   transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
