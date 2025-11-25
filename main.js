@@ -13,6 +13,7 @@ import orderRoutes from "./routes/order.route.js";
 import taskRoutes from "./routes/task.route.js";
 import taskerRoutes from "./routes/tasker.route.js";
 import discountRoutes from "./routes/discount.route.js";
+import chatRoutes from "./routes/chat.route.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/order", orderRoutes);
 app.use("/api/task", taskRoutes);
 app.use("/api/tasker", taskerRoutes);
 app.use("/api/discount", discountRoutes);
+app.use("/api/chats", chatRoutes);
 
 // Wrap express server in httpServer
 const httpServer = http.createServer(app);
