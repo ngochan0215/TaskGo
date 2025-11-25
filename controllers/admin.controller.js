@@ -1,29 +1,75 @@
-import User from "../models/users.js";
-import Account from "../models/accounts.js";
-import Tasker from "../models/taskers.js";
-import Customer from "../models/customers.js";
+import { User, Account, Tasker, Customer } from "../models/index.js";
 
 // Show all taskers in the system along with their information
 export const getAllTaskers = async (req, res) => {
   try {
-    const taskers = await Tasker.find()
-      .select("-__v")
+    const { 
+      status,            
+      working_status,   
+      sort_by = "created_at", 
+      sort_dir = "asc", 
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (working_status) filter.working_status = working_status;
+
+    const taskers = await Tasker.find(filter)
       .populate({
         path: "user_id",
-        select: "-_id",
+        select: "full_name phone_number identification avatar_url"
+      })
+      .populate({
+        path: "user_id",
         populate: {
           path: "account_id",
-          select: "email status -_id",
-        },
-      });
+          select: "email status is_verified"
+        }
+      })
+      .sort({ [sort_by]: sort_dir === "desc" ? -1 : 1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
 
-    res.status(200).json(taskers);
+    const total = await Tasker.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      data: taskers
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "SERVER ERROR", error: error.message });
+    console.error("Get all taskers error:", error);
+    res.status(500).json({ success: false, message: "Server error", error });
   }
 };
 
+// export const getAllTaskerss = async (req, res) => {
+//   try {
+//     const taskers = await Tasker.find()
+//       .select("-__v")
+//       .populate({
+//         path: "user_id",
+//         select: "-_id",
+//         populate: {
+//           path: "account_id",
+//           select: "email status -_id",
+//         },
+//       });
+
+//     res.status(200).json(taskers);
+//   } catch (error) {
+//     res.status(500).json({ message: "SERVER ERROR", error: error.message });
+//   }
+// };
+
 // Show all customers in the system along with their information
+
 export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find()
@@ -43,7 +89,6 @@ export const getAllCustomers = async (req, res) => {
   }
 };
 
-// Update tasker profile, includes: Lương cơ bản, tình trạng tài khoản, tình trạng làm việc
 export const updateTaskerProfile = async (req, res) => {
   try {
     const { taskerId } = req.params;
@@ -60,7 +105,6 @@ export const updateTaskerProfile = async (req, res) => {
       return res.status(404).json({ message: "Tasker not found." });
     }
 
-    // validation a bit
     if (hourly_rate !== undefined) {
       if (typeof hourly_rate !== "number" || hourly_rate < 0) {
         return res.status(400).json({ message: "Invalid hourly_rate value." });
@@ -102,4 +146,45 @@ export const updateTaskerProfile = async (req, res) => {
     res.status(500).json({ message: "SERVER ERROR: ", error: error.message });
   }
 };
+
+export const approveTasker = async (req, res) => {
+  try {
+    const { taskerId } = req.params;
+
+    const tasker = await Tasker.findById(taskerId).populate("user_id");
+    if (!tasker) return res.status(404).json({ message: "Tasker not found" });
+
+    tasker.status = "working";        
+    tasker.working_status = "available";
+    await tasker.save();
+
+    await Account.updateOne(
+      { user_id: tasker.user_id._id },
+      { status: "active" }
+    );
+
+    res.json({ message: "Tasker approved successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const rejectTasker = async (req, res) => {
+  const { taskerId } = req.params;
+
+  await Tasker.findByIdAndUpdate(taskerId, {
+    status: "pending",
+    working_status: "inactive",
+  });
+
+  await Account.updateOne(
+      { user_id: tasker.user_id._id },
+      { status: "inactive" }
+    );
+
+  res.json({ message: "Tasker rejected and kept inactive" });
+};
+
 

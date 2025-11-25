@@ -2,19 +2,19 @@ import mongoose, { trusted } from "mongoose";
 
 const discountSchema = new mongoose.Schema(
   {
-    discount_name: { type: String, required: true, unique: true, trim: true },
+    name: { type: String, required: true, unique: true, trim: true },
     description: { type: String, required: true },
     percentage: { type: Number, required: true, min: 0, max: 100 },
     begin_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
     appliesTo: {
       type: {
-        kind: { type: String, enum: ["service", "task", "order", "bill"] },
+        kind: { type: String, enum: ["service", "task", "order", "receipt"] },
         refId: { type: mongoose.Schema.Types.ObjectId, refPath: "appliesTo.kind" },
       },
       required: true,
     },
-    status: { type: String, enum: ["active", "inactive"] },
+    status: { type: String, enum: ["upcoming", "ongoing", "completed"], default: "ongoing" },
   },
   { timestamps: true }
 );

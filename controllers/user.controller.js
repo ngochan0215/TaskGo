@@ -1,8 +1,4 @@
-import User from "../models/users.js";
-import Account from "../models/accounts.js";
-import Customer from "../models/customers.js";
-import Tasker from "../models/taskers.js";
-
+import { User, Account, Tasker, Customer } from "../models/index.js";
 import bcrypt from "bcrypt";
 import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";
 
@@ -63,15 +59,14 @@ export const updateUserProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: "Account not found" });
     }
 
-    const { full_name, phone_number, identification, avatar_url } = req.body;
-    if (!full_name && !phone_number && !identification && !avatar_url) {
+    const { full_name, phone_number, identification } = req.body;
+    if (!full_name && !phone_number && !identification ) {
       throw new Error("At least one field is required to update");
     }
 
     if (full_name) user.full_name = full_name;
     if (phone_number) user.phone_number = phone_number;
     if (identification) user.identification = identification;
-    if (avatar_url) user.avatar_url = avatar_url;
     await user.save();
 
     if (account.role == "tasker") {
@@ -88,7 +83,6 @@ export const updateUserProfile = async (req, res) => {
       if (introduction) tasker.introduction = introduction;
       if (working_area) tasker.working_area = working_area;
       await tasker.save();
-
     }
 
     return res.status(200).json({ success: true, message: "Profile updated successfully" });
@@ -99,66 +93,93 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-export const changePassword = async (req, res) => {
+export const updateAvatar = async (req, res) => {
   try {
-      const { oldPassword, newPassword } = req.body;
+    const userId = req.userId;
 
-      const user = await User.findById(req.userId);
-      if (!user) {
-        return res.status(400).json({ success: false, message: "User not found" });
-      }
+    if (!req.file || !req.file.path) {
+      return res.status(400).json({ message: "Không có file nào được chọn." });
+    }
 
-      const account = await Account.findById(user.account_id).select("+password_hash");
-      if (!account) {
-        return res.status(400).json({ success: false, message: "Account not found" });
-      }
+    const avatarUrl = req.file.path;
 
-      const isMatch = await bcrypt.compare(oldPassword, account.password_hash);
-      if(!isMatch) {
-        return res.status(400).json({ message: "Incorrect old password." });
-      }
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { avatar_url: avatarUrl },
+      { new: true }
+    );
 
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: "Password must be at least 6 characters long" });
-      }
-
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      account.password_hash = hashedPassword;
-      await account.save();
-      res.json({ message: "Change password successfully."})
+    res.status(200).json({
+      success: true,
+      message: "Cập nhật avatar thành công",
+      avatar: updatedUser.avatar,
+    });
 
   } catch (error) {
-      res.status(500).json({message: "SERVER ERROR: ", error: error.message });
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "User not found" });
+    }
+
+    const account = await Account.findById(user.account_id).select("+password_hash");
+    if (!account) {
+      return res.status(400).json({ success: false, message: "Account not found" });
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, account.password_hash);
+    if(!isMatch) {
+      return res.status(400).json({ message: "Incorrect old password." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    account.password_hash = hashedPassword;
+    await account.save();
+    res.json({ message: "Change password successfully."})
+
+  } catch (error) {
+    res.status(500).json({message: "SERVER ERROR: ", error: error.message });
   }
 };
 
 export const sendEmail = async (req, res) => {
-    try {
-        const { newEmail } = req.body;
+  try {
+    const { newEmail } = req.body;
 
-        const user = await User.findById(req.userId);
-        if (!user) {
-          return res.status(400).json({ success: false, message: "User not found" });
-        }
-
-        const account = await Account.findById(user.account_id);
-        if (!account) {
-          return res.status(400).json({ success: false, message: "Account not found" });
-        }
-
-        const otp = (Math.floor(100000 + Math.random() * 900000)).toString();
-        account.changeEmailOTP = otp;
-        account.changeEmailOTPExpiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
-        account.changeEmailAddress = newEmail;
-
-        await account.save();
-        await sendVerificationEmailUpdateProfile(newEmail, otp);
-
-        res.json({ message: "Successfully send verification email for updating profile." });
-
-    } catch (error) {
-        res.status(500).json({ message: "SERVER ERROR: ", error: error.message });
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "User not found" });
     }
+
+    const account = await Account.findById(user.account_id);
+    if (!account) {
+      return res.status(400).json({ success: false, message: "Account not found" });
+    }
+
+    const otp = (Math.floor(100000 + Math.random() * 900000)).toString();
+    account.changeEmailOTP = otp;
+    account.changeEmailOTPExpiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    account.changeEmailAddress = newEmail;
+
+    await account.save();
+    await sendVerificationEmailUpdateProfile(newEmail, otp);
+
+    res.json({ message: "Successfully send verification email for updating profile." });
+
+  } catch (error) {
+    res.status(500).json({ message: "SERVER ERROR: ", error: error.message });
+  }
 };
 
 export const verifyEmail = async (req, res) => {
