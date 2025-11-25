@@ -5,18 +5,18 @@ import Chat from "../models/chats.js";
 
 export async function createNewChatForOrder(order_id) {
   if (!mongoose.Types.ObjectId.isValid(order_id))
-    throw new Error("Invalid order id");
+    throw new Error("invalid_order_id");
   const order = await Order.findById(order_id).exec();
-  if (!order) throw new Error("Order not found");
+  if (!order) throw new Error("order_not_found");
   if (order.status !== "accepted" && order.status !== "in_progress")
-    throw new Error("Can't create new chat for pending or completed orders");
+    throw new Error("invalid_order_state");
 
   const customer = await Account.findOne({ user_id: order.customer_id }).exec();
   const tasker = await Account.findOne({ user_id: order.tasker_id }).exec();
 
-  if (!customer || !tasker) throw new Error("Participant account not found");
+  if (!customer || !tasker) throw new Error("participant_not_found");
   if (customer.role !== "customer" || tasker.role !== "tasker")
-    throw new Error("Only allow chat between customer and tasker");
+    throw new Error("invalid_participant_roles");
 
   const chat = await Chat.findOneAndUpdate(
     { order_id: order._id },

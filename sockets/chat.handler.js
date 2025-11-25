@@ -19,12 +19,12 @@ export default function registerChatHandlers(io) {
       try {
         const { order_id } = payload || {}; // prevent null destructuring
         if (!order_id)
-          return ack && ack({ ok: false, error: "order_id_required" });
+          return ack && ack({ ok: false, error: "invalid_order_id" });
 
         let order = await Order.findById(order_id);
         if (!order) return ack && ack({ ok: false, error: "order_not_found" });
 
-        let targetChat = await Chat.findOne({ order_id: order._id }).exec();
+        const targetChat = await Chat.findOne({order_id: order_id});
         if (
           !targetChat &&
           (order.status === "accepted" || order.status === "in_progress")
