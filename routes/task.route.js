@@ -5,9 +5,10 @@ import {
 	getTaskById,
     updateService,
     deleteService,
-	listTasks,
+	getAllTasks,
 	updateTask,
 	deleteTask,
+	getAllServices
 } from "../controllers/task.controller.js";
 import { isAdmin } from "../middleware/verifyRole.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -25,7 +26,8 @@ router.patch('/task/update/:id', verifyToken, isAdmin, updateTask);
 router.delete('/task/delete/:id', verifyToken, isAdmin, deleteTask);
 
 // users can see all tasks and services
-router.get('/task', listTasks);
-router.get('/task/:id', getTaskById);
+router.get('/task', verifyToken, getAllTasks);
+router.get('/task/:id', verifyToken, getTaskById);
+router.get('/service', verifyToken, getAllServices);
 
 export default router;

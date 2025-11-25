@@ -2,6 +2,7 @@ import bcryptjs from "bcryptjs";
 import crypto from "crypto";
 import { User, Account, Tasker, Customer } from "../models/index.js";
 import { generateTokenAndSetCookie } from "../utils/generateTokenAndSetCookie.js";
+import { defaultAvatars } from "../config/avatars.js";
 import {
   sendVerificationEmail,
   sendWelcomeEmail,
@@ -12,7 +13,7 @@ import {
 export const signup = async (req, res) => {
   try {
     const { full_name, email, phone_number, identification, password, role } = req.body;
-    // check validation
+
     if (!full_name || !email || !phone_number || !identification || !password || !role) {
       throw new Error("All fields are required");
     }
@@ -30,19 +31,21 @@ export const signup = async (req, res) => {
       return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
     }
 
-    const userAlreadyExists = await Account.findOne({ email });
-    if (userAlreadyExists) {
+    const existingUser = await Account.findOne({ email });
+    if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
     const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    const randomAvatar = defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
 
     // insert user general information first
     const user = new User({
       full_name: full_name,
       phone_number: phone_number,
       identification: identification,
+      avatr_url: randomAvatar,
     });
     await user.save();
 
@@ -54,13 +57,13 @@ export const signup = async (req, res) => {
       role: role,
       verificationToken,
       verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      status: "inactive",
     });
     await account.save();
 
     user.account_id = account._id;
     await user.save();
 
-    // insert the others information, clarify by customer or tasker
     if (role == "customer") {
       const customer = new Customer({ user_id: user._id });
       await customer.save();
@@ -71,7 +74,10 @@ export const signup = async (req, res) => {
         user_id: user._id,
         introduction: introduction,
         working_area: working_area,
+        status: "pending",
+        working_status: "inactive",
       });
+
       await tasker.save();
     }
 
@@ -80,7 +86,9 @@ export const signup = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "User created successfully",
+      message: role === "tasker"
+        ? "Tasker registered. Waiting for admin approval."
+        : "Customer registered successfully.",
       user,
     });
   } catch (error) {
@@ -91,7 +99,6 @@ export const signup = async (req, res) => {
 
 export const verifyEmail = async (req, res) => {
   try {
-    // code is the otp code sent in email
     const { code } = req.body;
     if (!code) {
       throw new Error("All fields are required");
@@ -134,6 +141,10 @@ export const login = async (req, res) => {
     const account = await Account.findOne({ email });
     if (!account) {
       return res.status(400).json({ success: false, message: "Invalid email!" });
+    }
+
+    if (account.status !== "active") {
+      return res.status(400).json({ success: false, message: "Account is not active. Please verify your email or contact support." });
     }
 
     const user = await User.findById(account.user_id);
@@ -239,3 +250,5 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
+
