@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskGo - Trang chủ</title>
 
-    <link rel="stylesheet" type="text/css" href="../../../public/css/output.css">
+    <link rel="stylesheet" href="../../../public/css/output.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
-
 <body class="bg-primary-100 min-h-screen font-montserrat">
 
 <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
@@ -18,9 +17,7 @@
         <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
             <a href="#"><img src="/public/images/taskgo-logo.png" alt=""></a>
         </div>
-
         <h1 class="font-bold text-xl text-dark-900">Trang chủ</h1>
-
         <div class="w-10 h-10 flex items-center justify-center">
             <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
         </div>
@@ -28,77 +25,25 @@
 </header>
 
 <main class="p-4 pb-24">
-    <div class="mb-4">
-        <input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
-               class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">
-    </div>
+    <div id="search-container"></div>
 
-    <!-- Dịch vụ yêu thích -->
     <section class="mb-6">
         <div class="flex justify-between items-center mb-2">
             <h2 class="font-semibold text-dark-900">Dịch vụ yêu thích của bạn</h2>
         </div>
-
-        <div id="favorite-services" class="grid grid-cols-2 gap-3">
-        </div>
+        <div id="favorite-services" class="grid grid-cols-2 gap-3"></div>
     </section>
 
-    <!-- Danh sách dịch vụ -->
     <section class="mb-6">
         <div class="flex justify-between items-center mb-2">
             <h2 class="font-semibold text-dark-900">Các dịch vụ phổ biến</h2>
             <a href="service_listpage.html" class="text-primary-500 text-sm cursor-pointer">Xem thêm →</a>
         </div>
-
-        <div id="service-list" class="grid grid-cols-2 gap-3">
-            <div class="service-item relative" data-name="Dọn dẹp nhà cửa" data-img="/public/images/dondepnhacua.jpeg">
-                <img src="/public/images/dondepnhacua.jpeg" class="rounded-xl w-full h-48 object-cover">
-                <button class="heart-btn absolute top-2 right-2">
-                    <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-                </button>
-                <p class="mt-1 text-sm font-medium">Dọn dẹp nhà cửa</p>
-            </div>
-
-            <div class="service-item relative" data-name="Sơn lại nhà cửa" data-img="/public/images/sonlainhacua.jpeg">
-                <img src="/public/images/sonlainhacua.jpeg" class="rounded-xl w-full h-48 object-cover">
-                <button class="heart-btn absolute top-2 right-2">
-                    <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-                </button>
-                <p class="mt-1 text-sm font-medium">Sơn lại nhà cửa</p>
-            </div>
-
-            <div class="service-item relative" data-name="Vệ sinh thảm và sofa" data-img="/public/images/vesinhthamvasofa.jpeg">
-                <img src="/public/images/vesinhthamvasofa.jpeg" class="rounded-xl w-full h-48 object-cover">
-                <button class="heart-btn absolute top-2 right-2">
-                    <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-                </button>
-                <p class="mt-1 text-sm font-medium">Vệ sinh thảm và sofa</p>
-            </div>
-
-            <div class="service-item relative" data-name="Phân loại đồ đạc" data-img="/public/images/phanloaidodac.jpg">
-                <img src="/public/images/phanloaidodac.jpg" class="rounded-xl w-full h-48 object-cover">
-                <button class="heart-btn absolute top-2 right-2">
-                    <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-                </button>
-                <p class="mt-1 text-sm font-medium">Phân loại đồ đạc</p>
-            </div>
-        </div>
+        <div id="service-list" class="grid grid-cols-2 gap-3"></div>
     </section>
 
-    <!-- Banner -->
     <section class="mb-6">
-        <div class="relative">
-            <img src="/public/images/dichvudondep.png"
-                 class="rounded-2xl w-full h-60 object-cover shadow-lg">
-
-            <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
-                Dịch vụ dọn dẹp <br> trọn gói <br> ...
-            </div>
-
-            <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
-                Khám phá ngay
-            </button>
-        </div>
+        <div id="banner-container"></div>
     </section>
 
     <div class="text-center pb-10">
@@ -131,39 +76,77 @@
 </footer>
 
 <script>
-    const favoriteContainer = document.getElementById("favorite-services");
+const searchContainer = document.getElementById("search-container");
+const inputDiv = document.createElement("div");
+inputDiv.className = "mb-4";
+inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
+               class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
+searchContainer.appendChild(inputDiv);
 
-    document.querySelectorAll(".heart-btn").forEach(btn => {
-        btn.addEventListener("click", function () {
-            const heart = this.querySelector(".heart-icon");
-            const item = this.closest(".service-item");
-            const name = item.dataset.name;
-            const img = item.dataset.img;
+const services = [
+    {name: "Dọn dẹp nhà cửa", img: "/public/images/dondepnhacua.jpeg"},
+    {name: "Sơn lại nhà cửa", img: "/public/images/sonlainhacua.jpeg"},
+    {name: "Vệ sinh thảm và sofa", img: "/public/images/vesinhthamvasofa.jpeg"},
+    {name: "Phân loại đồ đạc", img: "/public/images/phanloaidodac.jpg"},
+];
 
-            const isFavorited = heart.classList.contains("text-red-500");
+const serviceList = document.getElementById("service-list");
+services.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "service-item relative";
+    div.dataset.name = s.name;
+    div.dataset.img = s.img;
+    div.innerHTML = `
+        <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
+        <button class="heart-btn absolute top-2 right-2">
+            <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
+        </button>
+        <p class="mt-1 text-sm font-medium">${s.name}</p>
+    `;
+    serviceList.appendChild(div);
+});
 
-            if (!isFavorited) {
-                heart.classList.add("text-red-500");
+const bannerContainer = document.getElementById("banner-container");
+bannerContainer.innerHTML = `
+    <div class="relative">
+        <img src="/public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
+        <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
+            Dịch vụ dọn dẹp <br> trọn gói <br> ...
+        </div>
+        <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
+            Khám phá ngay
+        </button>
+    </div>
+`;
 
-                const favHTML = `
-                    <div class="service-item">
-                        <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-                        <p class="mt-1 text-sm font-medium">${name}</p>
-                    </div>
-                `;
+const favoriteContainer = document.getElementById("favorite-services");
+document.addEventListener("click", e => {
+    const btn = e.target.closest(".heart-btn");
+    if (!btn) return;
 
-                favoriteContainer.innerHTML += favHTML;
+    const heart = btn.querySelector(".heart-icon");
+    const item = btn.closest(".service-item");
+    const name = item.dataset.name;
+    const img = item.dataset.img;
 
-            } else {
-                heart.classList.remove("text-red-500");
+    const existingFav = Array.from(favoriteContainer.children)
+        .find(c => c.querySelector("p").innerText === name);
 
-                favoriteContainer.innerHTML = Array.from(favoriteContainer.children)
-                    .filter(c => c.querySelector("p").innerText !== name)
-                    .map(c => c.outerHTML)
-                    .join("");
-            }
-        });
-    });
+    if (!existingFav) {
+        heart.style.color = "red";
+        const favItem = document.createElement("div");
+        favItem.className = "service-item";
+        favItem.innerHTML = `
+            <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+            <p class="mt-1 text-sm font-medium">${name}</p>
+        `;
+        favoriteContainer.appendChild(favItem);
+    } else {
+        heart.style.color = "white"; // Toggle lại
+        favoriteContainer.removeChild(existingFav);
+    }
+});
+
 </script>
 
 </body>
