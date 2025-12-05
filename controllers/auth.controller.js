@@ -27,10 +27,6 @@ export const signup = async (req, res) => {
       return res.status(400).json({ success: false, message: "Identification must includes only 12 numbers." });
     }
 
-    if (password.length < 6) {
-      return res.status(400).json({ success: false, message: "Password must be at least 6 characters long" });
-    }
-
     const existingUser = await Account.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "User already exists" });
@@ -56,7 +52,7 @@ export const signup = async (req, res) => {
       password_hash: hashedPassword,
       role: role,
       verificationToken,
-      verificationTokenExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      verificationTokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
       status: "inactive",
     });
     await account.save();
@@ -90,10 +86,49 @@ export const signup = async (req, res) => {
         ? "Tasker registered. Waiting for admin approval."
         : "Customer registered successfully.",
       user,
+
     });
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ success: false, message: "SERVER ERROR: ", error });
+  }
+};
+
+export const resendVerificationToken = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required" });
+    }
+
+    const account = await Account.findOne({ email });
+    if (!account) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (account.status === "active") {
+      return res.status(400).json({
+        success: false,
+        message: "This account is already verified"
+      });
+    }
+
+    const newVerificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+    account.verificationToken = newVerificationToken;
+    account.verificationTokenExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+    await account.save();
+
+    await sendVerificationEmail(account.email, newVerificationToken);
+
+    return res.status(200).json({
+      success: true,
+      message: "A new verification code has been sent to your email."
+    });
+
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    res.status(500).json({ success: false, message: "SERVER ERROR", error });
   }
 };
 

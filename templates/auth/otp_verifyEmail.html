@@ -7,7 +7,7 @@
     <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
     <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 
-    <title>Xác thực OTP</title>
+    <title>Xác thực email</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,15 +48,18 @@
 <div class="w-full max-w-md bg-white shadow-lg rounded-2xl p-8 border border-gray-200">
 
     <div class="mb-6">
-        <a href="forgot-password.html" class="inline-block p-1 mb-6 -ml-2 text-gray-500 hover:text-dark-900 transition-colors">
+        <a href="login-signup.html" class="inline-block p-1 mb-6 -ml-2 text-gray-500 hover:text-dark-900 transition-colors">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15 19L8 12L15 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
         </a>
 
-        <h1 class="text-2xl font-bold text-dark-900 mb-3" id="otp-title">Nhập mã xác thực</h1>
+        <h1 class="text-2xl font-bold text-dark-900 mb-3" id="otp-title">Xác thực email</h1>
         <p class="text-gray-500 text-sm mb-8" id="otp-instruction">
             Vui lòng nhập mã gồm 6 chữ số đã được gửi cho bạn.
+        </p>
+        <p class="text-gray-500 text-sm mb-8" id="otp-instruction">
+            Mã có hiệu lực trong 1h kể từ khi email được gửi.
         </p>
     </div>
 
@@ -81,7 +84,7 @@
             Chưa nhận được mã?
         </p>
         <button id="resend-otp" class="text-primary-400 font-medium disabled:text-gray-400" disabled>
-            Gửi lại sau (<span id="countdown">60</span>s)
+            Gửi lại sau (<span id="countdown">60s</span>)
         </button>
     </div>
 
@@ -168,15 +171,38 @@
         }
     });
 
-    document.getElementById('otp-form').addEventListener('submit', function(e) {
+    document.getElementById('otp-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-
         const otpCode = otpInputs.map(input => input.value).join('');
 
-        if (otpCode.length === OTP_LENGTH) {
-            window.location.href = `reset-password.html`;
-        } else {
-            alert(`Vui lòng nhập đủ mã xác thực ${OTP_LENGTH} chữ số.`);
+        if (otpCode.length !== OTP_LENGTH) {
+            alert(`Vui lòng nhập đủ ${OTP_LENGTH} chữ số.`);
+            return;
+        }
+
+        try {
+            const response = await fetch("http://localhost:3000/api/auth/verify-email", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ code: otpCode })
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                alert(data.message || "Mã xác thực không hợp lệ hoặc đã hết hạn");
+                return;
+            }
+
+            // Xác thực thành công
+            alert("Xác thực email thành công!");
+            window.location.href = "login-signup.html";
+
+        } catch (error) {
+            console.error("Verify email error:", error);
+            alert("Không thể xác thực email. Vui lòng thử lại sau.");
         }
     });
 
