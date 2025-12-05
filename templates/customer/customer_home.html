@@ -32,15 +32,18 @@
         <input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
                class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">
     </div>
+
+    <!-- Dịch vụ yêu thích -->
     <section class="mb-6">
         <div class="flex justify-between items-center mb-2">
             <h2 class="font-semibold text-dark-900">Dịch vụ yêu thích của bạn</h2>
-            <a class="text-primary-500 text-sm cursor-pointer">Xem thêm →</a>
         </div>
 
         <div id="favorite-services" class="grid grid-cols-2 gap-3">
         </div>
     </section>
+
+    <!-- Danh sách dịch vụ -->
     <section class="mb-6">
         <div class="flex justify-between items-center mb-2">
             <h2 class="font-semibold text-dark-900">Các dịch vụ phổ biến</h2>
@@ -48,45 +51,48 @@
         </div>
 
         <div id="service-list" class="grid grid-cols-2 gap-3">
-            <div class="service-item relative" data-name="Dọn dẹp nhà cửa" data-img="/images/dondepnhacua.png">
-                <img src="/images/dondepnhacua.jpeg" class="rounded-xl w-full h-32 object-cover">
+            <div class="service-item relative" data-name="Dọn dẹp nhà cửa" data-img="/images/dondepnhacua.jpeg">
+                <img src="/images/dondepnhacua.jpeg" class="rounded-xl w-full h-48 object-cover">
                 <button class="heart-btn absolute top-2 right-2">
                     <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
                 </button>
                 <p class="mt-1 text-sm font-medium">Dọn dẹp nhà cửa</p>
             </div>
-            <div class="service-item relative" data-name="Sơn lại nhà cửa" data-img="/images/sonlainhacua.png">
-                <img src="/images/sonlainhacua.jpeg" class="rounded-xl w-full h-32 object-cover">
+
+            <div class="service-item relative" data-name="Sơn lại nhà cửa" data-img="/images/sonlainhacua.jpeg">
+                <img src="/images/sonlainhacua.jpeg" class="rounded-xl w-full h-48 object-cover">
                 <button class="heart-btn absolute top-2 right-2">
                     <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
                 </button>
                 <p class="mt-1 text-sm font-medium">Sơn lại nhà cửa</p>
             </div>
+
             <div class="service-item relative" data-name="Vệ sinh thảm và sofa" data-img="/images/vesinhthamvasofa.jpeg">
-                <img src="/images/vesinhthamvasofa.jpeg" class="rounded-xl w-full h-32 object-cover">
+                <img src="/images/vesinhthamvasofa.jpeg" class="rounded-xl w-full h-48 object-cover">
                 <button class="heart-btn absolute top-2 right-2">
                     <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
                 </button>
                 <p class="mt-1 text-sm font-medium">Vệ sinh thảm và sofa</p>
             </div>
+
             <div class="service-item relative" data-name="Phân loại đồ đạc" data-img="/images/phanloaidodac.jpg">
-                <img src="/images/phanloaidodac.jpg" class="rounded-xl w-full h-32 object-cover">
+                <img src="/images/phanloaidodac.jpg" class="rounded-xl w-full h-48 object-cover">
                 <button class="heart-btn absolute top-2 right-2">
                     <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
                 </button>
                 <p class="mt-1 text-sm font-medium">Phân loại đồ đạc</p>
             </div>
-
         </div>
     </section>
 
+    <!-- Banner -->
     <section class="mb-6">
         <div class="relative">
             <img src="/images/dichvudondep.png"
-                 class="rounded-2xl w-full h-64 object-cover shadow-lg">
+                 class="rounded-2xl w-full h-60 object-cover shadow-lg">
 
             <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
-                Dịch vụ dọn dẹp<br>trọn gói
+                Dịch vụ dọn dẹp <br> trọn gói <br> ...
             </div>
 
             <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
@@ -94,12 +100,13 @@
             </button>
         </div>
     </section>
+
     <div class="text-center pb-10">
         <p class="text-gray-500 text-sm">Chưa thấy dịch vụ bạn cần?</p>
         <a href="#" class="text-primary-500 font-semibold">Xem danh sách toàn bộ dịch vụ</a>
     </div>
-
 </main>
+
 <footer>
     <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
         <div class="flex justify-around py-2 text-base">
@@ -139,11 +146,12 @@
                 heart.classList.add("text-red-500");
 
                 const favHTML = `
-                    <div class="fav-item">
-                        <img src="${img}" class="rounded-xl w-full h-32 object-cover">
+                    <div class="service-item">
+                        <img src="${img}" class="rounded-xl w-full h-48 object-cover">
                         <p class="mt-1 text-sm font-medium">${name}</p>
                     </div>
                 `;
+
                 favoriteContainer.innerHTML += favHTML;
 
             } else {
