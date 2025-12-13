@@ -988,6 +988,12 @@ select {
 .w-24 {
   width: 6rem;
 }
+.w-\[75\%\] {
+  width: 75%;
+}
+.w-\[80\%\] {
+  width: 80%;
+}
 
 .w-32 {
   width: 8rem;
@@ -1001,13 +1007,6 @@ select {
   width: 1.5rem;
 }
 
-.w-\[47\%\] {
-  width: 47%;
-}
-
-.w-\[70\%\] {
-  width: 70%;
-}
 
 .w-8 {
   width: 2rem;
@@ -1105,6 +1104,77 @@ select {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.self-start {
+  align-self: flex-start;
+}
+.overflow-hidden {
+  overflow: hidden;
+}
+.rounded-\[32px\] {
+  border-radius: 32px;
+}
+.rounded-full {
+  border-radius: calc(infinity * 1px);
+}
+.border {
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+}
+.border-2 {
+  border-style: var(--tw-border-style);
+  border-width: 2px;
+}
+.border-t {
+  border-top-style: var(--tw-border-style);
+  border-top-width: 1px;
+}
+.border-b {
+  border-bottom-style: var(--tw-border-style);
+  border-bottom-width: 1px;
+}
+.border-\[\#5C956C\] {
+  border-color: #5C956C;
+}
+.bg-\[\#5C956C\] {
+  background-color: #5C956C;
+}
+.bg-\[\#95DA97\] {
+  background-color: #95DA97;
+}
+.bg-\[\#969496\] {
+  background-color: #969496;
+}
+.bg-\[\#EAFED9\] {
+  background-color: #EAFED9;
+}
+.bg-\[\#FFFFFF\] {
+  background-color: #FFFFFF;
+}
+.object-contain {
+  object-fit: contain;
+}
+.text-center {
+  text-align: center;
+}
+.text-left {
+  text-align: left;
+}
+.text-\[\#16411F\] {
+  color: #16411F;
+}
+.text-\[\#969496\] {
+  color: #969496;
+}
+.text-\[\#FFFFFF\] {
+  color: #FFFFFF;
+}
+.lowercase {
+  text-transform: lowercase;
+}
+.no-underline {
+  text-decoration-line: none;
 }
 
 .justify-around {
