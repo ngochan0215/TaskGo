@@ -2,8 +2,9 @@ import mongoose from "mongoose";
 
 const voucherSchema = new mongoose.Schema(
   {
-    voucher_name: { type: String, required: true, trim: true },
-    quantity: { type: Number, default: 0 }, // total available vouchers
+    name: { type: String, required: true, trim: true },
+    description: { type: String, required: true, trim: true },
+    quantity: { type: Number, default: 1, min: 10 }, // total available vouchers
     percentage: { type: Number, default: 0, min: 0, max: 100 },
     begin_date: { type: Date },
     end_date: { type: Date },

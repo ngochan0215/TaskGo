@@ -8,7 +8,7 @@ const reviewSchema = new mongoose.Schema(
     reviewee_role: { type: String, enum: ["customer", "tasker"], required: true },
     rating: { type: Number, required: true, min: 0, max: 5 },
     comment: { type: String, trim: true },
-    status: { type: String, enum: ["visible", "hidden"], default: "visible" },
+    status: { type: String, enum: ["visible", "hidden", "deleted"], default: "visible" },
   },
   { timestamps: true }
 );

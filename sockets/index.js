@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import { socketAuth } from "../middleware/socketAuth.js";
-import registerHandlers from "./handlers.js";
+import { setSocketInstance } from "./instance.js";
+import registerChatHandlers from "./chat.handler.js";
+import registerNotificationHandlers from "./notification.handler.js";
 
 export function initSocket(httpServer) {
   const io = new Server(httpServer, {
@@ -10,8 +12,10 @@ export function initSocket(httpServer) {
   // Global socket middleware for JWT auth
   io.use(socketAuth);
 
-  // Register application event handlers
-  registerHandlers(io);
+  registerChatHandlers(io);
+  registerNotificationHandlers(io);
+
+  setSocketInstance(io);
 
   io.engine.on("connection_error", (err) => {
     console.error("Socket.IO engine connection_error:", err.message || err);

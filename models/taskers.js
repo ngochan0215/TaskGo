@@ -8,7 +8,7 @@ const taskerSchema = new mongoose.Schema(
     introduction: { type: String, trim: true },
     working_area: [{ type: String, trim: true }],
     status: { type: String, enum: ["pending", "working", "resign"], default: "pending" },
-    working_status: { type: String, enum: ["pending", "available", "busy", "inactive"], default: "available" } // Đoạn này cần hỏi lại sau:)))
+    working_status: { type: String, enum: ["pending", "available", "busy", "inactive"], default: "pending" } 
   },
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
