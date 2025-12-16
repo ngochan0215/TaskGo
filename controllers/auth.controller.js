@@ -83,7 +83,7 @@ export const signup = async (req, res) => {
     res.status(201).json({
       success: true,
       message: role === "tasker"
-        ? "Tasker registered. Waiting for admin approval."
+        ? "Tasker registered successfully."
         : "Customer registered successfully.",
       user,
 
@@ -230,7 +230,7 @@ export const forgotPassword = async (req, res) => {
 
     await sendPasswordResetEmail(
       account.email,
-      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
+      `${process.env.CLIENT_URL}/templates/auth/set-password.html?token=${resetToken}&flow=reset`
     );
 
     res.status(200).json({ success: true, message: "Password reset link sent to your email" });
