@@ -117,7 +117,17 @@ function handleLogin() {
       if (!res.ok) return showErrorMessage(data.message);
 
       localStorage.setItem("token", data.token);
-      window.location.href = "/dashboard.html";
+
+      const system_role = data.system_role;
+
+      if (system_role === "admin") {
+        window.location.href = "../admin/admin.html";
+      } else if (system_role === "tasker") {
+        window.location.href = "../tasker/tasker.html";
+      } else {
+        window.location.href = "../customer/customer_home.html";
+      }
+
     } catch {
       showErrorMessage("Không thể kết nối máy chủ.");
     }

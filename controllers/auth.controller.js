@@ -10,6 +10,7 @@ import {
   sendResetSuccessEmail,
 } from "../gmail/email.js";
 
+// SIGN UP LOGIC //
 export const signup = async (req, res) => {
   try {
     const { full_name, email, phone_number, identification, password, role } = req.body;
@@ -166,6 +167,7 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
+// LOGIN LOGIC //
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -196,7 +198,7 @@ export const login = async (req, res) => {
     account.last_login = new Date();
     await account.save();
 
-    res.status(200).json({ success: true, message: "Logged in successfully", token });
+    res.status(200).json({ success: true, message: "Logged in successfully", token, system_role: account.role });
 
   } catch (error) {
     console.error("Login error:", error);
