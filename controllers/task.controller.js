@@ -82,6 +82,11 @@ export const getAllServices = async (req, res) => {
 
 		const skip = (Number(page) - 1) * Number(limit);
 		const services = await Service.find(q)
+			.select("-__v")
+			.populate({
+				path: "tasks", select: "_id task_name description pricing icon",
+				options: { sort: { createdAt: -1 } },
+			})
 			.sort({ createdAt: -1 })
 			.skip(skip)
 			.limit(Number(limit))

@@ -21,13 +21,13 @@ router.patch('/service/update/:id', verifyToken, isAdmin, updateService);
 router.delete('/service/delete/:id', verifyToken, isAdmin, deleteService);
 
 // admin manage tasks
-router.post('/task/new', verifyToken, isAdmin, createTask);
-router.patch('/task/update/:id', verifyToken, isAdmin, updateTask);
-router.delete('/task/delete/:id', verifyToken, isAdmin, deleteTask);
+router.post('/new', verifyToken, isAdmin, createTask);
+router.patch('/update/:id', verifyToken, isAdmin, updateTask);
+router.delete('/delete/:id', verifyToken, isAdmin, deleteTask);
 
 // users can see all tasks and services
-router.get('/task', verifyToken, getAllTasks);
-router.get('/task/:id', verifyToken, getTaskById);
-router.get('/service', verifyToken, getAllServices);
+router.get('/all', verifyToken, getAllTasks);
+router.get('/:id', verifyToken, getTaskById);
+router.get('/service/all', verifyToken, getAllServices);
 
 export default router;
