@@ -30,7 +30,7 @@ export const signup = async (req, res) => {
 
     const existingUser = await Account.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "User already exists" });
+      return res.status(400).json({ success: false, message: "Người dùng này đã tồn tại." });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -42,7 +42,7 @@ export const signup = async (req, res) => {
       full_name: full_name,
       phone_number: phone_number,
       identification: identification,
-      avatr_url: randomAvatar,
+      avatar_url: randomAvatar,
     });
     await user.save();
 

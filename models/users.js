@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
     account_id: { type: mongoose.Schema.Types.ObjectId, ref: "Account", unique: true },
     full_name: { type: String, required: true, trim: true },
     phone_number: { type: String, required: true, unique: true, trim: true },
-    identification: { type: String, required: true, unique: true, trim: true, select: false },
+    identification: { type: String, required: true, unique: true, trim: true },
     avatar_url: { type: String, trim: true },
     reputation_score: { type: Number, default: 0 },
   },

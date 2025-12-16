@@ -6,32 +6,33 @@ export const getUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
     }
 
     const account = await Account.findById(user.account_id);
     if (!account) {
-      return res.status(400).json({ success: false, message: "Account not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
     }
 
     if (account.role == "customer") {
       const customer = await Customer.findOne({ user_id: user._id });
       if (!customer) {
-        return res.status(400).json({ success: false, message: "Customer not found" });
+        return res.status(400).json({ success: false, message: "Không tìm thấy khách hàng!" });
       }
 
-      return res.status(200).json({ success: true, user, role: account.role, type: customer.type });
+      return res.status(200).json({ success: true, user, role: account.role, email: account.email, type: customer.type });
 
     } else if (account.role == "tasker") {
       const tasker = await Tasker.findOne({ user_id: user._id });
       if (!tasker) {
-        return res.status(400).json({ success: false, message: "Tasker not found" });
+        return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
       }
 
       return res.status(200).json({
         success: true,
         user,
         role: account.role,
+        email: account.email,
         working_year: tasker.working_year,
         hourly_rate: tasker.hourly_rate,
         introduction: tasker.introduction,
@@ -39,11 +40,11 @@ export const getUserProfile = async (req, res) => {
       });
     }
 
-    return res.status(400).json({ success: false, message: "Invalid role" });
+    return res.status(400).json({ success: false, message: "Role không hợp lệ!"});
 
   } catch (error) {
-    console.error("Get user profile error:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.error("LỖI LẤY PROFFILE USER:", error);
+    res.status(500).json({ success: false, message: "LỖI SERVER: ", error: error.message });
   }
 };
 
@@ -51,17 +52,34 @@ export const updateUserProfile = async (req, res) => {
   try {
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
     }
 
     const account = await Account.findById(user.account_id);
     if (!account) {
-      return res.status(400).json({ success: false, message: "Account not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
     }
 
     const { full_name, phone_number, identification } = req.body;
-    if (!full_name && !phone_number && !identification ) {
-      throw new Error("At least one field is required to update");
+
+    if (phone_number) {
+      const phoneExists = await User.findOne({ phone_number, _id: { $ne: user._id } });
+      if (phoneExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Số điện thoại đã được sử dụng."
+        });
+      }
+    }
+
+    if (identification) {
+      const idExists = await User.findOne({ identification, _id: { $ne: user._id } });
+      if (idExists) {
+        return res.status(400).json({
+          success: false,
+          message: "CCCD đã được sử dụng."
+        });
+      }
     }
 
     if (full_name) user.full_name = full_name;
@@ -72,16 +90,14 @@ export const updateUserProfile = async (req, res) => {
     if (account.role == "tasker") {
       const tasker = await Tasker.findOne({ user_id: user._id });
       if (!tasker) {
-        return res.status(400).json({ success: false, message: "Tasker not found" });
+        return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
       }
 
       const { introduction, working_area } = req.body;
-      if (!introduction && !working_area) {
-        throw new Error("At least one field is required to update");
-      }
 
       if (introduction) tasker.introduction = introduction;
       if (working_area) tasker.working_area = working_area;
+      
       await tasker.save();
     }
 
@@ -89,7 +105,7 @@ export const updateUserProfile = async (req, res) => {
 
   } catch (error) {
     console.error("Update user profile error:", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
   }
 };
 
@@ -112,7 +128,7 @@ export const updateAvatar = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Cập nhật avatar thành công",
-      avatar: updatedUser.avatar,
+      avatar: updatedUser.avatar_url,
     });
 
   } catch (error) {
@@ -126,21 +142,17 @@ export const changePassword = async (req, res) => {
 
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy người dùng." });
     }
 
     const account = await Account.findById(user.account_id).select("+password_hash");
     if (!account) {
-      return res.status(400).json({ success: false, message: "Account not found" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản." });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, account.password_hash);
     if(!isMatch) {
-      return res.status(400).json({ message: "Incorrect old password." });
-    }
-
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res.status(400).json({ message: "Mật khẩu cũ không đúng." });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -149,6 +161,7 @@ export const changePassword = async (req, res) => {
     res.json({ message: "Change password successfully."})
 
   } catch (error) {
+    console.log(error);
     res.status(500).json({message: "SERVER ERROR: ", error: error.message });
   }
 };

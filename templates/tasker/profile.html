@@ -31,19 +31,19 @@
     <div class="flex flex-col items-center p-4 space-y-4">
         <div class="relative w-32 h-32">
             <div class="w-full h-full rounded-full border-4 border-primary-400 overflow-hidden">
-                <img src="placeholder_avatar.jpg" alt="" class="w-full h-full object-cover">
+                <img id="avatar" alt="" class="w-full h-full object-cover">
             </div>
             
             <button class="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-md border border-gray-200 hover:opacity-80">
                 <span class="material-symbols-outlined text-sm text-gray-700">
                     photo_camera
                 </span>
-                <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" onchange="previewAvatar(event)">
+                <input type="file" class="absolute inset-0 opacity-0 cursor-pointer" onchange="updateAvatar(event)">
             </button>
         </div>
         
-        <h1 class="text-2xl font-bold text-dark-900 mt-4">Nguyễn Văn A</h1>
-        <div class="flex items-center text-base text-dark-900 cursor-pointer hover:text-primary-dark">
+        <h1 id="fullName" class="text-2xl font-bold text-dark-900 mt-4"></h1>
+        <div id="editToggle" class="flex items-center text-base text-dark-900 cursor-pointer hover:text-primary-dark">
             <span>Chỉnh sửa thông tin</span>
             <span class="material-symbols-outlined text-base ml-1">edit</span>
         </div>
@@ -66,22 +66,16 @@
         <h2 class="text-base font-semibold text-dark-900 pb-2">Thông tin cá nhân:</h2>
         
         <div>
-            <label for="email" class="text-base font-medium text-dark-900 block mb-1">Email</label>
-            <input 
-                type="email" 
-                id="email" 
-                value="melpeters@gmail.com" 
+            <label for="intro" class="text-base font-medium text-dark-900 block mb-1">Giới thiệu bản thân</label>
+            <input type="text" id="intro" readonly
                 class="w-full p-3 border border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
         </div>
-        
+
         <div>
-            <label for="experience" class="text-base font-medium text-dark-900 block mb-1">Kinh nghiệm làm việc</label>
-            <input 
-                type="text" 
-                id="experience" 
-                value="3 năm" 
+            <label for="email" class="text-base font-medium text-dark-900 block mb-1">Địa chỉ email</label>
+            <input type="email" id="email" readonly
                 class="w-full p-3 border border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
@@ -89,22 +83,40 @@
 
         <div>
             <label for="phone" class="text-base font-medium text-dark-900 block mb-1">Số điện thoại</label>
-            <input 
-                type="tel" 
-                id="phone" 
-                value="0123456789" 
+            <input type="tel" id="phone" readonly
+                class="w-full p-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+        </div>
+
+        <div>
+            <label for="cccd" class="text-base font-medium text-dark-900 block mb-1">Căn cước công dân</label>
+            <input type="text" id="cccd" readonly
                 class="w-full p-3 border border-gray-300 rounded-lg 
                        focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
         </div>
         
         <div>
-            <label for="address-1" class="text-base font-medium text-dark-900 block mb-1">Địa chỉ</label>
+            <label for="working-year" class="text-base font-medium text-dark-900 block mb-1">Thâm niên làm việc (theo năm)</label>
+            <input type="number" id="working-year" readonly min="1"
+                class="w-full p-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+        </div>
+
+        <div>
+            <label for="hourly-rate" class="text-base font-medium text-dark-900 block mb-1">Mức lương cơ bản theo giờ (VNĐ)</label>
+            <input type="number" id="hourly-rate" readonly min="1"
+                class="w-full p-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+        </div>
+        
+        <div>
+            <label for="working-area" class="text-base font-medium text-dark-900 block mb-1">Khu vực hoạt động</label>
             <div class="flex items-center space-x-2 bg-white p-3 border border-gray-300 rounded-lg">
-                <input 
-                    type="text" 
-                    id="address-1" 
-                    value="Đường số 1, KP Tân An,......" 
+                <input type="text" id="working-area" readonly
                     class="flex-1 border-none focus:outline-none bg-transparent"
                 />
                 <button class="text-gray-100 hover:text-red-500">
@@ -114,10 +126,14 @@
         </div>
     </div>
     <div class="pt-6">
-        <button class="action-btn action-btn-hover w-full ">
+        <button id="updateBtn" onclick="updateProfile()" class="action-btn action-btn-hover w-full " disabled>
             Cập nhật thông tin
         </button>
     </div>
+
+    <a href="../auth/set-password.html?flow=change">Đổi mật khẩu</a>
+    <a href="../auth/change-email.html">Đổi email</a>
+
   </main>
 
   <footer>
@@ -142,6 +158,9 @@
       </div>
     </nav>
   </footer>
+
+  <script src="../js/profile_tasker.js" defer></script>
+
 </body>
 
 </html>

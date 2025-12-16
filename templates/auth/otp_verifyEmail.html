@@ -100,6 +100,7 @@
         return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
     };
 
+    const flow = getUrlParameter('flow');
     const type = getUrlParameter('type');
     const contact = getUrlParameter('contact');
     const otpTitle = document.getElementById('otp-title');
@@ -181,24 +182,39 @@
         }
 
         try {
-            const response = await fetch("http://localhost:3000/api/auth/verify-email", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ code: otpCode })
-            });
+            let response;
+            if (flow === 'change-email') {
+                response = await fetch(
+                    'http://localhost:3000/api/user/profile/change-email/verify-otp',
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        },
+                        body: JSON.stringify({ otp: otpCode })
+                    }
+                );
+            }
+            else {
+                const response = await fetch("http://localhost:3000/api/auth/verify-email", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ code: otpCode })
+                });
+            }
 
             const data = await response.json();
 
-            if (!data.success) {
-                alert(data.message || "Mã xác thực không hợp lệ hoặc đã hết hạn");
+            if (!response.ok) {
+                alert(data.message || 'OTP không hợp lệ');
                 return;
             }
 
-            // Xác thực thành công
-            alert("Xác thực email thành công!");
-            window.location.href = "login-signup.html";
+            alert('Xác thực thành công');
+            window.location.href = 'login-signup.html';
 
         } catch (error) {
             console.error("Verify email error:", error);
