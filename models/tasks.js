@@ -9,10 +9,9 @@ const taskSchema = new mongoose.Schema(
     },
     task_name: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
-    pricing: {
-      unit: { type: String, enum: ["hour", "job"], default: "hour" },
-      amount: { type: Number, default: 0 },
-    },
+    pricing: { type: Number, default: 0, required: true },
+    unit: { type: String, enum: ["hour", "job"], default: "hour" },
+    icon: { type: String }
   },
   { timestamps: true }
 );

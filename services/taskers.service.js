@@ -117,7 +117,6 @@ const buildTaskerRanking = async (orderId) => {
 
 const rankingCache = new Map(); 
 
-
 function getNextBatch(allRanked, offset) {
   return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
 }
@@ -242,7 +241,7 @@ export const denyTaskRequest = async (taskerId, orderId) =>{
     return newTasker;
 };
 
-export const confirmDepartureTask = async (taskerId, orderId) =>{
+export const confirmDepartureService = async (taskerId, orderId) =>{
     const taskerModel = Tasker;
     const orderModel = Order;
     console.log(taskerId, orderId);
@@ -278,7 +277,7 @@ export const confirmDepartureTask = async (taskerId, orderId) =>{
     })
 };
 
-export const confirmArriving = async (taskerId, orderId) => {
+export const confirmArrivingService = async (taskerId, orderId) => {
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 
@@ -300,7 +299,7 @@ export const confirmArriving = async (taskerId, orderId) => {
     return { success: true };
 };
 
-export const confirmStart = async (taskerId, orderId) => {
+export const confirmStartService = async (taskerId, orderId) => {
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 
@@ -321,7 +320,7 @@ export const confirmStart = async (taskerId, orderId) => {
     return { success: true };
 };
 
-export const confirmComplete = async (taskerId, orderId) => {
+export const confirmCompleteService = async (taskerId, orderId) => {
     const order = await Order.findById(orderId);
     if (!order) throw new Error("Order not found");
 

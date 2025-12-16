@@ -1,6 +1,6 @@
-import {  cancelOrderByCustomerService,
-  getAllOrdersService, deleteOrderByIdService, getOrderByIdService, getAllOrdersByCustomerIdService,
-  createOrderService,
+import { Order, Task } from "../models/index.js";
+import { createOrderService, cancelOrderByCustomerService, getAllOrdersService, 
+  deleteOrderByIdService, getOrderByIdService, getAllOrdersByCustomerIdService,
  } from "../services/order.service.js";
 
 export const getAllOrders = async (req, res) => {

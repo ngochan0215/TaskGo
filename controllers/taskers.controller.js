@@ -1,5 +1,5 @@
-import { acceptTaskRequest, confirmDepartureTask, denyTaskRequest,
-    confirmArriving, confirmStart, confirmComplete
+import { acceptTaskRequest, confirmDepartureService, denyTaskRequest,
+    confirmArrivingService, confirmStartService, confirmCompleteService
  } from "../services/taskers.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer } from "../models/index.js";
@@ -50,7 +50,7 @@ export const acceptTask = async (req, res) =>{
 export const confirmDeparture = async (req, res) =>{
     const {  orderId } = req.params;
     try {
-        await confirmDepartureTask(req.userId, orderId);
+        await confirmDepartureService(req.userId, orderId);
         //TODO: send notification to customer
 
         const order = await Order.findById(orderId).select("customer_id");
@@ -152,7 +152,7 @@ export const denyTask = async (req, res) =>{
 export const confirmArrive = async (req, res) => {
     const { orderId } = req.params;
     try {
-        await confirmArriving(req.userId, orderId);
+        await confirmArrivingService(req.userId, orderId);
 
         const order = await Order.findById(orderId);
         const customerId = order.customer_id.toString();
@@ -180,7 +180,7 @@ export const confirmArrive = async (req, res) => {
 export const confirmStartTask = async (req, res) => {
     const { orderId } = req.params;
     try {
-        await confirmStart(req.userId, orderId);
+        await confirmStartService(req.userId, orderId);
 
         const order = await Order.findById(orderId).select("customer_id");
         if (!order) throw new Error("Order not found");
@@ -209,7 +209,7 @@ export const confirmStartTask = async (req, res) => {
 export const confirmCompleteTask = async (req, res) => {
     const { orderId } = req.params;
     try {
-        await confirmComplete(req.userId, orderId);
+        await confirmCompleteService(req.userId, orderId);
 
         const order = await Order.findById(orderId).select("customer_id");
         if (!order) throw new Error("Order not found");

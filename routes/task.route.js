@@ -5,9 +5,10 @@ import {
 	getTaskById,
     updateService,
     deleteService,
-	listTasks,
+	getAllTasks,
 	updateTask,
 	deleteTask,
+	getAllServices
 } from "../controllers/task.controller.js";
 import { isAdmin } from "../middleware/verifyRole.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -20,12 +21,13 @@ router.patch('/service/update/:id', verifyToken, isAdmin, updateService);
 router.delete('/service/delete/:id', verifyToken, isAdmin, deleteService);
 
 // admin manage tasks
-router.post('/task/new', verifyToken, isAdmin, createTask);
-router.patch('/task/update/:id', verifyToken, isAdmin, updateTask);
-router.delete('/task/delete/:id', verifyToken, isAdmin, deleteTask);
+router.post('/new', verifyToken, isAdmin, createTask);
+router.patch('/update/:id', verifyToken, isAdmin, updateTask);
+router.delete('/delete/:id', verifyToken, isAdmin, deleteTask);
 
 // users can see all tasks and services
-router.get('/task', listTasks);
-router.get('/task/:id', getTaskById);
+router.get('/all', verifyToken, getAllTasks);
+router.get('/:id', verifyToken, getTaskById);
+router.get('/service/all', verifyToken, getAllServices);
 
 export default router;
