@@ -13,6 +13,12 @@ module.exports = {
           400: "#5C956C", // medium green
           500: "#3B5F43", // dark green
         },
+        primaryTasker: {
+          100: "#E0E7FF",
+          200: "#A5B4FC",
+          400: "#4F46E5",
+          500: "#3730A3",
+        },
         secondary: {
           100: "#12A327",
           200: "#54A312",
