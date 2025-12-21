@@ -2,7 +2,7 @@ import { acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService
  } from "../services/taskers.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
-import { User, Order, Notification, Customer } from "../models/index.js";
+import { User, Order, Notification, Customer, Tasker } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 
 export const acceptTask = async (req, res) =>{
@@ -235,3 +235,51 @@ export const confirmComplete = async (req, res) => {
     }
 };
 
+// Show all taskers in the system along with their information
+export const getAllTaskers = async (req, res) => {
+  try {
+    const { 
+      status,            
+      working_status,   
+      sort_by = "created_at", 
+      sort_dir = "asc", 
+      page = 1,
+      limit = 10
+    } = req.query;
+
+    const filter = {};
+
+    if (status) filter.status = status;
+    if (working_status) filter.working_status = working_status;
+
+    const taskers = await Tasker.find(filter)
+      .populate({
+        path: "user_id",
+        select: "full_name phone_number identification avatar_url"
+      })
+      .populate({
+        path: "user_id",
+        populate: {
+          path: "account_id",
+          select: "email status is_verified"
+        }
+      })
+      .sort({ [sort_by]: sort_dir === "desc" ? -1 : 1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    const total = await Tasker.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      data: taskers
+    });
+
+  } catch (error) {
+    console.error("Get all taskers error:", error);
+    res.status(500).json({ success: false, message: "Server error", error });
+  }
+};

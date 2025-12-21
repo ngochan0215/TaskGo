@@ -1,7 +1,7 @@
 import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
-import { isTasker } from "../middleware/verifyRole.js"
-import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart} from "../controllers/taskers.controller.js";
+import { isAdmin, isTasker } from "../middleware/verifyRole.js"
+import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers} from "../controllers/taskers.controller.js";
 
 const router = express.Router();
 
@@ -11,4 +11,6 @@ router.put("/confirm/depart/:orderId", verifyToken, isTasker, confirmDeparture);
 router.put("/confirm/arrive/:orderId", verifyToken, isTasker, confirmArriving);
 router.put("/confirm/start/:orderId", verifyToken, isTasker, confirmStart);
 router.put("/confirm/complete/:orderId", verifyToken, isTasker, confirmComplete);
+
+router.get("/all", verifyToken, isAdmin, getAllTaskers);
 export default router;
