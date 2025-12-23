@@ -4,9 +4,9 @@ import { validateDate } from "../utils/validateDate.js";
 //------ DISCOUNT -------//
 export const createDiscount = async (req, res) => {
   try {
-    const { name, description, begin_date, end_date, percentage, appliesTo } = req.body;
+    const { name, description, begin_date, end_date, percentage, applied_model, applied_model_id } = req.body;
 
-    if (!name || !description || !begin_date || !end_date || !percentage || !appliesTo) {
+    if (!name || !description || !begin_date || !end_date || !percentage || !applied_model) {
       return res.status(400).json({
         success: false,
         message: "Please fill all the required information.",
@@ -26,7 +26,7 @@ export const createDiscount = async (req, res) => {
       return res.status(400).json({ success: false, message: "Discount's name already existed." });
     }
 
-    const discount = new Discount({ name, description, begin_date: validDate.begin, end_date: validDate.end, percentage, appliesTo });
+    const discount = new Discount({ name, description, begin_date: validDate.begin, end_date: validDate.end, percentage, applied_model, applied_model_id });
     await discount.save();
 
     return res.status(201).json({ success: true, message: "Create new discount successfully!", discount });
@@ -38,59 +38,60 @@ export const createDiscount = async (req, res) => {
 };
 
 export const getAllDiscounts = async (req, res) => {
-    try {
-        const discounts = await Discount.find().sort({ createdAt: -1 });
-        return res.status(200).json({ success: true, discounts });
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
-    }
+  try {
+      const discounts = await Discount.find().sort({ created_at: -1 });
+      return res.status(200).json({ success: true, discounts });
+  } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
+  }
 };
 
 export const getDiscountById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const discount = await Discount.findById(id);
+  try {
+      const { id } = req.params;
+      const discount = await Discount.findById(id);
 
-        if (!discount)
-          return res.status(404).json({ success: false, message: "Discount not found!" });
+      if (!discount)
+        return res.status(404).json({ success: false, message: "Discount not found!" });
 
-        return res.status(200).json({ success: true, discount });
+      return res.status(200).json({ success: true, discount });
 
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
-    }
+  } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
+  }
 };
 
 export const deleteDiscount = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const discount = await Discount.findByIdAndDelete(id);
+  try {
+      const { id } = req.params;
+      const discount = await Discount.findById(id);
 
-        if (!discount)
-          return res.status(404).json({ success: false, message: "Discount not found!" });
+      if (!discount)
+        return res.status(404).json({ success: false, message: "Discount not found!" });
 
-        const now = new Date();
-        if (now >= discount.begin_date) {
-          return res.status(400).json({
-            success: false,
-            message: "Unable to delete as discount already began!"
-          });
-        }
+      const now = new Date();
+      if (now >= discount.begin_date) {
+        return res.status(400).json({
+          success: false,
+          message: "Unable to delete as discount already began!"
+        });
+      }
 
-        return res.status(200).json({ success: true, message: "Delete discount successfully!"});
+      await Discount.findByIdAndDelete(id);
+      return res.status(200).json({ success: true, message: "Delete discount successfully!"});
 
-    } catch (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
-    }
+  } catch (err) {
+      console.error(err);
+      return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
+  }
 };
 
 export const updateDiscount = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, begin_date, end_date, percentage, appliesTo } = req.body;
+    const { name, description, begin_date, end_date, percentage, applied_model, applied_model_id } = req.body;
 
     const discount = await Discount.findById(id);
     if (!discount)
@@ -101,6 +102,13 @@ export const updateDiscount = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Unable to update as discount already began!"
+      });
+    }
+
+    if (discount.end_date < now) {
+      return res.status(400).json({
+        success: false,
+        message: "Cannot update completed discount"
       });
     }
 
@@ -116,15 +124,15 @@ export const updateDiscount = async (req, res) => {
     if (name && name !== discount.name) {
       const existing = await Discount.findOne({ name, _id: { $ne: id } });
       if (existing)
-          return res.status(400).json({ success: false, message: "Discount's name already exists." });
+        return res.status(400).json({ success: false, message: "Discount's name already exists." });
       discount.name = name;
     }
 
     if (description) discount.description = description;
-    if (appliesTo) discount.appliesTo = appliesTo;
+    if (applied_model) discount.applied_model = applied_model;
 
     if (typeof percentage !== "undefined") {
-      if (percentage < 0 || percentage > 100)
+      if (percentage <= 0 || percentage > 100)
         return res.status(400).json({ success: false, message: "Discount's percentage must be between 1% and 100%." });
       discount.percentage = percentage;
     }

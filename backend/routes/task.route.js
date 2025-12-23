@@ -8,7 +8,10 @@ import {
 	getAllTasks,
 	updateTask,
 	deleteTask,
-	getAllServices
+	getAllServices,
+	activateService,
+	getServiceById,
+	unactivateService
 } from "../controllers/task.controller.js";
 import { isAdmin } from "../middleware/verifyRole.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -18,6 +21,8 @@ const router = express.Router();
 // admin manage service category
 router.post('/service/new', verifyToken, isAdmin, createService);
 router.patch('/service/update/:id', verifyToken, isAdmin, updateService);
+router.patch('/service/activate/:id', verifyToken, isAdmin, activateService);
+router.patch('/service/unactivate/:id', verifyToken, isAdmin, unactivateService);
 router.delete('/service/delete/:id', verifyToken, isAdmin, deleteService);
 
 // admin manage tasks
@@ -29,5 +34,6 @@ router.delete('/delete/:id', verifyToken, isAdmin, deleteTask);
 router.get('/all', verifyToken, getAllTasks);
 router.get('/:id', verifyToken, getTaskById);
 router.get('/service/all', verifyToken, getAllServices);
+router.get('/service/:id', verifyToken, getServiceById);
 
 export default router;

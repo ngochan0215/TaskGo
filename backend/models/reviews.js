@@ -9,12 +9,15 @@ const reviewSchema = new mongoose.Schema(
     rating: { type: Number, required: true, min: 0, max: 5 },
     comment: { type: String, trim: true },
     status: { type: String, enum: ["visible", "hidden", "deleted"], default: "visible" },
+    note : { type: String }
   },
-  { timestamps: true }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" }, 
+  }
 );
 
 // Each pair of reviewer and order should have only one review
-reviewSchema.index({ reviewer_id: 1, related_order: 1 }, { unique: true });
+reviewSchema.index({ reviewer_id: 1, order_id: 1 }, { unique: true });
 
 const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
 export default Review;

@@ -7,11 +7,14 @@ const taskSchema = new mongoose.Schema(
       ref: "Service",
       required: true,
     },
+
     task_name: { type: String, required: true, trim: true },
     description: { type: String, required: true, trim: true },
     pricing: { type: Number, default: 0, required: true },
     unit: { type: String, enum: ["hour", "job"], default: "hour" },
-    icon: { type: String }
+    icon: { type: String },
+
+    status: { type: String, enum: ["active", "inactive", "launching"], default: "launching" },
   },
   { timestamps: true }
 );

@@ -43,6 +43,55 @@ export const updateService = async (req, res) => {
 	}
 };
 
+// khi mới tạo service mặc định là đang phát triển, admin cần kích hoạt để sử dụng
+export const activateService = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		const service = await Service.findById(id);
+		if (!service) 
+			return res.status(404).json({ success: false, message: "Service not found." });
+
+		service.status = "active";
+
+		await Task.updateMany(
+			{ service_id: service._id },
+			{ $set: { status: "active" } }
+		);
+
+		await service.save();
+		return res.status(200).json({ success: true, service });
+
+	} catch (err) {
+		console.error(err);
+	    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+	}
+};
+
+// hủy cung cấp dịch vụ, nhưng vẫn lưu trong DB
+export const unactivateService = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		const service = await Service.findById(id);
+		if (!service) 
+			return res.status(404).json({ success: false, message: "Service not found." });
+
+		service.status = "inactive";
+		await Task.updateMany(
+			{ service_id: service._id },
+			{ $set: { status: "inactive" } }
+		);
+
+		await service.save();
+		return res.status(200).json({ success: true, service });
+
+	} catch (err) {
+		console.error(err);
+	    return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+	}
+};
+
 // Pass query ?force=true to delete tasks together with service.
 export const deleteService = async (req, res) => {
 	try {
@@ -74,17 +123,20 @@ export const deleteService = async (req, res) => {
 // Get all services (optionally paginated)
 export const getAllServices = async (req, res) => {
 	try {
-		const { page = 1, limit = 50, search } = req.query;
+		const { page = 1, limit = 50, search, status } = req.query;
 		const q = {};
 		if (search) {
 			q.category_name = { $regex: search, $options: 'i' };
+		}
+		if (status) {
+			q.status = status;
 		}
 
 		const skip = (Number(page) - 1) * Number(limit);
 		const services = await Service.find(q)
 			.select("-__v")
 			.populate({
-				path: "tasks", select: "_id task_name description pricing icon",
+				path: "tasks", select: "_id task_name description pricing status icon",
 				options: { sort: { createdAt: -1 } },
 			})
 			.sort({ createdAt: -1 })
@@ -107,10 +159,44 @@ export const getAllServices = async (req, res) => {
 	}
 };
 
+export const getServiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const service = await Service.findById(id)
+	  .select("-__v -createdAt -updatedAt")
+      .populate({
+        path: "tasks",
+        select: "task_name description pricing unit",
+        options: { sort: { createdAt: -1 } }
+      });
+
+    if (!service) {
+      return res.status(404).json({
+        success: false,
+        message: "Service not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: service
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: "SERVER ERROR",
+      err: err.message
+    });
+  }
+};
+
 //---- TASK ----//
 export const createTask = async (req, res) => {
 	try {
 		const { service_id, task_name, description, pricing } = req.body;
+		let status = "launching";
+
 		if (!service_id || !task_name || !description || !pricing) 
 			return res.status(400).json({ success: false, message: "Data required." });
 
@@ -118,11 +204,16 @@ export const createTask = async (req, res) => {
 		if (!svc) 
 			return res.status(404).json({ success: false, message: "Service not found." });
 
+		if (svc.status !== "active")
+			return res.status(400).json({ success: false, message: "Cannot add task to inactive service." });
+		else if (svc.status === "active")
+			status = "active";
+		
 		const existing = await Task.findOne({ service_id, task_name });
 		if (existing) 
 			return res.status(400).json({ success: false, message: "Task already exists for this service." });
 
-		const task = new Task({ service_id, task_name, description, pricing });
+		const task = new Task({ service_id, task_name, description, pricing, status });
 		await task.save();
 		return res.status(201).json({ success: true, task });
 
@@ -169,7 +260,7 @@ export const getAllTasks = async (req, res) => {
 export const updateTask = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { task_name, description, pricing } = req.body;
+		const { task_name, description, pricing, status } = req.body;
 
 		const task = await Task.findById(id);
 		if (!task) 
@@ -178,6 +269,10 @@ export const updateTask = async (req, res) => {
 		if(!task_name) task.task_name = task_name;
 		if (!description) task.description = description;
 		if (!pricing) task.pricing = pricing;
+
+		if (status !== 'inactive') {
+			return res.status(400).json({ success: false, message: "You can only update task's status to inactive." });
+		}
 
 		await task.save();
 		return res.status(200).json({ success: true, task });
@@ -203,3 +298,5 @@ export const deleteTask = async (req, res) => {
     	return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
 	}
 };
+
+// TODO: viết hàm lấy các dịch vụ thường được sử dụng dựa trên lịch sử đơn hàng của user

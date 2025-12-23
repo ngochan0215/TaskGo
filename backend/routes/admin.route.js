@@ -6,7 +6,7 @@ import { getAllCustomers, updateTaskerProfile } from "../controllers/admin.contr
 const router = express.Router();
 
 // manage employess and customers
-router.patch("/tasker/update/:taskerId", verifyToken, isAdmin, updateTaskerProfile);
-router.get("/customer", verifyToken, isAdmin, getAllCustomers);
+router.patch("/taskers/update/:taskerId", verifyToken, isAdmin, updateTaskerProfile);
+router.get("/customers/all", verifyToken, isAdmin, getAllCustomers);
 
 export default router;

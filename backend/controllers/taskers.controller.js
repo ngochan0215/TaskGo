@@ -5,6 +5,7 @@ import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer, Tasker } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 
+// tasker nhận task
 export const acceptTask = async (req, res) =>{
     const { orderId } = req.params;
     try {
@@ -21,24 +22,15 @@ export const acceptTask = async (req, res) =>{
         const tasker_name = tasker.full_name.toString();
         console.log("tasker", tasker);
 
-        const notification = await Notification.create({
-            user_id: user_id,
-            title: "Đơn hàng đã được chấp nhận",
-            message: `Tasker ${tasker_name} đã nhận đơn hàng của bạn!`,
-            type: "order",
-            reference: { kind: "Order", refId: orderId },
-            status: "unread",
-        });
-
-        const io = getSocketInstance();
-        io.to(`user:${user_id}`).emit("notification", {
-            id: notification._id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            createdAt: notification.createdAt,
-            reference: notification.reference,
-        });
+        await pushNotification(
+            user_id,
+            "Đơn hàng đã được chấp nhận!",
+            `Tasker ${tasker_name} đã nhận đơn hàng của bạn!`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
 
         res.status(200).json({ message: "Order accepted successfully" });
     }
@@ -47,6 +39,7 @@ export const acceptTask = async (req, res) =>{
     }
 }
 
+// tasker xác nhận khởi hành đến địa điểm của khách hàng
 export const confirmDeparture = async (req, res) =>{
     const {  orderId } = req.params;
     try {
@@ -62,31 +55,24 @@ export const confirmDeparture = async (req, res) =>{
         const tasker = await User.findById(req.userId).select("full_name");
         const tasker_name = tasker.full_name || "Tasker";
 
-        const notification = await Notification.create({
-            user_id: user_id,
-            title: "Tasker đang trên đường đến!",
-            message: `Tasker ${tasker_name} đã xác nhận khởi hành đến địa điểm của bạn.`,
-            type: "order",
-            reference: { kind: "Order", refId: orderId },
-            status: "unread",
-        });
+        await pushNotification(
+            user_id,
+            "Tasker đang trên đường đến!",
+            `Tasker ${tasker_name} đã xác nhận khởi hành đến địa điểm của bạn.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
 
-        // Gửi qua Socket.IO
-        const io = getSocketInstance();
-        io.to(`user:${user_id}`).emit("notification", {
-            id: notification._id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            createdAt: notification.createdAt,
-            reference: notification.reference,
-        });
         res.status(200).json({ message: "Tasker confirm departure successfully" });
     }
     catch (error) {
         res.status(400).json({ message: "Failed to confirm departure", error: error.message });
     }
 }
+
+// tasker từ chối task
 export const denyTask = async (req, res) =>{
     const {  orderId } = req.params;
     try {
@@ -104,43 +90,63 @@ export const denyTask = async (req, res) =>{
         const tasker = await User.findById(req.userId);
         const tasker_name = tasker.full_name.toString();
 
-        const notification = await Notification.create({
-            user_id: user_id,
-            title: "Đơn hàng đã bị từ chối",
-            message: `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm
-            tasker khác cho bạn.`,
-            type: "order",
-            reference: { kind: "Order", refId: orderId },
-            status: "unread",
-        });
+        await pushNotification(
+            user_id,
+            "Đơn hàng đã bị tasker từ chối",
+            `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm tasker khác cho bạn.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
 
-        const io = getSocketInstance();
-        io.to(`user:${user_id}`).emit("notification", {
-            id: notification._id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            createdAt: notification.createdAt,
-            reference: notification.reference,
-        });
+        await pushNotification(
+            newTasker.taskerId,
+            "Bạn có đơn hàng mới.",
+            `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}).`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
 
-        const newTaskerNoti = await Notification.create({
-            user_id: newTasker.taskerId,
-            title: "Bạn có đơn hàng mới.",
-            message: `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}).`,
-            type: "order",
-            reference: { kind: "Order", refId: orderId },
-            status: "unread",
-        });
+        // const notification = await Notification.create({
+        //     user_id: user_id,
+        //     title: "Đơn hàng đã bị từ chối",
+        //     content: `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm
+        //     tasker khác cho bạn.`,
+        //     type: "order",
+        //     reference: { kind: "Order", refId: orderId },
+        //     status: "unread",
+        // });
 
-         io.to(`user:${newTasker.taskerId}`).emit("notification", {
-            id: newTaskerNoti._id,
-            title: newTaskerNoti.title,
-            message: newTaskerNoti.message,
-            type: newTaskerNoti.type,
-            createdAt: newTaskerNoti.createdAt,
-            reference: newTaskerNoti.reference,
-        });
+        // const io = getSocketInstance();
+        // io.to(`user:${user_id}`).emit("notification", {
+        //     id: notification._id,
+        //     title: notification.title,
+        //     content: notification.message,
+        //     type: notification.type,
+        //     created_at: notification.created_at,
+        //     reference: notification.reference,
+        // });
+
+        // const newTaskerNoti = await Notification.create({
+        //     user_id: newTasker.taskerId,
+        //     title: "Bạn có đơn hàng mới.",
+        //     message: `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}).`,
+        //     type: "order",
+        //     reference: { kind: "Order", refId: orderId },
+        //     status: "unread",
+        // });
+
+        //  io.to(`user:${newTasker.taskerId}`).emit("notification", {
+        //     id: newTaskerNoti._id,
+        //     title: newTaskerNoti.title,
+        //     content: newTaskerNoti.content,
+        //     type: newTaskerNoti.type,
+        //     created_at: newTaskerNoti.created_at,
+        //     reference: newTaskerNoti.reference,
+        // });
 
         res.status(200).json({ message: "Order denied and assign task to another tasker successfully" });
     }
@@ -149,6 +155,7 @@ export const denyTask = async (req, res) =>{
     }
 };
 
+// tasker xác nhận đã đến nơi
 export const confirmArriving = async (req, res) => {
     const { orderId } = req.params;
     try {
@@ -177,6 +184,7 @@ export const confirmArriving = async (req, res) => {
     }
 };
 
+// tasker xác nhận bắt đầu công việc
 export const confirmStart = async (req, res) => {
     const { orderId } = req.params;
     try {
@@ -206,6 +214,7 @@ export const confirmStart = async (req, res) => {
     }
 };
 
+// tasker xác nhận hoàn thành công việc
 export const confirmComplete = async (req, res) => {
     const { orderId } = req.params;
     try {
@@ -235,7 +244,7 @@ export const confirmComplete = async (req, res) => {
     }
 };
 
-// Show all taskers in the system along with their information
+// Lấy danh sách tất cả tasker với phân trang, lọc và sắp xếp
 export const getAllTaskers = async (req, res) => {
   try {
     const { 

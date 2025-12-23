@@ -1,5 +1,6 @@
-import { User, Account, Tasker, Customer } from "../models/index.js";
+import { User, Account, Tasker, Customer, FavoriteTasker, Address } from "../models/index.js";
 import bcrypt from "bcrypt";
+import mongoose from "mongoose";
 import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";
 
 export const getUserProfile = async (req, res) => {
@@ -224,5 +225,301 @@ export const verifyEmail = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ message: "Lỗi xác thực OTP", error: error.message });
+  }
+};
+
+// Favorite Tasker Controllers
+export const addFavoriteTasker = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { tasker_id, note } = req.body;
+
+    if (!tasker_id)
+      return res.status(400).json({ message: "Thiếu tasker_id" });
+
+    if (!mongoose.isValidObjectId(tasker_id))
+      return res.status(400).json({ message: "tasker_id không hợp lệ" });
+
+    const existed = await FavoriteTasker.findOne({
+      user_id: userId,
+      tasker_id
+    });
+
+    if (existed)
+      return res.status(409).json({
+        message: "Tasker này đã nằm trong danh sách yêu thích"
+      });
+
+    const favorite = await FavoriteTasker.create({
+      user_id: userId,
+      tasker_id,
+      note
+    });
+
+    return res.status(201).json({
+      message: "Thêm tasker vào danh sách yêu thích thành công",
+      data: favorite
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Tasker này đã nằm trong danh sách yêu thích"
+      });
+    }
+
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const removeFavoriteTasker = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { tasker_id } = req.params;
+
+    if (!mongoose.isValidObjectId(tasker_id))
+      return res.status(400).json({ message: "tasker_id không hợp lệ" });
+
+    const deleted = await FavoriteTasker.findOneAndDelete({
+      user_id: userId,
+      tasker_id
+    });
+
+    if (!deleted)
+      return res.status(404).json({
+        message: "Tasker này không nằm trong danh sách yêu thích"
+      });
+
+    return res.json({
+      message: "Đã xóa tasker khỏi danh sách yêu thích"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const getMyFavoriteTaskers = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const favorites = await FavoriteTasker.find({ user_id: userId })
+      .select("-__v -created_at -updated_at")
+      .populate({
+        path: "tasker_id",
+        select: "-created_at -updated_at -__v",
+      })
+      .sort({ created_at: -1 });
+
+    return res.json({
+      total: favorites.length,
+      data: favorites
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const checkFavoriteTasker = async (req, res) => {
+  const userId = req.userId;
+  const { tasker_id } = req.params;
+
+  const exists = await FavoriteTasker.exists({
+    user_id: userId,
+    tasker_id
+  });
+
+  res.json({ is_favorite: !!exists });
+};
+
+// Addresses Controllers 
+
+const MAX_ADDRESS_PER_USER = 5;
+
+export const addAddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const { label, longtitude, latitude, full_address,
+      street, ward, district, city, note, is_default } = req.body;
+
+    if ( longtitude === undefined || latitude === undefined || !full_address ||
+      !street || !ward || !district || !city
+    ) {
+      return res.status(400).json({
+        message: "Thiếu thông tin địa chỉ bắt buộc"
+      });
+    }
+
+    if ( typeof longtitude !== "number" || typeof latitude !== "number" ) {
+      return res.status(400).json({
+        message: "Tọa độ không hợp lệ"
+      });
+    }
+
+    if (is_default === true) {
+      await Address.updateMany(
+        { user_id: userId, is_default: true },
+        { is_default: false }
+      );
+    }
+
+    const addressCount = await Address.countDocuments({
+      user_id: userId
+    });
+
+    if (addressCount >= MAX_ADDRESS_PER_USER) {
+      return res.status(400).json({
+        message: `Bạn chỉ được thêm tối đa ${MAX_ADDRESS_PER_USER} địa chỉ`
+      });
+    }
+
+    const address = await Address.create({
+      user_id: userId,
+      label,
+      longtitude,
+      latitude,
+      full_address,
+      street,
+      ward,
+      district,
+      city,
+      note,
+      is_default: addressCount === 0 ? true : !!is_default
+    });
+
+    return res.status(201).json({
+      message: "Thêm địa chỉ thành công",
+      data: address
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const getMyAddresses = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const addresses = await Address.find({ user_id: userId })
+      .sort({ is_default: -1, created_at: -1 });
+
+    return res.json({
+      total: addresses.length,
+      data: addresses
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const deleteAddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { address_id } = req.params;
+
+    if (!mongoose.isValidObjectId(address_id))
+      return res.status(400).json({ message: "address_id không hợp lệ" });
+
+    const address = await Address.findOne({
+      _id: address_id,
+      user_id: userId
+    });
+
+    if (!address)
+      return res.status(404).json({
+        message: "Không tìm thấy địa chỉ"
+      });
+
+    const wasDefault = address.is_default;
+
+    await address.deleteOne();
+
+    // Nếu xóa địa chỉ default thì set địa chỉ khác làm default
+    if (wasDefault) {
+      const anotherAddress = await Address.findOne({ user_id: userId })
+        .sort({ created_at: 1 });
+
+      if (anotherAddress) {
+        anotherAddress.is_default = true;
+        await anotherAddress.save();
+      }
+    }
+
+    return res.json({
+      message: "Xóa địa chỉ thành công"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
+  }
+};
+
+export const setDefaultAddress = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { address_id } = req.params;
+
+    if (!mongoose.isValidObjectId(address_id))
+      return res.status(400).json({ message: "address_id không hợp lệ" });
+
+    const address = await Address.findOne({
+      _id: address_id,
+      user_id: userId
+    });
+
+    if (!address)
+      return res.status(404).json({
+        message: "Không tìm thấy địa chỉ"
+      });
+
+    // Bỏ default tất cả địa chỉ khác
+    await Address.updateMany(
+      { user_id: userId, is_default: true },
+      { is_default: false }
+    );
+
+    address.is_default = true;
+    await address.save();
+
+    return res.json({
+      message: "Đặt địa chỉ mặc định thành công",
+      data: address
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Lỗi server",
+      error: error.message
+    });
   }
 };

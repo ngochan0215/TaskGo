@@ -5,6 +5,7 @@ import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
     createOrder, cancelOrderByCustomer
  } from "../controllers/order.controller.js";
 
+import { addReview, editReview, getMyReviews, getReviewByOrder } from "../controllers/review.controller.js";
 const router = express.Router();
 
 router.post("/create", verifyToken, isCustomer, createOrder);
@@ -14,5 +15,10 @@ router.put("/cancel/:orderId", verifyToken, isCustomer, cancelOrderByCustomer);
 router.get("/all", verifyToken, isAdmin, getAllOrders);
 router.get("/:id",verifyToken, getOrderById);
 router.delete("/delete/:orderId", verifyToken, isAdmin, deleteOrderById);
+
+router.post("/reviews/add", verifyToken, addReview);
+router.get("/reviews/my-reviews", verifyToken, getMyReviews);
+router.get("/reviews/:order_id", verifyToken, getReviewByOrder);
+router.put("/reviews/:order_id/edit", verifyToken, editReview);
 
 export default router;
