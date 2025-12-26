@@ -5,7 +5,7 @@ import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";
 
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await User.findById(req.userId).select("-created_at -updated_at -__v");
     if (!user) {
       return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
     }
@@ -41,7 +41,7 @@ export const getUserProfile = async (req, res) => {
       });
     }
 
-    return res.status(400).json({ success: false, message: "Role không hợp lệ!"});
+    return res.status(400).json({ success: false, message: `Bạn là ${account.role}, không hợp lệ!`});
 
   } catch (error) {
     console.error("LỖI LẤY PROFFILE USER:", error);

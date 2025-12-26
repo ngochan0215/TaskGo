@@ -232,7 +232,7 @@ export const forgotPassword = async (req, res) => {
 
     await sendPasswordResetEmail(
       account.email,
-      `${process.env.CLIENT_URL}/templates/auth/set-password.html?token=${resetToken}&flow=reset`
+      `${process.env.CLIENT_URL}/frontend/templates/auth/set-password.html?token=${resetToken}&flow=reset`
     );
 
     res.status(200).json({ success: true, message: "Password reset link sent to your email" });

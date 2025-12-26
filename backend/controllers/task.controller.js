@@ -164,10 +164,10 @@ export const getServiceById = async (req, res) => {
     const { id } = req.params;
 
     const service = await Service.findById(id)
-	  .select("-__v -createdAt -updatedAt")
+	  .select("-__v -createdAt -updatedAt -id")
       .populate({
         path: "tasks",
-        select: "task_name description pricing unit",
+        select: "task_name description pricing unit status",
         options: { sort: { createdAt: -1 } }
       });
 
@@ -227,7 +227,7 @@ export const getTaskById = async (req, res) => {
 	try {
 		const { id } = req.params;
 
-		const task = await Task.findById(id).lean();
+		const task = await Task.findById(id).select("-__v -createdAt -updatedAt").lean();
 		if (!task) 
 			return res.status(404).json({ success: false, message: "Task not found." });
 
@@ -242,12 +242,16 @@ export const getTaskById = async (req, res) => {
 // List tasks optionally filtered by service_id, with pagination
 export const getAllTasks = async (req, res) => {
 	try {
-		const { serviceId, page = 1, limit = 50 } = req.query;
+		const { serviceId, status, page = 1, limit = 50 } = req.query;
 		const q = {};
 
 		if (serviceId) q.service_id = serviceId;
+		if (status) q.status = status;
+
 		const skip = (Number(page) - 1) * Number(limit);
-		const tasks = await Task.find(q).sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean();
+		const tasks = await Task.find(q)
+			.select("-__v -createdAt -updatedAt")
+			.sort({ createdAt: -1 }).skip(skip).limit(Number(limit)).lean();
 
 		return res.status(200).json({ success: true, tasks });
 
@@ -266,11 +270,11 @@ export const updateTask = async (req, res) => {
 		if (!task) 
 			return res.status(404).json({ success: false, message: "Task not found." });
 
-		if(!task_name) task.task_name = task_name;
-		if (!description) task.description = description;
-		if (!pricing) task.pricing = pricing;
+		if(task_name) task.task_name = task_name;
+		if (description) task.description = description;
+		if (pricing) task.pricing = pricing;
 
-		if (status !== 'inactive') {
+		if (status && status !== 'inactive') {
 			return res.status(400).json({ success: false, message: "You can only update task's status to inactive." });
 		}
 
