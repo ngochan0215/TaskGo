@@ -6,7 +6,9 @@ import { createOrderService, cancelOrderByCustomerService, getAllOrdersService,
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await getAllOrdersService(req.query);
+
     res.status(200).json({ success: true, orders });
+
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -15,7 +17,9 @@ export const getAllOrders = async (req, res) => {
 export const deleteOrderById = async (req, res) => {
   try {
     const deleted = await deleteOrderByIdService(req.params.orderId);
+
     res.status(200).json({ success: true, deleted });
+
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -24,7 +28,9 @@ export const deleteOrderById = async (req, res) => {
 export const getOrderById = async (req, res) => {
   try {
     const order = await getOrderByIdService(req.params.id);
+
     res.status(200).json({ success: true, order });
+
   } catch (err) {
     res.status(404).json({ success: false, message: err.message });
   }
@@ -32,11 +38,13 @@ export const getOrderById = async (req, res) => {
 
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
-    const { customerId } = req.params;
+    const { customerId } = req.params || req.userId;
+
     const orders = await getAllOrdersByCustomerIdService({
       customerId, 
       ...req.query
     });
+    
     res.status(200).json({ success: true, orders });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
@@ -45,11 +53,15 @@ export const getAllOrdersByCustomerId = async (req, res) => {
 
 // create order by customer
 export const createOrder = async (req, res) => {
+  console.log("req.body", req.body);
   try {
+    console.log("Creating order for user:", req.userId);
     const result = await createOrderService({
-      customerId: req.userId,
+      customer_id: req.userId,
       ...req.body,
     });
+
+    console.log("result", result);
 
     return res.status(201).json({
       success: true,
@@ -58,6 +70,7 @@ export const createOrder = async (req, res) => {
       assignedTasker: result.assignedTasker,
     });
   } catch (err) {
+    console.log("err", err);  
     return res.status(400).json({
       success: false,
       message: err.message,

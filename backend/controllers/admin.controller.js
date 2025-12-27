@@ -27,10 +27,9 @@ export const getAllCustomers = async (req, res) => {
       .select("-__v")
       .populate({
         path: "user_id",
-        select: "-_id",
         populate: {
           path: "account_id",
-          select: "email status -_id",
+          select: "email status",
         },
       });
 

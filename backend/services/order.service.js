@@ -1,5 +1,5 @@
-
-import { Task, Voucher, Discount, User, Order } from "../models/index.js";
+import mongoose from "mongoose";
+import { Task, Voucher, Discount, User, Order, OrderStatusLog, Address } from "../models/index.js";
 import { suggestTasker } from "../services/taskers.service.js";
 
 // Get all orders with optional filters + pagination
@@ -28,10 +28,12 @@ export async function getAllOrdersService({ customer_id, tasker_id, status, page
 // Delete a specific order, only for ADMIN
 export async function deleteOrderByIdService(orderId) {
   try {
-
     const deleted = await Order.findByIdAndDelete(orderId);
-    if (!deleted) throw new Error("Order not found");
+    if (!deleted) 
+      throw new Error("Order not found");
+
     return deleted;
+
   } catch (err) {
     throw new Error(err.message);
   }
@@ -40,9 +42,12 @@ export async function deleteOrderByIdService(orderId) {
 // Get order by id
 export async function getOrderByIdService(orderId) {
   try {
-    const order = await Order.findById(orderId).lean();
-    if (!order) throw new Error("Order not found");
+    const order = await Order.findById(orderId).select("-__v -created_at -updated_at").lean();
+    if (!order) 
+      throw new Error("Order not found");
+
     return order;
+
   } catch (err) {
     throw new Error(err.message);
   }
@@ -72,104 +77,143 @@ export async function getAllOrdersByCustomerIdService({ customerId, status, page
 };
 
 export async function createOrderService({
-  customerId,
-  task_id,
-  voucher_id,
-  discount_id,
-  scheduled_at,
-  type,
-  location,
-  note,
-  quantity,
-  total_amount
-}) {
-  try {
-    if (!task_id || !type || !quantity || !location) {
-      throw new Error("Please fill all the required information.");
-    }
+  customer_id, task_id, voucher_id, discount_id, address_id,
+  scheduled_at, type, note, quantity, total_amount }) 
+  {
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    scheduleDate = new Date(scheduled_at);
-    if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date()) {
-      throw new Error("Invalid or past scheduled date.");
-    }
+    try {
 
-    const task = await Task.findById(task_id);
-    if (!task) {
-      throw new Error("Task not found.");
-    }
+      // validation
+      if (!task_id || !type || !quantity || !address_id) {
+        throw new Error("Please fill all the required information.");
+      }
 
-    let base_fee = task.pricing.amount * quantity;
+      if (!["immediate", "scheduled"].includes(type)) {
+        throw new Error("Invalid order type");
+      }
 
-    let discount_percent = 0;
-    if (discount_id) {
-      const discount = await Discount.findById(discount_id);
-      discount_percent += discount?.percent || 0;
-    }
+      if (quantity <= 0) 
+        throw new Error("Invalid quantity");
 
-    let voucher_percent = 0;
-    if (voucher_id) {
-      const voucher = await Voucher.findById(voucher_id);
-      voucher_percent += voucher?.percent || 0;
-    }
+      let scheduleDate;
+      if (type === "scheduled") {
+        scheduleDate = new Date(scheduled_at);
+        if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date())
+          throw new Error("Invalid scheduled date");
+      } else {
+        scheduleDate = new Date();
+      }
 
-    const discount_amount = (base_fee * discount_percent) / 100;
-    const voucher_amount = (base_fee * voucher_percent) / 100;
+      const task = await Task.findById(task_id).session(session);
+      if (!task) {
+        throw new Error("Task not found.");
+      }
 
-    const expected_total = Math.max(base_fee - discount_amount - voucher_amount, 0);
+      const address = await Address.findById(address_id).session(session);
+      if (!address) 
+        throw new Error("Address not found");
+      if (address.user_id.toString() !== customer_id.toString()) {
+        throw new Error("Address does not belong to customer");
+      }
 
-    if (Number(total_amount) !== expected_total) {
-      throw new Error("Invalid total bill. Please refresh and confirm again.");
-    }
+      // calculate bill
+      let base_fee = task.pricing * quantity;
 
-    const newOrder = await Order.create({
-      customer_id: customerId,
-      task_id,
-      type,
-      scheduled_at: scheduleDate,
-      location,
-      note,
-      voucher_id,
-      discount_id,
-      quantity,
-      base_fee,
-      discount_amount,
-      voucher_amount,
-      total_amount,
-      status: "pending",
-    });
+      let discount_percent = 0;
+      if (discount_id) {
+        const discount = await Discount.findById(discount_id).session(session);
+        discount_percent += discount?.percent || 0;
+      }
 
-    // Check if it's immediate (within ~15 mins)
-    const isImmediate = new Date(scheduleDate).getTime() <= Date.now() + 15 * 60 * 1000;
+      let voucher_percent = 0;
+      if (voucher_id) {
+        const voucher = await Voucher.findById(voucher_id).session(session);
+        voucher_percent += voucher?.percent || 0;
+      }
 
-    // If immediate, then assign a tasker
-    if (isImmediate) {
-      const suggestion = await suggestTasker(customer_id);
-      if (!suggestion) throw new Error("No available tasker at the moment");
+      const discount_amount = (base_fee * discount_percent) / 100;
+      const voucher_amount = (base_fee * voucher_percent) / 100;
 
-      await Order.updateOne(
-        { _id: newOrder._id },
-        {
-          tasker_id: suggestion.taskerId,
-          status: "assigned",
-        }
+      const expected_total = Math.max(base_fee - discount_amount - voucher_amount, 0);
+
+      if (Number(total_amount) !== expected_total) {
+        throw new Error("Invalid total bill. Please refresh and confirm again.");
+      }
+
+      const order = await Order.create(
+        [{
+          customer_id: customer_id,
+          task_id,
+          type,
+          scheduled_at: scheduleDate,
+          quantity, note,
+          address_id,
+          address_snapshot: {
+            full_address: address.full_address,
+            latitude: address.latitude,
+            longtitude: address.longtitude
+          },
+          voucher_id,
+          discount_id,
+          base_fee,
+          discount_amount,
+          voucher_amount,
+          total_amount,
+          status: "pending",
+        }],
+        { session }
       );
 
-      const updated = await Order.findById(newOrder._id);
-      return { order: updated, assignedTasker: suggestion }      
+      await changeOrderStatus({
+        orderId: order[0]._id,
+        toStatus: "pending",
+        actorType: "system",
+        actorId: null,
+        session
+      });
+
+      // nếu là đơn đặt liền thì gán tasker ngay
+      if (type === "immediate") {
+        const suggestion = await suggestTasker(customer_id);
+        if (!suggestion) 
+          throw new Error("No available tasker at the moment");
+
+        order[0].tasker_id = suggestion.taskerId;
+        await order[0].save({ session });
+
+        await changeOrderStatus({
+          orderId: order[0]._id,
+          toStatus: "assigned",
+          actorType: "system",
+          actorId: null,
+          session
+        });
+
+        await session.commitTransaction();
+
+        return { order: order[0], assignedTasker: suggestion }      
+      }
+
+      // if scheduled order, not assign yet
+      await session.commitTransaction();
+      return { order: order[0], assignedTasker: null };
+
+    } catch (err) {
+      await session.abortTransaction();
+      session.endSession();
+      throw new Error(err.message);
     }
-
-    // if scheduled order, not assign yet
-    return { order: newOrder, assignedTasker: null };
-
-  } catch (err) {
-    throw new Error(err.message);
-  }
 }
 
 // customer cancels order
 export async function cancelOrderByCustomerService({ orderId, customerId, reason }) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).session(session);
     if (!order) {
       throw new Error("Order not found.");
     }
@@ -178,19 +222,116 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       throw new Error("User doesn't have the right to cancel this order.");
     }
 
-    if (order.status === "cancelled" || order.status === "completed") {
-      throw new Error("Order cannot be cancelled.");
+    if (order.status !== "accepted")
+      throw new Error("Order can only be cancelled after tasker has accepted it and before starting moving to destination.");
+
+    // nếu là đơn đặt trước
+    let penaltyAmount = 0;
+
+    if (order.type === "scheduled") {
+      const scheduledAt = new Date(order.scheduled_at);
+      const diffHours =
+        (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      // 3 tiếng trước giờ G: không cho huỷ
+      if (diffHours <= 3) {
+        throw new Error("Cannot cancel order within 3 hours before scheduled time");
+      }
+
+      // dưới 12 tiếng thì phạt 30% tổng bill
+      if (diffHours < 12) {
+        penaltyAmount = order.total_amount * 0.3;
+      }
     }
 
-    // update order status
-    order.status = "cancelled";
-    order.cancelReason = reason || null;
-    order.cancelledAt = new Date();
+    // nếu là đơn đặt liền
+    // lấy thời điểm tasker accept
+    const acceptedLog = await OrderStatusLog.findOne({
+      order_id: orderId,
+      to_status: "accepted"
+    })
+      .sort({ created_at: -1 })
+      .session(session);
 
+    if (!acceptedLog)
+      throw new Error("Accepted timestamp not found");
+
+    const now = new Date();
+    const diffMinutes =
+      (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+
+    // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
+    if (diffMinutes > 15)
+      throw new Error("Cancellation time window (15 minutes) has expired");
+
+    // kiểm tra số lần huỷ trong ngày
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const cancelCountToday = await OrderStatusLog.countDocuments({
+      actor_type: "customer",
+      actor_id: customerId,
+      to_status: "cancelled",
+      created_at: { $gte: startOfDay }
+    }).session(session);
+
+    if (cancelCountToday >= 5)
+      throw new Error("Daily cancellation limit exceeded (5 times)");
+
+    // đổi trạng thái và log
+    await changeOrderStatus({
+      orderId,
+      toStatus: "cancelled",
+      actorType: "customer",
+      actorId: customerId,
+      reason,
+      session
+    });
+
+    // TODO: Xử lý phí phạt
+    if (penaltyAmount > 0) {
+      console.log(`Apply penalty of amount: ${penaltyAmount}`);
+      // Logic xử lý phí phạt (trừ vào ví, thanh toán, v.v.) sẽ được triển khai ở đây.
+    }
+
+    await session.commitTransaction();
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw new Error(error.message);
+  } finally {
+    session.endSession();
+  }
+}
+
+// change order status and log it
+export async function changeOrderStatus({ orderId, toStatus, actorType, actorId , reason = null, session }) {
+  try {
+    const order = await Order.findById(orderId).session(session);
+    if (!order) {
+      throw new Error("Order not found.");
+    } 
+
+    // log trạng thái
+    await OrderStatusLog.create({
+      order_id: orderId,
+      from_status: order.status,
+      to_status: toStatus,
+      actor_type: actorType,
+      actor_id: actorId,
+      reason
+    });
+
+    // update order
+    order.status = toStatus;
+    if (toStatus === "pending") {
+      order.tasker_id = null;
+    }
     await order.save();
+
     return order;
 
   } catch (error) {
     throw new Error(error.message);
-  }
-}
+  }   
+};

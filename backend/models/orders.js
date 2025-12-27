@@ -5,22 +5,22 @@ const orderSchema = new mongoose.Schema(
     customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     tasker_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
+
     voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
     discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
-
+    
     type: { type: String, enum: ["immediate", "scheduled"], default: "immediate" },
-    location: {
-      address: { type: String, required: true },
+    scheduled_at: { type: Date, required: true },
+
+    address_id: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
+    address_snapshot: {
+      full_address: String,
       latitude: Number,
       longtitude: Number
     },
+    
     note: { type: String },
     quantity: { type: Number, default: 1 },
-
-    scheduled_at: { type: Date, required: true },
-    departed_at: { type: Date },    // tasker bắt đầu đi
-    started_at: { type: Date },     // tasker bắt đầu làm
-    completed_at: { type: Date },   // tasker hoàn thành
 
     base_fee: { type: Number, required: true },
     discount_amount: { type: Number, default: 0 },
@@ -42,11 +42,10 @@ const orderSchema = new mongoose.Schema(
       ],
       default: "pending"
     },
-
-    cancel_reason: { type: String },
-    cancel_at: { type: Date }
   },
-  { timestamps: true }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+   }
 );
 
 // orderSchema.index({ customer_id: 1 });
