@@ -2,7 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles can be added here */
+
+@layer components {
+  .nav-item {
+    @apply flex flex-col items-center transition-colors duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-white;
+  }
+
+  .nav-item-inactive {
+    @apply text-primary-500 hover:text-white;
+  }
+
+  .mobile-menu-open {
+    @apply translate-y-0 opacity-100 visible;
+  }
+
+  .mobile-menu-closed {
+    @apply -translate-y-full opacity-0 invisible;
+  }
+}
+
 .material-symbols-outlined{
   font-variation-settings:
   'FILL' 1,

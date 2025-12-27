@@ -13,16 +13,44 @@
 <body class="bg-primary-100 min-h-screen font-montserrat">
 
 <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
-    <div class="flex items-center justify-between px-4">
+    <div class="flex items-center justify-between px-4 relative">
         <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-            <a href="#"><img src="/public/images/taskgo-logo.png" alt=""></a>
+            <a href="#"><img src="/public/images/taskgo-logo.png" alt="Logo"></a>
         </div>
-        <h1 class="font-bold text-xl md:text-2xl lg:text-3xl text-dark-900">Trang chủ</h1>
-        <div class="w-10 h-10 flex items-center justify-center">
+
+        <h1 class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2">Trang chủ</h1>
+
+        <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
+            <a href="#" class="text-dark-900 font-bold border-b-2 border-primary-500">Trang chủ</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Hoạt động</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Tin nhắn</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Thông báo</a>
+        </nav>
+
+        <div id="menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer">
             <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
         </div>
+
+        <div class="hidden md:block w-10"></div>
     </div>
 </header>
+
+<div id="mobile-menu" class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden">
+    <nav class="flex flex-col p-4 space-y-4">
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">house</span> <span>Trang chủ</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">news</span> <span>Hoạt động</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">chat</span> <span>Tin nhắn</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">lightbulb</span> <span>Thông báo</span>
+        </a>
+    </nav>
+</div>
 
 <main class="p-4 pb-24">
     <div id="search-container"></div>
@@ -51,102 +79,130 @@
         <a href="service_listpage.html" class="text-primary-500 font-semibold">Xem danh sách toàn bộ dịch vụ</a>
     </div>
 </main>
-
-<footer>
-    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-        <div class="flex justify-around py-2 text-base">
-            <a href="#" class="flex flex-col items-center text-white">
-                <span class="material-symbols-outlined text-4xl">house</span>
-                Trang chủ
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">news</span>
-                Hoạt động
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">chat</span>
-                Tin nhắn
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                Thông báo
-            </a>
+<footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch"> <div class="flex flex-col justify-center space-y-3">
+            <div class="space-y-1">
+                <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
+                <div class="flex gap-1.5">
+                    <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#ReactJS</span>
+                    <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
+                </div>
+            </div>
+            <div class="space-y-1">
+                <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Backend & Database</h4>
+                <div class="flex flex-wrap gap-1.5">
+                    <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#NodeJS</span>
+                    <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#MongoDB</span>
+                </div>
+            </div>
         </div>
-    </nav>
-</footer>
 
-<script>
-const searchContainer = document.getElementById("search-container");
-const inputDiv = document.createElement("div");
-inputDiv.className = "mb-4";
-inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
-               class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
-searchContainer.appendChild(inputDiv);
+            <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
+                <div class="flex justify-center items-center space-x-2">
+                    <img src="/public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
+                    <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
+                </div>
+                <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
+                <p class="text-[11px] font-medium text-primary-600">SE347.Q14 - NHÓM 8</p>
+            </div>
 
-const services = [
-    {name: "Dọn dẹp nhà cửa", img: "/public/images/dondepnhacua.jpeg"},
-    {name: "Sơn lại nhà cửa", img: "/public/images/sonlainhacua.jpeg"},
-    {name: "Vệ sinh thảm và sofa", img: "/public/images/vesinhthamvasofa.jpeg"},
-    {name: "Phân loại đồ đạc", img: "/public/images/phanloaidodac.jpg"},
-];
+            <div class="flex flex-col justify-between md:items-end text-center md:text-right py-1">
+                <div class="space-y-1">
+                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Giảng viên hướng dẫn</h4>
+                    <p class="text-sm font-bold text-dark-900">ThS. Trần Thị Hồng Yến</p>
+                    <p class="text-[10px] text-gray-500 font-medium">Đại học Công nghệ Thông tin - ĐHQG TP.HCM</p>
+                </div>
 
-const serviceList = document.getElementById("service-list");
-services.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "service-item relative";
-    div.dataset.name = s.name;
-    div.dataset.img = s.img;
-    div.innerHTML = `
-        <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
-        <button class="heart-btn absolute top-2 right-2">
-            <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-        </button>
-        <p class="mt-1 text-sm font-medium">${s.name}</p>
-    `;
-    serviceList.appendChild(div);
-});
+                <div class="mt-4 md:mt-0">
 
-const bannerContainer = document.getElementById("banner-container");
-bannerContainer.innerHTML = `
-    <div class="relative">
-        <img src="/public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
-        <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
-            Dịch vụ dọn dẹp <br> trọn gói <br> ...
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2025 NHÓM 8 • UIT</p>
+                </div>
+            </div>
+
         </div>
-        <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
-            Khám phá ngay
-        </button>
     </div>
-`;
+</footer>
+<script>
+    const searchContainer = document.getElementById("search-container");
+    const inputDiv = document.createElement("div");
+    inputDiv.className = "mb-4";
+    inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
+                   class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
+    searchContainer.appendChild(inputDiv);
 
-const favoriteContainer = document.getElementById("favorite-services");
-document.addEventListener("click", e => {
-    const btn = e.target.closest(".heart-btn");
-    if (!btn) return;
+    const services = [
+        {name: "Dọn dẹp nhà cửa", img: "/public/images/dondepnhacua.jpeg"},
+        {name: "Sơn lại nhà cửa", img: "/public/images/sonlainhacua.jpeg"},
+        {name: "Vệ sinh thảm và sofa", img: "/public/images/vesinhthamvasofa.jpeg"},
+        {name: "Phân loại đồ đạc", img: "/public/images/phanloaidodac.jpg"},
+    ];
 
-    const heart = btn.querySelector(".heart-icon");
-    const item = btn.closest(".service-item");
-    const name = item.dataset.name;
-    const img = item.dataset.img;
-
-    const existingFav = Array.from(favoriteContainer.children)
-        .find(c => c.querySelector("p").innerText === name);
-
-    if (!existingFav) {
-        heart.style.color = "red";
-        const favItem = document.createElement("div");
-        favItem.className = "service-item";
-        favItem.innerHTML = `
-            <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-            <p class="mt-1 text-sm font-medium">${name}</p>
+    const serviceList = document.getElementById("service-list");
+    services.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "service-item relative";
+        div.dataset.name = s.name;
+        div.dataset.img = s.img;
+        div.innerHTML = `
+            <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
+            <button class="heart-btn absolute top-2 right-2">
+                <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
+            </button>
+            <p class="mt-1 text-sm font-medium">${s.name}</p>
         `;
-        favoriteContainer.appendChild(favItem);
-    } else {
-        heart.style.color = "white"; // Toggle lại
-        favoriteContainer.removeChild(existingFav);
-    }
-});
+        serviceList.appendChild(div);
+    });
 
+    const bannerContainer = document.getElementById("banner-container");
+    bannerContainer.innerHTML = `
+        <div class="relative">
+            <img src="/public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
+            <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
+                Dịch vụ dọn dẹp <br> trọn gói <br> ...
+            </div>
+            <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
+                Khám phá ngay
+            </button>
+        </div>
+    `;
+
+    const favoriteContainer = document.getElementById("favorite-services");
+    document.addEventListener("click", e => {
+        const btn = e.target.closest(".heart-btn");
+        if (!btn) return;
+
+        const heart = btn.querySelector(".heart-icon");
+        const item = btn.closest(".service-item");
+        const name = item.dataset.name;
+        const img = item.dataset.img;
+
+        const existingFav = Array.from(favoriteContainer.children)
+            .find(c => c.querySelector("p").innerText === name);
+
+        if (!existingFav) {
+            heart.style.color = "red";
+            const favItem = document.createElement("div");
+            favItem.className = "service-item";
+            favItem.innerHTML = `
+                <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+                <p class="mt-1 text-sm font-medium">${name}</p>
+            `;
+            favoriteContainer.appendChild(favItem);
+        } else {
+            heart.style.color = "white";
+            favoriteContainer.removeChild(existingFav);
+        }
+    });
+
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", () => {
+            mobileMenu.classList.toggle("hidden");
+        });
+    }
 </script>
 
 </body>
