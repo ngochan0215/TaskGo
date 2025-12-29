@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../public/favicons/favicon.ico"
+    />
+
+    <title>TaskGo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+  </head>
+
+  <body
+    class="m-0 bg-[#95DA97] flex justify-center py-8 font-montserrat min-h-screen"
+  >
+    <div
+      class="w-full max-w-xs mx-auto bg-[#EAFED9] rounded-3xl shadow-xl overflow-hidden flex flex-col"
+    >
+      <!-- HEADER -->
+      <header class="bg-[#95DA97] px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center">
+          <div
+            class="rounded-full bg-[#FFFFFF] flex items-center justify-center overflow-hidden"
+            style="width: 48px; height: 48px"
+          >
+            <img
+              src="../../public/images/taskgo-logo.png"
+              alt="TaskGo logo"
+              class="object-contain"
+              style="width: 64px; height: 64px"
+            />
+          </div>
+        </div>
+
+        <h1 class="text-base font-bold text-[#16411F]">Admin</h1>
+
+        <div class="w-10 h-10 flex items-center justify-center">
+          <a href="#">
+            <span class="material-symbols-outlined text-[#16411F] text-3xl">
+              menu
+            </span>
+          </a>
+        </div>
+      </header>
+
+      <!-- MAIN -->
+      <main class="flex-1 pt-6 pb-6 flex flex-col gap-4">
+        <h2 class="px-6 text-lg font-bold text-[#16411F]">DỊCH VỤ</h2>
+
+        <!-- SEARCH -->
+        <div class="mx-auto mt-1" style="width: 92%">
+          <div
+            class="bg-[#FFFFFF] rounded-full h-12 px-4 flex items-center shadow-md"
+          >
+            <span
+              class="material-symbols-outlined text-gray-400 text-[20px] mr-2"
+            >
+              search
+            </span>
+            <input
+              type="text"
+              placeholder="Tìm kiếm"
+              class="flex-1 bg-transparent outline-none border-0 text-sm placeholder:text-gray-400"
+              style="border: none"
+            />
+          </div>
+        </div>
+
+        <br />
+
+        <!-- TABLE SERVICES -->
+        <div class="mx-auto mt-4" style="width: 92%">
+          <div
+            class="bg-[#FFFFFF] shadow-md"
+            style="border-radius: 24px; padding-top: 4px; padding-bottom: 4px"
+          >
+            <table class="w-full text-xs text-gray-800 table-fixed">
+              <thead class="bg-[#F7F7F7] text-[11px] text-gray-500">
+                <tr>
+                  <th
+                    class="text-left font-semibold py-3 pl-4 pr-2 align-middle"
+                    style="width: 40%"
+                  >
+                    Tên dịch vụ
+                  </th>
+                  <th
+                    class="text-left font-semibold py-3 pl-2 pr-2 align-middle"
+                    style="width: 40%"
+                  >
+                    Mô tả
+                  </th>
+                  <th
+                    class="text-center font-semibold py-3 px-2 align-middle"
+                    style="width: 20%"
+                  >
+                    Trạng thái
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody class="bg-[#FFFFFF] text-[12px]">
+                <!-- 1 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Dọn dẹp nhà
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Vệ sinh toàn bộ nhà, lau chùi cơ bản.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #c6f3d0;
+                      "
+                      class="text-[11px] font-semibold text-[#2E7D32]"
+                    >
+                      Hoạt động
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 2 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">Giặt ủi</td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Nhận giặt, phơi khô và gấp quần áo.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #c6f3d0;
+                      "
+                      class="text-[11px] font-semibold text-[#2E7D32]"
+                    >
+                      Hoạt động
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 3 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Chăm sóc vườn
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Cắt tỉa cây, tưới nước và dọn dẹp sân vườn.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #c6f3d0;
+                      "
+                      class="text-[11px] font-semibold text-[#2E7D32]"
+                    >
+                      Hoạt động
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 4 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Sửa ống nước
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Xử lý rò rỉ, nghẹt, thay đường ống nhỏ.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #fff6d1;
+                      "
+                      class="text-[11px] font-semibold text-[#D48806]"
+                    >
+                      Tạm ngưng
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 5 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Vệ sinh văn phòng
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Dọn dẹp bàn làm việc, sàn, khu vực chung.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #c6f3d0;
+                      "
+                      class="text-[11px] font-semibold text-[#2E7D32]"
+                    >
+                      Hoạt động
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 6 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Chăm sóc thú cưng
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Cho ăn, dắt đi dạo, dọn vệ sinh cơ bản.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #c6f3d0;
+                      "
+                      class="text-[11px] font-semibold text-[#2E7D32]"
+                    >
+                      Hoạt động
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- 7 -->
+                <tr class="border-t border-gray-100">
+                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
+                    Chuyển nhà
+                  </td>
+                  <td class="py-3 pl-2 pr-2 text-[11px] text-gray-600">
+                    Hỗ trợ đóng gói, vận chuyển đồ đạc.
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <span
+                      style="
+                        display: inline-block;
+                        padding: 4px 12px;
+                        border-radius: 9999px;
+                        background-color: #fff6d1;
+                      "
+                      class="text-[11px] font-semibold text-[#D48806]"
+                    >
+                      Tạm ngưng
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <br />
+
+        <!-- BUTTON -->
+        <div class="mt-6 mx-auto" style="width: 92%">
+          <button
+            class="w-full bg-[#5C956C] text-[#FFFFFF] py-3 rounded-full text-base font-semibold shadow-md hover:bg-[#3B5F43] transition-colors"
+          >
+            Thêm dịch vụ
+          </button>
+        </div>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="bg-[#95DA97] border-t border-[#5C956C]">
+        <nav class="flex justify-around py-2 text-[11px]">
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">home</span>
+            Trang chủ
+          </a>
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">group</span>
+            Người dùng
+          </a>
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">shopping_bag</span>
+            Đơn hàng
+          </a>
+          <a
+            href="#"
+            class="flex flex-col items-center text-white font-semibold no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">grid_view</span>
+            Khác
+          </a>
+          <a
+            href="#"
+            class="flex flex-col items-center text-[#16411F] no-underline"
+          >
+            <span class="material-symbols-outlined text-2xl">lightbulb</span>
+            Thông báo
+          </a>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
