@@ -21,23 +21,40 @@ module.exports = {
         },
         secondary: {
           100: "#12A327",
+          150: "#108121ff",
           200: "#54A312",
         },
         accent: {
           500: "#FFBE18", //warning yellow
+          550: "#e0a714ff",
         },
+        danger: {
+          600: "#dc2626",
+          650: "#bd1d1dff",
+        },
+
+        // gray: {
+        //   100: "#60655C",
+        //   400: "#969496",
+        // },
         gray: {
-          100: "#60655C",
-          400: "#969496",
+          50: "#F7F7F7",
+          100: "#E7E7E7",
+          200: "#D1D5DB",
+          300: "#9CA3AF",
+          600: "#4B5563",
+          700: "#374151",
+          800: "#1F2937",
+          900: "#111827",
         },
         dark: {
           900: "#282A37",
         },
-        blue: "#283891",
+        // blue: "#283891",
         white: "#FFFFFF",
         black: "#000000",
       },
     },
   },
-  plugins: [require('@tailwindcss/forms')],
+  plugins: [require("@tailwindcss/forms")],
 };
