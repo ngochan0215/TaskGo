@@ -8,9 +8,6 @@ export default function registerOrderHandlers(io) {
   io.on("connection", (socket) => {
     const userId = String(socket.user.userId);
 
-    /**
-     * CUSTOMER / TASKER JOIN ORDER ROOM
-     */
     socket.on("join-order-room", async ({ order_id }, ack) => {
       try {
         if (!order_id) return ack?.({ ok: false, error: "order_id_required" });

@@ -1,4 +1,5 @@
-import mongoose from "mongoose";import { Task, User, Order, OrderStatusLog, Address } from "../models/index.js";
+import mongoose from "mongoose";
+import { Task, User, Order, OrderStatusLog, Address, Voucher, Discount } from "../models/index.js";
 import { validateAndGetDiscountSnapshot } from "./discount.js";
 import { checkAndGetVoucherSnapshot } from "./voucher.js";
 
@@ -90,113 +91,90 @@ export async function createOrderService({
   {
     const session = await mongoose.startSession();
     session.startTransaction();
-
     try {
 
       // validation
       if (!task_id || !type || !quantity || !address_id) {
-        throw new Error("Please fill all the required information.");
+        throw new Error("Yêu cầu chọn dịch vụ, loại task, số lượng và địa chỉ.");
       }
-  customerId,
-  task_id,
-  type,
-  scheduled_at,
-  location,
-  note,
-  voucher_id,
-  discount_id,
-  quantity,
-  total_amount,
-}) {
-  try {
-    if (
-      !customerId ||
-      !task_id ||
-      !type ||
-      !location ||
-      !scheduled_at ||
-      !quantity ||
-      !total_amount
-    ) {
-      throw new Error("Please fill all the required information.");
-    }
 
       if (!["immediate", "scheduled"].includes(type)) {
-        throw new Error("Invalid order type");
+        throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
       }
 
       if (quantity <= 0) 
-        throw new Error("Invalid quantity");
+        throw new Error("Số giờ đặt phải lớn hơn 0.");
 
       let scheduleDate;
       if (type === "scheduled") {
         scheduleDate = new Date(scheduled_at);
         if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date())
-          throw new Error("Invalid scheduled date");
+          throw new Error("Ngày hẹn lịch không hợp lệ.");
       } else {
         scheduleDate = new Date();
       }
 
       const task = await Task.findById(task_id).session(session);
       if (!task) {
-        throw new Error("Task not found.");
+        throw new Error("Không tìm thấy dịch vụ.");
       }
 
       const address = await Address.findById(address_id).session(session);
       if (!address) 
-        throw new Error("Address not found");
+        throw new Error("Không tìm thấy địa chỉ khách hàng.");
+
       if (address.user_id.toString() !== customer_id.toString()) {
         throw new Error("Address does not belong to customer");
       }
 
-      // calculate bill
+      // TODO: logic tính tiền  nên thực hiện trước khi tạo order
       let base_fee = task.pricing * quantity;
 
-    const discount_snapshot =
-      discount_id && (await validateAndGetDiscountSnapshot(discount_id));
+    // const discount_snapshot =
+    //   discount_id && (await validateAndGetDiscountSnapshot(discount_id));
 
-    const discount_percent = discount_snapshot?.percentage || 0;
+    // const discount_percent = discount_snapshot?.percentage || 0;
 
-    const voucher_snapshot =
-      voucher_id &&
-      (await checkAndGetVoucherSnapshot(
-        voucher_id,
-        customerId,
-        (
-          await User.findById(customerId)
-        ).type
-      ));
-    const voucher_percent = voucher_snapshot?.percentage || 0;
+    // const voucher_snapshot =
+    //   voucher_id &&
+    //   (await checkAndGetVoucherSnapshot(
+    //     voucher_id,
+    //     customerId,
+    //     (
+    //       await User.findById(customerId)
+    //     ).type
+    //   ));
+    // const voucher_percent = voucher_snapshot?.percentage || 0;
 
-    if (voucher_id) {
-      await Voucher.findByIdAndUpdate(voucher_id, {
-        $inc: { total_quantity: -1 },
-      });
+    // if (voucher_id) {
+    //   await Voucher.findByIdAndUpdate(voucher_id, {
+    //     $inc: { total_quantity: -1 },
+    //   });
 
-      // Lưu vào VoucherUsage để track
-      await VoucherUsage.create({
-        voucher_id,
-        user_id: customerId,
-        order_id: newOrder._id,
-        used_at: new Date(),
-      });
-    }
+    //   // Lưu vào VoucherUsage để track
+    //   await VoucherUsage.create({
+    //     voucher_id,
+    //     user_id: customerId,
+    //     order_id: newOrder._id,
+    //     used_at: new Date(),
+    //   });
+    // }
 
-      const discount_amount = (base_fee * discount_percent) / 100;
-      const voucher_amount = (base_fee * voucher_percent) / 100;
+    //   const discount_amount = (base_fee * discount_percent) / 100;
+    //   const voucher_amount = (base_fee * voucher_percent) / 100;
 
-    const expected_total = Math.max(
-      base_fee - discount_amount - voucher_amount,
-      0
-    );
+    // const expected_total = Math.max(
+    //   base_fee - discount_amount - voucher_amount,
+    //   0
+    // );
 
-      if (Number(total_amount) !== expected_total) {
-        throw new Error("Invalid total bill. Please refresh and confirm again.");
-      }
+    //   if (Number(total_amount) !== expected_total) {
+    //     throw new Error("Invalid total bill. Please refresh and confirm again.");
+    //   }
 
       const order = await Order.create(
         [{
-          customer_id: customer_id,
+          customer_id,
           task_id,
           type,
           scheduled_at: scheduleDate,
@@ -226,37 +204,13 @@ export async function createOrderService({
         session
       });
 
-      // nếu là đơn đặt liền thì gán tasker ngay
+      // TODO: thêm logic đặt liền
       if (type === "immediate") {
-        const suggestion = await suggestTasker(order[0]._id, {});
-        if (!suggestion) 
-          throw new Error("No available tasker at the moment");
-    const newOrder = await Order.create({
-      customer_id: customerId,
-      tasker_id: null,
-      task_id,
-      type,
-      scheduled_at: scheduleDate,
-      location: { address: location },
-      note,
-      voucher_snapshot,
-      discount_snapshot,
-      quantity,
-      base_fee,
-      total_amount,
-      status: "pending",
-    });
-
-    return newOrder;
-    // // Check if it's immediate (within ~15 mins)
-    // const isImmediate = new Date(scheduleDate).getTime() <= Date.now() + 15 * 60 * 1000;
-    // // If immediate, then assign a tasker
-    // if (isImmediate) {
-    //   const suggestion = await suggestTasker(newOrder._id, {});
-    //   if (!suggestion) throw new Error("No available tasker at the moment");
-
-        order[0].tasker_id = suggestion.taskerId;
-        await order[0].save({ session });
+      //   const suggestion = await suggestTasker(order[0]._id, {});
+      //   if (!suggestion) 
+      //     throw new Error("No available tasker at the moment");
+      // order[0].tasker_id = suggestion.taskerId;
+      // await order[0].save({ session });
 
         await changeOrderStatus({
           orderId: order[0]._id,
@@ -267,11 +221,10 @@ export async function createOrderService({
         });
 
         await session.commitTransaction();
-
         return { order: order[0], assignedTasker: suggestion }      
       }
 
-      // if scheduled order, not assign yet
+      // nếu đặt lịch trước thì chưa gán tasker liền
       await session.commitTransaction();
       return { order: order[0], assignedTasker: null };
 

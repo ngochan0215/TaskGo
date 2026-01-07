@@ -10,9 +10,6 @@ import {
 import { getSocketInstance } from "../sockets/instance.js";
 import { buildTaskerRanking } from "../services/taskers.service.js";
 
-/**
- * GET ALL ORDERS
- */
 export const getAllOrders = async (req, res) => {
   try {
     const orders = await getAllOrdersService(req.query);
@@ -24,9 +21,6 @@ export const getAllOrders = async (req, res) => {
   }
 };
 
-/**
- * DELETE ORDER
- */
 export const deleteOrderById = async (req, res) => {
   try {
     const deleted = await deleteOrderByIdService(req.params.orderId);
@@ -38,9 +32,6 @@ export const deleteOrderById = async (req, res) => {
   }
 };
 
-/**
- * GET ORDER BY ID
- */
 export const getOrderById = async (req, res) => {
   try {
     const order = await getOrderByIdService(req.params.id);
@@ -52,9 +43,7 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-/**
- * GET ORDERS BY CUSTOMER
- */
+
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
     const { customerId } = req.params || req.userId;
@@ -70,13 +59,11 @@ export const getAllOrdersByCustomerId = async (req, res) => {
   }
 };
 
-/**
- * CREATE ORDER (CUSTOMER)
- */
 export const createOrder = async (req, res) => {
   console.log("req.body", req.body);
   try {
     console.log("Creating order for user:", req.userId);
+
     const result = await createOrderService({
       customer_id: req.userId,
       ...req.body,
@@ -93,8 +80,8 @@ export const createOrder = async (req, res) => {
 
     // Gợi ý tasker dựa trên thuật toán xếp hạng
     const taskers = await buildTaskerRanking(result._id);
-
     console.log("Tasker ", taskers);
+
     if (Array.isArray(taskers)) {
       console.log("Taskers to notify:", taskers);
       for (const tasker of taskers) {
@@ -116,6 +103,7 @@ export const createOrder = async (req, res) => {
       order: result,
       assignedTasker: result.assignedTasker,
     });
+
   } catch (err) {
     console.log("err", err);  
     return res.status(400).json({
@@ -125,9 +113,6 @@ export const createOrder = async (req, res) => {
   }
 };
 
-/**
- * CANCEL ORDER (CUSTOMER)
- */
 export const cancelOrderByCustomer = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -140,13 +125,14 @@ export const cancelOrderByCustomer = async (req, res) => {
 
     const io = getSocketInstance();
 
-    // 🔔 Notify all sockets in order room
+    // notify all sockets in order room
     io.to(`order:${orderId}`).emit("order-cancelled", {
       order_id: orderId,
       reason: req.body.reason,
     });
 
     return res.status(200).json({ success: true, order });
+    
   } catch (err) {
     return res.status(400).json({ success: false, message: err.message });
   }

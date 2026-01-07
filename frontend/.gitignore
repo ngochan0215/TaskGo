@@ -1,0 +1,7 @@
+.env
+node_modules/
+.prettierrc
+.vscode/
+
+### macOS ###
+*.DS_Store

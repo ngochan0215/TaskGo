@@ -2,11 +2,7 @@ import mongoose from "mongoose";
 
 const orderSchema = new mongoose.Schema(
   {
-    customer_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
+    customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     tasker_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
 
@@ -14,7 +10,7 @@ const orderSchema = new mongoose.Schema(
 
     discount_snapshot: {
       discountId: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
-          name: String,
+      name: String,
       description: String,
       percentage: Number,
       begin_date: Date,

@@ -58,10 +58,12 @@ export const buildTaskerRanking = async (orderId) => {
   const userModel = User;
 
   const order = await orderModel.findById(orderId);
-  if (!order) throw new Error("Order not found");
+  if (!order) 
+    throw new Error("Order not found");
 
   const task = await taskModel.findById(order.task_id);
-  if (!task) throw new Error("Task not found");
+  if (!task) 
+    throw new Error("Task not found");
 
   const customer = await customerModel.findOne({
     user_id: order.customer_id,
@@ -277,9 +279,10 @@ export const denyTaskRequest = async (taskerId, orderId, reason) =>{
             actorId: null,
         });
 
-    const newTasker = await suggestTasker(orderId, {
-        excludedTaskerIds: [tasker._id]
-    })
+        // tìm tasker khác
+        const newTasker = await suggestTasker(orderId, {
+            excludedTaskerIds: [tasker._id]
+        })
 
         if (newTasker) {
             const orderLog = await changeOrderStatus({
@@ -292,6 +295,7 @@ export const denyTaskRequest = async (taskerId, orderId, reason) =>{
         
         if (order.customer_id) 
             rankingCache.delete(String(order.customer_id));
+        
         return newTasker;
 
     } catch (error) {
