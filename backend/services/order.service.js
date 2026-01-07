@@ -176,7 +176,7 @@ export async function createOrderService({
 
       // nếu là đơn đặt liền thì gán tasker ngay
       if (type === "immediate") {
-        const suggestion = await suggestTasker(customer_id);
+        const suggestion = await suggestTasker(order[0]._id, {});
         if (!suggestion) 
           throw new Error("No available tasker at the moment");
 

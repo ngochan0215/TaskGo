@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/ngochan0215/TaskGo#readme",
   "dependencies": {
+    "@payos/node": "^2.0.3",
     "@tailwindcss/forms": "^0.5.10",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",

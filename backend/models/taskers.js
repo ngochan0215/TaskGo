@@ -13,7 +13,9 @@ const taskerSchema = new mongoose.Schema(
     total_completed_tasks: { type: Number, default: 0 },
 
     status: { type: String, enum: ["pending", "working", "resign"], default: "pending" },
-    working_status: { type: String, enum: ["pending", "available", "busy", "inactive"], default: "pending" } 
+    working_status: { type: String, enum: ["pending", "available", "busy", "inactive"], default: "pending" } ,
+    BIN: {type: String, required: true }, //6 số đầu của thẻ ngân hàng
+    account_number: {type: String, required: true }, //số tài khoản ngân hàng (không phải số thẻ nhé:)))
   },
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
