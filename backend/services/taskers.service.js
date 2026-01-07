@@ -50,6 +50,7 @@ const buildTaskerRanking = async (orderId) => {
   if (!customer) throw new Error("Customer not found");
 
   const userId = customer.user_id;
+  
   const orderAddress = { 
     longitude: order.address_snapshot.longtitude,
     latitude: order.address_snapshot.latitude
