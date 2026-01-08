@@ -1,4 +1,7 @@
-import { createPayment, payOut, getPaymentLinkDetail, paymentSucceeded, paymentFailed, getpaymentDetail, payoutDetail, payoutDetailList} from '../services/payos.service.js'
+import { createPayment, payOut, getPaymentLinkDetail, paymentSucceeded, 
+    paymentFailed, getpaymentDetail, payoutDetail, payoutDetailList
+} from '../services/payos.service.js'
+
 export const createPaymentLink = async (req, res) => {
     try {
         const { userId } = req.params;

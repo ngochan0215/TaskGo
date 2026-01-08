@@ -6,6 +6,7 @@ import FavoriteTasker from "./favoriteTaskers.js"
 
 import Discount from "./discounts.js";
 import Voucher from "./vouchers.js";
+import VoucherUsage from "./voucherUsage.js";
 import Message from "./messages.js";
 import Notification from "./notifications.js";
 
@@ -20,6 +21,7 @@ import Address from "./addresses.js";
 
 export {
     Account, User, Customer, Tasker, FavoriteTasker,
-    Discount, Voucher, Order, OrderStatusLog, Receipt, Address,
+    Discount, Voucher, VoucherUsage,
+    Order, OrderStatusLog, Receipt, Address,
     Service, Task, Message, Notification, Review,
 };

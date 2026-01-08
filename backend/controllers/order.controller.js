@@ -1,3 +1,5 @@
+import mongoose from "mongoose";
+import { Voucher, VoucherUsage, Order } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -42,7 +44,6 @@ export const getOrderById = async (req, res) => {
     res.status(404).json({ success: false, message: err.message });
   }
 };
-
 
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
@@ -135,5 +136,139 @@ export const cancelOrderByCustomer = async (req, res) => {
     
   } catch (err) {
     return res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// check lại voucher, thêm record voucher usage
+export const applyVoucherToBooking = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = req.user._id;
+    const { order_id, voucher_code } = req.body;
+
+    const order = await Order.findById(order_id).session(session);
+    if (!order) {
+      return res.status(400).json({ message: "Không tìm thấy đơn hàng." });
+    }
+
+    if (order.customer_id.toString() !== userId.toString()) {
+      return res.status(400).json({ message: "Không có quyền áp voucher cho booking này." });
+    }
+
+    if (order.voucher_id) {
+      return res.status(400).json({ message: "Đơn hàng đã áp dụng voucher." });
+    }
+
+    const voucher = await Voucher.findOne({
+      code: voucher_code.toUpperCase(),
+      is_active: true
+    }).session(session);
+
+    if (!voucher) {
+      return res.status(400).json({ message: "Voucher không tồn tại hoặc đã bị vô hiệu hóa." });
+    }
+
+    const now = new Date();
+    if (now < voucher.begin_date || now > voucher.end_date) {
+      return res.status(400).json({ message: "Voucher không nằm trong thời gian hiệu lực." });
+    }
+
+    // check tổng lượt
+    if (voucher.used_quantity >= voucher.total_quantity) {
+      return res.status(400).json({ message: "Voucher đã hết lượt sử dụng." });
+    }
+
+    // check per user limit
+    const usedByUser = await VoucherUsage.countDocuments({
+      voucher_id: voucher._id,
+      user_id: userId
+    }).session(session);
+
+    if (usedByUser >= voucher.per_user_limit) {
+      return res.status(400).json({ message: "Bạn đã dùng hết lượt voucher này." });
+    }
+
+    // FIRST_ORDER
+    if (voucher.conditions?.rule_type === "FIRST_ORDER") {
+      const totalUsed = await VoucherUsage.countDocuments({
+        user_id: userId
+      }).session(session);
+
+      if (totalUsed > 0) {
+        return res.status(400).json({ message: "Voucher chỉ áp dụng cho đơn đầu tiên." });
+      }
+    }
+
+    // min order value
+    if (
+      voucher.conditions?.min_order_value &&
+      booking.total_amount < voucher.conditions.min_order_value
+    ) {
+      return res.status(400).json({ message: "Giá trị đơn hàng chưa đạt điều kiện áp voucher." });
+    }
+
+    // tính discount
+    let discountAmount = 0;
+
+    if (voucher.discount.type === "PERCENT") {
+      discountAmount =
+        booking.total_amount * (voucher.discount.value / 100);
+
+      if (
+        voucher.discount.max_discount &&
+        discountAmount > voucher.discount.max_discount
+      ) {
+        discountAmount = voucher.discount.max_discount;
+      }
+    }
+
+    if (voucher.discount.type === "FIXED") {
+      discountAmount = voucher.discount.value;
+    }
+
+    discountAmount = Math.min(discountAmount, booking.total_amount);
+
+    // update booking
+    booking.voucher_id = voucher._id;
+    booking.discount_amount = discountAmount;
+    booking.final_amount = booking.total_amount - discountAmount;
+
+    // ghi usage
+    await VoucherUsage.create(
+      [
+        {
+          voucher_id: voucher._id,
+          user_id: userId,
+          order_id: order._id
+        }
+      ],
+      { session }
+    );
+
+    // update voucher
+    voucher.used_quantity += 1;
+
+    await order.save({ session });
+    await voucher.save({ session });
+
+    await session.commitTransaction();
+
+    return res.json({
+      success: true,
+      message: "Áp dụng voucher thành công.",
+      discount_amount: discountAmount,
+      final_amount: booking.final_amount
+    });
+
+  } catch (err) {
+    await session.abortTransaction();
+    return res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  } finally {
+    session.endSession();
   }
 };

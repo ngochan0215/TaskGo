@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import { Task, User, Order, OrderStatusLog, Address, Voucher, Discount } from "../models/index.js";
+import { Task, Order, OrderStatusLog, Address, 
+  Voucher, Discount, VoucherUsage, Customer
+ } from "../models/index.js";
 import { validateAndGetDiscountSnapshot } from "./discount.js";
 import { checkAndGetVoucherSnapshot } from "./voucher.js";
 
@@ -243,31 +245,31 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
   try {
     const order = await Order.findById(orderId).session(session);
     if (!order) {
-      throw new Error("Order not found.");
+      throw new Error("Không tìm thấy đơn hàng.");
     }
 
     if (customerId && String(order.customer_id) !== String(customerId)) {
-      throw new Error("User doesn't have the right to cancel this order.");
+      throw new Error("Người dùng không có quyền hủy đơn này.");
     }
 
-    if (order.status !== "accepted")
-      throw new Error("Order can only be cancelled after tasker has accepted it and before starting moving to destination.");
+    const validStatus = ["accepted", "pending", "assigned"];
+    if (!validStatus.includes(order.status))
+      throw new Error("Đơn hàng chỉ có thể hủy trước khi tasker được chỉ định bắt đầu di chuyển.");
 
     // nếu là đơn đặt trước
     let penaltyAmount = 0;
 
     if (order.type === "scheduled") {
       const scheduledAt = new Date(order.scheduled_at);
-      const diffHours =
-        (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+      const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-      // 3 tiếng trước giờ G: không cho huỷ
-      if (diffHours <= 3) {
-        throw new Error("Cannot cancel order within 3 hours before scheduled time");
+      // 1 tiếng trước giờ G: không cho huỷ nữa
+      if (diffHours <= 1) {
+        throw new Error("Không được phép hủy 1 tiếng trước giờ hẹn lịch làm.");
       }
 
-      // dưới 12 tiếng thì phạt 30% tổng bill
-      if (diffHours < 12) {
+      // dưới 5 tiếng thì phạt 30% tổng bill
+      if (diffHours < 5) {
         penaltyAmount = order.total_amount * 0.3;
       }
     }
@@ -285,12 +287,11 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       throw new Error("Accepted timestamp not found");
 
     const now = new Date();
-    const diffMinutes =
-      (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+    const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
 
     // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
     if (diffMinutes > 15)
-      throw new Error("Cancellation time window (15 minutes) has expired");
+      throw new Error("Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn.");
 
     // kiểm tra số lần huỷ trong ngày
     const startOfDay = new Date();
@@ -304,7 +305,7 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     }).session(session);
 
     if (cancelCountToday >= 5)
-      throw new Error("Daily cancellation limit exceeded (5 times)");
+      throw new Error("Đã hết số lần được phép hủy trong ngày (5 lần).");
 
     // đổi trạng thái và log
     await changeOrderStatus({
@@ -315,6 +316,27 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       reason,
       session
     });
+
+    // update số lần hủy của khách hàng
+    await Customer.findOneAndUpdate(
+      { user_id: customerId },
+      { $inc: { cancellation_count: 1 } }
+    );
+
+    // cập nhật sử dụng voucher
+    await VoucherUsage.deleteOne({
+      voucher_id: order.voucher_id,
+      order_id: order._id
+    });
+
+    await Voucher.findByIdAndUpdate(order.voucher_id, {
+      $inc: { used_quantity: -1 }
+    });
+
+    order.voucher_id = null;
+    order.discount_amount = 0;
+    order.final_amount = order.total_amount;
+    await order.save();
 
     // TODO: Xử lý phí phạt
     if (penaltyAmount > 0) {

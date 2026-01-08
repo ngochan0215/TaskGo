@@ -347,7 +347,6 @@ export const checkFavoriteTasker = async (req, res) => {
 };
 
 // Addresses Controllers 
-
 const MAX_ADDRESS_PER_USER = 5;
 
 export const addAddress = async (req, res) => {

@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
+import { voucherStatusCron } from "./utils/voucherStatus.js";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -34,12 +35,12 @@ app.use('/payment', express.static(path.join(__dirname, 'templates')));
 
 // Route cho trang thanh toán thành công
 app.get('/payment/success', (req, res) => {
-    res.sendFile(path.join(__dirname, 'templates', 'success.html'));
+  res.sendFile(path.join(__dirname, 'templates', 'success.html'));
 });
 
 // Route cho trang thanh toán thất bại
 app.get('/payment/cancel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'templates', 'cancel.html'));
+  res.sendFile(path.join(__dirname, 'templates', 'cancel.html'));
 });
 
 app.use("/api/auth", authRoutes);
@@ -50,6 +51,8 @@ app.use("/api/task", taskRoutes);
 app.use("/api/tasker", taskerRoutes);
 app.use("/api/discount", discountRoutes);
 app.use("/api/transaction", transactionRoutes);
+
+voucherStatusCron();
 
 // Wrap express server in httpServer
 const httpServer = http.createServer(app);

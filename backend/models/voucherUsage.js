@@ -14,9 +14,15 @@ const voucherUsageSchema = new mongoose.Schema(
             required: true
         },
 
-        used_count: {
-            type: Number,
-            default: 1
+        order_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Order",
+            required: true
+        },
+
+        used_at: {
+            type: Date,
+            default: Date.now
         }
     }, 
     { 
