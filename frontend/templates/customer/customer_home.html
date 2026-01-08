@@ -9,23 +9,142 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
     <link rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            position: relative;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-modal:hover,
+        .close-modal:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="bg-primary-100 min-h-screen font-montserrat">
 
 <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
-    <div class="flex items-center justify-between px-4">
+    <div class="flex items-center justify-between px-4 relative">
         <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
             <a href="#"><img src="../../public/images/taskgo-logo.png" alt=""></a>
         </div>
-        <h1 class="font-bold text-xl md:text-2xl lg:text-3xl text-dark-900">Trang chủ</h1>
-        <div class="w-10 h-10 flex items-center justify-center">
+
+        <h1 class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2">Trang chủ</h1>
+
+        <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
+            <a href="#" class="text-dark-900 font-bold border-b-2 border-primary-500">Trang chủ</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Hoạt động</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Tin nhắn</a>
+            <a href="#" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Thông báo</a>
+        </nav>
+
+        <div id="menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer">
             <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
         </div>
+
+        <div class="hidden md:block w-10"></div>
     </div>
 </header>
 
+<div id="mobile-menu" class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden">
+    <nav class="flex flex-col p-4 space-y-4">
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">house</span> <span>Trang chủ</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">news</span> <span>Hoạt động</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">chat</span> <span>Tin nhắn</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+            <span class="material-symbols-outlined">lightbulb</span> <span>Thông báo</span>
+        </a>
+    </nav>
+</div>
+
 <main class="p-4 pb-24">
     <div id="search-container"></div>
+
+    <section class="mb-6">
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="font-semibold text-dark-900">Tài khoản của bạn</h2>
+            <a href="#" class="text-sm text-primary-500 hover:underline">Xem chi tiết</a>
+        </div>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary-500 text-lg">stars</span>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500 leading-none">Điểm tích lũy</p>
+                    <p class="text-lg font-bold text-dark-900">1250</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-green-600 text-lg">check_circle</span>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500 leading-none">Đơn thành công</p>
+                    <p class="text-lg font-bold text-dark-900">18</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-red-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-red-500 text-lg">cancel</span>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-500 leading-none">Đơn đã huỷ</p>
+                    <p class="text-lg font-bold text-dark-900">2</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="font-semibold text-dark-900">Tasker yêu thích</h2>
+            <a href="#" class="text-primary-500 text-sm cursor-pointer hover:underline">Xem tất cả</a>
+        </div>
+        <div id="favorite-taskers-list" class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4 scrollbar-hide">
+        </div>
+    </section>
 
     <section class="mb-6">
         <div class="flex justify-between items-center mb-2">
@@ -52,101 +171,266 @@
     </div>
 </main>
 
-<footer>
-    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-        <div class="flex justify-around py-2 text-base">
-            <a href="#" class="flex flex-col items-center text-white">
-                <span class="material-symbols-outlined text-4xl">house</span>
-                Trang chủ
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">news</span>
-                Hoạt động
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">chat</span>
-                Tin nhắn
-            </a>
-            <a href="#" class="flex flex-col items-center text-primary-500">
-                <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                Thông báo
-            </a>
+<div id="tasker-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <div class="flex flex-col items-center mb-4">
+            <img id="modal-tasker-avatar" src="" alt="Avatar" class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500">
+            <h3 id="modal-tasker-name" class="text-xl font-bold text-dark-900"></h3>
+            <div class="flex items-center text-yellow-500 text-sm font-medium">
+                <span id="modal-tasker-rating"></span>
+                <span class="material-symbols-outlined text-sm ml-1">star</span>
+                <span class="text-gray-400 ml-1" id="modal-tasker-reviews"></span>
+            </div>
         </div>
-    </nav>
+
+        <div class="space-y-3 text-sm">
+            <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Chuyên môn:</span>
+                <span id="modal-tasker-skill" class="font-medium text-dark-900"></span>
+            </div>
+            <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Số việc đã làm:</span>
+                <span id="modal-tasker-jobs" class="font-medium text-dark-900"></span>
+            </div>
+            <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Khu vực:</span>
+                <span id="modal-tasker-location" class="font-medium text-dark-900"></span>
+            </div>
+            <div>
+                <span class="text-gray-500 block mb-1">Giới thiệu:</span>
+                <p id="modal-tasker-bio" class="text-gray-700 italic bg-gray-50 p-2 rounded"></p>
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button class="flex-1 py-2 rounded-lg border border-primary-500 text-primary-500 font-medium hover:bg-primary-50">Nhắn tin</button>
+            <button class="flex-1 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 shadow-md">Đặt lịch ngay</button>
+        </div>
+    </div>
+</div>
+
+<footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
+    <div class="max-w-5xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            <div class="flex flex-col justify-center space-y-3">
+                <div class="space-y-1">
+                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
+                    <div class="flex gap-1.5">
+                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#ReactJS</span>
+                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Backend & Database</h4>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#NodeJS</span>
+                        <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#MongoDB</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
+                <div class="flex justify-center items-center space-x-2">
+                    <img src="/public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
+                    <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
+                </div>
+                <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
+                <p class="text-[11px] font-medium text-primary-600">SE347.Q14 - NHÓM 8</p>
+            </div>
+
+            <div class="flex flex-col justify-between md:items-end text-center md:text-right py-1">
+                <div class="space-y-1">
+                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Giảng viên hướng dẫn</h4>
+                    <p class="text-sm font-bold text-dark-900">ThS. Trần Thị Hồng Yến</p>
+                    <p class="text-[10px] text-gray-500 font-medium">Đại học Công nghệ Thông tin - ĐHQG TP.HCM</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">© 2025 NHÓM 8 • UIT</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </footer>
 
 <script>
-const searchContainer = document.getElementById("search-container");
-const inputDiv = document.createElement("div");
-inputDiv.className = "mb-4";
-inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
-               class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
-searchContainer.appendChild(inputDiv);
+    // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
+    const searchContainer = document.getElementById("search-container");
+    const inputDiv = document.createElement("div");
+    inputDiv.className = "mb-4";
+    inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
+                   class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
+    searchContainer.appendChild(inputDiv);
 
-const services = [
-    {name: "Dọn dẹp nhà cửa", img: "../../public/images/dondepnhacua.jpeg"},
-    {name: "Sơn lại nhà cửa", img: "../../public/images/sonlainhacua.jpeg"},
-    {name: "Vệ sinh thảm và sofa", img: "../../public/images/vesinhthamvasofa.jpeg"},
-    {name: "Phân loại đồ đạc", img: "../../public/images/phanloaidodac.jpg"},
-];
+    const services = [
+        {name: "Dọn dẹp nhà cửa", img: "/public/images/dondepnhacua.jpeg"},
+        {name: "Sơn lại nhà cửa", img: "/public/images/sonlainhacua.jpeg"},
+        {name: "Vệ sinh thảm và sofa", img: "/public/images/vesinhthamvasofa.jpeg"},
+        {name: "Phân loại đồ đạc", img: "/public/images/phanloaidodac.jpg"},
+    ];
 
-const serviceList = document.getElementById("service-list");
-services.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "service-item relative";
-    div.dataset.name = s.name;
-    div.dataset.img = s.img;
-    div.innerHTML = `
-        <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
-        <button class="heart-btn absolute top-2 right-2">
-            <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-        </button>
-        <p class="mt-1 text-sm font-medium">${s.name}</p>
-    `;
-    serviceList.appendChild(div);
-});
-
-const bannerContainer = document.getElementById("banner-container");
-bannerContainer.innerHTML = `
-    <div class="relative">
-        <img src="../../public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
-        <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
-            Dịch vụ dọn dẹp <br> trọn gói <br> ...
-        </div>
-        <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
-            Khám phá ngay
-        </button>
-    </div>
-`;
-
-const favoriteContainer = document.getElementById("favorite-services");
-document.addEventListener("click", e => {
-    const btn = e.target.closest(".heart-btn");
-    if (!btn) return;
-
-    const heart = btn.querySelector(".heart-icon");
-    const item = btn.closest(".service-item");
-    const name = item.dataset.name;
-    const img = item.dataset.img;
-
-    const existingFav = Array.from(favoriteContainer.children)
-        .find(c => c.querySelector("p").innerText === name);
-
-    if (!existingFav) {
-        heart.style.color = "red";
-        const favItem = document.createElement("div");
-        favItem.className = "service-item";
-        favItem.innerHTML = `
-            <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-            <p class="mt-1 text-sm font-medium">${name}</p>
+    const serviceList = document.getElementById("service-list");
+    services.forEach(s => {
+        const div = document.createElement("div");
+        div.className = "service-item relative";
+        div.dataset.name = s.name;
+        div.dataset.img = s.img;
+        div.innerHTML = `
+            <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
+            <button class="heart-btn absolute top-2 right-2">
+                <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
+            </button>
+            <p class="mt-1 text-sm font-medium">${s.name}</p>
         `;
-        favoriteContainer.appendChild(favItem);
-    } else {
-        heart.style.color = "white"; // Toggle lại
-        favoriteContainer.removeChild(existingFav);
-    }
-});
+        serviceList.appendChild(div);
+    });
 
+    const bannerContainer = document.getElementById("banner-container");
+    bannerContainer.innerHTML = `
+        <div class="relative">
+            <img src="/public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
+            <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
+                Dịch vụ dọn dẹp <br> trọn gói <br> ...
+            </div>
+            <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
+                Khám phá ngay
+            </button>
+        </div>
+    `;
+
+    const favoriteContainer = document.getElementById("favorite-services");
+    document.addEventListener("click", e => {
+        const btn = e.target.closest(".heart-btn");
+        if (!btn) return;
+
+        const heart = btn.querySelector(".heart-icon");
+        const item = btn.closest(".service-item");
+        const name = item.dataset.name;
+        const img = item.dataset.img;
+
+        const existingFav = Array.from(favoriteContainer.children)
+            .find(c => c.querySelector("p").innerText === name);
+
+        if (!existingFav) {
+            heart.style.color = "red";
+            const favItem = document.createElement("div");
+            favItem.className = "service-item";
+            favItem.innerHTML = `
+                <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+                <p class="mt-1 text-sm font-medium">${name}</p>
+            `;
+            favoriteContainer.appendChild(favItem);
+        } else {
+            heart.style.color = "white";
+            favoriteContainer.removeChild(existingFav);
+        }
+    });
+
+
+    // Mock Data Tasker
+    const favoriteTaskers = [
+        {
+            id: 1,
+            name: "Nguyễn Văn A",
+            avatar: "https://i.pravatar.cc/150?u=1",
+            rating: 4.8,
+            reviews: 120,
+            skill: "Dọn dẹp nhà, Sửa điện",
+            jobs: 350,
+            location: "Quận 1, TP.HCM",
+            bio: "Tôi là người cẩn thận, sạch sẽ và luôn đúng giờ. Có kinh nghiệm 5 năm dọn dẹp."
+        },
+        {
+            id: 2,
+            name: "Trần Thị B",
+            avatar: "https://i.pravatar.cc/150?u=2",
+            rating: 4.9,
+            reviews: 85,
+            skill: "Nấu ăn, Đi chợ",
+            jobs: 210,
+            location: "Thủ Đức, TP.HCM",
+            bio: "Nấu ăn ngon chuẩn vị miền Tây. Luôn chọn thực phẩm tươi sạch nhất cho khách."
+        },
+        {
+            id: 3,
+            name: "Lê Văn C",
+            avatar: "https://i.pravatar.cc/150?u=3",
+            rating: 4.5,
+            reviews: 40,
+            skill: "Sửa ống nước",
+            jobs: 90,
+            location: "Bình Thạnh, TP.HCM",
+            bio: "Thợ sửa ống nước chuyên nghiệp, khắc phục nhanh chóng mọi sự cố rò rỉ."
+        },
+        {
+            id: 4,
+            name: "Phạm Thị D",
+            avatar: "https://i.pravatar.cc/150?u=4",
+            rating: 5.0,
+            reviews: 200,
+            skill: "Trông trẻ, Dọn dẹp",
+            jobs: 500,
+            location: "Quận 7, TP.HCM",
+            bio: "Yêu trẻ con, kiên nhẫn và chu đáo. Đã có chứng chỉ bảo mẫu."
+        }
+    ];
+
+    const taskerListContainer = document.getElementById("favorite-taskers-list");
+
+    favoriteTaskers.forEach(tasker => {
+        const taskerCard = document.createElement("div");
+        taskerCard.className = "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
+        taskerCard.onclick = () => openTaskerModal(tasker); // Gắn sự kiện click
+
+        taskerCard.innerHTML = `
+            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:border-primary-500 transition-colors">
+                <img src="${tasker.avatar}" alt="${tasker.name}" class="w-full h-full object-cover">
+            </div>
+            <p class="text-xs font-medium text-center mt-2 text-dark-900 group-hover:text-primary-500 truncate w-full">${tasker.name}</p>
+            <div class="flex items-center text-[10px] text-gray-500">
+                <span class="material-symbols-outlined text-[10px] text-yellow-500 mr-0.5">star</span>
+                ${tasker.rating}
+            </div>
+        `;
+        taskerListContainer.appendChild(taskerCard);
+    });
+
+    const modal = document.getElementById("tasker-modal");
+    const closeModalBtn = document.querySelector(".close-modal");
+
+    // Hàm mở modal và điền dữ liệu
+    function openTaskerModal(tasker) {
+        document.getElementById("modal-tasker-avatar").src = tasker.avatar;
+        document.getElementById("modal-tasker-name").textContent = tasker.name;
+        document.getElementById("modal-tasker-rating").textContent = tasker.rating;
+        document.getElementById("modal-tasker-reviews").textContent = `(${tasker.reviews} đánh giá)`;
+        document.getElementById("modal-tasker-skill").textContent = tasker.skill;
+        document.getElementById("modal-tasker-jobs").textContent = `${tasker.jobs} việc`;
+        document.getElementById("modal-tasker-location").textContent = tasker.location;
+        document.getElementById("modal-tasker-bio").textContent = tasker.bio;
+
+        modal.classList.add("show");
+    }
+
+
+    closeModalBtn.onclick = function() {
+        modal.classList.remove("show");
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.classList.remove("show");
+        }
+    }
+
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", () => {
+            mobileMenu.classList.toggle("hidden");
+        });
+    }
 </script>
 
 </body>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGo - Tin nhắn dịch vụ</title>
+
+    <link rel="stylesheet" href="../../public/css/output.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+        @keyframes ripple {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.3); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+        .calling-animation {
+            animation: ripple 2s infinite;
+        }
+    </style>
+
+    <script src="../components/cus_header.js" defer></script>
+    <script src="../components/cus_footer.js" defer></script>
+</head>
+
+<body class="bg-[#F0FDF4] h-screen w-full overflow-hidden font-montserrat flex flex-col">
+
+<app-header></app-header>
+
+<main class="flex-1 flex flex-col min-h-0 w-full max-w-[1440px] mx-auto md:p-4">
+
+    <div class="flex-1 bg-white md:rounded-2xl shadow-sm border border-gray-200 flex overflow-hidden w-full h-full relative">
+
+        <aside class="w-[80px] md:w-[320px] flex-none border-r border-gray-100 flex flex-col bg-white">
+            <div class="p-4 border-b border-gray-100 h-[70px] flex items-center shrink-0">
+                <h2 class="hidden md:block font-bold text-xl text-dark-900">Tin nhắn</h2>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                <div class="flex gap-3 p-3 rounded-xl bg-green-50 border-l-4 border-green-500 cursor-pointer group">
+                    <div class="relative shrink-0 w-12 h-12">
+                        <img src="https://i.pravatar.cc/150?img=11" class="w-full h-full rounded-full object-cover border border-green-200">
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div class="hidden md:flex flex-1 min-w-0 flex-col justify-center">
+                        <div class="flex justify-between items-center">
+                            <p class="font-bold text-dark-900 text-sm truncate">Nguyễn Văn A</p>
+                            <span class="text-[10px] text-gray-500 font-medium">10:23</span>
+                        </div>
+                        <p class="text-xs text-green-600 font-medium truncate">Đang làm • Dọn dẹp nhà...</p>
+                    </div>
+                </div>
+                <div class="flex gap-3 p-3 rounded-xl hover:bg-gray-50 cursor-pointer transition">
+                    <div class="relative shrink-0 w-12 h-12">
+                        <img src="https://i.pravatar.cc/150?img=32" class="w-full h-full rounded-full object-cover border border-gray-100">
+                    </div>
+                    <div class="hidden md:flex flex-1 min-w-0 flex-col justify-center">
+                        <div class="flex justify-between items-center">
+                            <p class="font-bold text-dark-900 text-sm truncate">Trần Thị B</p>
+                            <span class="text-[10px] text-gray-400">Hôm qua</span>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate">Đã đến nơi rồi nhé...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 flex flex-col bg-white min-w-0 relative">
+
+            <div id="call-overlay" class="hidden absolute inset-0 z-50 bg-gray-900/95 backdrop-blur-md flex flex-col items-center justify-center transition-all duration-300">
+
+                <div class="relative mb-8">
+                    <div class="w-36 h-36 rounded-full p-1 border-4 border-white/20 calling-animation">
+                        <img src="https://i.pravatar.cc/150?img=11" class="w-full h-full rounded-full object-cover shadow-2xl">
+                    </div>
+                </div>
+
+                <h3 class="text-3xl font-bold text-white mb-2 tracking-tight">Nguyễn Văn A</h3>
+                <p class="text-green-400 font-medium mb-16 flex items-center gap-2 text-lg">
+                    <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
+                    Đang kết nối...
+                </p>
+
+                <div class="flex items-center gap-10">
+                    <div class="flex flex-col items-center gap-2">
+                        <button class="w-16 h-16 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm">
+                            <span class="material-symbols-outlined text-[28px]">mic_off</span>
+                        </button>
+                        <span class="text-xs text-gray-400">Tắt mic</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-2">
+                        <button id="btn-end-call" class="w-20 h-20 rounded-full bg-red-500 text-white flex items-center justify-center shadow-lg hover:bg-red-600 transition transform hover:scale-110 active:scale-95 border-4 border-gray-900">
+                            <span class="material-symbols-outlined text-[40px]">call_end</span>
+                        </button>
+                        <span class="text-xs text-gray-400">Kết thúc</span>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-2">
+                        <button class="w-16 h-16 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 transition backdrop-blur-sm">
+                            <span class="material-symbols-outlined text-[28px]">volume_up</span>
+                        </button>
+                        <span class="text-xs text-gray-400">Loa ngoài</span>
+                    </div>
+                </div>
+            </div>
+            <div class="px-4 md:px-6 h-[70px] border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-10">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="relative shrink-0 w-10 h-10">
+                        <img src="https://i.pravatar.cc/150?img=11" class="w-full h-full rounded-full object-cover border border-gray-200">
+                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-dark-900 text-sm">Nguyễn Văn A</h3>
+                        <div class="flex items-center gap-1">
+                            <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[9px] font-bold flex items-center">
+                                4.9 <span class="material-symbols-outlined text-[10px] ml-0.5">star</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-call" class="w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition shadow-sm active:scale-95">
+                    <span class="material-symbols-outlined text-[20px]">call</span>
+                </button>
+            </div>
+
+            <div class="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar flex flex-col bg-[#FAFAFA]">
+                <div class="flex justify-center my-4">
+                    <div class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-[10px] font-medium">
+                        Đơn hàng #DH8291 đã bắt đầu thực hiện
+                    </div>
+                </div>
+                <div class="flex items-end gap-2 mb-4 max-w-[85%]">
+                    <img src="https://i.pravatar.cc/150?img=11" class="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm">
+                    <div class="bg-white border border-gray-200 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm text-dark-900 shadow-sm">
+                        Chào bạn, mình đã đến đầu hẻm rồi nhé.
+                    </div>
+                </div>
+                <div class="flex flex-col items-end mb-4 ml-auto max-w-[85%]">
+                    <div class="bg-green-500 text-white px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-md">
+                        Ok bạn, bạn cứ chạy thẳng vào nhà số 123 cổng xanh nha.
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 bg-white border-t border-gray-100 shrink-0">
+                <div class="flex items-center gap-2 md:gap-3 bg-gray-50 px-2 py-2 rounded-full border border-gray-200 focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-200 transition-all">
+                    <input type="text" placeholder="Nhập tin nhắn..." class="flex-1 bg-transparent border-none px-3 py-1 text-sm text-dark-900 focus:outline-none placeholder-gray-400">
+                    <button class="w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center shadow-md hover:bg-green-600 transition active:scale-95 shrink-0">
+                        <span class="material-symbols-outlined text-[18px] ml-0.5">send</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<app-footer></app-footer>
+
+<script>
+    const btnCall = document.getElementById('btn-call');
+    const btnEndCall = document.getElementById('btn-end-call');
+    const callOverlay = document.getElementById('call-overlay');
+
+    if(btnCall && callOverlay && btnEndCall) {
+        btnCall.addEventListener('click', () => {
+            callOverlay.classList.remove('hidden');
+        });
+
+        btnEndCall.addEventListener('click', () => {
+            callOverlay.classList.add('hidden');
+        });
+    }
+</script>
+
+</body>
+</html>
