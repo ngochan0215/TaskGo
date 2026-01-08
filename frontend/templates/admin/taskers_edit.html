@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin</title>
+
+    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+
+</head>
+
+<body class="admin-shell">
+    <div id="backdrop" class="backdrop" onclick="closeSidebar()"></div>
+
+    <aside id="sidebarMobile" class="sidebar-mobile closed lg:hidden">
+        <div class="sidebar-brand">
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+            </div>
+
+            <div class="sidebar-brand-title">Admin</div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">home</span>
+                Trang chủ
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">person</span>
+                Quản lý Customer
+            </a>
+
+            <a class="sidebar-link active" href="./taskers.html">
+                <span class="material-symbols-outlined">badge</span>
+                Quản lý Tasker
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">design_services</span>
+                Quản lý dịch vụ
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                Quản lý đơn hàng
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Quản lý doanh thu
+            </a>
+
+            <a class="sidebar-link" href="./discounts.html">
+                <span class="material-symbols-outlined">percent_discount</span>
+                Quản lý khuyến mãi
+            </a>
+
+            <a class="sidebar-link" href="./vouchers.html">
+                <span class="material-symbols-outlined">local_activity</span>
+                Quản lý voucher
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                Cài đặt
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="admin-layout">
+        <aside class="sidebar hidden lg:flex">
+            <div class="sidebar-brand">
+                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+                </div>
+
+                <div class="sidebar-brand-title">TaskGo Admin</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">home</span>
+                    Trang chủ
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">person</span>
+                    Quản lý Customer
+                </a>
+
+                <a class="sidebar-link active" href="./taskers.html">
+                    <span class="material-symbols-outlined">badge</span>
+                    Quản lý Tasker
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">design_services</span>
+                    Quản lý dịch vụ
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    Quản lý đơn hàng
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    Quản lý doanh thu
+                </a>
+
+                <a class="sidebar-link" href="./discounts.html">
+                    <span class="material-symbols-outlined">percent_discount</span>
+                    Quản lý khuyến mãi
+                </a>
+
+                <a class="sidebar-link" href="./vouchers.html">
+                    <span class="material-symbols-outlined">local_activity</span>
+                    Quản lý voucher
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    Cài đặt
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">logout</span>
+                    Đăng xuất
+                </a>
+            </div>
+        </aside>
+
+        <div class="main-area">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="topbar-btn lg:hidden" type="button" onclick="openSidebar()"
+                        aria-label="Open sidebar">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="material-symbols-outlined">badge</span>
+                        <div class="topbar-title">Quản lý Tasker</div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button class="topbar-btn" type="button">
+                        <span class="material-symbols-outlined">notifications</span>
+                        Thông báo
+                    </button>
+                </div>
+            </header>
+
+            <div class="content-wrap">
+                <div class="content-card">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <div class="page-title">Xem/Sửa Tasker</div>
+                            <p class="text-xs">Note: Chế độ Sửa thì gọi data lên lấp
+                                đầy các input, Chế độ Xem thì gán thuộc tính disable cho các input.</p>
+                            <p class="text-xs">Logic dùng 1 file html để chuyển các view dựa trên chế độ thao tác sẽ
+                                tăng tính tái sử dụng trang.</p>
+                        </div>
+                    </div>
+
+                    <form id="main-form" class="space-y-6 mt-6">
+                        <!-- Section 1: Thông tin chung -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
+                                <span class="material-symbols-outlined">info</span>
+                                <h2 class="font-bold uppercase tracking-wider text-sm">Thông tin cơ bản</h2>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Họ tên
+                                        *</label>
+                                    <input type="text" name="name" required placeholder="Họ tên đối tác"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">SĐT
+                                        *</label>
+                                    <input type="tel" name="phone_number" required placeholder="Số điện thoại chính chủ"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">CCCD
+                                        *</label>
+                                    <input type="text" name="identification" required
+                                        placeholder="Số CCCD/CMND chính chủ"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Giới thiệu
+                                        </label>
+                                    <textarea name="description" rows="3" required
+                                        placeholder="Giới thiệu bản thân đối tác..."
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all"></textarea>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Đường link avatar
+                                    </label>
+                                    <input type="url" name="avatar_url"
+                                        placeholder="Ví dụ: https://www.google.com/search?sca_esv=28031..."
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Điểm uy tín
+                                    </label>
+                                    <input type="number" name="reputation_score" default="0" required placeholder=""
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Thông tin đăng ký làm Tasker -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
+                                <span class="material-symbols-outlined">badge</span>
+                                <h2 class="font-bold uppercase tracking-wider text-sm">Thông tin đăng ký làm Tasker</h2>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Kinh nghiệm làm việc
+                                        *</label>
+
+                                    <input type="number" name="working_year" default="1" min="1" required
+                                        placeholder="1"
+                                        class="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Thu nhập mong muốn (VND/h)
+                                        *</label>
+                                    <input type="number" name="hourly_rate" default= "1" min="1" required placeholder="100000"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Khu vực làm việc
+                                        *</label>
+                                    <input type="text" name="working_area" placeholder="Ví dụ: Quận 8, TP. Hồ Chí Minh"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Trạng thái -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
+                            <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
+                                <span class="material-symbols-outlined">amend</span>
+                                <h2 class="font-bold uppercase tracking-wider text-sm">Trạng thái</h2>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Trạng thái tài khoản</label>
+                                    <select name="status"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none bg-white">
+                                        <option value="pending">Đang chờ duyệt (PENDING)</option>
+                                        <option value="working">Đang làm việc (WORKING)</option>
+                                        <option value="resign">Đã nghỉ việc (RESIGN)</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Trạng thái làm việc</label>
+                                    <select name="status"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none bg-white">
+                                        <option value="pending">Đang chờ (PENDING)</option>
+                                        <option value="available">Đang rảnh (AVAILABLE)</option>
+                                        <option value="busy">Đang bận (BUSY)</option>
+                                        <option value="inactive">Không hoạt động (INACTIVE)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer Actions -->
+                        <div class="flex flex-col md:flex-row gap-4 pt-4">
+                            <button type="submit"
+                                class="flex-1 bg-secondary-100 hover:bg-secondary-150 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center space-x-2">
+                                <span class="material-symbols-outlined">save</span>
+                                <span>Lưu</span>
+                            </button>
+                            <button type="button"
+                                class="flex-1 bg-danger-600 hover:bg-danger-650 text-white font-bold py-4 rounded-xl transition-all flex items-center justify-center space-x-2">
+                                <span class="material-symbols-outlined">save</span>
+                                <span>Huỷ</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        const sidebarMobile = document.getElementById("sidebarMobile");
+        const backdrop = document.getElementById("backdrop");
+
+        function openSidebar() {
+            sidebarMobile.classList.remove("closed");
+            backdrop.classList.add("show");
+        }
+
+        function closeSidebar() {
+            sidebarMobile.classList.add("closed");
+            backdrop.classList.remove("show");
+        }
+    </script>
+    <!-- Code injected by live-server -->
+    <script>
+        // <![CDATA[  <-- For SVG support
+        if ('WebSocket' in window) {
+            (function () {
+                function refreshCSS() {
+                    var sheets = [].slice.call(document.getElementsByTagName("link"));
+                    var head = document.getElementsByTagName("head")[0];
+                    for (var i = 0; i < sheets.length; ++i) {
+                        var elem = sheets[i];
+                        var parent = elem.parentElement || head;
+                        parent.removeChild(elem);
+                        var rel = elem.rel;
+                        if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+                            var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+                            elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+                        }
+                        parent.appendChild(elem);
+                    }
+                }
+                var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+                var address = protocol + window.location.host + window.location.pathname + '/ws';
+                var socket = new WebSocket(address);
+                socket.onmessage = function (msg) {
+                    if (msg.data == 'reload') window.location.reload();
+                    else if (msg.data == 'refreshcss') refreshCSS();
+                };
+                if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+                    console.log('Live reload enabled.');
+                    sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+                }
+            })();
+        }
+        else {
+            console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+        }
+        // ]]>
+    </script>
+</body>
+
+</html>

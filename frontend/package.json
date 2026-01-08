@@ -1,0 +1,47 @@
+{
+  "name": "taskgo",
+  "version": "1.0.0",
+  "description": "A smart on-demand service platform that connects customers with trusted taskers for daily tasks such as cleaning, repairs, errands, and more. Fast, reliable, reasonable and convenient — get things done anytime, anywhere.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "nodemon main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ngochan0215/TaskGo.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/ngochan0215/TaskGo/issues"
+  },
+  "homepage": "https://github.com/ngochan0215/TaskGo#readme",
+  "dependencies": {
+    "@tailwindcss/forms": "^0.5.10",
+    "axios": "^1.12.2",
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^1.41.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^7.0.9",
+    "request": "^2.88.2",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.22",
+    "nodemon": "^3.1.10",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.18"
+  }
+}
