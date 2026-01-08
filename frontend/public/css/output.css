@@ -1,55 +1,7 @@
-*, ::before, ::after {
-  --tw-border-spacing-x: 0;
-  --tw-border-spacing-y: 0;
-  --tw-translate-x: 0;
-  --tw-translate-y: 0;
-  --tw-rotate: 0;
-  --tw-skew-x: 0;
-  --tw-skew-y: 0;
-  --tw-scale-x: 1;
-  --tw-scale-y: 1;
-  --tw-pan-x:  ;
-  --tw-pan-y:  ;
-  --tw-pinch-zoom:  ;
-  --tw-scroll-snap-strictness: proximity;
-  --tw-gradient-from-position:  ;
-  --tw-gradient-via-position:  ;
-  --tw-gradient-to-position:  ;
-  --tw-ordinal:  ;
-  --tw-slashed-zero:  ;
-  --tw-numeric-figure:  ;
-  --tw-numeric-spacing:  ;
-  --tw-numeric-fraction:  ;
-  --tw-ring-inset:  ;
-  --tw-ring-offset-width: 0px;
-  --tw-ring-offset-color: #fff;
-  --tw-ring-color: rgb(59 130 246 / 0.5);
-  --tw-ring-offset-shadow: 0 0 #0000;
-  --tw-ring-shadow: 0 0 #0000;
-  --tw-shadow: 0 0 #0000;
-  --tw-shadow-colored: 0 0 #0000;
-  --tw-blur:  ;
-  --tw-brightness:  ;
-  --tw-contrast:  ;
-  --tw-grayscale:  ;
-  --tw-hue-rotate:  ;
-  --tw-invert:  ;
-  --tw-saturate:  ;
-  --tw-sepia:  ;
-  --tw-drop-shadow:  ;
-  --tw-backdrop-blur:  ;
-  --tw-backdrop-brightness:  ;
-  --tw-backdrop-contrast:  ;
-  --tw-backdrop-grayscale:  ;
-  --tw-backdrop-hue-rotate:  ;
-  --tw-backdrop-invert:  ;
-  --tw-backdrop-opacity:  ;
-  --tw-backdrop-saturate:  ;
-  --tw-backdrop-sepia:  ;
-  --tw-contain-size:  ;
-  --tw-contain-layout:  ;
-  --tw-contain-paint:  ;
-  --tw-contain-style:  ;
+/*! tailwindcss v4.1.16 | MIT License | https://tailwindcss.com */
+@layer properties;
+.visible {
+  visibility: visible;
 }
 
 ::backdrop {
@@ -790,7 +742,9 @@ select {
 .absolute {
   position: absolute;
 }
-
+.fixed {
+  position: fixed;
+}
 .relative {
   position: relative;
 }
@@ -864,8 +818,7 @@ select {
 }
 
 .mx-auto {
-  margin-left: auto;
-  margin-right: auto;
+  margin-inline: auto;
 }
 
 .my-2 {
@@ -953,19 +906,6 @@ select {
 .mt-0\.5 {
   margin-top: 0.125rem;
 }
-
-.block {
-  display: block;
-}
-
-.inline-block {
-  display: inline-block;
-}
-
-.inline {
-  display: inline;
-}
-
 .flex {
   display: flex;
 }
@@ -981,13 +921,11 @@ select {
 .grid {
   display: grid;
 }
-
 .hidden {
   display: none;
 }
-
-.h-10 {
-  height: 2.5rem;
+.inline-flex {
+  display: inline-flex;
 }
 
 .h-12 {
@@ -1033,21 +971,14 @@ select {
 .h-6 {
   height: 1.5rem;
 }
-
 .min-h-screen {
   min-height: 100vh;
 }
-
-.w-10 {
-  width: 2.5rem;
+.w-\[47\%\] {
+  width: 47%;
 }
-
-.w-16 {
-  width: 4rem;
-}
-
-.w-24 {
-  width: 6rem;
+.w-\[70\%\] {
+  width: 70%;
 }
 
 .w-32 {
@@ -1081,25 +1012,11 @@ select {
 .w-\[90\%\] {
   width: 90%;
 }
-
 .w-full {
   width: 100%;
 }
-
-.max-w-md {
-  max-width: 28rem;
-}
-
-.max-w-sm {
-  max-width: 24rem;
-}
-
-.max-w-xs {
-  max-width: 20rem;
-}
-
 .flex-1 {
-  flex: 1 1 0%;
+  flex: 1;
 }
 
 .flex-shrink-0 {
@@ -1154,7 +1071,12 @@ select {
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
-
+.grid-cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.grid-rows-4 {
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
 .flex-col {
   flex-direction: column;
 }
@@ -1166,9 +1088,8 @@ select {
 .items-center {
   align-items: center;
 }
-
-.justify-start {
-  justify-content: flex-start;
+.items-start {
+  align-items: flex-start;
 }
 
 .justify-center {
@@ -1885,9 +1806,8 @@ select {
 .underline {
   text-decoration-line: underline;
 }
-
-.no-underline {
-  text-decoration-line: none;
+.opacity-40 {
+  opacity: 40%;
 }
 
 .opacity-0 {
@@ -1900,6 +1820,14 @@ select {
 
 .opacity-70 {
   opacity: 0.7;
+}
+
+.opacity-80 {
+  opacity: 0.8;
+}
+
+.opacity-90 {
+  opacity: 0.9;
 }
 
 .opacity-80 {
@@ -1978,9 +1906,9 @@ select {
 }
 
 .transition-colors {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
+  transition-timing-function: var(--tw-ease, ease);
+  transition-duration: var(--tw-duration, 0s);
 }
 
 .transition-transform {
