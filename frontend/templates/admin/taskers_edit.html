@@ -44,7 +44,7 @@
                 Quản lý Customer
             </a>
 
-            <a class="sidebar-link" href="./taskers.html">
+            <a class="sidebar-link active" href="./taskers.html">
                 <span class="material-symbols-outlined">badge</span>
                 Quản lý Tasker
             </a>
@@ -64,7 +64,7 @@
                 Quản lý doanh thu
             </a>
 
-            <a class="sidebar-link active" href="./discounts.html">
+            <a class="sidebar-link" href="./discounts.html">
                 <span class="material-symbols-outlined">percent_discount</span>
                 Quản lý khuyến mãi
             </a>
@@ -109,7 +109,7 @@
                     Quản lý Customer
                 </a>
 
-                <a class="sidebar-link" href="./taskers.html">
+                <a class="sidebar-link active" href="./taskers.html">
                     <span class="material-symbols-outlined">badge</span>
                     Quản lý Tasker
                 </a>
@@ -129,7 +129,7 @@
                     Quản lý doanh thu
                 </a>
 
-                <a class="sidebar-link active" href="./discounts.html">
+                <a class="sidebar-link" href="./discounts.html">
                     <span class="material-symbols-outlined">percent_discount</span>
                     Quản lý khuyến mãi
                 </a>
@@ -162,8 +162,8 @@
                     </button>
 
                     <div class="flex items-center gap-2 min-w-0">
-                        <span class="material-symbols-outlined">percent_discount</span>
-                        <div class="topbar-title">Quản lý khuyến mãi</div>
+                        <span class="material-symbols-outlined">badge</span>
+                        <div class="topbar-title">Quản lý Tasker</div>
                     </div>
                 </div>
 
@@ -179,8 +179,8 @@
                 <div class="content-card">
                     <div class="flex items-start justify-between gap-4">
                         <div>
-                            <div class="page-title">Xem/Tạo/Sửa khuyến mãi</div>
-                            <p class="text-xs">Note: Chế độ tạo thì như view hiện tại, Chế độ Sửa thì gọi data lên lấp
+                            <div class="page-title">Xem/Sửa Tasker</div>
+                            <p class="text-xs">Note: Chế độ Sửa thì gọi data lên lấp
                                 đầy các input, Chế độ Xem thì gán thuộc tính disable cho các input.</p>
                             <p class="text-xs">Logic dùng 1 file html để chuyển các view dựa trên chế độ thao tác sẽ
                                 tăng tính tái sử dụng trang.</p>
@@ -197,125 +197,109 @@
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Tên chương trình
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Họ tên
                                         *</label>
-                                    <input type="text" name="name" required placeholder="Ví dụ: Chào xuân 2026"
+                                    <input type="text" name="name" required placeholder="Họ tên đối tác"
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
                                 </div>
 
                                 <div class="md:col-span-2">
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Mô tả hiển thị
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">SĐT
                                         *</label>
+                                    <input type="tel" name="phone_number" required placeholder="Số điện thoại chính chủ"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">CCCD
+                                        *</label>
+                                    <input type="text" name="identification" required
+                                        placeholder="Số CCCD/CMND chính chủ"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Giới thiệu
+                                        </label>
                                     <textarea name="description" rows="3" required
-                                        placeholder="Nội dung khuyến mãi sẽ hiển thị..."
+                                        placeholder="Giới thiệu bản thân đối tác..."
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all"></textarea>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Đường link avatar
+                                    </label>
+                                    <input type="url" name="avatar_url"
+                                        placeholder="Ví dụ: https://www.google.com/search?sca_esv=28031..."
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Điểm uy tín
+                                    </label>
+                                    <input type="number" name="reputation_score" default="0" required placeholder=""
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none transition-all">
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Section 2: Giá trị & Thời gian -->
+                        <!-- Section 2: Thông tin đăng ký làm Tasker -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
                             <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
-                                <span class="material-symbols-outlined">percent</span>
-                                <h2 class="font-bold uppercase tracking-wider text-sm">Giá trị & Hiệu lực</h2>
+                                <span class="material-symbols-outlined">badge</span>
+                                <h2 class="font-bold uppercase tracking-wider text-sm">Thông tin đăng ký làm Tasker</h2>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Phần trăm giảm
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Kinh nghiệm làm việc
                                         *</label>
-                                    <div class="relative">
-                                        <input type="number" name="percentage" min="1" max="100" required
-                                            placeholder="0"
-                                            class="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
-                                        <span
-                                            class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold">%</span>
-                                    </div>
+
+                                    <input type="number" name="working_year" default="1" min="1" required
+                                        placeholder="1"
+                                        class="w-full pl-4 pr-10 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Ngày bắt đầu
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Thu nhập mong muốn (VND/h)
                                         *</label>
-                                    <input type="date" name="begin_date" required
+                                    <input type="number" name="hourly_rate" default= "1" min="1" required placeholder="100000"
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Ngày kết thúc
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Khu vực làm việc
                                         *</label>
-                                    <input type="date" name="end_date" required
+                                    <input type="text" name="working_area" placeholder="Ví dụ: Quận 8, TP. Hồ Chí Minh"
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
                                 </div>
 
                             </div>
                         </div>
 
-                        <!-- Section 3: Phạm vi áp dụng (Enum: SERVICE, TASK, ORDER...) -->
+                        <!-- Section 3: Trạng thái -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
                             <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
-                                <span class="material-symbols-outlined">layers</span>
-                                <h2 class="font-bold uppercase tracking-wider text-sm">Đối tượng & Phạm vi</h2>
+                                <span class="material-symbols-outlined">amend</span>
+                                <h2 class="font-bold uppercase tracking-wider text-sm">Trạng thái</h2>
                             </div>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Áp dụng cho *</label>
-                                    <select name="applied_model" id="applied_model" onchange="toggleModelIdInput()"
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Trạng thái tài khoản</label>
+                                    <select name="status"
                                         class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none bg-white">
-                                        <option value="GLOBAL">Toàn hệ thống (GLOBAL)</option>
-                                        <option value="SERVICE">Dịch vụ (SERVICE)</option>
-                                        <option value="TASK">Công việc (TASK)</option>
-                                        <option value="ORDER">Đơn hàng (ORDER)</option>
-                                        <option value="RECEIPT">Biên lai (RECEIPT)</option>
+                                        <option value="pending">Đang chờ duyệt (PENDING)</option>
+                                        <option value="working">Đang làm việc (WORKING)</option>
+                                        <option value="resign">Đã nghỉ việc (RESIGN)</option>
                                     </select>
                                 </div>
 
-                            </div>
-                        </div>
-
-                        <!-- Section 4: Điều kiện (Conditions) -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 md:p-8">
-                            <div class="flex items-center space-x-2 text-gray-600 mb-6 border-b border-gray-50 pb-4">
-                                <span class="material-symbols-outlined">group</span>
-                                <h2 class="font-bold uppercase tracking-wider text-sm">Điều kiện áp dụng</h2>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-3">Loại khách
-                                        hàng</label>
-                                    <div class="flex flex-wrap gap-3">
-                                        <label class="flex items-center space-x-2 cursor-pointer group">
-                                            <input type="checkbox" name="customer_types" value="new"
-                                                class="w-5 h-5 rounded border-gray-300 text-dark-900 focus:ring-gray-500 transition-all">
-                                            <span
-                                                class="text-slate-600 group-hover:text-dark-900 transition-colors">Khách
-                                                hàng mới</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 cursor-pointer group">
-                                            <input type="checkbox" name="customer_types" value="loyal"
-                                                class="w-5 h-5 rounded border-gray-300 text-dark-900 focus:ring-gray-500 transition-all">
-                                            <span
-                                                class="text-slate-600 group-hover:text-dark-900 transition-colors">Thân
-                                                thiết (Loyal)</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 cursor-pointer group">
-                                            <input type="checkbox" name="customer_types" value="vip"
-                                                class="w-5 h-5 rounded border-gray-300 text-dark-900 focus:ring-gray-500 transition-all">
-                                            <span
-                                                class="text-slate-600 group-hover:text-dark-900 transition-colors">VIP</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Giá trị đơn hàng tối
-                                        thiểu</label>
-                                    <div class="relative">
-                                        <input type="number" name="min_order_value" placeholder="0"
-                                            class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none">
-                                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">VNĐ</span>
-                                    </div>
+                                    <label class="block text-sm font-semibold text-dark-900 mb-2">Trạng thái làm việc</label>
+                                    <select name="status"
+                                        class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-gray-500 outline-none bg-white">
+                                        <option value="pending">Đang chờ (PENDING)</option>
+                                        <option value="available">Đang rảnh (AVAILABLE)</option>
+                                        <option value="busy">Đang bận (BUSY)</option>
+                                        <option value="inactive">Không hoạt động (INACTIVE)</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
