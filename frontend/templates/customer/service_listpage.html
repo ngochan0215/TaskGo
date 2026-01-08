@@ -54,7 +54,10 @@
   </footer>
 
   <script>
-
+    const UNIT_MAP = {
+      hour: "giờ",
+      job: "công việc"
+    };
     const TASK_DETAIL_MAP = {
       cleaning_washing_machine: "./detail_pages/cleaning_washing_machine.html",
       cleaning_house: "./detail_pages/cleaning_house_detail.html",
@@ -113,12 +116,10 @@
 
             <div class="grid grid-cols-3 gap-y-4 text-center text-base">
               ${service.tasks?.map(task => {
-                console.log("TASK_TYPE: ", task.task_type);
                 const detailPage = TASK_DETAIL_MAP[task.task_type];
-                console.log("detailPage: ", detailPage);
                 if (!detailPage) return "";
                 return `
-                <a href="${detailPage}?id=${task._id}"
+                <a href="${detailPage}?id=${task._id}&price=${task.pricing}"
                   class="flex flex-col items-center space-y-1 text-black">
 
                   <span class="material-symbols-outlined
@@ -130,7 +131,7 @@
                   <span>${task.task_name}</span>
                   <span class="text-sm text-gray-500">
                     ${Number(task.pricing || 0).toLocaleString()} /
-                    ${task.unit || "hour"}
+                    ${UNIT_MAP[task.unit] || task.unit }
                   </span>
                 </a>
               `;

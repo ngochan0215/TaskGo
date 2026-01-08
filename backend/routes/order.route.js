@@ -2,7 +2,8 @@ import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isCustomer } from "../middleware/verifyRole.js";
 import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
-    createOrder, cancelOrderByCustomer
+    createOrder, cancelOrderByCustomer,
+    createReceipt
  } from "../controllers/order.controller.js";
 
 import { addReview, editReview, getMyReviews, getReviewByOrder } from "../controllers/review.controller.js";
@@ -16,6 +17,10 @@ router.get("/all", verifyToken, isAdmin, getAllOrders);
 router.get("/:id",verifyToken, getOrderById);
 router.delete("/delete/:orderId", verifyToken, isAdmin, deleteOrderById);
 
+// receipt - hóa đơn
+router.post("/receipt/", verifyToken, createReceipt);
+
+// review - đánh giá
 router.post("/reviews/add", verifyToken, addReview);
 router.get("/reviews/my-reviews", verifyToken, getMyReviews);
 router.get("/reviews/:order_id", verifyToken, getReviewByOrder);

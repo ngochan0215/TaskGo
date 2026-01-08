@@ -134,9 +134,10 @@ export const getAllServices = async (req, res) => {
 
 		const skip = (Number(page) - 1) * Number(limit);
 		const services = await Service.find(q)
-			.select("-__v")
+			.select("-__v -createdAt -updatedAt")
 			.populate({
-				path: "tasks", select: "_id task_name description pricing status icon task_type",
+				//path: "tasks", select: "_id task_name description pricing status icon task_type unit",
+				path: "tasks", select: "-__v -createdAt -updatedAt",
 				options: { sort: { createdAt: -1 } },
 			})
 			.sort({ createdAt: -1 })

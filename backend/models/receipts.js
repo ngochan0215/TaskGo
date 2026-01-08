@@ -19,7 +19,9 @@ const receiptSchema = new mongoose.Schema(
     transaction_id: { type: String, trim: true },
 
   },
-  { timestamps: true }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" } 
+  }
 );
 
 //receiptSchema.index({ order_id: 1 });

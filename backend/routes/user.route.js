@@ -19,7 +19,7 @@ router.delete("/favorites/taskers/:tasker_id", verifyToken, isCustomer, removeFa
 router.get("/favorites/taskers/", verifyToken, isCustomer, getMyFavoriteTaskers);
 
 router.post("/addresses/", verifyToken, isCustomer, addAddress);
-router.get("/addresses/all", verifyToken, isCustomer, getMyAddresses);
+router.get("/addresses/my", verifyToken, isCustomer, getMyAddresses);
 router.delete("/addresses/:address_id", verifyToken, isCustomer, deleteAddress);
 router.patch("/addresses/:address_id/set-default", verifyToken, isCustomer, setDefaultAddress);
 

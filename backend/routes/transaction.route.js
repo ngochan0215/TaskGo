@@ -12,4 +12,5 @@ router.get("/payout/:referenceId", payoutStatusDetail); //chi tiết payout chuy
 router.get("/:orderId", getPaymentTransactionDetail);   
 router.patch("/:orderId/success", updateSuccessfulTransaction); 
 router.patch("/:orderId/failed", updateFailedTransaction);
+
 export default router;

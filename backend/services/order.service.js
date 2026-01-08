@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
-  Voucher, Discount, VoucherUsage, Customer
+  Voucher, Receipt, VoucherUsage, Customer, 
  } from "../models/index.js";
 import { validateAndGetDiscountSnapshot } from "./discount.js";
 import { checkAndGetVoucherSnapshot } from "./voucher.js";
@@ -88,15 +88,19 @@ export async function getAllOrdersByCustomerIdService({
 }
 
 export async function createOrderService({
-  customer_id, task_id, voucher_id, discount_id, address_id,
-  scheduled_at, type, note, quantity, total_amount }) 
+  customer_id, task_id, task_snapshot, voucher_id, voucher_snapshot,
+  discount_id, discount_snapshot, address_id, address_snapshot, 
+  task_payload, scheduled_at, type, note, quantity, base_amount }) 
   {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
 
+      if (!customer_id) 
+        customer_id = req.userId;
+
       // validation
-      if (!task_id || !type || !quantity || !address_id) {
+      if (!task_id || !type || !task_payload || !address_id) {
         throw new Error("Yêu cầu chọn dịch vụ, loại task, số lượng và địa chỉ.");
       }
 
@@ -104,8 +108,8 @@ export async function createOrderService({
         throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
       }
 
-      if (quantity <= 0) 
-        throw new Error("Số giờ đặt phải lớn hơn 0.");
+      // if (quantity <= 0) 
+      //   throw new Error("Số giờ đặt phải lớn hơn 0.");
 
       let scheduleDate;
       if (type === "scheduled") {
@@ -126,73 +130,25 @@ export async function createOrderService({
         throw new Error("Không tìm thấy địa chỉ khách hàng.");
 
       if (address.user_id.toString() !== customer_id.toString()) {
-        throw new Error("Address does not belong to customer");
+        throw new Error("Đây không phải là địa chỉ của khách hàng.");
       }
 
-      // TODO: logic tính tiền  nên thực hiện trước khi tạo order
-      let base_fee = task.pricing * quantity;
-
-    // const discount_snapshot =
-    //   discount_id && (await validateAndGetDiscountSnapshot(discount_id));
-
-    // const discount_percent = discount_snapshot?.percentage || 0;
-
-    // const voucher_snapshot =
-    //   voucher_id &&
-    //   (await checkAndGetVoucherSnapshot(
-    //     voucher_id,
-    //     customerId,
-    //     (
-    //       await User.findById(customerId)
-    //     ).type
-    //   ));
-    // const voucher_percent = voucher_snapshot?.percentage || 0;
-
-    // if (voucher_id) {
-    //   await Voucher.findByIdAndUpdate(voucher_id, {
-    //     $inc: { total_quantity: -1 },
-    //   });
-
-    //   // Lưu vào VoucherUsage để track
-    //   await VoucherUsage.create({
-    //     voucher_id,
-    //     user_id: customerId,
-    //     order_id: newOrder._id,
-    //     used_at: new Date(),
-    //   });
-    // }
-
-    //   const discount_amount = (base_fee * discount_percent) / 100;
-    //   const voucher_amount = (base_fee * voucher_percent) / 100;
-
-    // const expected_total = Math.max(
-    //   base_fee - discount_amount - voucher_amount,
-    //   0
-    // );
-
-    //   if (Number(total_amount) !== expected_total) {
-    //     throw new Error("Invalid total bill. Please refresh and confirm again.");
-    //   }
+      if (!voucher_id) voucher_id = null;
+      if (!discount_id) discount_id = null;
+      if (!voucher_snapshot) voucher_snapshot = null;
+      if (!discount_snapshot) discount_snapshot = null;
 
       const order = await Order.create(
         [{
           customer_id,
-          task_id,
+          task_id, task_snapshot,
           type,
           scheduled_at: scheduleDate,
           quantity, note,
-          address_id,
-          address_snapshot: {
-            full_address: address.full_address,
-            latitude: address.latitude,
-            longtitude: address.longtitude
-          },
-          voucher_id,
-          discount_id,
-          base_fee,
-          discount_amount,
-          voucher_amount,
-          total_amount,
+          address_id, address_snapshot,
+          voucher_id, voucher_snapshot,
+          discount_id, discount_snapshot,
+          base_amount,
           status: "pending",
         }],
         { session }
@@ -205,6 +161,26 @@ export async function createOrderService({
         actorId: null,
         session
       });
+
+      if (voucher_id && voucher_snapshot) {
+        // ghi usage
+        await VoucherUsage.create(
+          [
+            {
+              voucher_id,
+              user_id: customer_id,
+              order_id: order._id
+            }
+          ],
+          { session }
+        );
+    
+        // update voucher
+        const voucher = await Voucher.findById(voucher_id).session(session);
+        voucher.used_quantity += 1;
+    
+        await voucher.save({ session });
+      }
 
       // TODO: thêm logic đặt liền
       if (type === "immediate") {
@@ -384,3 +360,57 @@ export async function changeOrderStatus({ orderId, toStatus, actorType, actorId 
     throw new Error(error.message);
   }   
 };
+
+//---- RECEIPT ----//
+export async function createReceiptService({ order_id, payment_method }) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    if (!order_id)
+      throw new Error("order_id là bắt buộc.");
+
+    if (!["cash", "credit_card", "bank_transfer", "ewallet"].includes(payment_method)) {
+      throw new Error("Phương thức thanh toán không hợp lệ.");
+    }
+
+    const order = await Order.findById(order_id).session(session);
+    if (!order)
+      throw new Error("Không tìm thấy đơn hàng.");
+
+    const allowedStatuses = ["pending", "awaiting_payment"];
+    if (!allowedStatuses.includes(order.status)) {
+      throw new Error(
+        `Không thể tạo hóa đơn khi đơn hàng đang ở trạng thái: ${order.status}`
+      );
+    }
+
+    const existingReceipt = await Receipt.findOne({ order_id: order._id }).session(session);
+
+    if (existingReceipt) {
+      await session.commitTransaction();
+      return { receipt: existingReceipt, order };
+    }
+
+    const receipt = await Receipt.create(
+      [
+        {
+          order_id: order._id,
+          total_amount: order.base_amount,
+          payment_method,
+          status: "pending"
+        }
+      ],
+      { session }
+    );
+
+    await session.commitTransaction();
+    return { receipt: receipt[0], order };
+
+  } catch (err) {
+    await session.abortTransaction();
+    throw err;
+  } finally {
+    session.endSession();
+  }
+}

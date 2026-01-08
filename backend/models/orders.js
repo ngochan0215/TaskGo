@@ -4,28 +4,40 @@ const orderSchema = new mongoose.Schema(
   {
     customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     tasker_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+
     task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
+    task_snapshot: {
+      name: String,
+      pricing: Number,
+      unit: String
+    },
 
-    voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
-
+    discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
     discount_snapshot: {
-      discountId: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
       name: String,
       description: String,
       percentage: Number,
-      begin_date: Date,
-      end_date: Date,
       appliedAt: { type: Date, default: Date.now },
     },
 
+    voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
     voucher_snapshot: {
-      voucherId: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
+      code: String,
       name: String,
       description: String,
-      percentage: Number,
-      begin_date: Date,
-      end_date: Date,
-      code: String,
+      discount_amount: Number,
+    },
+
+    address_id: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
+    address_snapshot: {
+      full_address: String,
+      latitude: Number,
+      longtitude: Number,
+    },
+
+    task_payload: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true
     },
 
     type: {
@@ -34,28 +46,12 @@ const orderSchema = new mongoose.Schema(
       default: "immediate",
     },
     scheduled_at: { type: Date, required: true },
-
-    address_id: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
-    address_snapshot: {
-      full_address: String,
-      latitude: Number,
-      longtitude: Number,
-    },
     
     note: { type: String },
     quantity: { type: Number, default: 1 },
-
-    scheduled_at: { type: Date, required: true },
-    departed_at: { type: Date },    // tasker bắt đầu đi
-    started_at: { type: Date },     // tasker bắt đầu làm
-    completed_at: { type: Date },   // tasker hoàn thành
-
-    base_fee: { type: Number, required: true },
-    quantity: { type: Number, default: 1 },
-    // discount_amount: { type: Number, default: 0 },
-    // voucher_amount: { type: Number, default: 0 },
+    
+    base_amount: { type: Number, required: true },
     tip_amount: { type: Number, default: 0 },
-    total_amount: { type: Number },
 
     status: {
       type: String,

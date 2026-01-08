@@ -16,7 +16,7 @@
     <header class="bg-primary-200 py-4">
         <div class="flex items-center justify-between px-4">
             <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href=""><img src="/public/images/taskgo-logo.png" alt=""></a>
+                <a href=""><img src="../../../public/images/taskgo-logo.png" alt=""></a>
             </div>
 
             <h1 class="font-bold text-xl text-dark-900">Dịch vụ của bạn</h1>
@@ -29,27 +29,19 @@
     <main class="p-4 space-y-4 pb-32">
         <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
             <div class="flex justify-between items-center relative">
-
                 <a href="payment.html" class="text-gray-100 font-medium hover:text-primary-darker">
                     Thoát
                 </a>
-
                 <h2 class="text-lg font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2">
-                    Thêm khuyến mãi
+                    Tìm khuyến mãi
                 </h2>
-
                 <a href="payment.html" class="text-secondary-100 font-bold">
                     Lưu
                 </a>
-
             </div>
-            <!-- Thêm mã giảm giá -->
             <div class="flex justify-between items-center space-x-4">
                 <input type="text" placeholder="Nhập mã khuyến mãi" class="flex-1 p-3 border border-gray-300 rounded-xl 
-                       focus:outline-none focus:ring-2 focus:ring-primary-500" />
-                <!-- <button class="action-btn action-btn-hover">
-                    Thêm
-                </button> -->
+                    focus:outline-none focus:ring-2 focus:ring-primary-500" />
             </div>
             <p class="text-dark-900 font-medium pt-2">Ưu đãi của bạn</p>
 
@@ -66,49 +58,10 @@
             </div>
 
             <div class="space-y-3" id="voucherList">
-                <!-- <label for="ud1"
-                    class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 cursor-pointer">
-                    <div>
-                        <p class="text-sm text-gray-100">UD1</p>
-                        <p class="text-base text-dark-900">Giảm 10% cho đơn hàng thứ 2</p>
-                    </div>
-                    <input type="radio" id="ud1" name="promo" value="ud1"
-                        class="h-5 w-5 text-secondary-200 border-gray-400" />
-                </label>
-
-                <label for="ud2"
-                    class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 cursor-pointer">
-                    <div>
-                        <p class="text-sm text-gray-100">UD2</p>
-                        <p class="text-base text-dark-900">Giảm 50% cho đơn hàng đầu tiên</p>
-                    </div>
-                    <input type="radio" id="ud2" name="promo" value="ud2"
-                        class="h-5 w-5 text-secondary-200 border-gray-400" />
-                </label>
-
-                <label for="ud3"
-                    class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 cursor-pointer">
-                    <div>
-                        <p class="text-sm text-gray-100">UD3</p>
-                        <p class="text-base text-dark-900">Giảm 10.000 VND cho đơn hàng từ 100.000 VND</p>
-                    </div>
-                    <input type="radio" id="ud3" name="promo" value="ud3"
-                        class="h-5 w-5 text-secondary-200 border-gray-400" />
-                </label>
-
-                <label for="ud4"
-                    class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 cursor-pointer">
-                    <div>
-                        <p class="text-sm text-gray-100">UD4</p>
-                        <p class="text-base text-dark-900">Miễn phí cho khách hàng thứ 9999</p>
-                    </div>
-                    <input type="radio" id="ud4" name="promo" value="ud4"
-                        class="h-5 w-5 text-secondary-200 border-gray-400" />
-                </label> -->
-
             </div>
         </div>
     </main>
+
     <footer>
         <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
             <div class="flex justify-around py-2 text-base">
@@ -133,8 +86,17 @@
     </footer>
 
     <script>
-        const TOTAL_AMOUNT = 350000;
+        const voucherDraft = JSON.parse(localStorage.getItem("voucherDraft"));
+        if (!voucherDraft) {
+            alert("Không có dữ liệu thanh toán");
+            location.href = "./payment.html";
+        }
+        console.log("VOUCHER DRAFT: ", voucherDraft);
+        const TOTAL_AMOUNT = voucherDraft.base_amount;
+
         let bestVoucherCode = null;
+        let bestVoucherName = "";
+        let bestVoucherDescription = "";
 
         async function loadVouchers() {
             try {
@@ -212,7 +174,10 @@
                 shadow-md p-4 cursor-pointer border transition-all duration-300
                 hover:border-primary-500 hover:shadow-lg"
                 data-discount="${voucher.discount_preview}"
-                data-code="${voucher.code}">
+                data-code="${voucher.code}"
+                data-name="${voucher.name}"
+                data-id="${voucher._id}"
+                data-description="${voucher.description || ""}">
 
                 <div class="flex items-start space-x-3">
                     <div class="bg-primary-100 text-primary-500 rounded-full p-2">
@@ -262,6 +227,10 @@
         function handleVoucherSelect(radio) {
             const label = radio.closest(".voucher-item");
             const discount = Number(label.dataset.discount);
+            const voucherId = label.dataset.id;
+            const voucherCode = label.dataset.code;
+            const voucherName = label.dataset.name;
+            const voucherDescription = label.dataset.description;
 
             // animation chọn
             document.querySelectorAll(".voucher-item").forEach(item => {
@@ -283,6 +252,31 @@
 
             discountValue.innerText = `-${discount.toLocaleString()}đ`;
             finalAmount.innerText = `${(TOTAL_AMOUNT - discount).toLocaleString()}đ`;
+
+            // lưu vào voucherDraft để đọc lại ở UI thanh toán
+            localStorage.setItem("voucherDraft", JSON.stringify({
+                base_amount: TOTAL_AMOUNT,
+                voucher_code: bestVoucherCode,
+                discount_amount: discount,
+                final_amount: TOTAL_AMOUNT - discount
+            }));
+
+            // lưu voucher snapshot vào bookingDraft
+            const rawBooking = localStorage.getItem("bookingDraft");
+            if (!rawBooking) return;
+
+            const bookingDraft = JSON.parse(rawBooking);
+
+            bookingDraft.voucher_id = voucherId; 
+            bookingDraft.voucher_snapshot = {
+                code: voucherCode,
+                name: voucherName,
+                description: voucherDescription,
+                discount_amount: discount,
+            };
+
+            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+            console.log("BOOKING DRAFT AFTER SAVING VOUCHER SNAPSHOT: ", bookingDraft);
         }
 
         loadVouchers();
