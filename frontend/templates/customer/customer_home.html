@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGo - Trang chủ</title>
+
+    <link rel="stylesheet" href="../../public/css/output.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+<body class="bg-primary-100 min-h-screen font-montserrat">
+
+<header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
+    <div class="flex items-center justify-between px-4">
+        <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
+            <a href="#"><img src="../../public/images/taskgo-logo.png" alt=""></a>
+        </div>
+        <h1 class="font-bold text-xl md:text-2xl lg:text-3xl text-dark-900">Trang chủ</h1>
+        <div class="w-10 h-10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
+        </div>
+    </div>
+</header>
+
+<main class="p-4 pb-24">
+    <div id="search-container"></div>
+
+    <section class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="font-semibold text-dark-900">Dịch vụ yêu thích của bạn</h2>
+        </div>
+        <div id="favorite-services" class="grid grid-cols-2 gap-3"></div>
+    </section>
+
+    <section class="mb-6">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="font-semibold text-dark-900">Các dịch vụ phổ biến</h2>
+            <a href="service_listpage.html" class="text-primary-500 text-sm cursor-pointer">Xem thêm →</a>
+        </div>
+        <div id="service-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+    </section>
+
+    <section class="mb-6">
+        <div id="banner-container"></div>
+    </section>
+
+    <div class="text-center pb-10">
+        <p class="text-gray-500 text-sm">Chưa thấy dịch vụ bạn cần?</p>
+        <a href="service_listpage.html" class="text-primary-500 font-semibold">Xem danh sách toàn bộ dịch vụ</a>
+    </div>
+</main>
+
+<footer>
+    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
+        <div class="flex justify-around py-2 text-base">
+            <a href="#" class="flex flex-col items-center text-white">
+                <span class="material-symbols-outlined text-4xl">house</span>
+                Trang chủ
+            </a>
+            <a href="#" class="flex flex-col items-center text-primary-500">
+                <span class="material-symbols-outlined text-4xl">news</span>
+                Hoạt động
+            </a>
+            <a href="#" class="flex flex-col items-center text-primary-500">
+                <span class="material-symbols-outlined text-4xl">chat</span>
+                Tin nhắn
+            </a>
+            <a href="#" class="flex flex-col items-center text-primary-500">
+                <span class="material-symbols-outlined text-4xl">lightbulb</span>
+                Thông báo
+            </a>
+        </div>
+    </nav>
+</footer>
+
+<script>
+const searchContainer = document.getElementById("search-container");
+const inputDiv = document.createElement("div");
+inputDiv.className = "mb-4";
+inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
+               class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
+searchContainer.appendChild(inputDiv);
+
+const services = [
+    {name: "Dọn dẹp nhà cửa", img: "../../public/images/dondepnhacua.jpeg"},
+    {name: "Sơn lại nhà cửa", img: "../../public/images/sonlainhacua.jpeg"},
+    {name: "Vệ sinh thảm và sofa", img: "../../public/images/vesinhthamvasofa.jpeg"},
+    {name: "Phân loại đồ đạc", img: "../../public/images/phanloaidodac.jpg"},
+];
+
+const serviceList = document.getElementById("service-list");
+services.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "service-item relative";
+    div.dataset.name = s.name;
+    div.dataset.img = s.img;
+    div.innerHTML = `
+        <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
+        <button class="heart-btn absolute top-2 right-2">
+            <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
+        </button>
+        <p class="mt-1 text-sm font-medium">${s.name}</p>
+    `;
+    serviceList.appendChild(div);
+});
+
+const bannerContainer = document.getElementById("banner-container");
+bannerContainer.innerHTML = `
+    <div class="relative">
+        <img src="../../public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
+        <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
+            Dịch vụ dọn dẹp <br> trọn gói <br> ...
+        </div>
+        <button class="absolute bottom-4 left-6 bg-primary-500 text-white px-4 py-2 rounded-lg shadow-md">
+            Khám phá ngay
+        </button>
+    </div>
+`;
+
+const favoriteContainer = document.getElementById("favorite-services");
+document.addEventListener("click", e => {
+    const btn = e.target.closest(".heart-btn");
+    if (!btn) return;
+
+    const heart = btn.querySelector(".heart-icon");
+    const item = btn.closest(".service-item");
+    const name = item.dataset.name;
+    const img = item.dataset.img;
+
+    const existingFav = Array.from(favoriteContainer.children)
+        .find(c => c.querySelector("p").innerText === name);
+
+    if (!existingFav) {
+        heart.style.color = "red";
+        const favItem = document.createElement("div");
+        favItem.className = "service-item";
+        favItem.innerHTML = `
+            <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+            <p class="mt-1 text-sm font-medium">${name}</p>
+        `;
+        favoriteContainer.appendChild(favItem);
+    } else {
+        heart.style.color = "white"; // Toggle lại
+        favoriteContainer.removeChild(existingFav);
+    }
+});
+
+</script>
+
+</body>
+</html>
