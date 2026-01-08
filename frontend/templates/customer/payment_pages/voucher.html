@@ -47,16 +47,26 @@
             <div class="flex justify-between items-center space-x-4">
                 <input type="text" placeholder="Nhập mã khuyến mãi" class="flex-1 p-3 border border-gray-300 rounded-xl 
                        focus:outline-none focus:ring-2 focus:ring-primary-500" />
-
-                <button class="action-btn action-btn-hover">
+                <!-- <button class="action-btn action-btn-hover">
                     Thêm
-                </button>
+                </button> -->
             </div>
             <p class="text-dark-900 font-medium pt-2">Ưu đãi của bạn</p>
 
-            <div class="space-y-3">
+            <div id="discountSummary"
+                class="hidden bg-primary-50 rounded-xl p-4 space-y-1 transition-all">
+                <p class="text-sm text-gray-100">
+                    Giảm giá:
+                    <span id="discountValue" class="font-semibold text-secondary-100"></span>
+                </p>
+                <p class="text-sm text-gray-100">
+                    Tổng sau giảm:
+                    <span id="finalAmount" class="font-bold text-dark-900"></span>
+                </p>
+            </div>
 
-                <label for="ud1"
+            <div class="space-y-3" id="voucherList">
+                <!-- <label for="ud1"
                     class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 cursor-pointer">
                     <div>
                         <p class="text-sm text-gray-100">UD1</p>
@@ -94,7 +104,7 @@
                     </div>
                     <input type="radio" id="ud4" name="promo" value="ud4"
                         class="h-5 w-5 text-secondary-200 border-gray-400" />
-                </label>
+                </label> -->
 
             </div>
         </div>
@@ -121,6 +131,162 @@
             </div>
         </nav>
     </footer>
+
+    <script>
+        const TOTAL_AMOUNT = 350000;
+        let bestVoucherCode = null;
+
+        async function loadVouchers() {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+                    window.location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const res = await fetch("http://localhost:3000/api/discount/voucher/eligible-list", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ total_amount: TOTAL_AMOUNT })
+                });
+
+                console.log("TOKEN: ", token);
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+                    window.location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const result = await res.json();
+                const list = document.getElementById("voucherList");
+                list.innerHTML = "";
+
+                if (!result.success || result.total === 0) {
+                    list.innerHTML = `
+                        <p class="text-gray-100 text-sm text-center">
+                            Không có khuyến mãi phù hợp
+                        </p>
+                    `;
+                    return;
+                }
+
+                // tìm voucher tốt nhất
+                const bestVoucher = result.vouchers.reduce((best, v) =>
+                    !best || v.discount_preview > best.discount_preview ? v : best
+                , null);
+
+                bestVoucherCode = bestVoucher.code;
+
+                result.vouchers.forEach(v => {
+                    list.innerHTML += renderVoucherItem(
+                        v,
+                        v.code === bestVoucherCode
+                    );
+                });
+
+                // auto tick voucher tốt nhất
+                const bestRadio = document.querySelector(
+                    `input[value="${bestVoucherCode}"]`
+                );
+                if (bestRadio) {
+                    bestRadio.checked = true;
+                    handleVoucherSelect(bestRadio);
+                }
+
+                bindVoucherEvents();
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderVoucherItem(voucher, isBest = false) {
+            return `
+            <label class="voucher-item flex justify-between items-center bg-white rounded-xl 
+                shadow-md p-4 cursor-pointer border transition-all duration-300
+                hover:border-primary-500 hover:shadow-lg"
+                data-discount="${voucher.discount_preview}"
+                data-code="${voucher.code}">
+
+                <div class="flex items-start space-x-3">
+                    <div class="bg-primary-100 text-primary-500 rounded-full p-2">
+                        <span class="material-symbols-outlined">sell</span>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <p class="text-xs text-gray-100 font-medium">
+                                ${voucher.code}
+                            </p>
+                            ${isBest ? `
+                                <span class="bg-secondary-100 text-white text-xs px-2 py-0.5 rounded-full">
+                                    Tốt nhất
+                                </span>` : ""}
+                        </div>
+
+                        <p class="text-sm font-semibold text-dark-900">
+                            ${voucher.name}
+                        </p>
+
+                        <p class="text-xs text-gray-100 mt-1">
+                            Tiết kiệm 
+                            <span class="text-secondary-100 font-semibold">
+                                ${voucher.discount_preview.toLocaleString()}đ
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <input type="radio"
+                    name="promo"
+                    value="${voucher.code}"
+                    class="promo-radio h-5 w-5 text-secondary-200 border-gray-400"/>
+            </label>
+            `;
+        }
+
+        function bindVoucherEvents() {
+            document.querySelectorAll(".promo-radio").forEach(radio => {
+                radio.addEventListener("change", () => {
+                    handleVoucherSelect(radio);
+                });
+            });
+        }
+
+        function handleVoucherSelect(radio) {
+            const label = radio.closest(".voucher-item");
+            const discount = Number(label.dataset.discount);
+
+            // animation chọn
+            document.querySelectorAll(".voucher-item").forEach(item => {
+                item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
+            });
+
+            label.classList.add(
+                "ring-2",
+                "ring-secondary-100",
+                "scale-[1.02]"
+            );
+
+            // hiển thị summary
+            const summary = document.getElementById("discountSummary");
+            const discountValue = document.getElementById("discountValue");
+            const finalAmount = document.getElementById("finalAmount");
+
+            summary.classList.remove("hidden");
+
+            discountValue.innerText = `-${discount.toLocaleString()}đ`;
+            finalAmount.innerText = `${(TOTAL_AMOUNT - discount).toLocaleString()}đ`;
+        }
+
+        loadVouchers();
+    </script>
 </body>
 
 </html>

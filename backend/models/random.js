@@ -1,7 +1,7 @@
 // import mongoose from "mongoose";
 // import dotenv from "dotenv";
 // import connectDB from "../config/db.js";
-// import Service from "../models/services.js";
+// import Task from "../models/tasks.js";
 
 // dotenv.config();
 
@@ -10,12 +10,12 @@
 //     connectDB();
 //     console.log("MongoDB connected");
 
-//     const result = await Service.updateMany(
-//       { status: { $exists: true } },
-//       { $set: { status: "active" } }
+//     const result = await Task.updateMany(
+//       { task_type: { $exists: false } },
+//       { $set: { task_type: "active" } }
 //     );
 
-//     console.log(`Migration done. Updated ${result.modifiedCount} services`);
+//     console.log(`Migration done. Updated ${result.modifiedCount} tasks`);
 //   } catch (err) {
 //     console.error("Migration failed:", err);
 //   } finally {

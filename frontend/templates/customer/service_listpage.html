@@ -54,6 +54,19 @@
   </footer>
 
   <script>
+
+    const TASK_DETAIL_MAP = {
+      cleaning_washing_machine: "./detail_pages/cleaning_washing_machine.html",
+      cleaning_house: "./detail_pages/cleaning_house_detail.html",
+      cleaning_air_conditioner: "./detail_pages/cleaning_air_conditioner.html",
+      caring_elderly: "./detail_pages/takecare_of_elder.html",
+      caring_thesick: "./detail_pages/takecare_of_sickpeople.html",
+      caring_children: "./detail_pages/babysitting.html",
+      shopping: "./detail_pages/market.html",
+      cooking: "./detail_pages/cooking.html",
+      active: "#"
+    };
+
     const API_URL = "http://localhost:3000/api/task/service/all";
 
     async function loadServices() {
@@ -73,6 +86,7 @@
         });
 
         console.log("TOKEN: ", token);
+
         if (res.status === 401) {
           localStorage.removeItem("token");
           alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
@@ -98,8 +112,13 @@
             </div>
 
             <div class="grid grid-cols-3 gap-y-4 text-center text-base">
-              ${service.tasks?.map(task => `
-                <a href="./detail_pages/task_detail.html?id=${task._id}"
+              ${service.tasks?.map(task => {
+                console.log("TASK_TYPE: ", task.task_type);
+                const detailPage = TASK_DETAIL_MAP[task.task_type];
+                console.log("detailPage: ", detailPage);
+                if (!detailPage) return "";
+                return `
+                <a href="${detailPage}?id=${task._id}"
                   class="flex flex-col items-center space-y-1 text-black">
 
                   <span class="material-symbols-outlined
@@ -114,7 +133,8 @@
                     ${task.unit || "hour"}
                   </span>
                 </a>
-              `).join("")}
+              `;
+        }).join("")}
             </div>
           `;
 
