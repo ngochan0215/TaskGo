@@ -1,363 +1,393 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin - Quản lý Đơn hàng</title>
 
-    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
-    <link
-      rel="icon"
-      type="image/x-icon"
-      href="../../public/favicons/favicon.ico"
-    />
-
-    <title>TaskGo</title>
+    <link rel="stylesheet" href="../../public/css/output.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-    />
-  </head>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200"/>
 
-  <body
-    class="m-0 bg-[#95DA97] flex justify-center py-8 font-montserrat min-h-screen"
-  >
-    <div
-      class="w-full max-w-xs mx-auto bg-[#EAFED9] rounded-3xl shadow-xl overflow-hidden flex flex-col"
-    >
-      <!-- HEADER -->
-      <header class="bg-[#95DA97] px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center">
-          <div
-            class="rounded-full bg-[#FFFFFF] flex items-center justify-center overflow-hidden"
-            style="width: 48px; height: 48px"
-          >
-            <img
-              src="../../public/images/taskgo-logo.png"
-              alt="TaskGo logo"
-              class="object-contain"
-              style="width: 64px; height: 64px"
-            />
-          </div>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+
+<div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
+
+<aside id="sidebarMobile" class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
+    <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+            <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-full h-full object-contain p-1">
         </div>
-
-        <h1 class="text-base font-bold text-[#16411F]">Admin</h1>
-
-        <div class="w-10 h-10 flex items-center justify-center">
-          <a href="#">
-            <span class="material-symbols-outlined text-[#16411F] text-3xl">
-            </span>
-          </a>
-        </div>
-      </header>
-
-      <!-- MAIN -->
-      <main class="flex-1 pt-6 pb-6 flex flex-col gap-4">
-        <h2 class="px-6 text-lg font-bold text-[#16411F]">ĐƠN HÀNG</h2>
-
-        <!-- SEARCH -->
-        <div class="mx-auto mt-1" style="width: 92%">
-          <div
-            class="bg-[#FFFFFF] rounded-full h-12 px-4 flex items-center shadow-md"
-          >
-            <span
-              class="material-symbols-outlined text-gray-400 text-[20px] mr-2"
-            >
-              search
-            </span>
-            <input
-              type="text"
-              placeholder="Tìm kiếm"
-              class="flex-1 bg-transparent outline-none border-0 text-sm placeholder:text-gray-400"
-              style="border: none"
-            />
-          </div>
-        </div>
-
-        <br />
-
-        <!-- TABLE ORDERS -->
-        <div class="mx-auto mt-4" style="width: 92%">
-          <div
-            class="bg-[#FFFFFF] shadow-md"
-            style="border-radius: 24px; padding-top: 4px; padding-bottom: 4px"
-          >
-            <table class="w-full text-xs text-gray-800 table-fixed">
-              <thead class="bg-[#F7F7F7] text-[11px] text-gray-500">
-                <tr>
-                  <th
-                    class="text-left font-semibold py-3 pl-4 pr-2 align-middle"
-                    style="width: 30%"
-                  >
-                    Mã đơn
-                  </th>
-                  <th
-                    class="text-left font-semibold py-3 pl-2 pr-2 align-middle"
-                    style="width: 40%"
-                  >
-                    Khách hàng
-                  </th>
-                  <th
-                    class="text-center font-semibold py-3 px-2 align-middle"
-                    style="width: 30%"
-                  >
-                    Trạng thái
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody class="bg-[#FFFFFF] text-[12px]">
-                <!-- 1 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2345</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Alice Smith
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoàn thành
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 2 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2344</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Bob Johnson
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoàn thành
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 3 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2343</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    John Doe
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Đang xử lý
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 4 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2342</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Emma Wilson
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #ffe2e2;
-                      "
-                      class="text-[11px] font-semibold text-[#C62828]"
-                    >
-                      Đã hủy
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 5 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2341</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    David Lee
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Chờ thanh toán
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 6 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2340</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Michael Brown
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoàn thành
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 7 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2339</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Sophia Nguyen
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Đang xử lý
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 8 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2338</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Minh Anh
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Đang xử lý
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 9 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">#2337</td>
-                  <td class="py-3 pl-2 pr-2 text-sm text-[#16411F]">
-                    Tuấn Kiệt
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #ffe2e2;
-                      "
-                      class="text-[11px] font-semibold text-[#C62828]"
-                    >
-                      Đã hủy
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <br />
-
-        <!-- BUTTON -->
-        <div class="mt-6 mx-auto" style="width: 92%">
-          <button
-            class="w-full bg-[#5C956C] text-[#FFFFFF] py-3 rounded-full text-base font-semibold shadow-md hover:bg-[#3B5F43] transition-colors"
-          >
-            Xử lý báo cáo
-          </button>
-        </div>
-      </main>
-
-      <!-- FOOTER -->
-      <footer class="bg-[#95DA97] border-t border-[#5C956C]">
-        <nav class="flex justify-around py-2 text-[11px]">
-          <a
-            href="#"
-            class="flex flex-col items-center text-[#16411F] no-underline"
-          >
-            <span class="material-symbols-outlined text-2xl">home</span>
-            Trang chủ
-          </a>
-          <a
-            href="#"
-            class="flex flex-col items-center text-[#16411F] no-underline"
-          >
-            <span class="material-symbols-outlined text-2xl">group</span>
-            Người dùng
-          </a>
-          <a
-            href="#"
-            class="flex flex-col items-center text-white font-semibold no-underline"
-          >
-            <span class="material-symbols-outlined text-2xl">shopping_bag</span>
-            Đơn hàng
-          </a>
-          <a
-            href="#"
-            class="flex flex-col items-center text-[#16411F] no-underline"
-          >
-            <span class="material-symbols-outlined text-2xl">grid_view</span>
-            Khác
-          </a>
-          <a
-            href="#"
-            class="flex flex-col items-center text-[#16411F] no-underline"
-          >
-            <span class="material-symbols-outlined text-2xl">lightbulb</span>
-            Thông báo
-          </a>
-        </nav>
-      </footer>
+        <div class="font-semibold text-sm tracking-wide">Admin</div>
     </div>
-  </body>
+
+    <nav class="p-3 flex-1 space-y-1">
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_home.html">
+            <span class="material-symbols-outlined">home</span>
+            Trang chủ
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">person</span>
+            Quản lý Customer
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_managetaskers.html">
+            <span class="material-symbols-outlined">badge</span>
+            Quản lý Tasker
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_manageservices.html">
+            <span class="material-symbols-outlined">design_services</span>
+            Quản lý Dịch vụ
+        </a>
+
+        <a class="sidebar-link active" 
+            href="./admin_manageorders.html">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Quản lý Đơn hàng
+        </a>
+
+        <a class="sidebar-link" href="./admin_managediscounts.html">
+            <span class="material-symbols-outlined">percent_discount</span>
+            Quản lý Khuyến mãi
+        </a>
+
+        <a class="sidebar-link" href="./admin_managevouchers.html">
+            <span class="material-symbols-outlined">local_activity</span>
+            Quản lý Voucher
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">bar_chart</span>
+            Quản lý Doanh thu
+        </a>
+        
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            Cài đặt
+        </a>
+    </nav>
+</aside>
+
+<div class="flex min-h-screen">
+
+    <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+        <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain p-1"/>
+            </div>
+            <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+        </div>
+
+        <nav class="p-3 flex-1 space-y-1">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_home.html">
+                <span class="material-symbols-outlined">home</span>
+                Trang chủ
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">person</span>
+                Quản lý Customer
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managetaskers.html">
+                <span class="material-symbols-outlined">badge</span>
+                Quản lý Tasker
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_manageservices.html">
+                <span class="material-symbols-outlined">design_services</span>
+                Quản lý Dịch vụ
+            </a>
+
+            <a class="sidebar-link active" 
+                href="./admin_manageorders.html">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                Quản lý Đơn hàng
+            </a>
+
+            <a class="sidebar-link" href="./admin_managediscounts.html">
+                <span class="material-symbols-outlined">percent_discount</span>
+                Quản lý Khuyến mãi
+            </a>
+
+            <a class="sidebar-link" href="./admin_managevouchers.html">
+                <span class="material-symbols-outlined">local_activity</span>
+                Quản lý Voucher
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Quản lý Doanh thu
+            </a>
+            
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                Cài đặt
+            </a>
+        </nav>
+
+        <div class="p-3 border-t border-white/10">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+
+        <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden" type="button" onclick="openSidebar()">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    <div class="font-semibold truncate">Quản lý Đơn hàng</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="hidden sm:inline">Thông báo</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]">
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng đơn hàng</p>
+                        <p class="text-2xl font-bold text-gray-800">1,248</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+                        <p class="text-xs text-green-600 font-bold uppercase mb-1">Hoàn thành</p>
+                        <p class="text-2xl font-bold text-gray-800">982 <span class="text-xs font-medium opacity-80">(78%)</span></p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
+                        <p class="text-xs text-yellow-600 font-bold uppercase mb-1">Đang diễn ra</p>
+                        <p class="text-2xl font-bold text-gray-800">145 <span class="text-xs font-medium opacity-80">(12%)</span></p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-red-50 border border-red-100">
+                        <p class="text-xs text-red-600 font-bold uppercase mb-1">Đã hủy</p>
+                        <p class="text-2xl font-bold text-gray-800">121 <span class="text-xs font-medium opacity-80">(10%)</span></p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 border border-gray-100 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">show_chart</span>
+                            Xu hướng đơn hàng (7 ngày qua)
+                        </h3>
+                        <div class="h-48 flex items-end justify-between gap-2 px-2">
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[40%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">40</span>
+                            </div>
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[55%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">55</span>
+                            </div>
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[35%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">35</span>
+                            </div>
+                            <div class="w-full bg-primary-500 hover:bg-primary-400 transition-all rounded-t h-[80%] relative group shadow-md">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-primary-600 text-white px-1 rounded font-bold opacity-0 group-hover:opacity-100 transition">80</span>
+                            </div>
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[60%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">60</span>
+                            </div>
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[70%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">70</span>
+                            </div>
+                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[50%] relative group">
+                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">50</span>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 uppercase font-bold px-1">
+                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-100 rounded-lg p-4 flex flex-col justify-center">
+                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">pie_chart</span>
+                            Tỷ lệ trạng thái
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-green-600 font-medium">Hoàn thành</span>
+                                    <span class="font-bold">78%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-green-500 h-full w-[78%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-yellow-600 font-medium">Đang diễn ra</span>
+                                    <span class="font-bold">12%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-yellow-500 h-full w-[12%]"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-red-600 font-medium">Đã hủy</span>
+                                    <span class="font-bold">10%</span>
+                                </div>
+                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-red-500 h-full w-[10%]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div class="flex gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                        <button class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition">Tất cả</button>
+                        <button class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap">Hoàn thành</button>
+                        <button class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap">Đang diễn ra</button>
+                        <button class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-red-500 hover:text-red-600 transition whitespace-nowrap">Đã hủy</button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                            <input type="text" placeholder="Tìm kiếm mã đơn, tên..." class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full md:w-64 bg-gray-50 focus:bg-white transition-all">
+                        </div>
+                        <button class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500" title="Lọc nâng cao">
+                            <span class="material-symbols-outlined text-lg">filter_list</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                        <tr>
+                            <th class="px-4 py-3 border-b border-gray-200">Mã ĐH</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Khách hàng</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Dịch vụ</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Thời gian</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-right">Giá trị</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
+                        </tr>
+                        </thead>
+                        <tbody class="text-sm text-gray-700 divide-y divide-gray-100 bg-white">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-primary-600">#DH-8821</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">Nguyễn Văn A</div>
+                                <div class="text-xs text-gray-500">090***123</div>
+                            </td>
+                            <td class="px-4 py-3">Dọn dẹp nhà (2h)</td>
+                            <td class="px-4 py-3 text-gray-500">10:30 - 08/01/2026</td>
+                            <td class="px-4 py-3 text-right font-bold">150.000đ</td>
+                            <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+                                        Hoàn thành
+                                    </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="text-gray-400 hover:text-primary-500 transition"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-primary-600">#DH-8822</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">Trần Thị B</div>
+                                <div class="text-xs text-gray-500">098***456</div>
+                            </td>
+                            <td class="px-4 py-3">Đi chợ hộ</td>
+                            <td class="px-4 py-3 text-gray-500">11:00 - 08/01/2026</td>
+                            <td class="px-4 py-3 text-right font-bold">85.000đ</td>
+                            <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
+                                        Đang diễn ra
+                                    </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="text-gray-400 hover:text-primary-500 transition"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-4 py-3 font-medium text-primary-600">#DH-8823</td>
+                            <td class="px-4 py-3">
+                                <div class="font-medium">Lê Hoàng C</div>
+                                <div class="text-xs text-gray-500">091***789</div>
+                            </td>
+                            <td class="px-4 py-3">Vệ sinh sofa</td>
+                            <td class="px-4 py-3 text-gray-500">09:00 - 08/01/2026</td>
+                            <td class="px-4 py-3 text-right font-bold">450.000đ</td>
+                            <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">
+                                        Đã hủy
+                                    </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="text-gray-400 hover:text-primary-500 transition"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                    <p class="text-sm text-gray-500">Hiển thị <span class="font-bold">1-10</span> trên <span class="font-bold">128</span> đơn hàng</p>
+                    <div class="flex gap-1">
+                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">1</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm">2</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm">3</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sidebarMobile = document.getElementById("sidebarMobile");
+    const backdrop = document.getElementById("backdrop");
+
+    function openSidebar() {
+      sidebarMobile.classList.remove("-translate-x-full");
+      backdrop.classList.remove("hidden");
+    }
+
+    function closeSidebar() {
+      sidebarMobile.classList.add("-translate-x-full");
+      backdrop.classList.add("hidden");
+    }
+</script>
+</body>
 </html>
