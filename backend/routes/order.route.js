@@ -18,7 +18,7 @@ router.get("/:id",verifyToken, getOrderById);
 router.delete("/delete/:orderId", verifyToken, isAdmin, deleteOrderById);
 
 // receipt - hóa đơn
-router.post("/receipt/", verifyToken, createReceipt);
+router.post("/receipt/add", verifyToken, createReceipt);
 
 // review - đánh giá
 router.post("/reviews/add", verifyToken, addReview);

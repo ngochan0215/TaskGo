@@ -203,6 +203,10 @@
             </div>
         </div>
 
+        <p class="status-message">
+            Bạn sẽ được chuyển về trang đặt sau <span id="countdown">10</span> giây…
+        </p>
+
         <div class="error-message" id="errorMessage"></div>
         
         <div id="loadingSection">
@@ -242,6 +246,8 @@
                     document.getElementById('orderInfo').classList.remove('hidden');
                     document.getElementById('loadingSection').classList.add('hidden');
                     // document.getElementById('actionSection').classList.remove('hidden');
+
+                    startRedirectCountdown();
                 } else {
                     showError(data.error || 'Có lỗi xảy ra khi cập nhật giao dịch');
                 }
@@ -262,6 +268,25 @@
         window.addEventListener('DOMContentLoaded', () => {
             updateSuccessfulTransaction();
         });
+
+        function startRedirectCountdown() {
+            const REDIRECT_AFTER = 10;
+            const REDIRECT_URL = './ordering_success.html';
+
+            let remaining = REDIRECT_AFTER;
+            const countdownEl = document.getElementById('countdown');
+
+            const timer = setInterval(() => {
+                remaining--;
+                if (countdownEl) countdownEl.textContent = remaining;
+
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    window.location.href = REDIRECT_URL;
+                }
+            }, 1000);
+        }
+
     </script>
 </body>
 </html>

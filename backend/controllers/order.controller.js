@@ -71,6 +71,7 @@ export const createOrder = async (req, res) => {
       ...req.body,
     });
 
+    console.log("ORDER: ", result);
     const io = getSocketInstance();
 
     io.to(`user:${req.userId}`).emit("order-created", {
@@ -81,7 +82,7 @@ export const createOrder = async (req, res) => {
     console.log("Emitted order-created to user:", req.userId);
 
     // Gợi ý tasker dựa trên thuật toán xếp hạng
-    const taskers = await buildTaskerRanking(result._id);
+    const taskers = await buildTaskerRanking(result.order._id);
     console.log("Tasker ", taskers);
 
     if (Array.isArray(taskers)) {

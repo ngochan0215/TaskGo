@@ -6,12 +6,20 @@ export const createPaymentLink = async (req, res) => {
     try {
         const { userId } = req.params;
         const transaction = req.body;
-        const paymentLink = await createPayment(transaction, userId);
-        res.status(200).json({ paymentLink });
+
+        const paymentLinkData = await createPayment(transaction, userId);
+
+        return res.status(200).json({
+            success: true,
+            data: paymentLinkData,
+        });
     }
     catch (error) {
         console.error('Lỗi khi tạo liên kết thanh toán:', error);
-        res.status(500).json({ error: 'Lỗi khi tạo liên kết thanh toán' });
+        res.status(500).json({ 
+            success: false,
+            error: 'Lỗi khi tạo liên kết thanh toán' 
+        });
     }
 };
 

@@ -47,13 +47,18 @@
             </label>
 
             <label class="flex items-center space-x-3">
-                <input type="radio" name="payment" value="qr" checked>
+                <input type="radio" name="payment" value="bank_transfer">
                 <span>Chuyển khoản ngân hàng (Mã QR)</span>
             </label>
 
             <label class="flex items-center space-x-3">
-                <input type="radio" name="payment" value="wallet">
+                <input type="radio" name="payment" value="ewallet">
                 <span>Ví TaskGo</span>
+            </label>
+
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="payment" value="credit_card">
+                <span>Thẻ tín dụng</span>
             </label>
         </div>
 
@@ -84,8 +89,8 @@
 
             <div class="flex justify-between items-center space-y-4 space-x-4">
                 <span id="finalAmountt" class="text-2xl font-bold text-dark-900">0 VND</span>
-                <button class="action-btn action-btn-hover">
-                    <a href="./payment_success.html">Tiếp theo</a>
+                <button id="submitBtn" class="action-btn action-btn-hover">
+                    Xác nhận thông tin thanh toán
                 </button>
             </div>
         </div>
@@ -115,10 +120,24 @@
 
     <script>
         let addressMap = {};
+        let token = {};
+        let order_id = null;
+        let newOrder = null;
+        let payment_method = "cash";
         let bookingDraft = null;
         let voucherDraft = null;
 
         const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
+
+        payment_method = document.querySelector("input[name='payment']:checked")?.value;
+        document.querySelectorAll("input[name='payment']").forEach(radio => {
+            radio.addEventListener("change", e => {
+                payment_method = e.target.value;
+                console.log("LATEST PAYMENT METHOD:", payment_method);
+            });
+        });
+
+        document.getElementById("submitBtn").addEventListener("click", submitOrder);
 
         function loadBookingDraft() {
             const raw = localStorage.getItem("bookingDraft");
@@ -170,13 +189,13 @@
 
         async function loadMyAddresses() {
             try {
-                const token = localStorage.getItem("token");
+                token = localStorage.getItem("token");
                 if (!token) {
                     alert("Vui lòng đăng nhập");
                     location.href = "../auth/login-signup.html";
                     return;
                 }
-
+                console.log("TOKEN: ", token);
                 const res = await fetch(
                     "http://localhost:3000/api/user/addresses/my",
                     {
@@ -194,6 +213,7 @@
                 }
 
                 const { data } = await res.json();
+                console.log("ADDRESSES: ", data);
                 const select = document.getElementById("addressSelect");
 
                 select.innerHTML = `<option value="">-- Chọn địa chỉ --</option>`;
@@ -231,12 +251,151 @@
             bookingDraft.address_snapshot = {
                 full_address: addressMap[addressId].full_address,
                 latitude: addressMap[addressId].latitude,
-                longtitude: addressMap[addressId].longtitude
+                longitude: addressMap[addressId].longitude
             };
 
             localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
         }
     
+        async function createPaymentLink(orderId, receiptId) {
+            console.log("ORDER ID IN CREATE PAYMENT LINK: ", orderId);
+            console.log("BOOKING DRAFT IN CREATE PAYMENT LINK: ", bookingDraft);
+            console.log("VOUCHER DRAFT IN CREATE PAYMENT LINK: ", voucherDraft);
+
+            const amount =
+                (voucherDraft && typeof voucherDraft.final_amount === "number"
+                    ? voucherDraft.final_amount
+                    : bookingDraft?.base_amount) || 0;
+
+            const shortOrderId = orderId.toString().slice(-6);
+
+            const transactionPayload = {
+                order_id: orderId,
+                receipt_id: receiptId,
+                amount,
+                description: `TT DH ${shortOrderId}`,
+                items: [
+                    {
+                        name: bookingDraft?.task_snapshot?.name || "TaskGo service",
+                        quantity: 1,
+                        price: amount,
+                    },
+                ],
+            };
+
+            const res = await fetch(
+                `http://localhost:3000/api/transaction/paymentLink/${newOrder.customer_id}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(transactionPayload)
+                }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+                alert(result.message || result.error || "Không thể tạo link thanh toán");
+                return null;
+            }
+
+            return result.data; // PayOS payment link object (checkoutUrl, orderCode, id,...)
+        }
+
+        async function createOrderReceipt() {
+            const payload = { order_id, payment_method };
+            console.log("PAYLOAD FOR RECEIPT: ", payload);
+            const res = await fetch("http://localhost:3000/api/order/receipt/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            if (!res.ok) {
+                alert(result.message || "Tạo hóa đơn cho đơn hàng thất bại!");
+                return;
+            }
+
+            console.log("RECEIPT CREATED:", result.data);
+            return result;
+        }
+
+        async function submitOrder() {
+            const payload = {
+                ...bookingDraft
+            };
+
+            if (!bookingDraft.address_id) {
+                alert("Vui lòng chọn địa chỉ làm việc");
+                return;
+            }
+
+            const res = await fetch("http://localhost:3000/api/order/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.message || "Tạo đơn hàng thất bại");
+                return;
+            }
+
+            console.log("ORDER CREATED:", result.order);
+            newOrder = result.order.order;
+            order_id = result.order.order._id;
+            localStorage.setItem("orderCreated", JSON.stringify(result.order));
+
+            // tạo hóa đơn
+            const receipt = await createOrderReceipt();
+
+            if (payment_method === "cash") {
+                // dọn draft sau khi tạo đơn thành công với tiền mặt
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+                localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+                location.href = "./ordering_success.html";
+            }
+            else if (payment_method === "bank_transfer") {
+                const paymentLink = await createPaymentLink(order_id, receipt?.data?._id);
+
+                if (!paymentLink || !paymentLink.checkoutUrl) {
+                    alert("Không tạo được link thanh toán");
+                    return;
+                }
+
+                // Lưu thông tin để success page check lại
+                localStorage.setItem("paymentPending", JSON.stringify({
+                    order_id,
+                    paymentId: paymentLink.id,
+                    orderCode: paymentLink.orderCode
+                }));
+
+                // dọn draft sau khi đã lưu paymentPending
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+                localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+                // Redirect sang PayOS
+                window.location.href = paymentLink.checkoutUrl;
+            }
+        }
+
         loadBookingDraft();
         initVoucherDraft();
         renderAmounts();

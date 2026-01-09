@@ -275,6 +275,7 @@
                 discount_amount: discount,
             };
 
+            bookingDraft.final_amount = voucherDraft.final_amount;
             localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
             console.log("BOOKING DRAFT AFTER SAVING VOUCHER SNAPSHOT: ", bookingDraft);
         }

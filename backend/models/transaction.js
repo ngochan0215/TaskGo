@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Mongoose } from "mongoose";
 
 const transactionSchema = new mongoose.Schema(
     {
@@ -7,13 +7,37 @@ const transactionSchema = new mongoose.Schema(
             ref: "User",
             required: true,
         },
+        order_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Order",
+            index: true,
+        },
+        receipt_id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Receipt",
+            index: true,
+        },
+
+        // payos
         order_code: { type: Number, required: true, unique: true },
+        payos_payment_id: { type: String, index: true }, // payment link id
+        reference_id: { type: String, index: true },    // payout reference id
+
+        // money
         description: { type: String, trim: true },
         amount: { type: Number, required: true },
-        status: { type: String, enum: ["pending", "completed", "failed"], default: "pending" },
-        type: { type: String, enum: ["payment", "payout"], required: true },
+
+        status: { type: String, enum: ["pending", "completed", "failed"], default: "pending", index: true },
+        type: { type: String, enum: ["payment", "payout"], required: true, index: true },
+
+        raw_response: { type: mongoose.Schema.Types.Mixed },
+        
+        completed_at: { type: Date },
+        failed_reason: { type: String },
     },
-    { timestamps: true }
+    { 
+        timestamps: { createdAt: "created_at", updatedAt: "updated_at" } 
+    }
 );
 
 transactionSchema.index({ user_id: 1});

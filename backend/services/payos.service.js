@@ -4,30 +4,71 @@ import crypto from "crypto";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Tạo payment link PayOS và lưu transaction tương ứng
 export const createPayment = async (transaction, userId) => {
+    // tạo orderCode cho PayOS và cho transaction nội bộ
+    const orderCode = Date.now();
+
+    const amount = Number(transaction.amount || 0);
+    if (!amount || Number.isNaN(amount)) {
+        throw new Error("Invalid amount for PayOS payment");
+    }
+
+    const description =
+        transaction.description ||
+        `Thanh toán đơn hàng ${transaction.order_id || transaction.orderId || orderCode}`;
+
+    // chuẩn hóa items, nếu FE không gửi thì tạo 1 item mặc định
+    const rawItems = Array.isArray(transaction.items) ? transaction.items : [];
+    const items = (rawItems.length ? rawItems : [{
+        name: transaction.item_name || description,
+        quantity: 1,
+        price: amount,
+    }]).map(item => ({
+        name: item.name || `Task ${item.taskId || ''}`.trim(),
+        quantity: item.quantity || 1,
+        price: Number(item.price || amount),
+    }));
+
     const paymentData = {
-        orderCode: Date.now(),
-        amount: transaction.amount,
-        description: transaction.description,
-        items: transaction.items.map(item => ({
-            name: `Task ${item.taskId}`,
-            quantity: item.quantity,
-            price: item.price,
-        })),
-        cancelUrl: 'http://localhost:3000/payment/cancel', 
-        returnUrl: 'http://localhost:3000/payment/success',
+        orderCode,
+        amount,
+        description,
+        items,
+        cancelUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/cancel.html',
+        returnUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/success.html',
     };
 
+    // tạo bản ghi transaction trước
     const newTransaction = await Transaction.create({
         user_id: userId,
-        order_code: paymentData.orderCode,
-        amount: transaction.amount,
-        description: transaction.description,
+        order_id: transaction.order_id || transaction.orderId || undefined,
+        receipt_id: transaction.receipt_id || transaction.receiptId || undefined,
+        order_code: orderCode,
+        amount,
+        description,
         type: 'payment',
+        status: 'pending',
     });
 
-    const paymentLink = await payOSpayment.paymentRequests.create(paymentData);
-    return paymentLink;
+    const payOSResponse = await payOSpayment.paymentRequests.create(paymentData);
+
+    // trích data hữu ích và cập nhật lại transaction
+    const data = payOSResponse?.data || payOSResponse;
+
+    try {
+        if (data?.id) {
+            newTransaction.payos_payment_id = data.id;
+        }
+        newTransaction.raw_response = payOSResponse;
+
+        await newTransaction.save();
+    } catch (err) {
+        console.error("Không thể cập nhật thông tin PayOS vào transaction:", err);
+    }
+
+    // trả về object dùng cho FE (chứa checkoutUrl, orderCode, id,...)
+    return data;
 }
 
 export const getPaymentLinkDetail = async (orderId) => {

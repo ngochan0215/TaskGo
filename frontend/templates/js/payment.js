@@ -55,6 +55,9 @@ function initVoucherDraft() {
 
   voucherDraft.base_amount = bookingDraft.base_amount;
   localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+  bookingDraft.final_amount = voucherDraft.final_amount;
+  localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
 }
 
 function renderAmounts() {

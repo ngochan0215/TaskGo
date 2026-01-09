@@ -32,7 +32,7 @@ const orderSchema = new mongoose.Schema(
     address_snapshot: {
       full_address: String,
       latitude: Number,
-      longtitude: Number,
+      longitude: Number,
     },
 
     task_payload: {
@@ -50,7 +50,8 @@ const orderSchema = new mongoose.Schema(
     note: { type: String },
     quantity: { type: Number, default: 1 },
     
-    base_amount: { type: Number, required: true },
+    base_amount: { type: Number, required: true },  // tiền gốc của dịch vụ
+    final_amount: { type: Number, required: true }, // tiền sau khi áp voucher, discount
     tip_amount: { type: Number, default: 0 },
 
     status: {

@@ -90,15 +90,11 @@ export async function getAllOrdersByCustomerIdService({
 export async function createOrderService({
   customer_id, task_id, task_snapshot, voucher_id, voucher_snapshot,
   discount_id, discount_snapshot, address_id, address_snapshot, 
-  task_payload, scheduled_at, type, note, quantity, base_amount }) 
+  task_payload, scheduled_at, type, note, quantity, base_amount, final_amount }) 
   {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-
-      if (!customer_id) 
-        customer_id = req.userId;
-
       // validation
       if (!task_id || !type || !task_payload || !address_id) {
         throw new Error("Yêu cầu chọn dịch vụ, loại task, số lượng và địa chỉ.");
@@ -141,14 +137,14 @@ export async function createOrderService({
       const order = await Order.create(
         [{
           customer_id,
-          task_id, task_snapshot,
+          task_id, task_snapshot, task_payload,
           type,
           scheduled_at: scheduleDate,
           quantity, note,
           address_id, address_snapshot,
           voucher_id, voucher_snapshot,
           discount_id, discount_snapshot,
-          base_amount,
+          base_amount, final_amount,
           status: "pending",
         }],
         { session }
@@ -169,7 +165,7 @@ export async function createOrderService({
             {
               voucher_id,
               user_id: customer_id,
-              order_id: order._id
+              order_id: order[0]._id
             }
           ],
           { session }
@@ -190,16 +186,16 @@ export async function createOrderService({
       // order[0].tasker_id = suggestion.taskerId;
       // await order[0].save({ session });
 
-        await changeOrderStatus({
-          orderId: order[0]._id,
-          toStatus: "assigned",
-          actorType: "system",
-          actorId: null,
-          session
-        });
+        // await changeOrderStatus({
+        //   orderId: order[0]._id,
+        //   toStatus: "assigned",
+        //   actorType: "system",
+        //   actorId: null,
+        //   session
+        // });
 
-        await session.commitTransaction();
-        return { order: order[0], assignedTasker: suggestion }      
+        // await session.commitTransaction();
+        // return { order: order[0], assignedTasker: suggestion }      
       }
 
       // nếu đặt lịch trước thì chưa gán tasker liền
@@ -385,6 +381,15 @@ export async function createReceiptService({ order_id, payment_method }) {
       );
     }
 
+    if (order.type === "scheduled" && payment_method !== "bank") {
+      throw new Error("Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản");
+    }
+
+    let deposit_paid_amount = 0;
+    if (order.type === "scheduled") {
+      deposit_paid_amount = Math.round(order.base_amount * 0.3);
+    }
+
     const existingReceipt = await Receipt.findOne({ order_id: order._id }).session(session);
 
     if (existingReceipt) {
@@ -397,6 +402,7 @@ export async function createReceiptService({ order_id, payment_method }) {
         {
           order_id: order._id,
           total_amount: order.base_amount,
+          deposit_paid_amount,
           payment_method,
           status: "pending"
         }

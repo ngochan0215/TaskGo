@@ -30,18 +30,20 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
-// Serve static files từ thư mục templates
-app.use('/payment', express.static(path.join(__dirname, 'templates')));
+// Serve static files từ thư mục frontend
+console.log('__dirname =', __dirname);
 
-// Route cho trang thanh toán thành công
-app.get('/payment/success', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'success.html'));
-});
+app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
-// Route cho trang thanh toán thất bại
-app.get('/payment/cancel', (req, res) => {
-  res.sendFile(path.join(__dirname, 'templates', 'cancel.html'));
-});
+// // Route cho trang thanh toán thành công
+// app.get('/payment/success', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'templates', 'success.html'));
+// });
+
+// // Route cho trang thanh toán thất bại
+// app.get('/payment/cancel', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'templates', 'cancel.html'));
+// });
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
@@ -54,9 +56,7 @@ app.use("/api/transaction", transactionRoutes);
 
 voucherStatusCron();
 
-// Wrap express server in httpServer
 const httpServer = http.createServer(app);
-
 const io = initSocket(httpServer);      
 
 httpServer.listen(PORT, () => {
