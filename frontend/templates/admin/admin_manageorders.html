@@ -26,17 +26,59 @@
 <aside id="sidebarMobile" class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
     <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
         <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-            <img src="/public/images/taskgo-logo.png" alt="Logo" class="w-full h-full object-contain p-1">
+            <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-full h-full object-contain p-1">
         </div>
         <div class="font-semibold text-sm tracking-wide">Admin</div>
     </div>
 
     <nav class="p-3 flex-1 space-y-1">
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="admin.html">
-            <span class="material-symbols-outlined">home</span> Trang chủ
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_home.html">
+            <span class="material-symbols-outlined">home</span>
+            Trang chủ
         </a>
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm bg-white/15 text-white font-semibold" href="#">
-            <span class="material-symbols-outlined">shopping_bag</span> Quản lý Đơn hàng
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">person</span>
+            Quản lý Customer
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_managetaskers.html">
+            <span class="material-symbols-outlined">badge</span>
+            Quản lý Tasker
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_manageservices.html">
+            <span class="material-symbols-outlined">design_services</span>
+            Quản lý Dịch vụ
+        </a>
+
+        <a class="sidebar-link active" 
+            href="./admin_manageorders.html">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Quản lý Đơn hàng
+        </a>
+
+        <a class="sidebar-link" href="./admin_managediscounts.html">
+            <span class="material-symbols-outlined">percent_discount</span>
+            Quản lý Khuyến mãi
+        </a>
+
+        <a class="sidebar-link" href="./admin_managevouchers.html">
+            <span class="material-symbols-outlined">local_activity</span>
+            Quản lý Voucher
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">bar_chart</span>
+            Quản lý Doanh thu
+        </a>
+        
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            Cài đặt
         </a>
     </nav>
 </aside>
@@ -46,13 +88,14 @@
     <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
         <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
             <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <img src="/public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain p-1"/>
+                <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain p-1"/>
             </div>
             <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
         </div>
 
         <nav class="p-3 flex-1 space-y-1">
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="admin.html">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_home.html">
                 <span class="material-symbols-outlined">home</span>
                 Trang chủ
             </a>
@@ -62,26 +105,39 @@
                 Quản lý Customer
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managetaskers.html">
                 <span class="material-symbols-outlined">badge</span>
                 Quản lý Tasker
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_manageservices.html">
                 <span class="material-symbols-outlined">design_services</span>
-                Quản lý dịch vụ
+                Quản lý Dịch vụ
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm bg-white/15 text-white shadow-sm border border-white/5 font-semibold" href="#">
+            <a class="sidebar-link active" 
+                href="./admin_manageorders.html">
                 <span class="material-symbols-outlined">shopping_bag</span>
-                Quản lý đơn hàng
+                Quản lý Đơn hàng
+            </a>
+
+            <a class="sidebar-link" href="./admin_managediscounts.html">
+                <span class="material-symbols-outlined">percent_discount</span>
+                Quản lý Khuyến mãi
+            </a>
+
+            <a class="sidebar-link" href="./admin_managevouchers.html">
+                <span class="material-symbols-outlined">local_activity</span>
+                Quản lý Voucher
             </a>
 
             <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
                 <span class="material-symbols-outlined">bar_chart</span>
-                Quản lý doanh thu
+                Quản lý Doanh thu
             </a>
-
+            
             <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
                 <span class="material-symbols-outlined">settings</span>
                 Cài đặt
