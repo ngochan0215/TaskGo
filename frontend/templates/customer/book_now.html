@@ -100,7 +100,7 @@
         if (hours > 0) timeText += `${hours}h`;
         if (minutes > 0) timeText += `${minutes}p`;
 
-        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText}`;
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText? timeText : "h"}`;
 
         // ===== LƯU NOTE =====
         function handleGoPayment() {

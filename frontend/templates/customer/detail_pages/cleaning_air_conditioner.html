@@ -38,7 +38,7 @@
         Đây là dịch vụ vệ sinh máy lạnh với quy trình 6 bước:
       </p>
 
-      <ul class="list-disc pl-5 space-y-2 text-sm text-gray-100 mb-6">
+      <ul class="list-disc pl-5 space-y-2 text-sm text-dark-300 mb-6">
         <li>Bước 1: Bật, kiểm tra và xác nhận tình trạng máy với Khách hàng trước khi vệ sinh</li>
         <li>Bước 2: Vệ sinh bộ lọc và vỏ máy</li>
         <li>Bước 3: Vệ sinh giàn lạnh</li>
@@ -47,23 +47,147 @@
         <li>Bước 6: Lắp lại và kiểm tra</li>
       </ul>
 
-      <div class="space-y-3">
-        <button
-          class="hour-btn hour-btn-hover">
-          Bơm gas
-        </button>
+      <p class="text-base mb-4">
+        Giá dịch vụ là 300.000 VNĐ cho 1 máy lạnh với công suất 2HP trở xuống và không kèm theo dịch vụ bơm gas.
+        <br>Dịch vụ Bơm gas kèm theo sẽ tính thêm 150.000 VNĐ cho mỗi máy.
+      </p>
+
+      <div class="space-y-4">
+        <h3 class="font-bold text-dark-900 text-base">Vui lòng chọn Loại máy lạnh với Công suất!</h3>
+
+        <!-- Treo tường -->
+        <div class="border rounded-xl p-4 space-y-3" data-type="wall">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary-500">ac_unit</span>
+              <span class="font-medium">Máy lạnh treo tường</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button class="add-device-btn w-8 h-8 rounded-full border text-lg">+</button>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_wall" class="accent-primary-500">
+              <span>Dưới 2 HP</span>
+            </label>
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_wall" class="accent-primary-500">
+              <span>Từ 2 HP trở lên</span>
+            </label>
+          </div>
+
+          <div class="border-t pt-3">
+            <label class="flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-orange-500">local_gas_station</span>
+                <div>
+                  <p class="font-medium">Bơm gas máy lạnh</p>
+                  <p class="text-sm text-gray-400">Chỉ áp dụng khi thiếu gas</p>
+                </div>
+              </div>
+              <input type="checkbox" class="accent-primary-500">
+            </label>
+          </div>
+        </div>
+
+        <!-- Máy lạnh đứng -->
+        <div class="border rounded-xl p-4 space-y-3" data-type="standing">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary-500">view_agenda</span>
+              <span class="font-medium">Máy lạnh đứng</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button class="add-device-btn w-8 h-8 rounded-full border text-lg">+</button>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_stand" class="accent-primary-500">
+              <span>Dưới 2 HP</span>
+            </label>
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_stand" class="accent-primary-500">
+              <span>Từ 2 HP trở lên</span>
+            </label>
+          </div>
+
+          <div class="border-t pt-3">
+            <label class="flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-orange-500">local_gas_station</span>
+                <div>
+                  <p class="font-medium">Bơm gas máy lạnh</p>
+                  <p class="text-sm text-gray-400">Chỉ áp dụng khi thiếu gas</p>
+                </div>
+              </div>
+              <input type="checkbox" class="accent-primary-500">
+            </label>
+          </div>
+        </div>
+
+        <!-- Âm trần -->
+        <div class="border rounded-xl p-4 space-y-3" data-type="ceiling">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-primary-500">grid_view</span>
+              <span class="font-medium">Máy lạnh âm trần</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button class="add-device-btn w-8 h-8 rounded-full border text-lg">+</button>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_ceiling" class="accent-primary-500">
+              <span>Dưới 2 HP</span>
+            </label>
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 text-sm cursor-pointer">
+              <input type="radio" name="hp_ceiling" class="accent-primary-500">
+              <span>Từ 2 HP trở lên</span>
+            </label>
+          </div>
+
+          <div class="border-t pt-3">
+            <label class="flex items-center justify-between cursor-pointer">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-orange-500">local_gas_station</span>
+                <div>
+                  <p class="font-medium">Bơm gas máy lạnh</p>
+                  <p class="text-sm text-gray-400">Chỉ áp dụng khi thiếu gas</p>
+                </div>
+              </div>
+              <input type="checkbox" class="accent-primary-500">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="deviceSummary" class="space-y-2 border-t pt-4"></div>
+
+      <div id="price-summary" class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform">
+        <div>
+            <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
+            <p id="total-price" class="text-2xl font-bold">0đ</p>
+            <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
+        </div>
+        <span class="material-symbols-outlined text-4xl">payments</span>
       </div>
 
       <div class="flex space-x-4">
-
-        <button class="action-btn action-btn-hover">
-          <a href="../book_now.html">Đặt ngay</a>
+        <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
+          Đặt ngay</a>
         </button>
-
         <button class="action-btn action-btn-hover">
           <a href="../scheduled.html">Đặt lịch trước</a>
         </button>
-
       </div>
     </div>
   </main>
@@ -90,6 +214,232 @@
       </div>
     </nav>
   </footer>
+
+  <script>
+    const AIRCON_TYPES = { 
+      wall: { label: "Treo tường", baseMultiplier: 1 }, 
+      standing: { label: "Máy lạnh đứng", baseMultiplier: 1 }, 
+      ceiling: { label: "Âm trần", baseMultiplier: 1 }, 
+    };
+
+    const HP_MULTIPLIER = {
+      below_2: 1,
+      above_2: 1.25,
+    };
+    
+    const airconState = {
+      wall: { quantity: 1, hp: "below_2" },
+      standing: { quantity: 0, hp: null },
+      ceiling: { quantity: 0, hp: null },
+    };
+
+    const GAS_PRICE = 150000;
+    let hasGas = false;
+    const DEVICES = [];
+    let deviceId = 0; 
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const basePrice = Number(urlParams.get("price")) || 300000; // Giá mặc định nếu không có tham số
+    const task_id = urlParams.get("id");
+    let task_name = "";
+    let task_unit = "";
+    let final_amount = 0;
+
+    // xử lý chọn công suất + bơm gas của mỗi thiết bị
+    document.querySelectorAll("[data-type]").forEach(block => {
+      const type = block.dataset.type;
+      const addBtn = block.querySelector(".add-device-btn");
+
+      addBtn.onclick = () => {
+        const hpRadio = block.querySelector("input[type=radio]:checked");
+        if (!hpRadio) {
+          alert("Vui lòng chọn công suất trước khi thêm thiết bị");
+          return;
+        }
+
+        const hp = hpRadio.nextElementSibling.innerText.includes("Dưới")
+          ? "below_2"
+          : "above_2";
+
+        const hasGas = block.querySelector("input[type=checkbox]").checked;
+
+        const amount = basePrice * HP_MULTIPLIER[hp] + (hasGas ? GAS_PRICE : 0);
+
+        DEVICES.push({
+          id: ++deviceId,
+          type,
+          label: AIRCON_TYPES[type].label,
+          hp,
+          has_gas: hasGas,
+          amount
+        });
+
+        renderDeviceSummary();
+        updatePriceSummary();
+      };
+    });
+
+    async function getTaskDetail() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Vui lòng đăng nhập");
+          location.href = "../auth/login-signup.html";
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        console.log("TOKEN: ", token);
+
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+            window.location.href = "../auth/login-signup.html";
+            return;
+        }
+
+        const data = await res.json();
+        console.log("TASK DETAIL: ", data.task);
+        if (!data.success) return;
+
+        task_name = data.task.task_name;
+        task_unit = data.task.unit;
+
+      } catch (err) {
+        console.error("Load services failed", err);
+      }
+    }
+
+    getTaskDetail();
+
+    // xử lý logic hiển thị tổng tiền tạm tính
+    function animatePrice() {
+      const box = document.getElementById("price-summary");
+      box.classList.add("scale-105");
+      setTimeout(() => box.classList.remove("scale-105"), 150);
+    }
+
+    function updatePriceSummary() {
+      const total = DEVICES.reduce((sum, d) => sum + d.amount, 0);
+
+      document.getElementById("total-price").textContent =
+        formatCurrency(total);
+
+      document.getElementById("totalTimeText").textContent =
+        `${DEVICES.length} giờ`;
+
+      animatePrice();
+    }
+
+    // hiển thị danh sách các thiết bị đã chọn
+    function renderDeviceSummary() {
+      const container = document.getElementById("deviceSummary");
+      container.innerHTML = "";
+
+      if (DEVICES.length === 0) {
+        container.innerHTML =
+          `<p class="text-sm text-gray-400">Chưa có thiết bị nào được thêm</p>`;
+        return;
+      }
+
+      DEVICES.forEach((d, index) => {
+        const div = document.createElement("div");
+        div.className =
+          "text-sm text-gray-700 bg-gray-50 p-3 rounded-lg space-y-1";
+
+        div.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-medium">
+                Thiết bị ${index + 1} – ${d.label}
+              </p>
+              <p>
+                Công suất: ${d.hp === "below_2" ? "Dưới 2 HP" : "Từ 2 HP trở lên"}
+              </p>
+              <p>
+                Bơm gas: ${d.has_gas ? "Có" : "Không"}
+              </p>
+            </div>
+
+            <button
+              onclick="removeDevice(${d.id})"
+              class="text-red-500 text-xs font-medium">
+              Xóa
+            </button>
+          </div>
+
+          <p class="text-primary-500 font-semibold">
+            Giá: ${d.amount.toLocaleString()}đ
+          </p>
+        `;
+
+        container.appendChild(div);
+        animatePrice();
+      });
+    }
+    
+    // xóa một thiết bị khỏi list
+    function removeDevice(id) {
+      const index = DEVICES.findIndex(d => d.id === id);
+      if (index === -1) return;
+
+      DEVICES.splice(index, 1);
+      renderDeviceSummary();
+      updatePriceSummary();
+    }
+
+    const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+    function calculateBaseAmount() {
+      const total =  DEVICES.reduce((sum, d) => sum + d.amount, 0);
+      document.getElementById("total-price").textContent = formatCurrency(total);
+      return total;
+    }
+
+    function saveDraft() {
+      bookingDraft = {
+        task_id,
+        type: "immediate",
+        base_amount: calculateBaseAmount(),
+        final_amount: calculateBaseAmount(),
+
+        task_snapshot: {
+          code: "AIRCONDITIONER",
+          name: task_name,
+          pricing: basePrice,
+          unit: task_unit
+        },
+
+        task_payload: {
+          devices: DEVICES,
+          total_time: DEVICES.length * 60,
+          final_amount: calculateBaseAmount(),
+        },
+
+        note: ""
+      };
+
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+    }
+
+    function handleBookingNow() {
+      if (DEVICES.length === 0) {
+        alert("Vui lòng thêm ít nhất 1 thiết bị");
+        return;
+      }
+      saveDraft();
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      console.log("BOOKING DRAFT: ", bookingDraft);
+      window.location.href = "../book_now.html";
+    }
+
+  </script>
 </body>
 
 </html>

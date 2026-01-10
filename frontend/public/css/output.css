@@ -3198,11 +3198,6 @@ header {
   color: rgb(161 98 7 / var(--tw-text-opacity, 1));
 }
 
-.text-gray-300 {
-  --tw-text-opacity: 1;
-  color: rgb(156 163 175 / var(--tw-text-opacity, 1));
-}
-
 .no-underline {
   text-decoration-line: none;
 }
@@ -3215,6 +3210,10 @@ header {
 .placeholder-gray-400::placeholder {
   --tw-placeholder-opacity: 1;
   color: rgb(156 163 175 / var(--tw-placeholder-opacity, 1));
+}
+
+.accent-primary-500 {
+  accent-color: #3B5F43;
 }
 
 .opacity-0 {
@@ -3826,11 +3825,6 @@ header {
 .hover\:text-red-600:hover {
   --tw-text-opacity: 1;
   color: rgb(220 38 38 / var(--tw-text-opacity, 1));
-}
-
-.hover\:text-secondary-100:hover {
-  --tw-text-opacity: 1;
-  color: rgb(18 163 39 / var(--tw-text-opacity, 1));
 }
 
 .hover\:text-slate-700:hover {

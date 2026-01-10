@@ -10,6 +10,13 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
+    <style>
+        .active-btn {
+            background-color: #22c55e;
+            color: white;
+            border-color: #22c55e;
+        }
+    </style>
 </head>
 
 <body class="bg-primary-100 min-h-screen font-montserrat">
@@ -27,7 +34,6 @@
     </header>
 
     <main class="p-4 space-y-4 pb-20">
-        <!-- Babysitting sections -->
         <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
 
             <div class="flex items-center justify-between border-b pb-2">
@@ -38,7 +44,7 @@
                 Đây là dịch vụ trông trẻ bao gồm 1 hoặc nhiều các công việc:
             </p>
 
-            <ul class="list-disc pl-5 space-y-2 text-sm text-gray-100 mb-6">
+            <ul class="list-disc pl-5 space-y-2 text-sm text-dark-300 mb-6">
                 <li>Đảm bảo sự an toàn cho trẻ trong suốt quá trình</li>
                 <li>Hỗ trợ chuẩn bị và cho trẻ ăn theo yêu cầu và hướng dẫn của phụ huynh</li>
                 <li>Tổ chức các hoạt động học và vui chơi theo độ tuổi</li>
@@ -46,79 +52,68 @@
                 <li>Hỗ trợ đưa đón trẻ đi học cự ly đi bộ gần nhà</li>
             </ul>
 
-            <!-- Child Quantity section  -->
             <h3 class="text-lg font-bold text-dark-900">Chọn số lượng trẻ</h3>
-            <div class="flex space-x-4">
-                    <button class="hour-btn hour-btn-hover w-50">
+            <div id="child-count-group" class="flex space-x-4">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="1">
                         1 trẻ
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover w-50">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="2">
                         2 trẻ
                     </button>
                 </div>
 
-            <!-- Child Age section -->
             <div class="space-y-3">
                 <h3 class="text-lg font-bold text-dark-900">Chọn độ tuổi của trẻ</h3>
                 <p class="text-base">Độ tuổi trẻ số 1</p>
-                <div class="flex space-x-4">
-                    <button class="hour-btn hour-btn-hover w-50">
+                <div id="child-age-group" data-index="0" class="flex space-x-4">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="1-6">
                         12 tháng - 6 tuổi
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover w-50">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="7-11">
                         7 tuổi - 11 tuổi
                     </button>
                 </div>
 
                 <p class="text-base">Độ tuổi trẻ số 2</p>
-                <div class="flex space-x-4">
-                    <button class="hour-btn hour-btn-hover w-50">
+                <div id="child-age-group" data-index="0" class="flex space-x-4">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="1-6">
                         12 tháng - 6 tuổi
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover w-50">
+                    <button class="hour-btn hour-btn-hover w-50" data-value="7-11">
                         7 tuổi - 11 tuổi
                     </button>
                 </div>
             </div>
 
-            <!-- Hour Selection section -->
             <div class="space-y-3">
                 <h3 class="text-lg font-bold text-dark-900">Chọn số giờ</h3>
-                <div class="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <button class="hour-btn hour-btn-hover">
+                <div id="hour-group" class="grid grid-cols-2 gap-x-4 gap-y-3">
+                    <button class="hour-btn hour-btn-hover" data-value="120">
                         2 giờ
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover">
+                    <button class="hour-btn hour-btn-hover" data-value="180">
                         3 giờ
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover">
+
+                    <button class="hour-btn hour-btn-hover" data-value="240">
                         4 giờ
                     </button>
-    
-                    <button class="hour-btn hour-btn-hover">
+                    <button class="hour-btn hour-btn-hover" data-value="300">
                         5 giờ
                     </button>
-                    <button class="hour-btn hour-btn-hover">
+                    <button class="hour-btn hour-btn-hover" data-value="360">
                         6 giờ
                     </button>
-                    <button class="hour-btn hour-btn-hover">
+                    <button class="hour-btn hour-btn-hover" data-value="420">
                         7 giờ
-                    </button>
-                    <button class="hour-btn hour-btn-hover">
-                        8 giờ
-                    </button>                    
+                    </button>                  
                 </div>
             </div>
 
             <div class="flex space-x-4">
 
-                <button class="action-btn action-btn-hover">
-                    <a href="../book_now.html">Đặt ngay</a>
+                <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
+                    Đặt ngay</a>
                 </button>
 
                 <button class="action-btn action-btn-hover">
@@ -153,7 +148,185 @@
     </footer>
 
     <script>
-        
+        const ok = confirm("Dịch vụ này chỉ giành cho bé từ 12 tháng tuổi đến 11 tuổi. Xin quý khách lưu ý!");
+        if (!ok) {
+            history.back();
+        }
+
+        let bookingDraft = null;
+        let token = null;
+
+        // khởi tạo các biến lưu thông tin task cho snapshot
+        const urlParams = new URLSearchParams(window.location.search);
+        const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
+        const task_id = urlParams.get("id");
+        let task_name = "";
+        let task_unit = "";
+        let child_count = 1;
+        let child_ages = [];
+        let total_time = 0;
+
+        // xử lý chọn số lượng trẻ
+        const childCountButtons = document.querySelectorAll(
+            "#child-count-group button"
+        );
+        childCountButtons.forEach((btn, index) => {
+            btn.onclick = () => {
+                childCountButtons.forEach(b => b.classList.remove("active-btn"));
+                btn.classList.add("active-btn");
+
+                child_count = index + 1;
+                child_ages = new Array(child_count).fill(null);
+                saveDraft();
+            };
+        });
+
+
+        // xử lý chọn độ tuổi trẻ
+        const ageGroups = document.querySelectorAll("#child-age-group");
+        ageGroups.forEach((group, childIndex) => {
+            const buttons = group.querySelectorAll("button");
+            const index = Number(group.dataset.index);
+
+            buttons.forEach(btn => {
+                btn.onclick = () => {
+                    if (childIndex >= child_count) return;
+
+                    // remove active trong group
+                    buttons.forEach(b => b.classList.remove("active-btn"));
+
+                    // add active
+                    btn.classList.add("active-btn");
+
+                    child_ages[childIndex] = btn.textContent.includes("6") ? "1-6" : "7-11";
+                    saveDraft();
+                };
+            });
+        });
+
+        // xử lý số giờ làm
+        const hourButtons = document.querySelectorAll(
+            "#hour-group button"
+        );
+        hourButtons.forEach(btn => {
+            btn.onclick = () => {
+                hourButtons.forEach(b => b.classList.remove("active-btn"));
+                btn.classList.add("active-btn");
+
+                total_time = Number(btn.dataset.value);
+                saveDraft();
+            };
+        });
+
+
+        async function getTaskDetail() {
+            try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    alert("Vui lòng đăng nhập");
+                    location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+                    {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                console.log("TOKEN: ", token);
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+                    window.location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const data = await res.json();
+                console.log("TASK DETAIL: ", data.task);
+                if (!data.success) return;
+
+                task_name = data.task.task_name;
+                task_unit = data.task.unit;
+                child_count = data.task.child_count;
+
+            } catch (err) {
+                console.error("Load services failed", err);
+            }
+        }
+
+        getTaskDetail();
+
+        function calculateBaseAmount() {
+            if (!total_time || !child_count) return 0;
+
+            let amount = basePrice;
+
+            if (child_count === 1 && total_time === 60)  return basePrice;
+
+            // mỗi trẻ thêm 30%
+            if (child_count > 1) {
+                amount += basePrice * 0.3 * (child_count - 1);
+            }
+
+            // mỗi giờ thêm 50k
+            if (total_time > 60) {
+                const added = Math.round(total_time / 60);
+                amount += (added - 1) * 50000;
+            }
+
+            return Math.round(amount);
+        }
+
+        function saveDraft() {
+            bookingDraft = {
+                task_id: task_id,
+                type: "immediate",
+                base_amount: calculateBaseAmount(),
+                final_amount: calculateBaseAmount(),
+
+                task_snapshot: {
+                    code: "CHILDCARE",
+                    name: "Chăm sóc trẻ em",
+                    pricing: basePrice,
+                    unit: task_unit
+                },
+
+                task_payload: {
+                    child_count,
+                    child_ages,
+                    total_time 
+                },
+
+                note: ""
+            };
+
+            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        }
+
+        function handleBookingNow() {
+            if (!child_count) {
+                alert("Vui lòng chọn số lượng trẻ!");
+                return;
+            }
+
+            if (child_ages.includes(null)) {
+                alert("Vui lòng chọn độ tuổi cho tất cả các bé!");
+                return;
+            }
+
+            if (!total_time) {
+                alert("Vui lòng chọn số giờ làm việc!");
+                return;
+            }
+
+            saveDraft();
+            console.log("BOOKING DRAFT:", bookingDraft);
+
+            window.location.href = "../book_now.html";
+        }
     </script>
 </body>
 </html>

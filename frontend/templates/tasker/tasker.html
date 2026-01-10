@@ -10,136 +10,136 @@
   <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 </head>
 
 <body class="bg-primaryTasker-100 font-montserrat text-base">
-  <nav class="sticky top-0 z-[100] bg-white shadow-sm">
-    <div class="relative">
-      <header class="bg-primaryTasker-200">
-        <div class="logo-icon flex-shrink-0">
-          <a href=""><img src="../../public/images/taskgo-logo.png" alt="TaskGo icon"></a>
-        </div>
-
-        <h1 class="text-dark-900">Trang chủ</h1>
-
-        <button id="menu-btn" class="p-2 focus:outline-none flex items-center">
-          <span id="menu-icon" class="material-symbols-outlined text-dark-900">menu</span>
-        </button>
-      </header>
-
-      <div id="menu-overlay"
-        class="menu-hamburger">
-
-        <nav class="flex flex-col p-6 space-y-6 text-dark-900 font-bold">
-          
-          <!-- Group link -->
-          <div class="border-b pb-4">
-            <!-- Group title -->
-            <button id="services-toggle"
-              class="group flex justify-between items-center w-full text-left focus:outline-none">
-              <span class="text-black group-hover-tasker-400">Dịch vụ</span>
-              <span id="services-arrow"
-                class="material-symbols-outlined group-hover-tasker-400 transition-transform duration-300">expand_more</span>
-            </button>
-
-            <!-- Group items -->
-            <div id="services-dropdown"
-              class="dropdown-items">
-              <ul class="py-2 px-4 space-y-3 mt-2">
-                <li>
-                  <a href="#"
-                    class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
-                    vụ A</a>
-                </li>
-                <li>
-                  <a href="#"
-                    class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
-                    vụ B</a>
-                </li>
-                <li>
-                  <a href="#"
-                    class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
-                    vụ C</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <!-- Link item -->
-          <a href="#" class="divider pb-4 text-hover-tasker-400">Trang A</a>
-          <a href="#" class="divider pb-4 text-hover-tasker-400">Trang B</a>
-          <a href="#" class="divider pb-4 text-hover-tasker-400">Trang C</a>
-
-        </nav>
+<nav class="sticky top-0 z-[100] bg-white shadow-sm">
+  <div class="relative">
+    <header class="bg-primaryTasker-200">
+      <div class="logo-icon flex-shrink-0">
+        <a href=""><img src="../../public/images/taskgo-logo.png" alt="TaskGo icon"></a>
       </div>
+
+      <h1 class="text-dark-900">Trang chủ</h1>
+
+      <button id="menu-btn" class="p-2 focus:outline-none flex items-center">
+        <span id="menu-icon" class="material-symbols-outlined text-dark-900">menu</span>
+      </button>
+    </header>
+
+    <div id="menu-overlay"
+         class="menu-hamburger">
+
+      <nav class="flex flex-col p-6 space-y-6 text-dark-900 font-bold">
+
+        <!-- Group link -->
+        <div class="border-b pb-4">
+          <!-- Group title -->
+          <button id="services-toggle"
+                  class="group flex justify-between items-center w-full text-left focus:outline-none">
+            <span class="text-black group-hover-tasker-400">Dịch vụ</span>
+            <span id="services-arrow"
+                  class="material-symbols-outlined group-hover-tasker-400 transition-transform duration-300">expand_more</span>
+          </button>
+
+          <!-- Group items -->
+          <div id="services-dropdown"
+               class="dropdown-items">
+            <ul class="py-2 px-4 space-y-3 mt-2">
+              <li>
+                <a href="#"
+                   class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
+                  vụ A</a>
+              </li>
+              <li>
+                <a href="#"
+                   class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
+                  vụ B</a>
+              </li>
+              <li>
+                <a href="#"
+                   class="block text-dark-900 text-hover-tasker-400 py-1 border-l-2 border-transparent border-hover-tasker-400 pl-3">Dịch
+                  vụ C</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- Link item -->
+        <a href="#" class="divider pb-4 text-hover-tasker-400">Trang A</a>
+        <a href="#" class="divider pb-4 text-hover-tasker-400">Trang B</a>
+        <a href="#" class="divider pb-4 text-hover-tasker-400">Trang C</a>
+
+      </nav>
+    </div>
+  </div>
+</nav>
+
+
+
+
+<main class="p-4 space-y-4 pb-20 min-h-screen">
+  <div class="card-container p-4 space-y-4">
+    <!-- Title area -->
+    <div class="flex items-center justify-between divider pb-2">
+      <h2 class="text-primaryTasker-500">Tiêu đề trang ...</h2>
+    </div>
+
+    <!-- Content area -->
+    <div>
+      <p>content</p>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-white bottom-0">
+  <nav>
+    <div class="px-2 py-2 text-sm">
+      <span>&copy; 2025</span>
+
     </div>
   </nav>
+</footer>
+<!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script> -->
+<script>
+  const menuBtn = document.getElementById('menu-btn');
+  const menuOverlay = document.getElementById('menu-overlay');
+  const menuIcon = document.getElementById('menu-icon');
 
+  const servicesToggle = document.getElementById('services-toggle');
+  const servicesDropdown = document.getElementById('services-dropdown');
+  const servicesArrow = document.getElementById('services-arrow');
 
+  // Xử lý đóng/mở Menu chính
+  menuBtn.addEventListener('click', () => {
+    const isOpened = menuOverlay.classList.contains('translate-y-0');
 
+    if (isOpened) {
+      // Đóng menu: đẩy ngược lên trên cao hơn Header
+      menuOverlay.classList.remove('translate-y-0');
+      menuOverlay.classList.add('-translate-y-[120%]');
+      menuIcon.innerText = 'menu';
+    } else {
+      // Mở menu: trượt xuống ngay sát mép dưới Header
+      menuOverlay.classList.remove('-translate-y-[120%]');
+      menuOverlay.classList.add('translate-y-0');
+      menuIcon.innerText = 'close';
+    }
+  });
 
-  <main class="p-4 space-y-4 pb-20 min-h-screen">
-    <div class="card-container p-4 space-y-4">
-      <!-- Title area -->
-      <div class="flex items-center justify-between divider pb-2">
-        <h2 class="text-primaryTasker-500">Tiêu đề trang ...</h2>
-      </div>
-
-      <!-- Content area -->
-      <div>
-        <p>content</p>
-      </div>
-    </div>
-  </main>
-
-  <footer class="bg-white bottom-0">
-    <nav>
-      <div class="px-2 py-2 text-sm">
-        <span>&copy; 2025</span>
-
-      </div>
-    </nav>
-  </footer>
-  <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script> -->
-  <script>
-    const menuBtn = document.getElementById('menu-btn');
-    const menuOverlay = document.getElementById('menu-overlay');
-    const menuIcon = document.getElementById('menu-icon');
-
-    const servicesToggle = document.getElementById('services-toggle');
-    const servicesDropdown = document.getElementById('services-dropdown');
-    const servicesArrow = document.getElementById('services-arrow');
-
-    // Xử lý đóng/mở Menu chính
-    menuBtn.addEventListener('click', () => {
-      const isOpened = menuOverlay.classList.contains('translate-y-0');
-
-      if (isOpened) {
-        // Đóng menu: đẩy ngược lên trên cao hơn Header
-        menuOverlay.classList.remove('translate-y-0');
-        menuOverlay.classList.add('-translate-y-[120%]');
-        menuIcon.innerText = 'menu';
-      } else {
-        // Mở menu: trượt xuống ngay sát mép dưới Header
-        menuOverlay.classList.remove('-translate-y-[120%]');
-        menuOverlay.classList.add('translate-y-0');
-        menuIcon.innerText = 'close';
-      }
-    });
-
-    // Xử lý Dropdown Dịch vụ
-    servicesToggle.addEventListener('click', () => {
-      const isExpanded = servicesDropdown.style.maxHeight && servicesDropdown.style.maxHeight !== '0px';
-      if (isExpanded) {
-        servicesDropdown.style.maxHeight = '0px';
-        servicesArrow.style.transform = 'rotate(0deg)';
-      } else {
-        servicesDropdown.style.maxHeight = servicesDropdown.scrollHeight + "px";
-        servicesArrow.style.transform = 'rotate(180deg)';
-      }
-    });
-  </script>
+  // Xử lý Dropdown Dịch vụ
+  servicesToggle.addEventListener('click', () => {
+    const isExpanded = servicesDropdown.style.maxHeight && servicesDropdown.style.maxHeight !== '0px';
+    if (isExpanded) {
+      servicesDropdown.style.maxHeight = '0px';
+      servicesArrow.style.transform = 'rotate(0deg)';
+    } else {
+      servicesDropdown.style.maxHeight = servicesDropdown.scrollHeight + "px";
+      servicesArrow.style.transform = 'rotate(180deg)';
+    }
+  });
+</script>
 </body>
 
 </html>

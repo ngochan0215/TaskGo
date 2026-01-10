@@ -57,6 +57,12 @@
                 </p>
             </div>
 
+            <button id="cancelVoucherBtn"
+                class="hidden w-full mt-2 py-3 rounded-xl border border-red-300
+                    text-red-500 font-semibold hover:bg-red-50 transition">
+                Hủy áp dụng khuyến mãi
+            </button>
+
             <div class="space-y-3" id="voucherList">
             </div>
         </div>
@@ -249,6 +255,7 @@
             const finalAmount = document.getElementById("finalAmount");
 
             summary.classList.remove("hidden");
+            cancelVoucherBtn.classList.remove("hidden");
 
             discountValue.innerText = `-${discount.toLocaleString()}đ`;
             finalAmount.innerText = `${(TOTAL_AMOUNT - discount).toLocaleString()}đ`;
@@ -256,7 +263,7 @@
             // lưu vào voucherDraft để đọc lại ở UI thanh toán
             localStorage.setItem("voucherDraft", JSON.stringify({
                 base_amount: TOTAL_AMOUNT,
-                voucher_code: bestVoucherCode,
+                voucher_code: voucherCode,
                 discount_amount: discount,
                 final_amount: TOTAL_AMOUNT - discount
             }));
@@ -281,6 +288,36 @@
         }
 
         loadVouchers();
+
+        const cancelVoucherBtn = document.getElementById("cancelVoucherBtn");
+
+        cancelVoucherBtn.addEventListener("click", () => {
+            document.querySelectorAll(".promo-radio").forEach(r => {
+                r.checked = false;
+            });
+
+            document.querySelectorAll(".voucher-item").forEach(item => {
+                item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
+            });
+
+            document.getElementById("discountSummary").classList.add("hidden");
+            cancelVoucherBtn.classList.add("hidden");
+
+            localStorage.removeItem("voucherDraft");
+
+            const rawBooking = localStorage.getItem("bookingDraft");
+            if (rawBooking) {
+                const bookingDraft = JSON.parse(rawBooking);
+
+                bookingDraft.voucher_id = null;
+                bookingDraft.voucher_snapshot = null;
+                bookingDraft.final_amount = bookingDraft.base_amount;
+
+                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+                console.log("BOOKING DRAFT AFTER CANCEL VOUCHER:", bookingDraft);
+            }
+        });
+
     </script>
 </body>
 

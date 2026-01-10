@@ -21,6 +21,62 @@ const serviceRenderers = {
     <p>⏱️ Thời gian: ${p.total_time} giờ</p>
   `,
 
+  GROCERY: (p) => `
+    <p>🛒 Tổng số sản phẩm: <strong>${p.items.length}</strong></p>
+    <div class="mt-2 space-y-1">
+      ${p.items.map(item => `
+        <p>🧺 ${item.name}</strong> - <span>${item.quantity} ${item.unit}</span></p>
+      `).join("")}
+    </div>
+    ${p.estimated_budget
+      ? `<p class="mt-2">💰 Ngân sách ước tính: ${Number(p.estimated_budget).toLocaleString()}đ</p>`
+      : ""
+    }
+    <p><strong>Lưu ý tổng tiền cần thanh toán sẽ là tổng phí dịch vụ + số tiền ước tính</strong></p>
+  `,
+
+  CHILDCARE: (p) => `
+    <p>👶 Số lượng trẻ: ${p.child_count} bé</p>
+    <p>⏱️ Thời gian làm việc: ${Math.floor(p.total_time / 60)}h ${p.total_time % 60}p</p>
+    <p>📋 Độ tuổi các bé:</p>
+    <ul class="pl-5 list-disc">
+      ${p.child_ages
+        .map(
+          (age, index) =>
+            `<li>🧒 Bé ${index + 1}: ${
+              age === "1-6" ? "12 tháng – 6 tuổi" : "7 – 11 tuổi"
+            }</li>`
+        )
+        .join("")}
+    </ul>
+  `,
+
+  AIRCONDITIONER: (p) => `
+    ${p.devices.map((d, i) => `
+      <div class="ml-3 mt-2">
+        <p>🔧 <strong>Thiết bị ${i + 1}: ${d.label}</strong></p>
+        <p>⚡ Công suất: ${d.hp === "below_2" ? "Dưới 2 HP" : "Từ 2 HP trở lên"}</p>
+        <p>🛢️ Bơm gas: ${d.has_gas ? "Có" : "Không"}</p>
+        <p>💰 Giá: ${d.amount.toLocaleString()}đ</p>
+      </div>
+    `).join("")}
+
+    <p class="mt-2 font-semibold">🧾 Tổng cộng: ${p.final_amount.toLocaleString()}đ</p>
+  `,
+
+  WASHING_MACHINE: (p) => `
+    ${p.devices.map((d, i) => `
+      <div class="ml-3 mt-2">
+        <p>🔧 <strong>Thiết bị ${i + 1}: ${d.label}</strong></p>
+        <p>⚡ Khối lượng lồng giặt: ${d.capacity === "below_9" ? "Dưới 9 Kg" : "Từ 9 Kg trở lên"}</p>
+        <p>🛢️ Tháo lồng giặt: ${d.remove ? "Có" : "Không"}</p>
+        <p>💰 Giá: ${d.amount.toLocaleString()}đ</p>
+      </div>
+    `).join("")}
+
+    <p class="mt-2 font-semibold">🧾 Tổng cộng: ${p.final_amount.toLocaleString()}đ</p>
+  `,
+
   DEFAULT: () =>
     `<p class="text-gray-400">Không có chi tiết dịch vụ</p>`
 };
@@ -79,10 +135,13 @@ function renderAmounts() {
 function renderServiceSummary() {
   const el = document.getElementById("serviceSummary");
 
-  console.log("BOOKING DRAFT: ", bookingDraft);
+  console.log("BOOKING DRAFT IN PAYMENT: ", bookingDraft);
   const serviceCode = bookingDraft.task_snapshot?.code || "DEFAULT";
 
   const renderer = serviceRenderers[serviceCode] || serviceRenderers.DEFAULT;
+
+  const payload = bookingDraft.task_payload;
+  console.log("PAYLOAD IN RENDER: ", payload);
 
   el.innerHTML = `
     <div>
@@ -96,7 +155,7 @@ function renderServiceSummary() {
     </div>
 
     <div class="text-l semibold text-dark-500 space-y-1">
-      ${renderer(bookingDraft.task_payload || {})}
+      ${renderer(payload || {})}
     </div>
 
     ${
