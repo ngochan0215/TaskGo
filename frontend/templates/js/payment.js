@@ -35,6 +35,48 @@ const serviceRenderers = {
     <p><strong>Lưu ý tổng tiền cần thanh toán sẽ là tổng phí dịch vụ + số tiền ước tính</strong></p>
   `,
 
+  HOUSE_CLEANING: (p) => {
+    const extrasArr = p.extras ? Object.values(p.extras) : [];
+
+    return `
+      <div class="space-y-1">
+        <p>⏱️ Thời gian combo dọn dẹp gốc: 
+          <strong>${p.base_time} giờ</strong>
+        </p>
+        ${
+          p.total_time && p.total_time > p.base_time
+            ? `<p>⏱️ Thời gian thực hiện tổng: 
+                <strong>${p.total_time} giờ</strong>
+              </p>`
+            : ""
+        }
+        ${
+          p.house_type
+            ? `<p>🏠 Loại nhà: 
+                <strong>${p.house_type}</strong>
+              </p>`
+            : ""
+        }
+        ${
+          extrasArr.length
+            ? `
+              <div class="mt-2">
+                <p>🧩 Dịch vụ thêm:</p>
+                <ul class="ml-4 list-disc space-y-1">
+                  ${extrasArr.map(e => `
+                    <span class="pl-30 text-m text-dark-300">${e.name}
+                        (+${Number(e.price).toLocaleString()}đ/giờ)
+                      </span>
+                  `).join("")}
+                </ul>
+              </div>
+            `
+            : `<p>🧩 Dịch vụ thêm: <span class="text-gray-500">Không có</span></p>`
+        }
+      </div>
+    `;
+  },
+
   CHILDCARE: (p) => `
     <p>👶 Số lượng trẻ: ${p.child_count} bé</p>
     <p>⏱️ Thời gian làm việc: ${Math.floor(p.total_time / 60)}h ${p.total_time % 60}p</p>
@@ -49,6 +91,16 @@ const serviceRenderers = {
         )
         .join("")}
     </ul>
+  `,
+
+  ELDERLY: (p) => `
+    <p>⏱️ Thời gian làm việc: ${Math.floor(p.total_time / 60)}h ${p.total_time % 60}p</p>
+    <p class="mt-2 font-semibold">🧾 Tổng cộng: ${p.final_amount.toLocaleString()}đ</p>
+  `,
+
+  SICK: (p) => `
+    <p>⏱️ Thời gian làm việc: ${Math.floor(p.total_time / 60)}h ${p.total_time % 60}p</p>
+    <p class="mt-2 font-semibold">🧾 Tổng cộng: ${p.final_amount.toLocaleString()}đ</p>
   `,
 
   AIRCONDITIONER: (p) => `

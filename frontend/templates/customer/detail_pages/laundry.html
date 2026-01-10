@@ -1,4 +1,4 @@
-<!doctype html>
+<!-- <!doctype html>
 <html>
 
 <head>
@@ -27,7 +27,6 @@
   </header>
 
   <main class="p-4 space-y-4 pb-20">
-    <!-- Laundry sections -->
     <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
 
       <div class="flex items-center justify-between border-b pb-2">
@@ -99,6 +98,157 @@
       </div>
     </nav>
   </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
+    const task_id = urlParams.get("id");
+    let task_name = "";
+    let task_unit = "";
+    let final_amount = 0;
+
+    async function getTaskDetail() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Vui lòng đăng nhập");
+          location.href = "../auth/login-signup.html";
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        console.log("TOKEN: ", token);
+
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+            window.location.href = "../auth/login-signup.html";
+            return;
+        }
+
+        const data = await res.json();
+        console.log("TASK DETAIL: ", data.task);
+        if (!data.success) return;
+
+        task_name = data.task.task_name;
+        task_unit = data.task.unit;
+
+      } catch (err) {
+        console.error("Load services failed", err);
+      }
+    }
+
+    getTaskDetail();
+
+    // xử lý logic hiển thị tổng tiền tạm tính
+    function animatePrice() {
+      const box = document.getElementById("price-summary");
+      box.classList.add("scale-105");
+      setTimeout(() => box.classList.remove("scale-105"), 150);
+    }
+
+    function updatePriceSummary() {
+      const total = DEVICES.reduce((sum, d) => sum + d.amount, 0);
+
+      document.getElementById("total-price").textContent =
+        formatCurrency(total);
+
+      document.getElementById("totalTimeText").textContent =
+        `${DEVICES.length} giờ`;
+
+      animatePrice();
+    }
+
+    const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+    document.querySelectorAll(".time-card").forEach(card => {
+      const hours = parseInt(card.innerText.match(/\d+/)[0]);
+      const price = parseInt(
+        card.querySelector(".font-bold").innerText.replace(/\D/g, "")
+      );
+
+      const saving = hours * basePrice - price;
+      card.querySelector(".saving-text").innerText =
+        `Tiết kiệm ${formatCurrency(saving)}`;
+    });
+
+    function selectTime(hours, price, el) {
+      selectedTime = hours;
+      final_amount = price;
+
+      document.getElementById("total-price").innerText =
+        formatCurrency(price);
+      document.getElementById("totalTimeText").innerText =
+        `${hours} giờ`;
+
+      document.querySelectorAll(".time-card").forEach(card => {
+        card.classList.remove(
+          "ring-2",
+          "ring-primary-500",
+          "bg-primary-50"
+        );
+      });
+
+      el.classList.add(
+        "ring-2",
+        "ring-primary-500",
+        "bg-primary-50"
+      );
+
+      animatePrice();
+    }
+    
+    function highlightSelected(hours) {
+      document.querySelectorAll("#time-options button").forEach(btn => {
+        btn.classList.remove("ring-2", "ring-primary-500");
+      });
+
+      event.currentTarget.classList.add("ring-2", "ring-primary-500");
+    }
+
+    function saveDraft() {
+      bookingDraft = {
+        task_id,
+        type: "immediate",
+        base_amount: final_amount,
+        final_amount: final_amount,
+
+        task_snapshot: {
+          code: "ELDERLY",
+          name: task_name,
+          pricing: basePrice,
+          unit: task_unit
+        },
+
+        task_payload: {
+          total_time: selectedTime * 60,
+          final_amount: final_amount,
+        },
+
+        note: ""
+      };
+
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+    }
+
+    function handleBookingNow() {
+      if (!selectedTime) {
+        alert("Vui lòng chọn thời gian chăm sóc!");
+        return;
+      }
+      saveDraft();
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      console.log("BOOKING DRAFT: ", bookingDraft);
+      window.location.href = "../book_now.html";
+    }
+
+  </script>
 </body>
 
-</html>
+</html> -->

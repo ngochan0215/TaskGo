@@ -10,6 +10,7 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
+  
 </head>
 
 <body class="bg-primary-100 min-h-screen font-montserrat">
@@ -27,7 +28,6 @@
   </header>
 
   <main class="p-4 space-y-4 pb-20">
-    <!-- Take care of the sick people sections -->
     <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
 
       <div class="flex items-center justify-between border-b pb-2">
@@ -51,24 +51,128 @@
         <li>Thông báo tình trạng của người bệnh cho người thân khi cần thiết</li>
       </ul>
 
-      <div class="space-y-3">
+      <h3 class="text-lg font-bold text-dark-900">Chọn thời gian chăm sóc</h3>
+
+      <div id="time-options" class="space-y-4">
+        <!-- combo 2 giờ -->
         <button
-          class="hour-btn hour-btn-hover">
-          Theo buổi (Tối đa 4 giờ)
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(2, 200000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">2 giờ</span>
+            </div>
+            <span class="text-lg font-bold">200.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
         </button>
 
+        <!-- combo 3 giờ -->
         <button
-          class="hour-btn hour-btn-hover">
-          Theo ngày (Tối đa 8 giờ)
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(3, 280000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">3 giờ</span>
+            </div>
+            <span class="text-lg font-bold">280.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+        </button>
+
+        <!-- combo 4 giờ -->
+         <button
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(4, 360000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">4 giờ</span>
+            </div>
+            <span class="text-lg font-bold">360.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+        </button>
+
+        <!-- combo 5 giờ -->
+        <button
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(5, 440000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">5 giờ</span>
+            </div>
+            <span class="text-lg font-bold">440.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+        </button>
+
+        <!-- combo 6 giờ -->
+         <button
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(6, 520000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">6 giờ</span>
+            </div>
+            <span class="text-lg font-bold">520.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+        </button>
+
+        <!-- combo 7 giờ -->
+         <button
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(7, 600000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">7 giờ</span>
+            </div>
+            <span class="text-lg font-bold">600.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+        </button>
+
+        <!-- combo 8 giờ -->
+         <button
+          class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                hover:shadow-lg hover:scale-[1.02]"
+          onclick="selectTime(8, 680000, this)">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <span class="material-symbols-outlined text-primary-500">schedule</span>
+              <span class="text-lg font-semibold">8 giờ</span>
+            </div>
+            <span class="text-lg font-bold">680.000đ</span>
+          </div>
+          <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
         </button>
       </div>
 
+      <div id="price-summary" class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform">
+        <div>
+            <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
+            <p id="total-price" class="text-2xl font-bold">0đ</p>
+            <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
+        </div>
+        <span class="material-symbols-outlined text-4xl">payments</span>
+      </div>
+
       <div class="flex space-x-4">
-
-        <button class="action-btn action-btn-hover">
-          <a href="../book_now.html">Đặt ngay</a>
+        <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
+          Đặt ngay</a>
         </button>
-
         <button class="action-btn action-btn-hover">
           <a href="../scheduled.html">Đặt lịch trước</a>
         </button>
@@ -99,6 +203,158 @@
       </div>
     </nav>
   </footer>
+
+  <script>
+      const urlParams = new URLSearchParams(window.location.search);
+      const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
+      const task_id = urlParams.get("id");
+      let task_name = "";
+      let task_unit = "";
+      let selectedTime = 0;
+      let final_amount = 0;
+
+      async function getTaskDetail() {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Vui lòng đăng nhập");
+            location.href = "../auth/login-signup.html";
+            return;
+          }
+
+          const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          console.log("TOKEN: ", token);
+
+          if (res.status === 401) {
+              localStorage.removeItem("token");
+              alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+              window.location.href = "../auth/login-signup.html";
+              return;
+          }
+
+          const data = await res.json();
+          console.log("TASK DETAIL: ", data.task);
+          if (!data.success) return;
+
+          task_name = data.task.task_name;
+          task_unit = data.task.unit;
+
+        } catch (err) {
+          console.error("Load services failed", err);
+        }
+      }
+
+      getTaskDetail();
+
+      // xử lý logic hiển thị tổng tiền tạm tính
+      function animatePrice() {
+        const box = document.getElementById("price-summary");
+        box.classList.add("scale-105");
+        setTimeout(() => box.classList.remove("scale-105"), 150);
+      }
+
+      function updatePriceSummary() {
+        const total = DEVICES.reduce((sum, d) => sum + d.amount, 0);
+
+        document.getElementById("total-price").textContent =
+          formatCurrency(total);
+
+        document.getElementById("totalTimeText").textContent =
+          `${DEVICES.length} giờ`;
+
+        animatePrice();
+      }
+
+      const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+      document.querySelectorAll(".time-card").forEach(card => {
+        const hours = parseInt(card.innerText.match(/\d+/)[0]);
+        const price = parseInt(
+          card.querySelector(".font-bold").innerText.replace(/\D/g, "")
+        );
+
+        const saving = hours * basePrice - price;
+        card.querySelector(".saving-text").innerText =
+          `Tiết kiệm ${formatCurrency(saving)}`;
+      });
+
+      function selectTime(hours, price, el) {
+        selectedTime = hours;
+        final_amount = price;
+
+        document.getElementById("total-price").innerText =
+          formatCurrency(price);
+        document.getElementById("totalTimeText").innerText =
+          `${hours} giờ`;
+
+        document.querySelectorAll(".time-card").forEach(card => {
+          card.classList.remove(
+            "ring-2",
+            "ring-primary-500",
+            "bg-primary-50"
+          );
+        });
+
+        el.classList.add(
+          "ring-2",
+          "ring-primary-500",
+          "bg-primary-50"
+        );
+
+        animatePrice();
+      }
+      
+      function highlightSelected(hours) {
+        document.querySelectorAll("#time-options button").forEach(btn => {
+          btn.classList.remove("ring-2", "ring-primary-500");
+        });
+
+        event.currentTarget.classList.add("ring-2", "ring-primary-500");
+      }
+
+      function saveDraft() {
+        bookingDraft = {
+          task_id,
+          type: "immediate",
+          base_amount: final_amount,
+          final_amount: final_amount,
+
+          task_snapshot: {
+            code: "SICK",
+            name: task_name,
+            pricing: basePrice,
+            unit: task_unit
+          },
+
+          task_payload: {
+            total_time: selectedTime * 60,
+            final_amount: final_amount,
+          },
+
+          note: ""
+        };
+
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      }
+
+      function handleBookingNow() {
+        if (!selectedTime) {
+          alert("Vui lòng chọn thời gian chăm sóc!");
+          return;
+        }
+        saveDraft();
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        console.log("BOOKING DRAFT: ", bookingDraft);
+        window.location.href = "../book_now.html";
+      }
+
+    </script>
 </body>
 
 </html>

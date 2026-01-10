@@ -10,6 +10,55 @@
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
+
+  <style>
+    .house-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid #1a5323;
+      background: white;
+      transition: all .25s ease;
+    }
+
+    .house-card:hover {
+      transform: scale(1.03);
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+    }
+
+    .house-card.active {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    .extra-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+      transition: all .25s ease;
+    }
+
+    .extra-card:hover {
+      background: #f9fafb;
+    }
+
+    .extra-card input:checked + span,
+    .extra-card input:checked ~ div {
+      color: #2563eb;
+    }
+
+    .extra-card input:checked ~ * {
+      font-weight: 600;
+    }
+    </style>
+
 </head>
 
 <body class="bg-primary-100 min-h-screen font-montserrat">
@@ -48,29 +97,167 @@
         <li>Đổ rác</li>
       </ul>
 
+      <!-- Thông tin nhà -->
       <div class="space-y-3">
-        <button
-          class="hour-btn hour-btn-hover">
-          2 giờ
-        </button>
+        <h3 class="font-semibold text-lg text-primary-500 flex items-center gap-2">
+          <span class="material-symbols-outlined">home</span>
+          Chọn các thông tin cho yêu cầu vệ sinh nhà cửa
+        </h3>
 
-        <button
-          class="hour-btn hour-btn-hover">
-          3 giờ
-        </button>
+        <!-- Loại nhà -->
+        <div class="space-y-2">
+          <p class="text-l font-medium text-dark-500">Loại nhà</p>
 
-        <button
-          class="hour-btn hour-btn-hover">
-          4 giờ
-        </button>
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              class="house-card"
+              onclick="selectHouseType('apartment', this)">
+              <span class="material-symbols-outlined text-3xl">apartment</span>
+              <span class="font-medium">Căn hộ</span>
+            </button>
+
+            <button
+              class="house-card"
+              onclick="selectHouseType('townhouse', this)">
+              <span class="material-symbols-outlined text-3xl">home</span>
+              <span class="font-medium">Nhà phố</span>
+            </button>
+
+            <button
+              class="house-card"
+              onclick="selectHouseType('office', this)">
+              <span class="material-symbols-outlined text-3xl">business</span>
+              <span class="font-medium">Văn phòng</span>
+            </button>
+
+            <button
+              class="house-card"
+              onclick="selectHouseType('shop', this)">
+              <span class="material-symbols-outlined text-3xl">store</span>
+              <span class="font-medium">Cửa hàng</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thời gian + diện tích -->
+         <div class="space-y-2">
+          <p class="text-l font-medium text-dark-500">Chọn thời gian và diện tích tương ứng</p>
+
+          <button
+            class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                  hover:shadow-lg hover:scale-[1.02]"
+            onclick="selectTime(2, 180000, this)">
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="material-symbols-outlined text-primary-500">schedule</span>
+                <span class="text-lg font-semibold">2 giờ</span>
+              </div>
+              <span class="text-lg font-bold">180.000đ</span>
+            </div>
+            <p class="text-xs text-dark-400 mt-1 text-center">
+              Phù hợp nhà ≤ 50m² hoặc 2 phòng
+            </p>
+            <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+          </button>
+
+          <button
+            class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                  hover:shadow-lg hover:scale-[1.02]"
+            onclick="selectTime(3, 250000, this)">
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="material-symbols-outlined text-primary-500">schedule</span>
+                <span class="text-lg font-semibold">3 giờ</span>
+              </div>
+              <span class="text-lg font-bold">250.000đ</span>
+            </div>
+            <p class="text-xs text-dark-400 mt-1 text-center">
+              Phù hợp nhà ≤ 80m² hoặc 3 phòng
+            </p>
+            <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+          </button>
+
+          <button
+            class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
+                  hover:shadow-lg hover:scale-[1.02]"
+            onclick="selectTime(4, 300000, this)">
+
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <span class="material-symbols-outlined text-primary-500">schedule</span>
+                <span class="text-lg font-semibold">4 giờ</span>
+              </div>
+              <span class="text-lg font-bold">300.000đ</span>
+            </div>
+            <p class="text-xs text-dark-400 mt-1 text-center">
+              Phù hợp nhà ≤ 100m² hoặc 4 phòng
+            </p>
+            <p class="text-sm text-primary-500 mt-1 text-center saving-text"></p>
+          </button>
+         </div> 
+
+        <!-- Dịch vụ thêm -->
+        <div class="space-y-2">
+          <p class="text-l font-medium text-dark-500">Chọn dịch vụ thêm</p>
+
+          <div class="space-y-2">
+            <label class="extra-card">
+              <input type="checkbox" onchange="toggleExtra(this)" 
+                data-key="deep_clean" data-price="100000" data-name="Tổng vệ sinh sâu" hidden>
+              <span class="material-symbols-outlined text-primary-500">cleaning_services</span>
+              <div>
+                <p class="font-medium">Tổng vệ sinh sâu</p>
+                <p class="text-xs text-dark-400">Lau kỹ các khu vực khó tiếp cận</p>
+                <p class="text-xs text-primary-500 font-semibold mt-1">
+                  + 100.000 VNĐ/h
+                </p>
+              </div>
+            </label>
+
+            <label class="extra-card">
+              <input type="checkbox" onchange="toggleExtra(this)" 
+                data-key="sanitizer" data-price="50000" data-name="Khử khuẩn" hidden>
+              <span class="material-symbols-outlined text-primary-500">sanitizer</span>
+              <div>
+                <p class="font-medium">Khử khuẩn</p>
+                <p class="text-xs text-dark-400">Phù hợp gia đình có trẻ nhỏ</p>
+                <p class="text-xs text-primary-500 font-semibold mt-1">
+                  + 50.000 VNĐ/h
+                </p>
+              </div>
+            </label>
+
+            <label class="extra-card">
+              <input type="checkbox" onchange="toggleExtra(this)" 
+                data-key="sofa" data-price="70000" data-name="Giặt sofa/rèm" hidden>
+              <span class="material-symbols-outlined text-primary-500">weekend</span>
+              <div>
+                <p class="font-medium">Giặt sofa / rèm</p>
+                <p class="text-xs text-dark-400">Tính thêm thời gian</p>
+                <p class="text-xs text-primary-500 font-semibold mt-1">
+                  + 70.000 VNĐ/h
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div id="price-summary" class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform">
+        <div>
+            <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
+            <p id="total-price" class="text-2xl font-bold">0đ</p>
+            <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
+        </div>
+        <span class="material-symbols-outlined text-4xl">payments</span>
       </div>
 
       <div class="flex space-x-4">
-
-        <button class="action-btn action-btn-hover">
-          <a href="../book_now.html">Đặt ngay</a>
+        <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
+          Đặt ngay</a>
         </button>
-
         <button class="action-btn action-btn-hover">
           <a href="../scheduled.html">Đặt lịch trước</a>
         </button>
@@ -101,6 +288,215 @@
       </div>
     </nav>
   </footer>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
+    const task_id = urlParams.get("id");
+    let task_name = "";
+    let task_unit = "";
+    let selectedTime = 0;
+    let displayTime = 0;
+    let final_amount = 0;
+    let extras = {};
+    let selectedHouseType = null;
+    let baseTimePrice = 0;
+
+    async function getTaskDetail() {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Vui lòng đăng nhập");
+          location.href = "../auth/login-signup.html";
+          return;
+        }
+
+        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        console.log("TOKEN: ", token);
+
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+            window.location.href = "../auth/login-signup.html";
+            return;
+        }
+
+        const data = await res.json();
+        console.log("TASK DETAIL: ", data.task);
+        if (!data.success) return;
+
+        task_name = data.task.task_name;
+        task_unit = data.task.unit;
+
+      } catch (err) {
+        console.error("Load services failed", err);
+      }
+    }
+
+    getTaskDetail();
+
+    // xử lý logic hiển thị tổng tiền tạm tính
+    function animatePrice() {
+      const box = document.getElementById("price-summary");
+      box.classList.add("scale-105");
+      setTimeout(() => box.classList.remove("scale-105"), 150);
+    }
+
+    const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+    document.querySelectorAll(".time-card").forEach(card => {
+      const hours = parseInt(card.innerText.match(/\d+/)[0]);
+      const price = parseInt(
+        card.querySelector(".font-bold").innerText.replace(/\D/g, "")
+      );
+
+      const saving = hours * basePrice - price;
+      card.querySelector(".saving-text").innerText =
+        `Tiết kiệm ${formatCurrency(saving)}`;
+    });
+
+    function selectTime(hours, price, el) {
+      selectedTime = hours;
+      baseTimePrice = price;
+
+      document.querySelectorAll(".time-card").forEach(card => {
+        card.classList.remove(
+          "ring-2",
+          "ring-primary-500",
+          "bg-primary-50"
+        );
+      });
+
+      el.classList.add(
+        "ring-2",
+        "ring-primary-500",
+        "bg-primary-50"
+      );
+
+      recalcTotal();
+    }
+
+    function toggleExtra(input) {
+      const key = input.dataset.key;
+      const name = input.dataset.name;
+      const price = Number(input.dataset.price);
+
+      if (input.checked) {
+        extras[key] = {
+          key,
+          name,
+          price
+        };
+
+        input.closest(".extra-card")
+          .classList.add("ring-2", "ring-primary-500");
+      } else {
+        delete extras[key];
+        input.closest(".extra-card")
+          .classList.remove("ring-2", "ring-primary-500");
+      }
+
+      recalcTotal();
+    }
+
+    function recalcTotal() {
+      if (!selectedTime) return;
+      let extraHours = 0;
+      let extrasTotal = 0;
+
+      Object.values(extras).forEach(e => {
+        extraHours += 1;
+        extrasTotal += e.price;
+      });
+
+      const finalAmount = baseTimePrice + extrasTotal;
+
+      document.getElementById("total-price").innerText =
+        formatCurrency(finalAmount);
+
+      displayTime = selectedTime + extraHours;
+      document.getElementById("totalTimeText").innerText =
+        `${displayTime} giờ`;
+
+      final_amount = finalAmount;
+
+      animatePrice();
+    }
+
+    function selectHouseType(type, el) {
+      selectedHouseType = type;
+
+      // Bỏ active tất cả
+      document.querySelectorAll(".house-card").forEach(card => {
+        card.classList.remove(
+          "active",
+          "ring-2",
+          "ring-primary-500"
+        );
+      });
+
+      // Active cái được chọn
+      el.classList.add(
+        "active",
+        "ring-2",
+        "ring-primary-500"
+      );
+    }
+
+    function highlightSelected(hours) {
+      document.querySelectorAll("#time-options button").forEach(btn => {
+        btn.classList.remove("ring-2", "ring-primary-500");
+      });
+
+      event.currentTarget.classList.add("ring-2", "ring-primary-500");
+    }
+
+    function saveDraft() {
+      bookingDraft = {
+        task_id,
+        type: "immediate",
+        base_amount: final_amount,
+        final_amount: final_amount,
+
+        task_snapshot: {
+          code: "HOUSE_CLEANING",
+          name: task_name,
+          pricing: basePrice,
+          unit: task_unit
+        },
+
+        task_payload: {
+          base_time: selectedTime * 60,
+          total_time: displayTime * 60,
+          extras: extras,
+          final_amount: final_amount,
+          house_type: selectHouseType,
+        },
+
+        note: ""
+      };
+
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+    }
+
+    function handleBookingNow() {
+      if (!selectedTime) {
+        alert("Vui lòng chọn thời gian dọn dẹp!");
+        return;
+      }
+      saveDraft();
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      console.log("BOOKING DRAFT: ", bookingDraft);
+      window.location.href = "../book_now.html";
+    }
+
+  </script>
 </body>
 
 </html>

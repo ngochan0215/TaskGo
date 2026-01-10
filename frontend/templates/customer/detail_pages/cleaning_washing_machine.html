@@ -178,227 +178,227 @@
     </footer>
 
     <script>
-    const WASHING_TYPES = { 
-      top: { label: "Cửa trên", baseMultiplier: 1 }, 
-      front: { label: "Cửa trước", baseMultiplier: 1 }, 
-    };
-
-    const CAPACITY_MULTIPLIER = {
-      below_9: 1,
-      above_9: 1.5,
-    };
-
-    const washingState = {
-      top: { quantity: 1, capacity: "below_9" },
-      front: { quantity: 0, capacity: null },
-    };
-
-    const DEVICES = [];
-    let deviceId = 0; 
-    let remove = false;
-    const removePrice = 100000;
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const basePrice = Number(urlParams.get("price")) || 500000; // Giá mặc định nếu không có tham số
-    const task_id = urlParams.get("id");
-    let task_name = "";
-    let task_unit = "";
-    let final_amount = 0;
-
-    // xử lý chọn công suất của mỗi thiết bị
-    document.querySelectorAll("[data-type]").forEach(block => {
-      const type = block.dataset.type;
-      const addBtn = block.querySelector(".add-device-btn");
-
-      addBtn.onclick = () => {
-        const capacityRadio = block.querySelector("input[type=radio]:checked");
-        if (!capacityRadio) {
-          alert("Vui lòng chọn khối lượng trước khi thêm thiết bị");
-          return;
-        }
-
-        const capacity = capacityRadio.nextElementSibling.innerText.includes("Dưới")
-          ? "below_9" : "above_9";
-
-        const remove = block.querySelector("input[type=checkbox]").checked;
-
-        const amount = basePrice * CAPACITY_MULTIPLIER[capacity] + (remove ? removePrice : 0);
-
-        DEVICES.push({
-          id: ++deviceId,
-          type,
-          label: WASHING_TYPES[type].label,
-          capacity,
-          remove,
-          amount
-        });
-
-        renderDeviceSummary();
-        updatePriceSummary();
+      const WASHING_TYPES = { 
+        top: { label: "Cửa trên", baseMultiplier: 1 }, 
+        front: { label: "Cửa trước", baseMultiplier: 1 }, 
       };
-    });
 
-    async function getTaskDetail() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Vui lòng đăng nhập");
-          location.href = "../auth/login-signup.html";
+      const CAPACITY_MULTIPLIER = {
+        below_9: 1,
+        above_9: 1.5,
+      };
+
+      const washingState = {
+        top: { quantity: 1, capacity: "below_9" },
+        front: { quantity: 0, capacity: null },
+      };
+
+      const DEVICES = [];
+      let deviceId = 0; 
+      let remove = false;
+      const removePrice = 100000;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const basePrice = Number(urlParams.get("price")) || 500000; // Giá mặc định nếu không có tham số
+      const task_id = urlParams.get("id");
+      let task_name = "";
+      let task_unit = "";
+      let final_amount = 0;
+
+      // xử lý chọn công suất của mỗi thiết bị
+      document.querySelectorAll("[data-type]").forEach(block => {
+        const type = block.dataset.type;
+        const addBtn = block.querySelector(".add-device-btn");
+
+        addBtn.onclick = () => {
+          const capacityRadio = block.querySelector("input[type=radio]:checked");
+          if (!capacityRadio) {
+            alert("Vui lòng chọn khối lượng trước khi thêm thiết bị");
+            return;
+          }
+
+          const capacity = capacityRadio.nextElementSibling.innerText.includes("Dưới")
+            ? "below_9" : "above_9";
+
+          const remove = block.querySelector("input[type=checkbox]").checked;
+
+          const amount = basePrice * CAPACITY_MULTIPLIER[capacity] + (remove ? removePrice : 0);
+
+          DEVICES.push({
+            id: ++deviceId,
+            type,
+            label: WASHING_TYPES[type].label,
+            capacity,
+            remove,
+            amount
+          });
+
+          renderDeviceSummary();
+          updatePriceSummary();
+        };
+      });
+
+      async function getTaskDetail() {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Vui lòng đăng nhập");
+            location.href = "../auth/login-signup.html";
+            return;
+          }
+
+          const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+
+          console.log("TOKEN: ", token);
+
+          if (res.status === 401) {
+              localStorage.removeItem("token");
+              alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+              window.location.href = "../auth/login-signup.html";
+              return;
+          }
+
+          const data = await res.json();
+          console.log("TASK DETAIL: ", data.task);
+          if (!data.success) return;
+
+          task_name = data.task.task_name;
+          task_unit = data.task.unit;
+
+        } catch (err) {
+          console.error("Load services failed", err);
+        }
+      }
+
+      getTaskDetail();
+
+      // xử lý logic hiển thị tổng tiền tạm tính
+      function animatePrice() {
+        const box = document.getElementById("price-summary");
+        box.classList.add("scale-105");
+        setTimeout(() => box.classList.remove("scale-105"), 150);
+      }
+
+      function updatePriceSummary() {
+        const total = DEVICES.reduce((sum, d) => sum + d.amount, 0);
+
+        document.getElementById("total-price").textContent =
+          formatCurrency(total);
+
+        document.getElementById("totalTimeText").textContent =
+          `${DEVICES.length} giờ`;
+
+        animatePrice();
+      }
+
+      // hiển thị danh sách các thiết bị đã chọn
+      function renderDeviceSummary() {
+        const container = document.getElementById("deviceSummary");
+        container.innerHTML = "";
+
+        if (DEVICES.length === 0) {
+          container.innerHTML =
+            `<p class="text-sm text-gray-400">Chưa có thiết bị nào được thêm</p>`;
           return;
         }
 
-        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        DEVICES.forEach((d, index) => {
+          const div = document.createElement("div");
+          div.className =
+            "text-sm text-gray-700 bg-gray-50 p-3 rounded-lg space-y-1";
 
-        console.log("TOKEN: ", token);
+          div.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-medium">
+                  Thiết bị ${index + 1} – ${d.label}
+                </p>
+                <p>
+                  Khối lượng: ${d.capacity === "below_9" ? "Dưới 9 Kg" : "Từ 9 Kg trở lên"}
+                </p>
+                <p>
+                  Tháo lồng giặt: ${d.remove ? "Có" : "Không"}
+                </p>
+              </div>
 
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../auth/login-signup.html";
-            return;
-        }
-
-        const data = await res.json();
-        console.log("TASK DETAIL: ", data.task);
-        if (!data.success) return;
-
-        task_name = data.task.task_name;
-        task_unit = data.task.unit;
-
-      } catch (err) {
-        console.error("Load services failed", err);
-      }
-    }
-
-    getTaskDetail();
-
-    // xử lý logic hiển thị tổng tiền tạm tính
-    function animatePrice() {
-      const box = document.getElementById("price-summary");
-      box.classList.add("scale-105");
-      setTimeout(() => box.classList.remove("scale-105"), 150);
-    }
-
-    function updatePriceSummary() {
-      const total = DEVICES.reduce((sum, d) => sum + d.amount, 0);
-
-      document.getElementById("total-price").textContent =
-        formatCurrency(total);
-
-      document.getElementById("totalTimeText").textContent =
-        `${DEVICES.length} giờ`;
-
-      animatePrice();
-    }
-
-    // hiển thị danh sách các thiết bị đã chọn
-    function renderDeviceSummary() {
-      const container = document.getElementById("deviceSummary");
-      container.innerHTML = "";
-
-      if (DEVICES.length === 0) {
-        container.innerHTML =
-          `<p class="text-sm text-gray-400">Chưa có thiết bị nào được thêm</p>`;
-        return;
-      }
-
-      DEVICES.forEach((d, index) => {
-        const div = document.createElement("div");
-        div.className =
-          "text-sm text-gray-700 bg-gray-50 p-3 rounded-lg space-y-1";
-
-        div.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="font-medium">
-                Thiết bị ${index + 1} – ${d.label}
-              </p>
-              <p>
-                Khối lượng: ${d.capacity === "below_9" ? "Dưới 9 Kg" : "Từ 9 Kg trở lên"}
-              </p>
-              <p>
-                Tháo lồng giặt: ${d.remove ? "Có" : "Không"}
-              </p>
+              <button
+                onclick="removeDevice(${d.id})"
+                class="text-red-500 text-xs font-medium">
+                Xóa
+              </button>
             </div>
 
-            <button
-              onclick="removeDevice(${d.id})"
-              class="text-red-500 text-xs font-medium">
-              Xóa
-            </button>
-          </div>
+            <p class="text-primary-500 font-semibold">
+              Giá: ${d.amount.toLocaleString()}đ
+            </p>
+          `;
 
-          <p class="text-primary-500 font-semibold">
-            Giá: ${d.amount.toLocaleString()}đ
-          </p>
-        `;
-
-        container.appendChild(div);
-        animatePrice();
-      });
-    }
-    
-    // xóa một thiết bị khỏi list
-    function removeDevice(id) {
-      const index = DEVICES.findIndex(d => d.id === id);
-      if (index === -1) return;
-
-      DEVICES.splice(index, 1);
-      renderDeviceSummary();
-      updatePriceSummary();
-    }
-
-    const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
-
-    function calculateBaseAmount() {
-      const total =  DEVICES.reduce((sum, d) => sum + d.amount, 0);
-      document.getElementById("total-price").textContent = formatCurrency(total);
-      return total;
-    }
-
-    function saveDraft() {
-      bookingDraft = {
-        task_id,
-        type: "immediate",
-        base_amount: calculateBaseAmount(),
-        final_amount: calculateBaseAmount(),
-
-        task_snapshot: {
-          code: "WASHING_MACHINE",
-          name: task_name,
-          pricing: basePrice,
-          unit: task_unit
-        },
-
-        task_payload: {
-          devices: DEVICES,
-          total_time: DEVICES.length * 60,
-          final_amount: calculateBaseAmount(),
-        },
-
-        note: ""
-      };
-
-      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-    }
-
-    function handleBookingNow() {
-      if (DEVICES.length === 0) {
-        alert("Vui lòng thêm ít nhất 1 thiết bị");
-        return;
+          container.appendChild(div);
+          animatePrice();
+        });
       }
-      saveDraft();
-      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-      console.log("BOOKING DRAFT: ", bookingDraft);
-      window.location.href = "../book_now.html";
-    }
+      
+      // xóa một thiết bị khỏi list
+      function removeDevice(id) {
+        const index = DEVICES.findIndex(d => d.id === id);
+        if (index === -1) return;
 
-  </script>
+        DEVICES.splice(index, 1);
+        renderDeviceSummary();
+        updatePriceSummary();
+      }
+
+      const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+      function calculateBaseAmount() {
+        const total =  DEVICES.reduce((sum, d) => sum + d.amount, 0);
+        document.getElementById("total-price").textContent = formatCurrency(total);
+        return total;
+      }
+
+      function saveDraft() {
+        bookingDraft = {
+          task_id,
+          type: "immediate",
+          base_amount: calculateBaseAmount(),
+          final_amount: calculateBaseAmount(),
+
+          task_snapshot: {
+            code: "WASHING_MACHINE",
+            name: task_name,
+            pricing: basePrice,
+            unit: task_unit
+          },
+
+          task_payload: {
+            devices: DEVICES,
+            total_time: DEVICES.length * 60,
+            final_amount: calculateBaseAmount(),
+          },
+
+          note: ""
+        };
+
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      }
+
+      function handleBookingNow() {
+        if (DEVICES.length === 0) {
+          alert("Vui lòng thêm ít nhất 1 thiết bị");
+          return;
+        }
+        saveDraft();
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        console.log("BOOKING DRAFT: ", bookingDraft);
+        window.location.href = "../book_now.html";
+      }
+
+    </script>
 </body>
 
 </html>
