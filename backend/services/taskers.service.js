@@ -57,6 +57,7 @@ export const buildTaskerRanking = async (orderId) => {
   const customerModel = Customer;
   const userModel = User;
 
+  // validate
   const order = await orderModel.findById(orderId);
   if (!order) 
     throw new Error("Order not found");
@@ -65,21 +66,19 @@ export const buildTaskerRanking = async (orderId) => {
   if (!task) 
     throw new Error("Task not found");
 
+  const service = await serviceModel.findById(task.service_id).lean();
+  if (!service) throw new Error("Service not found");
+
   const customer = await customerModel.findOne({
     user_id: order.customer_id,
   });
   if (!customer) throw new Error("Customer not found");
-
-  const userId = customer.user_id;
   
   const orderAddress = { 
-    longitude: order.address_snapshot.longtitude,
+    longitude: order.address_snapshot.longitude,
     latitude: order.address_snapshot.latitude
   };
   if (!orderAddress) throw new Error("Order address not found");
-
-  const service = await serviceModel.findById(task.service_id).lean();
-  if (!service) throw new Error("Service not found");
 
   // find available taskers for the assigned service
   const availableTaskers = await getOnlineAvailableTaskers(
@@ -195,10 +194,9 @@ export const suggestTasker = async (orderId, { excludedTaskerIds = [] } = {}) =>
 };
 
 // tasker confirms different stages of the order
-
-export const acceptTaskRequest = async (taskerId, orderId) =>{
+export const acceptTaskRequest = async (taskerUserId, orderId) =>{
     try {
-        const tasker = await Tasker.findOne({ user_id: taskerId });
+        const tasker = await Tasker.findOne({ user_id: taskerUserId });
         if (!tasker) {
             throw new Error("Tasker not found")
         }
@@ -212,21 +210,23 @@ export const acceptTaskRequest = async (taskerId, orderId) =>{
         }
 
         if (!order.tasker_id) {
-            order.tasker_id = taskerId;
+            order.tasker_id = taskerUserId;
         } 
-        else if (order.tasker_id.toString() !== taskerId.toString()) {
+        else if (order.tasker_id.toString() !== taskerUserId.toString()) {
             throw new Error("You are not assigned to this order");
         }
 
+        // update order status
         const orderLog = await changeOrderStatus({
             orderId,
             toStatus: "accepted",
             actorType: "tasker",
-            actorId: taskerId
+            actorId: taskerUserId
         });
 
+        // update tasker working status
         await Tasker.updateOne({
-            user_id: taskerId
+            user_id: taskerUserId
         },{
             working_status: "busy" 
         },{
@@ -239,9 +239,9 @@ export const acceptTaskRequest = async (taskerId, orderId) =>{
     }
 };
 
-export const denyTaskRequest = async (taskerId, orderId, reason) =>{
+export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
     try {
-        const tasker = await Tasker.findOne({ user_id: taskerId })
+        const tasker = await Tasker.findOne({ user_id: taskerUserId })
         if (!tasker) {
             throw new Error("Tasker not found")
         }
@@ -249,26 +249,28 @@ export const denyTaskRequest = async (taskerId, orderId, reason) =>{
         if (!order) {
             throw new Error("Order not found")
         }
-        if (order.tasker_id.toString() !== taskerId.toString()) {
+        if (order.tasker_id.toString() !== taskerUserId.toString()) {
             throw new Error("You are not assigned to this order")
         }
         if (order.status !== "assigned") {
             throw new Error("Order must be in assigned state to be denied")
         }
 
+        // update tasker rejection count
         await Tasker.updateOne(
-            { user_id: taskerId },
+            { user_id: taskerUserId },
             {
                 $inc: { rejection_count: 1 }
             },
             { runValidators: true }
         );
 
+        // log order status 
         const orderLog = await changeOrderStatus({
             orderId,
             toStatus: "cancelled",
             actorType: "tasker",
-            actorId: taskerId,
+            actorId: taskerUserId,
             reason: reason || "Tasker denied the task"
         });
 
@@ -303,11 +305,11 @@ export const denyTaskRequest = async (taskerId, orderId, reason) =>{
     }
 };
 
-export const confirmDepartureService = async (taskerId, orderId) =>{
+export const confirmDepartureService = async (taskerUserId, orderId) =>{
     try {
-        console.log(taskerId, orderId);
+        console.log(taskerUserId, orderId);
 
-        const tasker = await Tasker.findOne({ user_id: taskerId })
+        const tasker = await Tasker.findOne({ user_id: taskerUserId })
         if (!tasker) {
             throw new Error("Tasker not found")
         }
@@ -316,18 +318,19 @@ export const confirmDepartureService = async (taskerId, orderId) =>{
         if (!order) {
             throw new Error("Order not found")
         }
-        if (order.tasker_id.toString() !== taskerId.toString()) {
+        if (order.tasker_id.toString() !== taskerUserId.toString()) {
             throw new Error("You are not assigned to this order")
         }
         if (order.status !== "accepted") {
             throw new Error("Order is not accepted")
         }
 
+        // update order status
         const orderLog = await changeOrderStatus({
             orderId,
             toStatus: "departed",
             actorType: "tasker",
-            actorId: taskerId
+            actorId: taskerUserId
         });
 
     } catch (error) {
@@ -335,13 +338,13 @@ export const confirmDepartureService = async (taskerId, orderId) =>{
     }
 };
 
-export const confirmArrivingService = async (taskerId, orderId) => {
+export const confirmArrivingService = async (taskerUserId, orderId) => {
     try {
         const order = await Order.findById(orderId);
         if (!order) 
             throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerId.toString())
+        if (order.tasker_id.toString() !== taskerUserId.toString())
             throw new Error("You are not assigned to this order");
 
         if (order.status !== "accepted")
@@ -351,7 +354,7 @@ export const confirmArrivingService = async (taskerId, orderId) => {
             orderId,
             toStatus: "arrived",
             actorType: "tasker",
-            actorId: taskerId
+            actorId: taskerUserId
         });
 
     } catch (error) {
@@ -359,18 +362,18 @@ export const confirmArrivingService = async (taskerId, orderId) => {
     }
 };
 
-export const confirmStartService = async (taskerId, orderId) => {
+export const confirmStartService = async (taskerUserId, orderId) => {
     try {
         const order = await Order.findById(orderId);
         if (!order) 
             throw new Error("Order not found");
 
-        const tasker = await Tasker.findOne({ user_id: taskerId })
+        const tasker = await Tasker.findOne({ user_id: taskerUserId })
         if (!tasker) {
             throw new Error("Tasker not found")
         }
 
-        if (order.tasker_id.toString() !== taskerId.toString())
+        if (order.tasker_id.toString() !== taskerUserId.toString())
             throw new Error("You are not assigned to this order");
 
         if (order.status !== "arrived")
@@ -380,20 +383,21 @@ export const confirmStartService = async (taskerId, orderId) => {
             orderId,
             toStatus: "in_progress",
             actorType: "tasker",
-            actorId: taskerId
+            actorId: taskerUserId
         });
+
     } catch (error) {
         throw new Error(error.message);
     }
 };
 
-export const confirmCompleteService = async (taskerId, orderId) => {
+export const confirmCompleteService = async (taskerUserId, orderId) => {
     try {
         const order = await Order.findById(orderId);
         if (!order) 
             throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerId.toString())
+        if (order.tasker_id.toString() !== taskerUserId.toString())
             throw new Error("You are not assigned to this order");
 
         if (order.status !== "in_progress")
@@ -403,18 +407,18 @@ export const confirmCompleteService = async (taskerId, orderId) => {
             orderId,
             toStatus: "completed",
             actorType: "tasker",
-            actorId: taskerId
+            actorId: taskerUserId
         });
 
+        // update tasker completed orders count
         await Tasker.updateOne(
-            { user_id: taskerId },
+            { user_id: taskerUserId },
             {
                 $inc: { total_completed_tasks: 1 },
                 $set: { working_status: "available" }
             },
             { runValidators: true }
         );
-
 
         if (order.customer_id) 
             rankingCache.delete(String(order.customer_id));

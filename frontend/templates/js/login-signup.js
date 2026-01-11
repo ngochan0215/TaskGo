@@ -114,16 +114,19 @@ function handleLogin() {
       });
 
       const data = await res.json();
+      console.log("data: ", data);
       if (!res.ok) return showErrorMessage(data.message);
 
       localStorage.setItem("token", data.token);
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("system_role", data.system_role);
 
       const system_role = data.system_role;
 
       if (system_role === "admin") {
-        window.location.href = "../admin/admin.html";
+        window.location.href = "../admin/admin_home.html";
       } else if (system_role === "tasker") {
-        window.location.href = "../tasker/tasker.html";
+        window.location.href = "../tasker/tasker_home.html";
       } else {
         window.location.href = "../customer/customer_home.html";
       }

@@ -124,6 +124,22 @@
                 </button>
             </div>
         </div>
+
+        <div>
+            <label for="hourly-rate" class="text-base font-medium text-dark-900 block mb-1"> Số thẻ ngân hàng (6 số đầu)</label>
+            <input type="text" id="bin" readonly
+                class="w-full p-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+        </div>
+
+        <div>
+            <label for="hourly-rate" class="text-base font-medium text-dark-900 block mb-1"> Số tài khoản ngân hàng</label>
+            <input type="text" id="account-number" readonly
+                class="w-full p-3 border border-gray-300 rounded-lg 
+                       focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+        </div>
     </div>
     <div class="pt-6">
         <button id="updateBtn" onclick="updateProfile()" class="action-btn action-btn-hover w-full " disabled>

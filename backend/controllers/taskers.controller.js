@@ -12,15 +12,20 @@ export const acceptTask = async (req, res) =>{
     try {
         await acceptTaskRequest(req.userId, orderId);
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: "Không tìm thấy đơn hàng."});
+        }
+
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId).select("full_name");
         const tasker_name = tasker.full_name.toString();
         console.log("tasker", tasker);
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Đơn hàng đã được chấp nhận!",
             `Tasker ${tasker_name} đã nhận đơn hàng của bạn!`,
             "order",
@@ -32,7 +37,7 @@ export const acceptTask = async (req, res) =>{
         res.status(200).json({ message: "Order accepted successfully" });
     }
     catch (error) {
-        res.status(400).json({ message: "Failed to accept order", error: error.message });
+        res.status(500).json({ message: "Failed to accept order", error: error.message });
     }
 }
 
@@ -42,14 +47,19 @@ export const confirmDeparture = async (req, res) =>{
     try {
         await confirmDepartureService(req.userId, orderId);
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: "Không tìm thấy đơn hàng."});
+        }
+
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId).select("full_name");
-        const tasker_name = tasker.full_name || "Anoymous";
+        const tasker_name = tasker.full_name || "Nhân viên";
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Tasker đang trên đường đến!",
             `Tasker ${tasker_name} đã xác nhận khởi hành đến địa điểm của bạn.`,
             "order",
@@ -75,14 +85,14 @@ export const denyTask = async (req, res) =>{
             throw new Error("Order not found.");
         }
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId);
         const tasker_name = tasker.full_name.toString();
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Đơn hàng đã bị tasker từ chối",
             `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm tasker khác cho bạn.`,
             "order",
@@ -152,16 +162,21 @@ export const denyTask = async (req, res) =>{
 export const confirmArriving = async (req, res) => {
     const { orderId } = req.params;
     try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            throw new Error("Order not found.");
+        }
+
         await confirmArrivingService(req.userId, orderId);
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId);
-        const taskerName = tasker.full_name ?? "Anoymous";
+        const taskerName = tasker.full_name ?? "Nhân viên";
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Tasker đã đến nơi!",
             `Tasker ${taskerName} đã đến địa điểm của bạn.`,
             "order",
@@ -181,16 +196,21 @@ export const confirmArriving = async (req, res) => {
 export const confirmStart = async (req, res) => {
     const { orderId } = req.params;
     try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            throw new Error("Order not found.");
+        }
+
         await confirmStartService(req.userId, orderId);
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId).select("full_name");
-        const taskerName = tasker?.full_name || "Anoymous";
+        const taskerName = tasker?.full_name || "Nhân viên";
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Công việc đã được bắt đầu",
             `Tasker ${taskerName} đã bắt đầu thực hiện dịch vụ.`,
             "order",
@@ -210,16 +230,21 @@ export const confirmStart = async (req, res) => {
 export const confirmComplete = async (req, res) => {
     const { orderId } = req.params;
     try {
+        const order = await Order.findById(orderId);
+        if (!order) {
+            throw new Error("Order not found.");
+        }
+
         await confirmCompleteService(req.userId, orderId);
 
-        const customerId = order.customer_id.toString();
-        console.log("user_id of customer", customerId);
+        const customerUserId = order.customer_id.toString();
+        console.log("user_id of customer", customerUserId);
 
         const tasker = await User.findById(req.userId).select("full_name");
         const taskerName = tasker?.full_name || "Anoymous";
 
         await pushNotification(
-            customerId,
+            customerUserId,
             "Dịch vụ đã hoàn thành",
             `Tasker ${taskerName} đã hoàn tất đơn hàng của bạn.`,
             "order",
@@ -228,14 +253,13 @@ export const confirmComplete = async (req, res) => {
             "unread"
         );
 
-        await Customer.updateOne(
-            { user_id: customerId },
-            {
-                $inc: { total_completed_orders: 1 }
-            },
-            { runValidators: true }
-        );
-
+        // await Customer.updateOne(
+        //     { user_id: customerUserId },
+        //     {
+        //         $inc: { total_completed_orders: 1 }
+        //     },
+        //     { runValidators: true }
+        // );
 
         res.status(200).json({ message: "Task completed successfully" });
     }

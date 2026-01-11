@@ -1188,6 +1188,10 @@ header {
   top: 100%;
 }
 
+.top-5 {
+  top: 1.25rem;
+}
+
 .z-10 {
   z-index: 10;
 }
@@ -1206,6 +1210,10 @@ header {
 
 .z-\[60\] {
   z-index: 60;
+}
+
+.z-20 {
+  z-index: 20;
 }
 
 .m-0 {
@@ -1657,6 +1665,10 @@ header {
 
 .w-full {
   width: 100%;
+}
+
+.w-80 {
+  width: 20rem;
 }
 
 .min-w-0 {
@@ -2899,6 +2911,10 @@ header {
   line-height: 1rem;
 }
 
+.text-\[22px\] {
+  font-size: 22px;
+}
+
 .font-black {
   font-weight: 900;
 }
@@ -3308,14 +3324,14 @@ header {
   box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
 }
 
-.ring-secondary-100 {
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(18 163 39 / var(--tw-ring-opacity, 1));
-}
-
 .ring-primary-500 {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(59 95 67 / var(--tw-ring-opacity, 1));
+}
+
+.ring-secondary-100 {
+  --tw-ring-opacity: 1;
+  --tw-ring-color: rgb(18 163 39 / var(--tw-ring-opacity, 1));
 }
 
 .blur-lg {

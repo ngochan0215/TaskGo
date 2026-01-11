@@ -3,11 +3,15 @@ import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isCustomer } from "../middleware/verifyRole.js";
 import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
     createOrder, cancelOrderByCustomer,
-    createReceipt
+    createReceipt, getCustomerOrderStats,
  } from "../controllers/order.controller.js";
 
 import { addReview, editReview, getMyReviews, getReviewByOrder } from "../controllers/review.controller.js";
+
 const router = express.Router();
+
+// lấy số đơn đã hoàn thành và hủy của khách hàng
+router.get("/statistics/completed-cancelled", verifyToken, getCustomerOrderStats);
 
 router.post("/create", verifyToken, isCustomer, createOrder);
 router.get("/:customerId", verifyToken, getAllOrdersByCustomerId);

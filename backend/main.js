@@ -17,6 +17,7 @@ import taskRoutes from "./routes/task.route.js";
 import taskerRoutes from "./routes/tasker.route.js";
 import discountRoutes from "./routes/discount.route.js";
 import transactionRoutes from "./routes/transaction.route.js";
+import notificationRoutes from "./routes/notification.route.js";
 
 dotenv.config();
 
@@ -35,16 +36,6 @@ console.log('__dirname =', __dirname);
 
 app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
 
-// // Route cho trang thanh toán thành công
-// app.get('/payment/success', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'templates', 'success.html'));
-// });
-
-// // Route cho trang thanh toán thất bại
-// app.get('/payment/cancel', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'templates', 'cancel.html'));
-// });
-
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
@@ -53,11 +44,12 @@ app.use("/api/task", taskRoutes);
 app.use("/api/tasker", taskerRoutes);
 app.use("/api/discount", discountRoutes);
 app.use("/api/transaction", transactionRoutes);
+app.use("/api/notification", notificationRoutes);
 
 voucherStatusCron();
 
 const httpServer = http.createServer(app);
-const io = initSocket(httpServer);      
+initSocket(httpServer);      
 
 httpServer.listen(PORT, () => {
   connectDB();

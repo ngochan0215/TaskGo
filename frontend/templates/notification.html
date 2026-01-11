@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskGo - Thông báo</title>
 
-    <link rel="stylesheet" href="../../public/css/output.css">
+    <link rel="stylesheet" href="../public/css/output.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
@@ -80,57 +80,83 @@
 
 <app-footer></app-footer>
 
-<script>
-    const rawData = [
-        {
-            id: 1,
-            type: 'order',
-            title: 'Người giúp việc đã đến',
-            desc: 'Chị Nguyễn Văn A đã đến vị trí làm việc cho đơn hàng #DH8291.',
-            time: '5 phút trước',
-            icon: 'person_pin_circle',
-            isRead: false
-        },
-        {
-            id: 2,
-            type: 'promo',
-            title: 'Giảm 20% dọn dẹp cuối tuần',
-            desc: 'Nhập mã WEEKEND20 để được giảm giá cho dịch vụ dọn dẹp chuyên sâu.',
-            time: '1 giờ trước',
-            icon: 'local_offer',
-            isRead: false
-        },
-        {
-            id: 3,
-            type: 'order',
-            title: 'Hoàn thành dịch vụ',
-            desc: 'Đơn hàng #DH8290 đã hoàn tất. Bạn hãy đánh giá dịch vụ nhé!',
-            time: 'Hôm qua',
-            icon: 'check_circle',
-            isRead: true
-        },
-        {
-            id: 4,
-            type: 'system',
-            title: 'Bảo trì hệ thống thanh toán',
-            desc: 'Hệ thống ví điện tử sẽ bảo trì từ 00:00 - 02:00 ngày mai.',
-            time: '2 ngày trước',
-            icon: 'dns',
-            isRead: true
-        },
-         {
-            id: 5,
-            type: 'promo',
-            title: 'Săn sale 12h',
-            desc: 'Cơ hội cuối cùng để nhận ưu đãi đi chợ hộ.',
-            time: '3 ngày trước',
-            icon: 'bolt',
-            isRead: true
-        }
-    ];
+<div id="toast-container" class="fixed top-5 right-5 space-y-3 z-50"></div>
 
-    let notifications = [...rawData];
-    let currentFilter = 'all';
+<script>
+    let notifications = [];
+    let currentFilter = "all";
+
+    let token = localStorage.getItem("token");
+    if (!token) {
+        alert("Vui lòng đăng nhập");
+        location.href = "../auth/login-signup.html";
+    }
+    console.log("TOKEN: ", token);
+
+    function mapIcon(type) {
+        if(type === "order") return "receipt_long";
+        if(type === "promo") return "local_offer";
+        return "notifications";
+    }
+
+    function timeAgo(input) {
+        if (!input) return "";
+
+        const now = new Date();
+        const time = new Date(input);
+
+        const diffMs = now - time; // milliseconds
+        if (diffMs < 0) return "vừa xong";
+
+        const seconds = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours   = Math.floor(minutes / 60);
+        const days    = Math.floor(hours / 24);
+        const weeks   = Math.floor(days / 7);
+        const months  = Math.floor(days / 30);
+        const years   = Math.floor(days / 365);
+
+        if (seconds < 10) return "vừa xong";
+        if (seconds < 60) return `${seconds} giây trước`;
+        if (minutes < 60) return `${minutes} phút trước`;
+        if (hours < 24)   return `${hours} giờ trước`;
+        if (days < 7)     return `${days} ngày trước`;
+        if (weeks < 5)    return `${weeks} tuần trước`;
+        if (months < 12)  return `${months} tháng trước`;
+        return `${years} năm trước`;
+    }
+
+    async function loadNotifications() {
+        const res = await fetch("http://localhost:3000/api/notification/all", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+            window.location.href = "../auth/login-signup.html";
+            return;
+        }
+
+        if (!res.ok) return alert("Không thể load thông báo.");
+
+        const data = await res.json();
+
+        notifications = data.map(n => ({
+            id: n._id,
+            type: n.type,
+            title: n.title,
+            desc: n.content,
+            time: timeAgo(n.created_at) || timeAgo(n.createdAt),
+            icon: mapIcon(n.type),
+            isRead: n.status === "read",
+            reference: n.reference
+        }));
+
+        render();
+    }
 
     function render() {
         const container = document.getElementById('notification-list');
@@ -178,22 +204,23 @@
             const timeStyle = isUnread ? 'text-green-600 font-medium' : 'text-slate-400';
 
             const html = `
-                <div onclick="readItem(${item.id})" class="group relative flex gap-4 p-4 md:p-5 rounded-lg cursor-pointer transition-all duration-200 hover:-translate-y-1 fade-in ${cardClass}" style="animation-delay: ${index * 0.05}s">
-
-                    <div class="w-12 h-12 rounded-xl ${iconStyle} flex items-center justify-center shrink-0 shadow-sm">
-                        <span class="material-symbols-outlined text-[26px]">${item.icon}</span>
-                    </div>
-
-                    <div class="flex-1 min-w-0 flex flex-col justify-center">
-                        <div class="flex justify-between items-start mb-1.5">
-                            <h3 class="text-[15px] ${titleStyle} truncate pr-8">${item.title}</h3>
-                            <span class="text-[11px] ${timeStyle} shrink-0 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">${item.time}</span>
+                <div class="group relative flex gap-4 p-4 rounded-lg fade-in ${cardClass}">
+                    <div onclick="readItem('${item.id}')" class="flex-1 flex gap-4 cursor-pointer">
+                        <div class="w-12 h-12 rounded-xl ${iconStyle} flex items-center justify-center">
+                            <span class="material-symbols-outlined">${item.icon}</span>
                         </div>
-                        <p class="text-[13px] md:text-sm text-slate-500 leading-relaxed line-clamp-2">${item.desc}</p>
+
+                        <div class="flex-1 min-w-0">
+                            <h3 class="${titleStyle}">${item.title}</h3>
+                            <p class="text-sm text-slate-500">${item.desc}</p>
+                        </div>
                     </div>
 
-                    <button onclick="deleteItem(event, ${item.id})" class="absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 flex items-center justify-center rounded-full text-slate-300 hover:text-red-500 hover:bg-red-50 transition opacity-0 group-hover:opacity-100 z-10">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
+                    <button
+                    onclick="deleteItem(event, '${item.id}')"
+                    class="absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 z-20"
+                    >
+                    <span class="material-symbols-outlined">delete</span>
                     </button>
                 </div>
             `;
@@ -217,29 +244,121 @@
         render();
     }
 
-    function readItem(id) {
+    async function readItem(id) {
         const item = notifications.find(n => n.id === id);
-        if(item && !item.isRead) {
-            item.isRead = true;
-            render();
+        if(!item || item.isRead) return;
+
+        const res = await fetch(`http://localhost:3000/api/notification/${id}`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            method: "PATCH"
+        });
+
+        if (!res.ok) return alert("Không thể đánh dấu đã đọc");
+
+        item.isRead = true;
+        render();
+
+        if(item.reference?.kind === "Order") {
+            window.location.href = `/orders/${item.reference.refId}`;
         }
     }
 
-    function markAllRead() {
+    async function markAllRead() {
+        const res = await fetch(`http://localhost:3000/api/notification/read-all`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            method: "PATCH"
+        });
+
+        if (!res.ok) return alert("Không thể đánh dấu đã đọc tất cả.");
+
         notifications.forEach(n => n.isRead = true);
         render();
     }
 
-    function deleteItem(e, id) {
+    async function deleteItem(e, id) {
+        console.log("IM CALLED");
         e.stopPropagation();
         if(confirm('Bạn có chắc muốn xóa không?')) {
+            const res = await fetch(`http://localhost:3000/api/notification/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                method: "DELETE"
+            });
+
+            if (!res.ok) return alert("Không thể xóa thông báo.");
+
             notifications = notifications.filter(n => n.id !== id);
             render();
         }
     }
 
-    render();
-</script>
+    function showToast(item) {
+        const container = document.getElementById("toast-container");
 
+        const toast = document.createElement("div");
+        toast.className = `
+            bg-white border-l-4 border-green-500 shadow-lg
+            rounded-lg p-4 w-80 animate-slide-in
+        `;
+
+        toast.innerHTML = `
+            <p class="font-semibold text-slate-800">${item.title}</p>
+            <p class="text-sm text-slate-500 mt-1">${item.desc}</p>
+        `;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add("opacity-0");
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    render();
+    loadNotifications();
+</script>
+<script src="http://localhost:3000/socket.io/socket.io.js"></script>
+<script>
+    const socket = io("http://localhost:3000");
+
+    const user_id = JSON.parse(localStorage.getItem("user_id"));
+    const role = JSON.parse(localStorage.getItem("system_role"));
+
+    socket.emit("join", {
+        userId: user_id,
+        role,
+    });
+
+    socket.on("notification", async () => {
+        const res = await fetch("http://localhost:3000/api/notification/all", {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        const [latest] = await res.json();
+
+        const item = {
+            id: latest._id,
+            type: latest.type,
+            title: latest.title,
+            desc: latest.content,
+            time: "Vừa xong",
+            icon: mapIcon(latest.type),
+            isRead: false,
+            reference: latest.reference
+        };
+
+        notifications.unshift(item);
+        render();
+
+        showToast(item);
+    });
+
+</script>
 </body>
 </html>

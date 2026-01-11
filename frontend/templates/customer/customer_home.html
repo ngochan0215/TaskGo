@@ -113,7 +113,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Điểm tích lũy</p>
-                    <p class="text-lg font-bold text-dark-900">1250</p>
+                    <p id="customer-points" class="text-lg font-bold text-dark-900">1250</p>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
@@ -122,7 +122,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Đơn thành công</p>
-                    <p class="text-lg font-bold text-dark-900">18</p>
+                    <p id="customer-completed-orders" class="text-lg font-bold text-dark-900">18</p>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
@@ -131,7 +131,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Đơn đã huỷ</p>
-                    <p class="text-lg font-bold text-dark-900">2</p>
+                    <p id="customer-cancelled-orders" class="text-lg font-bold text-dark-900">2</p>
                 </div>
             </div>
         </div>
@@ -232,7 +232,7 @@
 
             <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
                 <div class="flex justify-center items-center space-x-2">
-                    <img src="/public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
+                    <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
                     <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
                 </div>
                 <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
@@ -254,6 +254,14 @@
 </footer>
 
 <script>
+    let token = null;
+    token = localStorage.getItem("token");
+    if (!token) {
+        alert("Vui lòng đăng nhập");
+        location.href = "../auth/login-signup.html";
+    }
+    console.log("TOKEN: ", token);
+
     // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
     const searchContainer = document.getElementById("search-container");
     const inputDiv = document.createElement("div");
@@ -298,102 +306,144 @@
         </div>
     `;
 
-    const favoriteContainer = document.getElementById("favorite-services");
-    document.addEventListener("click", e => {
-        const btn = e.target.closest(".heart-btn");
-        if (!btn) return;
+    // const favoriteContainer = document.getElementById("favorite-services");
+    // document.addEventListener("click", e => {
+    //     const btn = e.target.closest(".heart-btn");
+    //     if (!btn) return;
 
-        const heart = btn.querySelector(".heart-icon");
-        const item = btn.closest(".service-item");
-        const name = item.dataset.name;
-        const img = item.dataset.img;
+    //     const heart = btn.querySelector(".heart-icon");
+    //     const item = btn.closest(".service-item");
+    //     const name = item.dataset.name;
+    //     const img = item.dataset.img;
 
-        const existingFav = Array.from(favoriteContainer.children)
-            .find(c => c.querySelector("p").innerText === name);
+    //     const existingFav = Array.from(favoriteContainer.children)
+    //         .find(c => c.querySelector("p").innerText === name);
 
-        if (!existingFav) {
-            heart.style.color = "red";
-            const favItem = document.createElement("div");
-            favItem.className = "service-item";
-            favItem.innerHTML = `
-                <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-                <p class="mt-1 text-sm font-medium">${name}</p>
+    //     if (!existingFav) {
+    //         heart.style.color = "red";
+    //         const favItem = document.createElement("div");
+    //         favItem.className = "service-item";
+    //         favItem.innerHTML = `
+    //             <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+    //             <p class="mt-1 text-sm font-medium">${name}</p>
+    //         `;
+    //         favoriteContainer.appendChild(favItem);
+    //     } else {
+    //         heart.style.color = "white";
+    //         favoriteContainer.removeChild(existingFav);
+    //     }
+    // });
+
+    async function loadCustomerStats() {
+        try {
+            const statsRes= await fetch("http://localhost:3000/api/order/statistics/completed-cancelled", 
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const pointsRes= await fetch("http://localhost:3000/api/user/reputation-score", 
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            console.log("TOKEN: ", token);
+            if (statsRes.status === 401 || pointsRes.status === 401) {
+                localStorage.removeItem("token");
+                alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const statsJson = await statsRes.json();
+            const pointsJson = await pointsRes.json();
+
+            console.log("statistics json: ", statsJson);
+            console.log("points json: ", pointsJson);
+
+            if (!statsJson.success || !pointsJson.success) {
+                throw new Error("Không lấy được dữ liệu khách hàng");
+            }
+
+            const { completed_orders, cancelled_orders } = statsJson.data;
+            console.log("statistics data: ", statsJson.data);
+
+            document.getElementById("customer-points").textContent =
+                pointsJson.points.toLocaleString("vi-VN");
+
+            document.getElementById("customer-completed-orders").textContent =
+                completed_orders;
+
+            document.getElementById("customer-cancelled-orders").textContent =
+                cancelled_orders;
+
+        } catch (err) {
+            console.error("Load customer stats error:", err);
+        }
+    }
+
+    async function loadFavoriteTaskers() {
+        try {
+            const res = await fetch("http://localhost:3000/api/user/favorites/taskers", 
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const json = await res.json();
+
+            const container = document.getElementById("favorite-taskers-list");
+            container.innerHTML = "";
+
+            if (!json.data || json.data.length === 0) {
+            container.innerHTML = `
+                <p class="text-sm text-gray-400 px-4">Bạn chưa có tasker yêu thích</p>
             `;
-            favoriteContainer.appendChild(favItem);
-        } else {
-            heart.style.color = "white";
-            favoriteContainer.removeChild(existingFav);
+            return;
+            }
+
+            json.data.forEach(item => {
+                const tasker = item.tasker;
+                const user = item.user;
+                const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
+
+                const card = document.createElement("div");
+                card.className = "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
+                card.onclick = () => openTaskerModal({
+                    name: user.full_name,
+                    avatar,
+                    rating: tasker.reputation_score || 0,
+                    reviews: tasker.reviews_count || 0,
+                    skill: tasker.skill || "—",
+                    jobs: tasker.total_completed_tasks || 0,
+                    location: tasker.location || "—",
+                    bio: tasker.introduction || ""
+                });
+
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:border-primary-500 transition-colors">
+                    <img src="${avatar}" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-xs font-medium text-center mt-2 text-dark-900 group-hover:text-primary-500 truncate w-full">
+                    ${user.full_name}
+                    </p>
+                    <div class="flex items-center text-[10px] text-gray-500">
+                    <span class="material-symbols-outlined text-[10px] text-yellow-500 mr-0.5">star</span>
+                    ${user.reputation_score || 0}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+        } catch (err) {
+            console.error("Load favorite taskers error:", err);
         }
-    });
-
-
-    // Mock Data Tasker
-    const favoriteTaskers = [
-        {
-            id: 1,
-            name: "Nguyễn Văn A",
-            avatar: "https://i.pravatar.cc/150?u=1",
-            rating: 4.8,
-            reviews: 120,
-            skill: "Dọn dẹp nhà, Sửa điện",
-            jobs: 350,
-            location: "Quận 1, TP.HCM",
-            bio: "Tôi là người cẩn thận, sạch sẽ và luôn đúng giờ. Có kinh nghiệm 5 năm dọn dẹp."
-        },
-        {
-            id: 2,
-            name: "Trần Thị B",
-            avatar: "https://i.pravatar.cc/150?u=2",
-            rating: 4.9,
-            reviews: 85,
-            skill: "Nấu ăn, Đi chợ",
-            jobs: 210,
-            location: "Thủ Đức, TP.HCM",
-            bio: "Nấu ăn ngon chuẩn vị miền Tây. Luôn chọn thực phẩm tươi sạch nhất cho khách."
-        },
-        {
-            id: 3,
-            name: "Lê Văn C",
-            avatar: "https://i.pravatar.cc/150?u=3",
-            rating: 4.5,
-            reviews: 40,
-            skill: "Sửa ống nước",
-            jobs: 90,
-            location: "Bình Thạnh, TP.HCM",
-            bio: "Thợ sửa ống nước chuyên nghiệp, khắc phục nhanh chóng mọi sự cố rò rỉ."
-        },
-        {
-            id: 4,
-            name: "Phạm Thị D",
-            avatar: "https://i.pravatar.cc/150?u=4",
-            rating: 5.0,
-            reviews: 200,
-            skill: "Trông trẻ, Dọn dẹp",
-            jobs: 500,
-            location: "Quận 7, TP.HCM",
-            bio: "Yêu trẻ con, kiên nhẫn và chu đáo. Đã có chứng chỉ bảo mẫu."
-        }
-    ];
-
-    const taskerListContainer = document.getElementById("favorite-taskers-list");
-
-    favoriteTaskers.forEach(tasker => {
-        const taskerCard = document.createElement("div");
-        taskerCard.className = "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
-        taskerCard.onclick = () => openTaskerModal(tasker); // Gắn sự kiện click
-
-        taskerCard.innerHTML = `
-            <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:border-primary-500 transition-colors">
-                <img src="${tasker.avatar}" alt="${tasker.name}" class="w-full h-full object-cover">
-            </div>
-            <p class="text-xs font-medium text-center mt-2 text-dark-900 group-hover:text-primary-500 truncate w-full">${tasker.name}</p>
-            <div class="flex items-center text-[10px] text-gray-500">
-                <span class="material-symbols-outlined text-[10px] text-yellow-500 mr-0.5">star</span>
-                ${tasker.rating}
-            </div>
-        `;
-        taskerListContainer.appendChild(taskerCard);
-    });
+    }
 
     const modal = document.getElementById("tasker-modal");
     const closeModalBtn = document.querySelector(".close-modal");
@@ -431,6 +481,9 @@
             mobileMenu.classList.toggle("hidden");
         });
     }
+
+    loadCustomerStats();
+    loadFavoriteTaskers();
 </script>
 
 </body>

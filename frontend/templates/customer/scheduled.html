@@ -27,38 +27,56 @@
     </header>
 
     <main class="p-4 space-y-4 pb-20">
-        <!-- Work time section -->
         <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
             <div class="flex items-center justify-between border-b pb-2">
-                <h2 class="text-2xl font-bold text-primary-500">Thời gian làm việc</h2>
+                <h2 class="text-2xl font-bold text-primary-500 flex items-center gap-2">
+                <span class="material-symbols-outlined">event</span>
+                Thời gian làm việc
+                </h2>
             </div>
 
-            <p class="text-xs mb-4">
-                Chọn thời gian làm việc
+            <p class="text-l text-dark-300">
+                Chọn ngày và giờ Tasker đến làm việc
             </p>
 
-            <div class="bg-white rounded-lg">
-                <div class="flex items-center justify-between space-x-2 mb-4">
-                    <label for="workdate" class="text-xl whitespace-nowrap flex-shrink-0">
-                        Nhập thời gian:
-                    </label>
-                    <input type="datetime-local" id="workdate" name="workdate"
-                        class="text-lg font-medium" />
-                </div>
+            <div class="space-y-2">
+                <label class="text-sm font-medium text-dark-500 flex items-center gap-1">
+                <span class="material-symbols-outlined text-base">schedule</span>
+                Ngày & giờ
+                </label>
 
-                <div class="flex space-x-4 pt-4">
-                    <button class="action-btn action-btn-hover">
-                        Chọn lại
-                    </button>
+                <input
+                type="datetime-local"
+                id="workdate"
+                class="w-full rounded-lg border px-3 py-2 text-lg
+                        focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                onchange="handleSelectDate()"
+                />
+            </div>
 
-                    <button class="action-btn action-btn-hover">
-                        Đặt hôm nay
-                    </button>
-                </div>
+            <div id="selectedDatePreview"
+                class="hidden mt-2 p-3 rounded-lg bg-primary-50 text-primary-700 text-sm flex items-center gap-2">
+                <span class="material-symbols-outlined">check_circle</span>
+                <span id="selectedDateText"></span>
+            </div>
+
+            <div class="flex space-x-4 pt-4">
+                <button
+                onclick="resetDate()"
+                class="action-btn action-btn-hover w-full flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined">refresh</span>
+                Chọn lại
+                </button>
+
+                <button
+                onclick="setToday()"
+                class="action-btn action-btn-hover w-full flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined">today</span>
+                Đặt hôm nay
+                </button>
             </div>
         </div>
 
-        <!-- Note section -->
         <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
             <div class="flex items-center justify-between border-b pb-2">
                 <h2 class="text-2xl font-bold text-primary-500">Ghi chú cho Tasker</h2>
@@ -77,8 +95,9 @@
                     placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"></textarea>
             </div>
             <div class="flex space-x-4">
-                <button class="action-btn action-btn-hover">
-                    <a href="./payment_pages/payment.html">100.000 VND/2h</a>
+                <button onclick="handleGoPayment()" 
+                    class="action-btn action-btn-hover w-full text-center">
+                    <span id="bookingTotalText">---</span>
                 </button>
             </div>
         </div>
@@ -106,6 +125,89 @@
             </div>
         </nav>
     </footer>
+
+    <script>
+        const workdateInput = document.getElementById("workdate");
+        const previewBox = document.getElementById("selectedDatePreview");
+        const previewText = document.getElementById("selectedDateText");
+
+        // xử lý chọn ngày
+        function toDatetimeLocalVN(date) {
+            const vn = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+            return vn.toISOString().slice(0, 16);
+        }
+
+        function handleSelectDate() {
+            if (!workdateInput.value) return;
+
+            const date = new Date(workdateInput.value);
+            bookingDraft.scheduled_at = date.toISOString();
+
+            previewText.innerText =
+                `Đã chọn: ${date.toLocaleDateString("vi-VN")} lúc ${date.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit"
+                })}`;
+
+            previewBox.classList.remove("hidden");
+            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        }
+
+        function setToday() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() + 30);
+
+            workdateInput.value = toDatetimeLocalVN(now);
+            handleSelectDate();
+        }
+
+        function resetDate() {
+            workdateInput.value = "";
+            delete bookingDraft.scheduled_at;
+            previewBox.classList.add("hidden");
+            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        }
+
+        const bookingDraftRaw = localStorage.getItem("bookingDraft");
+        if (!bookingDraftRaw) {
+            alert("Không tìm thấy thông tin đặt dịch vụ.");
+            window.location.href = "/";
+        }
+        const bookingDraft = JSON.parse(bookingDraftRaw);
+
+        const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
+
+        // Render tiền + thời gian
+        const totalTextEl = document.getElementById("bookingTotalText");
+
+        const hours = Math.floor(bookingDraft.task_payload.total_time / 60);
+        const minutes = bookingDraft.task_payload.total_time % 60;
+
+        let timeText = "";
+        if (hours > 0) timeText += `${hours}h`;
+        if (minutes > 0) timeText += `${minutes}p`;
+
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText? timeText : "h"}`;
+
+        // lưu note
+        function handleGoPayment() {
+            if (!bookingDraft.scheduled_at) {
+                alert("Vui lòng chọn thời gian làm việc!");
+                return;
+            }
+
+            const note = document.querySelector("textarea").value.trim();
+            bookingDraft.note = note;
+
+            localStorage.setItem(
+                "bookingDraft",
+                JSON.stringify(bookingDraft)
+            );
+
+            console.log("BOOKING DRAFT IN SCHEDULED: ", bookingDraft);
+            window.location.href = "./payment_pages/payment.html";
+        }
+    </script>
 </body>
 
 </html>

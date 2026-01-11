@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Voucher, VoucherUsage, Order } from "../models/index.js";
+import { Voucher, VoucherUsage, Order, Customer, User } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -8,6 +8,7 @@ import {
   getAllOrdersByCustomerIdService,
   createOrderService,
   createReceiptService,
+  verifyCustomerOrderStats
 } from "../services/order.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
@@ -138,6 +139,25 @@ export const cancelOrderByCustomer = async (req, res) => {
     
   } catch (err) {
     return res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// trả về số đơn đã hoàn thành và hủy
+export const getCustomerOrderStats = async (req, res) => {
+  try {
+    const customerUserId = req.userId;
+
+    const stats = await verifyCustomerOrderStats(customerUserId);
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 };
 

@@ -420,3 +420,54 @@ export async function createReceiptService({ order_id, payment_method }) {
     session.endSession();
   }
 }
+
+export async function verifyCustomerOrderStats(customerUserId) {
+
+  const customer = await Customer.findOne({ user_id: customerUserId });
+  if (!customer) {
+    throw new Error("Không tìm thấy khách hàng.");
+  }
+
+  const [completedCount, cancelledCount] = await Promise.all([
+    Order.countDocuments({
+      customer_id: customerUserId,
+      status: "completed",
+    }),
+    Order.countDocuments({
+      customer_id: customerUserId,
+      status: "cancelled",
+    }),
+  ]);
+
+  const completedMismatch =
+    completedCount !== customer.total_completed_orders;
+
+  const cancelledMismatch =
+    cancelledCount !== customer.cancellation_count;
+
+  if (completedMismatch || cancelledMismatch) {
+    throw new Error(
+      JSON.stringify(
+        {
+          message: "Số liệu về đơn hàng đã hoàn thành và bị hủy của khách hàng đang mâu thuẫn.",
+          expected: {
+            completed: completedCount,
+            cancelled: cancelledCount,
+          },
+          stored: {
+            completed: customer.total_completed_orders,
+            cancelled: customer.cancellation_count,
+          },
+        },
+        null,
+        2
+      )
+    );
+  }
+
+  return {
+    completed_orders: completedCount,
+    cancelled_orders: cancelledCount,
+    verified: true,
+  };
+}

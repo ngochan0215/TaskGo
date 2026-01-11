@@ -123,7 +123,7 @@ export const deleteService = async (req, res) => {
 // Get all services (optionally paginated)
 export const getAllServices = async (req, res) => {
 	try {
-		const { page = 1, limit = 50, search, status } = req.query;
+		const { page = 1, limit = 50, search, status, task_status } = req.query;
 		const q = {};
 		if (search) {
 			q.category_name = { $regex: search, $options: 'i' };
@@ -136,8 +136,9 @@ export const getAllServices = async (req, res) => {
 		const services = await Service.find(q)
 			.select("-__v -createdAt -updatedAt")
 			.populate({
-				//path: "tasks", select: "_id task_name description pricing status icon task_type unit",
-				path: "tasks", select: "-__v -createdAt -updatedAt",
+				path: "tasks", 
+				match: { status: task_status },
+				select: "-__v -createdAt -updatedAt",
 				options: { sort: { createdAt: -1 } },
 			})
 			.sort({ createdAt: -1 })

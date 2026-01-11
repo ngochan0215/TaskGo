@@ -4,7 +4,7 @@ class AppHeader extends HTMLElement {
         <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
             <div class="flex items-center justify-between px-4 relative">
                 <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                    <a href="#"><img src="/public/images/taskgo-logo.png" alt="Logo"></a>
+                    <a href="#"><img src="../public/images/taskgo-logo.png" alt="Logo"></a>
                 </div>
 
                 <h1 class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2">Trang chủ</h1>

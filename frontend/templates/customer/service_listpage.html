@@ -70,7 +70,7 @@
       active: "#"
     };
 
-    const API_URL = "http://localhost:3000/api/task/service/all";
+    const API_URL = "http://localhost:3000/api/task/service/all?task_status=active";
 
     async function loadServices() {
     
@@ -104,6 +104,8 @@
         container.innerHTML = "";
 
         data.services.forEach(service => {
+          if (!service.tasks || service.tasks.length === 0) return;
+
           const section = document.createElement("div");
           section.className = "bg-white rounded-xl shadow-md p-4 space-y-4";
 
@@ -115,27 +117,28 @@
             </div>
 
             <div class="grid grid-cols-3 gap-y-4 text-center text-base">
-              ${service.tasks?.map(task => {
+              ${service.tasks.map(task => {
                 const detailPage = TASK_DETAIL_MAP[task.task_type];
                 if (!detailPage) return "";
+
                 return `
-                <a href="${detailPage}?id=${task._id}&price=${task.pricing}"
-                  class="flex flex-col items-center space-y-1 text-black">
+                  <a href="${detailPage}?id=${task._id}&price=${task.pricing}"
+                    class="flex flex-col items-center space-y-1 text-black">
 
-                  <span class="material-symbols-outlined
-                              text-primary-500 p-4 mb-3
-                              bg-primary-200 rounded-md text-4xl">
-                    ${task.icon || "handyman"}
-                  </span>
+                    <span class="material-symbols-outlined
+                                text-primary-500 p-4 mb-3
+                                bg-primary-200 rounded-md text-4xl">
+                      ${task.icon || "handyman"}
+                    </span>
 
-                  <span>${task.task_name}</span>
-                  <span class="text-sm text-gray-500">
-                    ${Number(task.pricing || 0).toLocaleString()} /
-                    ${UNIT_MAP[task.unit] || task.unit }
-                  </span>
-                </a>
-              `;
-        }).join("")}
+                    <span>${task.task_name}</span>
+                    <span class="text-sm text-gray-500">
+                      ${Number(task.pricing || 0).toLocaleString()} /
+                      ${UNIT_MAP[task.unit] || task.unit}
+                    </span>
+                  </a>
+                `;
+              }).join("")}
             </div>
           `;
 

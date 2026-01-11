@@ -245,6 +245,7 @@ export const login = async (req, res) => {
       message: "Logged in successfully",
       token,
       system_role: account.role,
+      user_id: user._id
     });
   } catch (error) {
     console.error("Login error:", error);

@@ -23,7 +23,7 @@ class AppFooter extends HTMLElement {
 
                     <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
                         <div class="flex justify-center items-center space-x-2">
-                            <img src="/public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
+                            <img src="../public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
                             <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
                         </div>
                         <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
