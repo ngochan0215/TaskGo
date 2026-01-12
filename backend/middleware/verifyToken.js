@@ -21,9 +21,6 @@ export const verifyToken = async (req, res, next) => {
     if (!decoded) {
       return res.status(401).json({ success: false, message: "Unauthorized - invalid or expired token" });
     }
-
-    console.log("TOKEN MIDDLEWARE: ", token);
-    console.log("DECODED: ", decoded);
     req.system_role = decoded.role;
     req.userId = decoded.userId;
     next();

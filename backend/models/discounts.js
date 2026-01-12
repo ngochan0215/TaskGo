@@ -3,58 +3,56 @@ import mongoose from "mongoose";
 // discount: áp dụng cho toàn hệ thống, system tự apply
 const discountSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    description: { type: String, required: true },
+    code: { type: String, required: true, unique: true, uppercase: true },
+    name: { type: String, required: true },
+    description: { type: String },
 
-    // phần trăm khuyến mãi
-    percentage: {
-      type: Number,
-      required: true,
-      min: 0,
-      max: 100,
-      set: v => Math.round(v * 100) / 100
-    },
-
-    begin_date: { type: Date, required: true },
-    end_date: { type: Date, required: true },
-
-    // đối tượng áp dụng
-    applied_model: {
-      type: String,
-      enum: ["SERVICE", "TASK", "ORDER", "RECEIPT", "GLOBAL"],
-      required: true
-    },
-
-    applied_model_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "applied_model",
-      required: function () {
-        return this.applied_model !== "GLOBAL";
-      }
+    discount: {
+      type: {
+        type: String,
+        enum: ["PERCENT", "FIXED"],
+        required: true
+      },
+      value: {
+        type: Number,
+        required: true
+      },
+      max_discount: Number
     },
 
     conditions: {
-      customer_types: {
-        type: [String],
-        enum: ["new", "loyal", "vip"],
-        default: []
+      min_order_value: Number,
+      task_ids: [ { type: mongoose.Schema.Types.ObjectId, ref: "Task" } ],
+      days_of_week: [Number], // 0-6
+      hours_range: {
+        from: Number, // 0-23
+        to: Number
       },
-      min_order_value: Number
-    }
+      customer_tiers: [String],
+    },
+
+    begin_date: Date,
+    end_date: Date,
+
+    priority: {
+      type: Number,
+      default: 1 // số càng cao càng ưu tiên
+    },
+
+    is_active: {
+      type: Boolean,
+      default: true
+    },
+
+    status: { type: String, enum: ["upcoming", "ongoing", "finished"], default: "upcoming" }
   }, 
-  {
-    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" }
   }
 );
 
-discountSchema.virtual("status").get(function () {
-  const now = new Date();
-  if (now < this.begin_date) return "upcoming";
-  if (now > this.end_date) return "completed";
-  return "ongoing";
-});
-
 discountSchema.index({ begin_date: 1, end_date: 1 });
+discountSchema.index({ code: 1, name: 1 });
 
 const Discount = mongoose.models.Discount || mongoose.model("Discount", discountSchema);
 export default Discount;

@@ -1,17 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["./templates/**/*.html", "./*.html"],
+  content: [
+    "./templates/**/*.html",
+    "./components/**/*.html",
+    "./src/**/*.js"
+  ],
   theme: {
     extend: {
       fontFamily: {
-        montserrat: ["Montserrat", "sans-serif"], // Tuỳ chỉnh font 'montserrat'
+        montserrat: ["Montserrat", "sans-serif"],
       },
       colors: {
+        // 1. MÀU CŨ (Giữ nguyên)
         primary: {
-          100: "#EAFED9", // cream
-          200: "#95DA97", // light green
-          400: "#5C956C", // medium green
-          500: "#3B5F43", // dark green
+          100: "#EAFED9",
+          200: "#95DA97",
+          400: "#5C956C",
+          500: "#3B5F43",
         },
         primaryTasker: {
           100: "#E0E7FF",

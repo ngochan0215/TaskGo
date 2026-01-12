@@ -13,7 +13,7 @@ const taskSchema = new mongoose.Schema(
     pricing: { type: Number, default: 0, required: true },
     unit: { type: String, enum: ["hour", "job"], default: "hour" },
     icon: { type: String },
-
+    task_type: { type: String },
     status: { type: String, enum: ["active", "inactive", "launching"], default: "launching" },
   },
   { timestamps: true }

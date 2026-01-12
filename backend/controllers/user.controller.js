@@ -312,17 +312,49 @@ export const getMyFavoriteTaskers = async (req, res) => {
   try {
     const userId = req.userId;
 
+    // 1. Lấy danh sách favorite tasker (tasker_id = User của tasker)
     const favorites = await FavoriteTasker.find({ user_id: userId })
       .select("-__v -created_at -updated_at")
       .populate({
         path: "tasker_id",
-        select: "-created_at -updated_at -__v",
+        select: "-__v -updated_at -created_at", // user info
       })
       .sort({ created_at: -1 });
 
+    if (!favorites.length) {
+      return res.json({
+        total: 0,
+        data: []
+      });
+    }
+
+    // 2. Lấy danh sách user_id của tasker
+    const taskerUserIds = favorites
+      .filter(f => f.tasker_id)
+      .map(f => f.tasker_id._id);
+
+    // 3. Query bảng Tasker
+    const taskers = await Tasker.find({
+      user_id: { $in: taskerUserIds }
+    }).select("-__v -created_at -updated_at");
+
+    // 4. Merge Tasker + User + Favorite metadata
+    const result = favorites.map(fav => {
+      const taskerProfile = taskers.find(
+        t => t.user_id.toString() === fav.tasker_id._id.toString()
+      );
+
+      return {
+        favorite_id: fav._id,
+        favorited_at: fav.created_at,
+        user: fav.tasker_id,      // bảng User
+        tasker: taskerProfile     // bảng Tasker
+      };
+    });
+
     return res.json({
-      total: favorites.length,
-      data: favorites
+      total: result.length,
+      data: result
     });
 
   } catch (error) {
@@ -347,7 +379,6 @@ export const checkFavoriteTasker = async (req, res) => {
 };
 
 // Addresses Controllers 
-
 const MAX_ADDRESS_PER_USER = 5;
 
 export const addAddress = async (req, res) => {
@@ -523,3 +554,27 @@ export const setDefaultAddress = async (req, res) => {
     });
   }
 };
+
+
+// TODO: viết hàm trả về các dịch vụ thường được khách hàng đặt
+
+export const getUserPoints = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId).select("reputation_score");
+    if (!user) {
+      throw new Error("Không tìm thấy người dùng.");
+    }
+
+    res.json({
+      success: true,
+      points: user.reputation_score
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+}

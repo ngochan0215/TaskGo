@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet"/>
 
     <style>
         :root {
@@ -50,9 +51,9 @@
 
         <form id="tasker-signup-form-2">
 
-            <div class="grid grid-cols-3 gap-4 mb-10">
+            <div id="service-grid" class="grid grid-cols-3 gap-4 mb-10">
 
-                <input type="checkbox" id="service-clean" name="services" value="Dọn dẹp nhà" class="hidden service-checkbox" checked>
+                <!-- <input type="checkbox" id="service-clean" name="services" value="Dọn dẹp nhà" class="hidden service-checkbox" checked>
                 <label for="service-clean" class="service-label flex flex-col items-center p-4 border-2 border-primary-400 rounded-xl cursor-pointer transition-all relative">
                     <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center check-icon">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,7 +84,7 @@
                     </div>
                     <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 text-gray-700">🧺</div>
                     <span class="text-sm font-semibold text-center">Vệ sinh máy giặt</span>
-                </label>
+                </label> -->
             </div>
 
             <button type="submit"
@@ -94,6 +95,105 @@
     </div>
 
 <script>
+    let token = localStorage.getItem("token");
+    if (!token) {
+        alert("Vui lòng đăng nhập");
+        location.href = "../auth/login-signup.html";
+    }
+    console.log("TOKEN: ", token);
+
+    const serviceGrid = document.getElementById("service-grid");
+
+    function renderIcon(iconName) {
+        console.log(iconName);
+        if (!iconName) return "build";
+        return `
+            <span class="material-symbols-outlined text-[22px]">
+            ${iconName}
+            </span>
+        `;
+    }
+
+    async function loadTasks() {
+        const res= await fetch("http://localhost:3000/api/task/all?status=active", 
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+
+        if (!res.ok) return alert("Không lấy được danh sách các dịch vụ.");
+        
+        const tasks = await res.json();
+        console.log("tasks: ", tasks.tasks);
+        renderServices(tasks.tasks);
+    }
+
+    function renderServices(tasks) {
+        serviceGrid.innerHTML = "";
+
+        tasks.forEach((task, index) => {
+            const id = `service-${task._id}`;
+
+            const html = `
+            <input
+                type="checkbox"
+                id="${id}"
+                name="services"
+                value="${task._id}"
+                class="hidden service-checkbox"
+            >
+
+            <label
+                for="${id}"
+                class="service-label flex flex-col items-center p-4 border-2 border-gray-300 rounded-xl cursor-pointer transition-all relative hover:border-primary-400"
+            >
+                <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center bg-gray-400 check-icon">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 13L9 17L19 7"
+                    stroke="white" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                </div>
+
+                <div class="w-10 h-10 bg-gray-200 rounded-full
+                    flex items-center justify-center mb-1 text-gray-700">
+                    ${renderIcon(task.icon)}
+                </div>
+
+                <span class="text-sm font-semibold text-center">
+                ${task.task_name}
+                </span>
+            </label>
+            `;
+
+            serviceGrid.insertAdjacentHTML("beforeend", html);
+        });
+
+        bindServiceCheckboxEvents();
+    }
+
+    function bindServiceCheckboxEvents() {
+        document.querySelectorAll('.service-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            const checkIcon = label.querySelector('.check-icon');
+
+            if (this.checked) {
+                label.classList.remove('border-gray-300');
+                label.classList.add('border-primary-400');
+                label.style.backgroundColor = 'var(--accent-color)';
+                checkIcon.style.backgroundColor = 'var(--primary-color)';
+            } else {
+                label.classList.remove('border-primary-400');
+                label.classList.add('border-gray-300');
+                label.style.backgroundColor = 'white';
+                checkIcon.style.backgroundColor = '#9CA3AF';
+            }
+            });
+        });
+    }
+
     document.getElementById('tasker-signup-form-2').addEventListener('submit', function(e) {
         e.preventDefault();
 
@@ -105,7 +205,7 @@
             'tasker_signup_step2',
             JSON.stringify({ services })
         );
-
+        console.log("tasker_signup_step2: ", services);
         window.location.href = 'tasker_signup_03.html';
     });
 
@@ -127,6 +227,8 @@
             }
         });
     });
+
+    loadTasks();
 </script>
 
 </body>

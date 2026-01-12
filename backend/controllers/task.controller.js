@@ -123,7 +123,7 @@ export const deleteService = async (req, res) => {
 // Get all services (optionally paginated)
 export const getAllServices = async (req, res) => {
 	try {
-		const { page = 1, limit = 50, search, status } = req.query;
+		const { page = 1, limit = 50, search, status, task_status } = req.query;
 		const q = {};
 		if (search) {
 			q.category_name = { $regex: search, $options: 'i' };
@@ -134,9 +134,11 @@ export const getAllServices = async (req, res) => {
 
 		const skip = (Number(page) - 1) * Number(limit);
 		const services = await Service.find(q)
-			.select("-__v")
+			.select("-__v -createdAt -updatedAt")
 			.populate({
-				path: "tasks", select: "_id task_name description pricing status icon",
+				path: "tasks", 
+				match: { status: task_status },
+				select: "-__v -createdAt -updatedAt",
 				options: { sort: { createdAt: -1 } },
 			})
 			.sort({ createdAt: -1 })
@@ -155,7 +157,7 @@ export const getAllServices = async (req, res) => {
 
 	} catch (err) {
 		console.error(err);
-		return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+		return res.status(500).json({ success: false, message: "SERVER ERROR:", error: err.message });
 	}
 };
 
@@ -194,7 +196,7 @@ export const getServiceById = async (req, res) => {
 //---- TASK ----//
 export const createTask = async (req, res) => {
 	try {
-		const { service_id, task_name, description, pricing } = req.body;
+		const { service_id, task_name, description, pricing, task_type } = req.body;
 		let status = "launching";
 
 		if (!service_id || !task_name || !description || !pricing) 
@@ -213,7 +215,7 @@ export const createTask = async (req, res) => {
 		if (existing) 
 			return res.status(400).json({ success: false, message: "Task already exists for this service." });
 
-		const task = new Task({ service_id, task_name, description, pricing, status });
+		const task = new Task({ service_id, task_name, description, pricing, task_type, status });
 		await task.save();
 		return res.status(201).json({ success: true, task });
 
@@ -264,7 +266,7 @@ export const getAllTasks = async (req, res) => {
 export const updateTask = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { task_name, description, pricing, status } = req.body;
+		const { task_name, description, pricing, status, task_type } = req.body;
 
 		const task = await Task.findById(id);
 		if (!task) 
@@ -273,6 +275,7 @@ export const updateTask = async (req, res) => {
 		if(task_name) task.task_name = task_name;
 		if (description) task.description = description;
 		if (pricing) task.pricing = pricing;
+		if (task_type) task.task_type = task_type;
 
 		if (status && status !== 'inactive') {
 			return res.status(400).json({ success: false, message: "You can only update task's status to inactive." });

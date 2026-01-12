@@ -106,6 +106,8 @@ async function updateProfile() {
         key => payload[key] === "" && delete payload[key]
     );
 
+    console.log("UPDATE PAYLOAD: ", payload);
+
     const res = await fetch("http://localhost:3000/api/user/profile/update", {
         method: "PUT",
         headers: {

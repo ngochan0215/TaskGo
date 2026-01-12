@@ -16,7 +16,7 @@
     <header class="bg-primary-200 py-4">
         <div class="flex items-center justify-between px-4">
             <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href=""><img src="/public/images/taskgo-logo.png" alt=""></a>
+                <a href=""><img src="../../../public/images/taskgo-logo.png" alt=""></a>
             </div>
 
             <h1 class="font-bold text-xl text-dark-900">Dịch vụ của bạn</h1>
@@ -27,57 +27,70 @@
     </header>
 
     <main class="p-4 space-y-4 pb-32">
-        <!-- Địa chỉ -->
-        <a href="./address_change.html"
-            class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 text-gray-400 font-medium hover:bg-gray-50">
-            <span class="flex items-center space-x-2">
-                <span class="material-symbols-outlined text-gray-100 text-xl">location_on</span>
-                <span>Địa chỉ</span>
-            </span>
-            <span class="material-symbols-outlined text-gray-400">chevron_right</span>
-        </a>
-        
-        <!-- Phương thức thanh toán -->
-        <a href="./method_change.html"
-            class="flex justify-between items-center bg-white rounded-xl shadow-md p-4 text-gray-400 font-medium hover:bg-gray-50">
-            <span class="flex items-center space-x-2">
-                <span class="material-symbols-outlined text-gray-100 text-xl">credit_card</span>
-                <span>Phương thức thanh toán</span>
-            </span>
-            <span class="material-symbols-outlined text-gray-400">chevron_right</span>
-        </a>
+        <div class="bg-white rounded-xl shadow-md p-4 space-y-2">
+            <h3 class="font-bold text-dark-900">Địa chỉ làm việc</h3>
+
+            <select id="addressSelect"
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-primary-500">
+                <option value="">-- Chọn địa chỉ --</option>
+                <option value="addr_1">Nhà riêng - Quận 7</option>
+                <option value="addr_2">Căn hộ - Thủ Đức</option>
+            </select>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-4 space-y-2">
+            <h3 class="font-bold text-dark-900">Phương thức thanh toán</h3>
+
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="payment" value="cash" checked>
+                <span>Tiền mặt</span>
+            </label>
+
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="payment" value="bank_transfer">
+                <span>Chuyển khoản ngân hàng (Mã QR)</span>
+            </label>
+
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="payment" value="ewallet">
+                <span>Ví TaskGo</span>
+            </label>
+
+            <label class="flex items-center space-x-3">
+                <input type="radio" name="payment" value="credit_card">
+                <span>Thẻ tín dụng</span>
+            </label>
+        </div>
 
         <!-- Tổng tiền -->
         <div class="bg-white rounded-xl shadow-md p-4 space-y-2 text-base">
             <!-- Tổng tiền dịch vụ -->
             <div class="flex justify-between">
                 <span class="text-gray-100">Tổng tiền dịch vụ</span>
-                <span class="font-semibold text-gray-100">500.000</span>
+                <span id="baseAmount" class="font-semibold text-gray-100"></span>
             </div>
 
             <!-- Voucher -->
             <div class="flex justify-between">
                 <span class="text-gray-100">Mã giảm</span>
-                <span class="font-semibold text-gray-100">-40.000</span>
+                <span id="voucherAmount" class="font-semibold text-gray-100"></span>
             </div>
 
             <!-- Phí dịch vụ -->
             <div class="flex justify-between border-b border-gray-400 pb-2">
                 <span class="text-gray-100">Phí dịch vụ (nếu có)</span>
-                <span class="font-semibold text-gray-100">+30.000</span>
+                <span id="extraFee" class="font-semibold text-gray-100">0 VND</span>
             </div>
 
             <div class="flex justify-between text-base pt-2">
                 <span class="font-bold text-dark-900">Tổng tiền</span>
-                <span class="font-bold text-dark-900">490.000</span>
+                <span id="finalAmount" class="font-bold text-dark-900">0 VND</span>
             </div>
 
             <div class="flex justify-between items-center space-y-4 space-x-4">
-
-                <p class="text-2xl font-bold text-dark-900">490.000 VND</p>
-
-                <button class="action-btn action-btn-hover">
-                   <a href="./payment_success.html">Xác nhận thanh toán</a>
+                <span id="finalAmountt" class="text-2xl font-bold text-dark-900">0 VND</span>
+                <button id="submitBtn" class="action-btn action-btn-hover">
+                    Xác nhận thông tin thanh toán
                 </button>
             </div>
         </div>
@@ -104,6 +117,292 @@
             </div>
         </nav>
     </footer>
-</body>
 
+    <script>
+        let addressMap = {};
+        let token = {};
+        let order_id = null;
+        let newOrder = null;
+        let payment_method = "cash";
+        let bookingDraft = null;
+        let voucherDraft = null;
+
+        const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
+
+        payment_method = document.querySelector("input[name='payment']:checked")?.value;
+        document.querySelectorAll("input[name='payment']").forEach(radio => {
+            radio.addEventListener("change", e => {
+                payment_method = e.target.value;
+                console.log("LATEST PAYMENT METHOD:", payment_method);
+            });
+        });
+
+        document.getElementById("submitBtn").addEventListener("click", submitOrder);
+
+        function loadBookingDraft() {
+            const raw = localStorage.getItem("bookingDraft");
+            if (!raw) {
+                alert("Không tìm thấy thông tin đặt dịch vụ");
+                location.href = "/";
+                return;
+            }
+            bookingDraft = JSON.parse(raw);
+            console.log("BOOKING DRAFT IN PAYMENT CONFIRMATION: ", bookingDraft);
+        }
+
+        function initVoucherDraft() {
+            voucherDraft =
+                JSON.parse(localStorage.getItem("voucherDraft")) || {
+                base_amount: bookingDraft.base_amount,
+                voucher_code: null,
+                discount_amount: 0,
+                final_amount: bookingDraft.base_amount
+                };
+
+            voucherDraft.base_amount = bookingDraft.base_amount;
+            localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+        }
+
+        function renderAmounts() {
+            document.getElementById("baseAmount").innerText =
+                formatCurrency(bookingDraft.base_amount);
+
+            document.getElementById("voucherAmount").innerText =
+                voucherDraft.discount_amount
+                ? `-${formatCurrency(voucherDraft.discount_amount)}`
+                : "0 VND";
+
+            document.getElementById("finalAmount").innerText =
+                formatCurrency(voucherDraft.final_amount);
+
+            document.getElementById("finalAmountt").innerText =
+                formatCurrency(voucherDraft.final_amount);
+        }
+
+        function bindAddressSelect() {
+            document
+                .getElementById("addressSelect")
+                .addEventListener("change", (e) => {
+                    saveSelectedAddress(e.target.value);
+                });
+        }
+
+        async function loadMyAddresses() {
+            try {
+                token = localStorage.getItem("token");
+                if (!token) {
+                    alert("Vui lòng đăng nhập");
+                    location.href = "../auth/login-signup.html";
+                    return;
+                }
+                console.log("TOKEN: ", token);
+                const res = await fetch(
+                    "http://localhost:3000/api/user/addresses/my",
+                    {
+                        headers: {
+                        Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if (res.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Phiên đăng nhập hết hạn");
+                    location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const { data } = await res.json();
+                console.log("ADDRESSES: ", data);
+                const select = document.getElementById("addressSelect");
+
+                select.innerHTML = `<option value="">-- Chọn địa chỉ --</option>`;
+                addressMap = {};
+
+                if (!data || data.length === 0) {
+                    select.innerHTML += `<option disabled>Chưa có địa chỉ</option>`;
+                    return;
+                }
+
+                data.forEach((addr) => {
+                    addressMap[addr._id] = addr;
+
+                    const opt = document.createElement("option");
+                    opt.value = addr._id;
+                    opt.textContent = addr.full_address;
+
+                    if (addr.is_default) {
+                        opt.selected = true;
+                        saveSelectedAddress(addr._id);
+                    }
+
+                    select.appendChild(opt);
+                });
+            } catch (err) {
+                console.error(err);
+                alert("Không thể tải danh sách địa chỉ");
+            }
+        }
+
+        function saveSelectedAddress(addressId) {
+            if (!addressMap[addressId]) return;
+
+            bookingDraft.address_id = addressId;
+            bookingDraft.address_snapshot = {
+                full_address: addressMap[addressId].full_address,
+                latitude: addressMap[addressId].latitude,
+                longitude: addressMap[addressId].longitude
+            };
+
+            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        }
+    
+        async function createPaymentLink(orderId, receiptId) {
+            console.log("ORDER ID IN CREATE PAYMENT LINK: ", orderId);
+            console.log("BOOKING DRAFT IN CREATE PAYMENT LINK: ", bookingDraft);
+            console.log("VOUCHER DRAFT IN CREATE PAYMENT LINK: ", voucherDraft);
+
+            const amount =
+                (voucherDraft && typeof voucherDraft.final_amount === "number"
+                    ? voucherDraft.final_amount
+                    : bookingDraft?.base_amount) || 0;
+
+            const shortOrderId = orderId.toString().slice(-6);
+
+            const transactionPayload = {
+                order_id: orderId,
+                receipt_id: receiptId,
+                amount,
+                description: `TT DH ${shortOrderId}`,
+                items: [
+                    {
+                        name: bookingDraft?.task_snapshot?.name || "TaskGo service",
+                        quantity: 1,
+                        price: amount,
+                    },
+                ],
+            };
+
+            const res = await fetch(
+                `http://localhost:3000/api/transaction/paymentLink/${newOrder.customer_id}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify(transactionPayload)
+                }
+            );
+
+            const result = await res.json();
+
+            if (!res.ok || !result.success) {
+                alert(result.message || result.error || "Không thể tạo link thanh toán");
+                return null;
+            }
+
+            return result.data; // PayOS payment link object (checkoutUrl, orderCode, id,...)
+        }
+
+        async function createOrderReceipt() {
+            const payload = { order_id, payment_method };
+            console.log("PAYLOAD FOR RECEIPT: ", payload);
+            const res = await fetch("http://localhost:3000/api/order/receipt/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+            if (!res.ok) {
+                alert(result.message || "Tạo hóa đơn cho đơn hàng thất bại!");
+                return;
+            }
+
+            console.log("RECEIPT CREATED:", result.data);
+            return result;
+        }
+
+        async function submitOrder() {
+            const payload = {
+                ...bookingDraft
+            };
+
+            if (!bookingDraft.address_id) {
+                alert("Vui lòng chọn địa chỉ làm việc");
+                return;
+            }
+
+            const res = await fetch("http://localhost:3000/api/order/create", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await res.json();
+
+            if (!res.ok) {
+                alert(result.message || "Tạo đơn hàng thất bại");
+                return;
+            }
+
+            console.log("ORDER CREATED:", result.order);
+            newOrder = result.order.order;
+            order_id = result.order.order._id;
+            localStorage.setItem("orderCreated", JSON.stringify(result.order));
+
+            // tạo hóa đơn
+            const receipt = await createOrderReceipt();
+
+            if (payment_method === "cash") {
+                // dọn draft sau khi tạo đơn thành công với tiền mặt
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+                localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+                location.href = "./ordering_success.html";
+            }
+            else if (payment_method === "bank_transfer") {
+                const paymentLink = await createPaymentLink(order_id, receipt?.data?._id);
+
+                if (!paymentLink || !paymentLink.checkoutUrl) {
+                    alert("Không tạo được link thanh toán");
+                    return;
+                }
+
+                // Lưu thông tin để success page check lại
+                localStorage.setItem("paymentPending", JSON.stringify({
+                    order_id,
+                    paymentId: paymentLink.id,
+                    orderCode: paymentLink.orderCode
+                }));
+
+                // dọn draft sau khi đã lưu paymentPending
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+                localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+                // Redirect sang PayOS
+                window.location.href = paymentLink.checkoutUrl;
+            }
+        }
+
+        loadBookingDraft();
+        initVoucherDraft();
+        renderAmounts();
+        bindAddressSelect();
+        loadMyAddresses();
+
+        console.log("FINAL BOOKING DRAFT: ", bookingDraft);
+    </script>
+</body>
 </html>

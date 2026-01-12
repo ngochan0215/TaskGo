@@ -46,8 +46,9 @@
                     placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"></textarea>
             </div>
             <div class="flex space-x-4">
-                <button class="action-btn action-btn-hover">
-                    <a href="./payment_pages/payment.html">100.000 VND/2h</a>
+                <button onclick="handleGoPayment()" 
+                    class="action-btn action-btn-hover w-full text-center">
+                    <span id="bookingTotalText">---</span>
                 </button>
             </div>
         </div>
@@ -75,6 +76,46 @@
             </div>
         </nav>
     </footer>
+
+    <script>
+        const bookingDraftRaw = localStorage.getItem("bookingDraft");
+        console.log("BOOKING DRAFT: ", bookingDraftRaw);
+
+        if (!bookingDraftRaw) {
+            alert("Không tìm thấy thông tin đặt dịch vụ.");
+            window.location.href = "/";
+        }
+
+        const bookingDraft = JSON.parse(bookingDraftRaw);
+
+        const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
+
+        // Render tiền + thời gian
+        const totalTextEl = document.getElementById("bookingTotalText");
+
+        const hours = Math.floor(bookingDraft.task_payload.total_time / 60);
+        const minutes = bookingDraft.task_payload.total_time % 60;
+
+        let timeText = "";
+        if (hours > 0) timeText += `${hours}h`;
+        if (minutes > 0) timeText += `${minutes}p`;
+
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText? timeText : "h"}`;
+
+        // ===== LƯU NOTE =====
+        function handleGoPayment() {
+            const note = document.querySelector("textarea").value.trim();
+            bookingDraft.note = note;
+
+            localStorage.setItem(
+                "bookingDraft",
+                JSON.stringify(bookingDraft)
+            );
+
+            window.location.href = "./payment_pages/payment.html";
+        }
+    </script>
+
 </body>
 
 </html>

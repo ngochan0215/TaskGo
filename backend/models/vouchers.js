@@ -1,52 +1,49 @@
 import mongoose from "mongoose";
 
-// voucher: người dùng tự nhập mã để được giảm giá
-
+// voucher: người dùng chọn mã giảm giá
 const voucherSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
+    code: { type: String, required: true, unique: true, uppercase: true },
+    name: { type: String, required: true },
+    description: { type: String },
 
-    total_quantity: { type: Number, default: 1, min: 10 }, // tổng số lượng voucher được phát hành
-    percentage: { type: Number, default: 0, min: 0, max: 100 },
-    max_percentage: { type: Number, default: 0, min: 0 }, // tối đa được giảm bao nhiêu tiền
+    discount: {
+      type: {
+        type: String,
+        enum: ["PERCENT", "FIXED"],
+        required: true
+      },
+      value: { type: Number, required: true },
+      max_discount: Number
+    },
+
+    total_quantity: { type: Number, required: true, min: 1 },
+    used_quantity: { type: Number, default: 0 },
 
     begin_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
 
-    // đối tượng áp dụng
-    applied_model: {
-      type: String,
-      enum: ["SERVICE", "TASK", "ORDER", "RECEIPT", "GLOBAL"],
-      required: true
-    },
+    is_active: { type: Boolean, default: false },
 
-    applied_model_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      refPath: "applied_model",
-      required: function () {
-        return this.applied_model !== "Global";
-      }
-    },
+    applicable_model: [String],
 
     conditions: {
-      customer_types: {
-        type: [String],
-        enum: ["new", "loyal", "vip"],
-        default: []
+      rule_type: {
+        type: String,
+        enum: ["FIRST_ORDER", "GENERAL"],
+        default: "GENERAL"
       },
-      min_order_value: Number
+      customer_tiers: [String],
+      min_order_value: { type: Number, default: 0 }
     },
 
-    // số lần 1 user được phép sử dụng voucher
-    per_user_limit: {
-      type: Number,
-      default: 1
-    }
-  },
+    per_user_limit: { type: Number, default: 1 },
+    status: { type: String, enum: ["upcoming", "ongoing", "finished"], default: "upcoming" }
+
+  }, 
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" }
-   }
+  }
 );
 
 voucherSchema.pre("validate", function (next) {
@@ -57,6 +54,8 @@ voucherSchema.pre("validate", function (next) {
 });
 
 voucherSchema.index({ begin_date: 1, end_date: 1 });
+voucherSchema.index({ code: 1, status: 1, is_active: 1 });
+
 
 const Voucher = mongoose.models.Voucher || mongoose.model("Voucher", voucherSchema);
 export default Voucher;

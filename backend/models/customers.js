@@ -4,6 +4,12 @@ const customerSchema = new mongoose.Schema(
   {
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true },
     type: { type: String, enum: ["new", "loyal", "vip"], default: "new" },
+
+    total_completed_orders: { type: Number, default: 0 },
+    cancellation_count: { type: Number, default: 0 },
+
+    BIN: {type: String, required: true }, //6 số đầu của thẻ ngân hàng
+    account_number: {type: String, required: true }, //số tài khoản ngân hàng (không phải số thẻ nhé)
   },
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" }, 

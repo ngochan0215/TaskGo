@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin - Quản lý dịch vụ</title>
+
+    <link rel="stylesheet" href="../../public/css/output.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200"
+    />
+
+    <style>
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+    </style>
+  </head>
+
+  <body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+    <div
+      id="backdrop"
+      class="fixed inset-0 z-40 bg-black/40 hidden"
+      onclick="closeSidebar()"
+    ></div>
+
+    <aside
+      id="sidebarMobile"
+      class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden"
+    >
+      <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div
+          class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
+        >
+          <img
+            src="../../public/images/taskgo-logo.png"
+            alt="TaskGo logo"
+            class="w-full h-full object-contain p-1"
+          />
+        </div>
+        <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+      </div>
+
+      <nav class="p-3 flex-1 space-y-1">
+          <a class="sidebar-link" 
+            href="./admin_home.html">
+              <span class="material-symbols-outlined">home</span>
+              Trang chủ
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">person</span>
+              Quản lý Customer
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+              href="./admin_managetaskers.html">
+              <span class="material-symbols-outlined">badge</span>
+              Quản lý Tasker
+          </a>
+
+          <a class="sidebar-link active" href="./admin_manageservices.html">
+              <span class="material-symbols-outlined">design_services</span>
+              Quản lý Dịch vụ
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+              href="./admin_manageorders.html">
+              <span class="material-symbols-outlined">shopping_bag</span>
+              Quản lý Đơn hàng
+          </a>
+
+          <a class="sidebar-link" href="./admin_managediscounts.html">
+              <span class="material-symbols-outlined">percent_discount</span>
+              Quản lý Khuyến mãi
+          </a>
+
+          <a class="sidebar-link" href="./admin_managevouchers.html">
+              <span class="material-symbols-outlined">local_activity</span>
+              Quản lý Voucher
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">bar_chart</span>
+              Quản lý Doanh thu
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">settings</span>
+              Cài đặt
+          </a>
+      </nav>
+
+      <div class="p-3 border-t border-white/10">
+        <a
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
+          href="#"
+        >
+          <span class="material-symbols-outlined">logout</span> Đăng xuất
+        </a>
+      </div>
+    </aside>
+
+    <div class="flex min-h-screen">
+      <aside
+        class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0"
+      >
+        <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+          <div
+            class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
+          >
+            <img
+              src="../../public/images/taskgo-logo.png"
+              alt="TaskGo logo"
+              class="w-9 h-9 object-contain p-1"
+            />
+          </div>
+          <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+        </div>
+
+        <nav class="p-3 flex-1 space-y-1">
+          <a class="sidebar-link" 
+            href="./admin_home.html">
+              <span class="material-symbols-outlined">home</span>
+              Trang chủ
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">person</span>
+              Quản lý Customer
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+              href="./admin_managetaskers.html">
+              <span class="material-symbols-outlined">badge</span>
+              Quản lý Tasker
+          </a>
+
+          <a class="sidebar-link active" 
+              href="./admin_manageservices.html">
+              <span class="material-symbols-outlined">design_services</span>
+              Quản lý Dịch vụ
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+              href="./admin_manageorders.html">
+              <span class="material-symbols-outlined">shopping_bag</span>
+              Quản lý Đơn hàng
+          </a>
+
+          <a class="sidebar-link" href="./admin_managediscounts.html">
+              <span class="material-symbols-outlined">percent_discount</span>
+              Quản lý Khuyến mãi
+          </a>
+
+          <a class="sidebar-link" href="./admin_managevouchers.html">
+              <span class="material-symbols-outlined">local_activity</span>
+              Quản lý Voucher
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">bar_chart</span>
+              Quản lý Doanh thu
+          </a>
+
+          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+              <span class="material-symbols-outlined">settings</span>
+              Cài đặt
+          </a>
+      </nav>
+
+        <div class="p-3 border-t border-white/10">
+          <a
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
+            href="#"
+          >
+            <span class="material-symbols-outlined">logout</span>
+            Đăng xuất
+          </a>
+        </div>
+      </aside>
+
+      <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+        <header
+          class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10"
+        >
+          <div class="flex items-center gap-3 min-w-0">
+            <button
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden"
+              type="button"
+              onclick="openSidebar()"
+            >
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="material-symbols-outlined">design_services</span>
+              <div class="font-semibold truncate">Quản lý dịch vụ</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm"
+              type="button"
+            >
+              <span class="material-symbols-outlined">notifications</span>
+              <span class="hidden sm:inline">Thông báo</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]"
+          >
+            <div
+              class="flex flex-col md:flex-row md:items-start md:justify-between gap-4"
+            >
+              <div>
+                <div class="text-base font-semibold text-gray-800">
+                  Quản lý dịch vụ
+                </div>
+                <div class="text-sm text-gray-600">
+                  Danh sách loại dịch vụ & dịch vụ trong hệ thống
+                </div>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <div class="relative w-full sm:w-[360px]">
+                  <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"
+                    >search</span
+                  >
+                  <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Tìm theo tên / mô tả..."
+                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full bg-gray-50 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div
+                  class="inline-flex rounded-xl bg-gray-100 p-1 no-scrollbar overflow-x-auto"
+                >
+                  <button
+                    id="tabCategories"
+                    class="px-3 py-2 text-sm rounded-lg bg-white shadow-sm text-gray-900 font-semibold whitespace-nowrap"
+                    type="button"
+                    onclick="switchTab('categories')"
+                  >
+                    Loại dịch vụ
+                  </button>
+                  <button
+                    id="tabServices"
+                    class="px-3 py-2 text-sm rounded-lg text-gray-700 hover:bg-white/70 transition whitespace-nowrap"
+                    type="button"
+                    onclick="switchTab('services')"
+                  >
+                    Dịch vụ
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
+              <div
+                class="p-4 rounded-lg bg-emerald-50 border border-emerald-100"
+              >
+                <p class="text-xs text-emerald-600 font-bold uppercase mb-1">
+                  Tổng loại dịch vụ
+                </p>
+                <p id="statCategories" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+              <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                <p class="text-xs text-blue-600 font-bold uppercase mb-1">
+                  Tổng dịch vụ
+                </p>
+                <p id="statServices" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+              <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+                <p class="text-xs text-green-600 font-bold uppercase mb-1">
+                  Đang hoạt động
+                </p>
+                <p id="statActive" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+              <div class="p-4 rounded-lg bg-red-50 border border-red-100">
+                <p class="text-xs text-red-600 font-bold uppercase mb-1">
+                  Tạm ngưng
+                </p>
+                <p id="statInactive" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4"
+            >
+              <div id="hintText" class="text-sm text-gray-600">
+                Quản lý danh mục (loại) dịch vụ
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <div
+                  id="serviceFilters"
+                  class="hidden flex-wrap items-center gap-2"
+                >
+                  <select
+                    id="filterCategory"
+                    class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all"
+                  >
+                    <option value="all">Tất cả loại</option>
+                  </select>
+
+                  <select
+                    id="filterStatus"
+                    class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all"
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <button
+                  id="btnAddCategory"
+                  data-admin-only="1"
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
+                  type="button"
+                  onclick="openCategoryModal('add')"
+                >
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  Thêm loại dịch vụ
+                </button>
+
+                <button
+                  id="btnAddService"
+                  data-admin-only="1"
+                  class="hidden inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
+                  type="button"
+                  onclick="openServiceModal('add')"
+                >
+                  <span class="material-symbols-outlined text-[18px]">add</span>
+                  Thêm dịch vụ
+                </button>
+
+                <button
+                  class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
+                  type="button"
+                  onclick="resetUI()"
+                >
+                  <span class="material-symbols-outlined text-[18px]"
+                    >refresh</span
+                  >
+                  Reset
+                </button>
+              </div>
+            </div>
+
+            <div id="panelCategories">
+              <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="w-full text-left border-collapse">
+                  <thead
+                    class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
+                  >
+                    <tr>
+                      <th class="px-4 py-3 border-b border-gray-200">
+                        Tên loại
+                      </th>
+                      <th class="px-4 py-3 border-b border-gray-200">Mã</th>
+                      <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                      <th
+                        class="px-4 py-3 border-b border-gray-200 text-center"
+                      >
+                        Trạng thái
+                      </th>
+                      <th
+                        class="px-4 py-3 border-b border-gray-200 text-center"
+                      >
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="categoriesBody"
+                    class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
+                  ></tbody>
+                </table>
+              </div>
+
+              <div
+                class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4"
+              >
+                <p class="text-sm text-gray-500">
+                  Hiển thị <span id="catRange" class="font-bold">0</span> trên
+                  <span id="catTotal" class="font-bold">0</span> loại dịch vụ
+                </p>
+                <div class="flex gap-1">
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                    disabled
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >chevron_left</span
+                    >
+                  </button>
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
+                  >
+                    1
+                  </button>
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                    disabled
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >chevron_right</span
+                    >
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="panelServices" class="hidden">
+              <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                <table class="w-full text-left border-collapse">
+                  <thead
+                    class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
+                  >
+                    <tr>
+                      <th class="px-4 py-3 border-b border-gray-200">
+                        Tên dịch vụ
+                      </th>
+                      <th class="px-4 py-3 border-b border-gray-200">Loại</th>
+                      <th class="px-4 py-3 border-b border-gray-200">Đơn vị</th>
+                      <th class="px-4 py-3 border-b border-gray-200 text-right">
+                        Giá cơ bản
+                      </th>
+                      <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                      <th
+                        class="px-4 py-3 border-b border-gray-200 text-center"
+                      >
+                        Trạng thái
+                      </th>
+                      <th
+                        class="px-4 py-3 border-b border-gray-200 text-center"
+                      >
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    id="servicesBody"
+                    class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
+                  ></tbody>
+                </table>
+              </div>
+
+              <div
+                class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4"
+              >
+                <p class="text-sm text-gray-500">
+                  Hiển thị <span id="srvRange" class="font-bold">0</span> trên
+                  <span id="srvTotal" class="font-bold">0</span> dịch vụ
+                </p>
+                <div class="flex gap-1">
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                    disabled
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >chevron_left</span
+                    >
+                  </button>
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
+                  >
+                    1
+                  </button>
+                  <button
+                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                    disabled
+                  >
+                    <span class="material-symbols-outlined text-sm"
+                      >chevron_right</span
+                    >
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+              <div
+                class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-[18px]">info</span>
+                <span id="toastText">Thông báo</span>
+              </div>
+            </div>
+
+            <div id="modalCategory" class="fixed inset-0 z-50 hidden">
+              <div
+                class="absolute inset-0 bg-black/40"
+                onclick="closeModal('modalCategory')"
+              ></div>
+              <div
+                class="relative w-full h-full flex items-center justify-center p-4"
+              >
+                <div
+                  class="w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-100"
+                >
+                  <div
+                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+                  >
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-gray-400"
+                        >category</span
+                      >
+                      <div class="font-bold text-gray-800" id="catModalTitle">
+                        Thêm loại dịch vụ
+                      </div>
+                    </div>
+                    <button
+                      class="text-gray-400 hover:text-gray-700"
+                      type="button"
+                      onclick="closeModal('modalCategory')"
+                    >
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  <div class="p-5 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Tên loại</label
+                        >
+                        <input
+                          id="catName"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                          placeholder="Ví dụ: House Cleaning"
+                        />
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Mã</label
+                        >
+                        <input
+                          id="catCode"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                          placeholder="Ví dụ: cat_clean"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase"
+                        >Mô tả</label
+                      >
+                      <textarea
+                        id="catDesc"
+                        rows="3"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        placeholder="Mô tả ngắn..."
+                      ></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Trạng thái</label
+                        >
+                        <select
+                          id="catStatus"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
+                  >
+                    <button
+                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                      type="button"
+                      onclick="closeModal('modalCategory')"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
+                      type="button"
+                      onclick="saveCategory()"
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="modalService" class="fixed inset-0 z-50 hidden">
+              <div
+                class="absolute inset-0 bg-black/40"
+                onclick="closeModal('modalService')"
+              ></div>
+              <div
+                class="relative w-full h-full flex items-center justify-center p-4"
+              >
+                <div
+                  class="w-full max-w-2xl bg-white rounded-xl shadow-lg border border-gray-100"
+                >
+                  <div
+                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+                  >
+                    <div class="flex items-center gap-2">
+                      <span class="material-symbols-outlined text-gray-400"
+                        >design_services</span
+                      >
+                      <div class="font-bold text-gray-800" id="srvModalTitle">
+                        Thêm dịch vụ
+                      </div>
+                    </div>
+                    <button
+                      class="text-gray-400 hover:text-gray-700"
+                      type="button"
+                      onclick="closeModal('modalService')"
+                    >
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+
+                  <div class="p-5 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Tên dịch vụ</label
+                        >
+                        <input
+                          id="srvName"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                          placeholder="Ví dụ: Dọn dẹp nhà cơ bản"
+                        />
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Loại dịch vụ</label
+                        >
+                        <select
+                          id="srvCategory"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        ></select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Đơn vị</label
+                        >
+                        <select
+                          id="srvUnit"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        >
+                          <option value="hour">Giờ</option>
+                          <option value="job">Gói</option>
+                          <option value="time">Lần</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Giá cơ bản</label
+                        >
+                        <input
+                          id="srvPrice"
+                          type="number"
+                          min="0"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                          placeholder="Ví dụ: 150000"
+                        />
+                      </div>
+                      <div>
+                        <label class="text-xs font-bold text-gray-500 uppercase"
+                          >Trạng thái</label
+                        >
+                        <select
+                          id="srvStatus"
+                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase"
+                        >Mô tả</label
+                      >
+                      <textarea
+                        id="srvDesc"
+                        rows="3"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        placeholder="Mô tả ngắn..."
+                      ></textarea>
+                    </div>
+                  </div>
+
+                  <div
+                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
+                  >
+                    <button
+                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                      type="button"
+                      onclick="closeModal('modalService')"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
+                      type="button"
+                      onclick="saveService()"
+                    >
+                      Lưu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
+              <div
+                class="absolute inset-0 bg-black/40"
+                onclick="closeModal('modalConfirm')"
+              ></div>
+              <div
+                class="relative w-full h-full flex items-center justify-center p-4"
+              >
+                <div
+                  class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100"
+                >
+                  <div
+                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+                  >
+                    <div class="font-bold text-gray-800">Xác nhận</div>
+                    <button
+                      class="text-gray-400 hover:text-gray-700"
+                      type="button"
+                      onclick="closeModal('modalConfirm')"
+                    >
+                      <span class="material-symbols-outlined">close</span>
+                    </button>
+                  </div>
+                  <div class="p-5">
+                    <div id="confirmText" class="text-sm text-gray-700">
+                      Bạn chắc chắn muốn xóa?
+                    </div>
+                  </div>
+                  <div
+                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
+                  >
+                    <button
+                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                      type="button"
+                      onclick="closeModal('modalConfirm')"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition"
+                      type="button"
+                      onclick="confirmDelete()"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const sidebarMobile = document.getElementById("sidebarMobile");
+      const backdrop = document.getElementById("backdrop");
+
+      function openSidebar() {
+        sidebarMobile.classList.remove("-translate-x-full");
+        backdrop.classList.remove("hidden");
+      }
+      function closeSidebar() {
+        sidebarMobile.classList.add("-translate-x-full");
+        backdrop.classList.add("hidden");
+      }
+
+      const $ = (id) => document.getElementById(id);
+
+      const state = {
+        tab: "categories",
+        search: "",
+        filterCategory: "all",
+        filterStatus: "all",
+        catMode: "add",
+        srvMode: "add",
+        editingCatId: null,
+        editingSrvId: null,
+        deleteCtx: null,
+        categories: [
+          {
+            id: 1,
+            name: "House Cleaning",
+            code: "cat_clean",
+            desc: "Dọn dẹp nhà cửa, vệ sinh cơ bản",
+            status: "active",
+          },
+          {
+            id: 2,
+            name: "Laundry",
+            code: "cat_laundry",
+            desc: "Giặt ủi, phơi/ủi quần áo",
+            status: "active",
+          },
+          {
+            id: 3,
+            name: "Plumbing",
+            code: "cat_plumb",
+            desc: "Sửa chữa điện nước đơn giản",
+            status: "inactive",
+          },
+        ],
+        services: [
+          {
+            id: 101,
+            name: "Dọn dẹp nhà cơ bản",
+            categoryId: 1,
+            unit: "hour",
+            price: 150000,
+            desc: "Gói 2h tiêu chuẩn",
+            status: "active",
+          },
+          {
+            id: 102,
+            name: "Vệ sinh nhà theo yêu cầu",
+            categoryId: 1,
+            unit: "job",
+            price: 300000,
+            desc: "Theo diện tích/khối lượng",
+            status: "inactive",
+          },
+          {
+            id: 201,
+            name: "Giặt ủi quần áo",
+            categoryId: 2,
+            unit: "time",
+            price: 80000,
+            desc: "Theo số lượng/túi đồ",
+            status: "active",
+          },
+          {
+            id: 301,
+            name: "Sửa ống nước rò rỉ",
+            categoryId: 3,
+            unit: "job",
+            price: 200000,
+            desc: "Kiểm tra + xử lý cơ bản",
+            status: "active",
+          },
+        ],
+      };
+
+      function fmtMoney(v) {
+        const n = Number(v || 0);
+        return n.toLocaleString("vi-VN") + "đ";
+      }
+
+      function statusChip(status) {
+        if (status === "active") {
+          return `
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+              Active
+            </span>`;
+        }
+        return `
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">
+            Inactive
+          </span>`;
+      }
+
+      function unitLabel(unit) {
+        if (unit === "hour") return "Giờ";
+        if (unit === "job") return "Gói";
+        return "Lần";
+      }
+
+      function openModal(id) {
+        $(id).classList.remove("hidden");
+      }
+      function closeModal(id) {
+        $(id).classList.add("hidden");
+      }
+
+      function toast(msg) {
+        $("toastText").textContent = msg;
+        $("toast").classList.remove("hidden");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(() => $("toast").classList.add("hidden"), 1600);
+      }
+
+      function applyRole() {
+        const role = (localStorage.getItem("role") || "admin").toLowerCase();
+        document.querySelectorAll("[data-admin-only]").forEach((el) => {
+          if (role !== "admin") el.classList.add("hidden");
+          else el.classList.remove("hidden");
+        });
+      }
+
+      function switchTab(tab) {
+        state.tab = tab;
+        if (tab === "categories") {
+          $("panelCategories").classList.remove("hidden");
+          $("panelServices").classList.add("hidden");
+          $("tabCategories").classList.add(
+            "bg-white",
+            "shadow-sm",
+            "text-gray-900",
+            "font-semibold"
+          );
+          $("tabServices").classList.remove(
+            "bg-white",
+            "shadow-sm",
+            "text-gray-900",
+            "font-semibold"
+          );
+          $("tabServices").classList.add("text-gray-700");
+          $("hintText").textContent = "Quản lý danh mục (loại) dịch vụ";
+          $("btnAddCategory").classList.remove("hidden");
+          $("btnAddService").classList.add("hidden");
+          $("serviceFilters").classList.add("hidden");
+        } else {
+          $("panelCategories").classList.add("hidden");
+          $("panelServices").classList.remove("hidden");
+          $("tabServices").classList.add(
+            "bg-white",
+            "shadow-sm",
+            "text-gray-900",
+            "font-semibold"
+          );
+          $("tabCategories").classList.remove(
+            "bg-white",
+            "shadow-sm",
+            "text-gray-900",
+            "font-semibold"
+          );
+          $("tabCategories").classList.add("text-gray-700");
+          $("hintText").textContent = "Quản lý dịch vụ (task) trong hệ thống";
+          $("btnAddCategory").classList.add("hidden");
+          $("btnAddService").classList.remove("hidden");
+          $("serviceFilters").classList.remove("hidden");
+        }
+        render();
+      }
+
+      function resetUI() {
+        state.search = "";
+        state.filterCategory = "all";
+        state.filterStatus = "all";
+        $("searchInput").value = "";
+        $("filterCategory").value = "all";
+        $("filterStatus").value = "all";
+        render();
+        toast("Đã reset bộ lọc");
+      }
+
+      function openCategoryModal(mode, id) {
+        state.catMode = mode;
+        state.editingCatId = id || null;
+        $("catModalTitle").textContent =
+          mode === "add" ? "Thêm loại dịch vụ" : "Sửa loại dịch vụ";
+
+        const cat =
+          mode === "edit" ? state.categories.find((c) => c.id === id) : null;
+        $("catName").value = cat ? cat.name : "";
+        $("catCode").value = cat ? cat.code : "";
+        $("catDesc").value = cat ? cat.desc : "";
+        $("catStatus").value = cat ? cat.status : "active";
+
+        openModal("modalCategory");
+      }
+
+      function saveCategory() {
+        const name = $("catName").value.trim();
+        const code = $("catCode").value.trim();
+        const desc = $("catDesc").value.trim();
+        const status = $("catStatus").value;
+
+        if (!name || !code) {
+          toast("Vui lòng nhập Tên + Mã");
+          return;
+        }
+
+        if (state.catMode === "add") {
+          const exists = state.categories.some(
+            (c) => c.code.toLowerCase() === code.toLowerCase()
+          );
+          if (exists) {
+            toast("Mã bị trùng");
+            return;
+          }
+          const id = Date.now();
+          state.categories.unshift({ id, name, code, desc, status });
+          toast("Đã thêm loại dịch vụ");
+        } else {
+          const cat = state.categories.find((c) => c.id === state.editingCatId);
+          if (!cat) return;
+          cat.name = name;
+          cat.code = code;
+          cat.desc = desc;
+          cat.status = status;
+          toast("Đã cập nhật loại dịch vụ");
+        }
+
+        closeModal("modalCategory");
+        render();
+      }
+
+      function openServiceModal(mode, id) {
+        state.srvMode = mode;
+        state.editingSrvId = id || null;
+        $("srvModalTitle").textContent =
+          mode === "add" ? "Thêm dịch vụ" : "Sửa dịch vụ";
+
+        rebuildCategorySelects();
+
+        const srv =
+          mode === "edit" ? state.services.find((s) => s.id === id) : null;
+        $("srvName").value = srv ? srv.name : "";
+        $("srvCategory").value = srv
+          ? String(srv.categoryId)
+          : state.categories[0]
+          ? String(state.categories[0].id)
+          : "";
+        $("srvUnit").value = srv ? srv.unit : "hour";
+        $("srvPrice").value = srv ? String(srv.price) : "";
+        $("srvDesc").value = srv ? srv.desc : "";
+        $("srvStatus").value = srv ? srv.status : "active";
+
+        openModal("modalService");
+      }
+
+      function saveService() {
+        const name = $("srvName").value.trim();
+        const categoryId = Number($("srvCategory").value);
+        const unit = $("srvUnit").value;
+        const price = Number($("srvPrice").value || 0);
+        const desc = $("srvDesc").value.trim();
+        const status = $("srvStatus").value;
+
+        if (!name || !categoryId) {
+          toast("Vui lòng nhập Tên + Loại");
+          return;
+        }
+
+        if (state.srvMode === "add") {
+          const id = Date.now();
+          state.services.unshift({
+            id,
+            name,
+            categoryId,
+            unit,
+            price,
+            desc,
+            status,
+          });
+          toast("Đã thêm dịch vụ");
+        } else {
+          const srv = state.services.find((s) => s.id === state.editingSrvId);
+          if (!srv) return;
+          srv.name = name;
+          srv.categoryId = categoryId;
+          srv.unit = unit;
+          srv.price = price;
+          srv.desc = desc;
+          srv.status = status;
+          toast("Đã cập nhật dịch vụ");
+        }
+
+        closeModal("modalService");
+        render();
+      }
+
+      function askDelete(type, id) {
+        state.deleteCtx = { type, id };
+        if (type === "category") {
+          const cat = state.categories.find((c) => c.id === id);
+          $("confirmText").textContent = `Xóa loại dịch vụ "${
+            cat ? cat.name : ""
+          }"? Dịch vụ thuộc loại này sẽ bị chuyển sang "Không xác định".`;
+        } else {
+          const srv = state.services.find((s) => s.id === id);
+          $("confirmText").textContent = `Xóa dịch vụ "${
+            srv ? srv.name : ""
+          }"?`;
+        }
+        openModal("modalConfirm");
+      }
+
+      function confirmDelete() {
+        if (!state.deleteCtx) return;
+        const { type, id } = state.deleteCtx;
+
+        if (type === "category") {
+          state.categories = state.categories.filter((c) => c.id !== id);
+          state.services.forEach((s) => {
+            if (s.categoryId === id) s.categoryId = 0;
+          });
+          toast("Đã xóa loại dịch vụ");
+        } else {
+          state.services = state.services.filter((s) => s.id !== id);
+          toast("Đã xóa dịch vụ");
+        }
+
+        state.deleteCtx = null;
+        closeModal("modalConfirm");
+        rebuildCategorySelects();
+        render();
+      }
+
+      function rebuildCategorySelects() {
+        const filter = $("filterCategory");
+        const srvCat = $("srvCategory");
+
+        const cats = state.categories.slice();
+
+        if (filter) {
+          const cur = filter.value || "all";
+          filter.innerHTML =
+            `<option value="all">Tất cả loại</option>` +
+            cats
+              .map((c) => `<option value="${c.id}">${c.name}</option>`)
+              .join("");
+          if ([...filter.options].some((o) => o.value === cur))
+            filter.value = cur;
+          else filter.value = "all";
+          state.filterCategory = filter.value;
+        }
+
+        if (srvCat) {
+          const cur2 = srvCat.value;
+          srvCat.innerHTML = cats.length
+            ? cats
+                .map((c) => `<option value="${c.id}">${c.name}</option>`)
+                .join("")
+            : `<option value="">Chưa có loại dịch vụ</option>`;
+          if (cats.length && [...srvCat.options].some((o) => o.value === cur2))
+            srvCat.value = cur2;
+          else if (cats.length) srvCat.value = String(cats[0].id);
+        }
+      }
+
+      function getCatName(id) {
+        const cat = state.categories.find((c) => c.id === id);
+        if (cat) return cat.name;
+        if (id === 0) return "Không xác định";
+        return "Không xác định";
+      }
+
+      function renderStats() {
+        $("statCategories").textContent = String(state.categories.length);
+        $("statServices").textContent = String(state.services.length);
+        const active = state.services.filter(
+          (s) => s.status === "active"
+        ).length;
+        const inactive = state.services.length - active;
+        $("statActive").textContent = String(active);
+        $("statInactive").textContent = String(inactive);
+      }
+
+      function renderCategories() {
+        const q = state.search.toLowerCase();
+        const rows = state.categories
+          .filter((c) => {
+            if (!q) return true;
+            return (c.name + " " + c.code + " " + (c.desc || ""))
+              .toLowerCase()
+              .includes(q);
+          })
+          .map((c) => {
+            return `
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3">
+                  <div class="font-medium">${c.name}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-500">${c.code}</td>
+                <td class="px-4 py-3 text-gray-600">${c.desc || ""}</td>
+                <td class="px-4 py-3 text-center">${statusChip(c.status)}</td>
+                <td class="px-4 py-3 text-center">
+                  <div class="inline-flex items-center gap-1">
+                    <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-primary-500 transition" title="Sửa" onclick="openCategoryModal('edit', ${
+                      c.id
+                    })">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-red-500 transition" title="Xóa" onclick="askDelete('category', ${
+                      c.id
+                    })">
+                      <span class="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>`;
+          })
+          .join("");
+
+        $("categoriesBody").innerHTML =
+          rows ||
+          `
+          <tr>
+            <td class="px-4 py-8 text-center text-gray-500" colspan="5">Không có dữ liệu</td>
+          </tr>`;
+
+        const total = state.categories.filter((c) => {
+          if (!q) return true;
+          return (c.name + " " + c.code + " " + (c.desc || ""))
+            .toLowerCase()
+            .includes(q);
+        }).length;
+
+        $("catTotal").textContent = String(total);
+        $("catRange").textContent = total ? `1-${total}` : "0";
+      }
+
+      function renderServices() {
+        const q = state.search.toLowerCase();
+        const catFilter = state.filterCategory;
+        const stFilter = state.filterStatus;
+
+        const rows = state.services
+          .filter((s) => {
+            if (
+              catFilter !== "all" &&
+              String(s.categoryId) !== String(catFilter)
+            )
+              return false;
+            if (stFilter !== "all" && s.status !== stFilter) return false;
+            if (!q) return true;
+            return (
+              s.name +
+              " " +
+              getCatName(s.categoryId) +
+              " " +
+              (s.desc || "")
+            )
+              .toLowerCase()
+              .includes(q);
+          })
+          .map((s) => {
+            return `
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3">
+                  <div class="font-medium">${s.name}</div>
+                </td>
+                <td class="px-4 py-3 text-gray-600">${getCatName(
+                  s.categoryId
+                )}</td>
+                <td class="px-4 py-3 text-gray-500">${unitLabel(s.unit)}</td>
+                <td class="px-4 py-3 text-right font-bold">${fmtMoney(
+                  s.price
+                )}</td>
+                <td class="px-4 py-3 text-gray-600">${s.desc || ""}</td>
+                <td class="px-4 py-3 text-center">${statusChip(s.status)}</td>
+                <td class="px-4 py-3 text-center">
+                  <div class="inline-flex items-center gap-1">
+                    <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-primary-500 transition" title="Sửa" onclick="openServiceModal('edit', ${
+                      s.id
+                    })">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-red-500 transition" title="Xóa" onclick="askDelete('service', ${
+                      s.id
+                    })">
+                      <span class="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>`;
+          })
+          .join("");
+
+        $("servicesBody").innerHTML =
+          rows ||
+          `
+          <tr>
+            <td class="px-4 py-8 text-center text-gray-500" colspan="7">Không có dữ liệu</td>
+          </tr>`;
+
+        const total = state.services.filter((s) => {
+          if (catFilter !== "all" && String(s.categoryId) !== String(catFilter))
+            return false;
+          if (stFilter !== "all" && s.status !== stFilter) return false;
+          if (!q) return true;
+          return (
+            s.name +
+            " " +
+            getCatName(s.categoryId) +
+            " " +
+            (s.desc || "")
+          )
+            .toLowerCase()
+            .includes(q);
+        }).length;
+
+        $("srvTotal").textContent = String(total);
+        $("srvRange").textContent = total ? `1-${total}` : "0";
+      }
+
+      function render() {
+        renderStats();
+        rebuildCategorySelects();
+        if (state.tab === "categories") renderCategories();
+        else renderServices();
+        applyRole();
+      }
+
+      $("searchInput").addEventListener("input", (e) => {
+        state.search = e.target.value || "";
+        render();
+      });
+
+      $("filterCategory").addEventListener("change", (e) => {
+        state.filterCategory = e.target.value;
+        render();
+      });
+
+      $("filterStatus").addEventListener("change", (e) => {
+        state.filterStatus = e.target.value;
+        render();
+      });
+
+      window.switchTab = switchTab;
+      window.openCategoryModal = openCategoryModal;
+      window.openServiceModal = openServiceModal;
+      window.saveCategory = saveCategory;
+      window.saveService = saveService;
+      window.askDelete = askDelete;
+      window.confirmDelete = confirmDelete;
+      window.closeModal = closeModal;
+      window.resetUI = resetUI;
+
+      render();
+    </script>
+  </body>
+</html>

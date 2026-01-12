@@ -4,49 +4,74 @@ const orderSchema = new mongoose.Schema(
   {
     customer_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     tasker_id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
-    voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
-    discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
 
-    type: { type: String, enum: ["immediate", "scheduled"], default: "immediate" },
-    location: {
-      address: { type: String, required: true },
-      latitude: Number,
-      longtitude: Number
+    task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
+    task_snapshot: {
+      name: String,
+      pricing: Number,
+      unit: String
     },
+
+    discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
+    discount_snapshot: {
+      name: String,
+      description: String,
+      percentage: Number,
+      appliedAt: { type: Date, default: Date.now },
+    },
+
+    voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },
+    voucher_snapshot: {
+      code: String,
+      name: String,
+      description: String,
+      discount_amount: Number,
+    },
+
+    address_id: { type: mongoose.Schema.Types.ObjectId, ref: "Address" },
+    address_snapshot: {
+      full_address: String,
+      latitude: Number,
+      longitude: Number,
+    },
+
+    task_payload: {
+      type: mongoose.Schema.Types.Mixed,
+      required: true
+    },
+
+    type: {
+      type: String,
+      enum: ["immediate", "scheduled"],
+      default: "immediate",
+    },
+    scheduled_at: { type: Date, required: true },
+    
     note: { type: String },
     quantity: { type: Number, default: 1 },
-
-    scheduled_at: { type: Date, required: true },
-    departed_at: { type: Date },    // tasker bắt đầu đi
-    started_at: { type: Date },     // tasker bắt đầu làm
-    completed_at: { type: Date },   // tasker hoàn thành
-
-    base_fee: { type: Number, required: true },
-    discount_amount: { type: Number, default: 0 },
-    voucher_amount: { type: Number, default: 0 },
+    
+    base_amount: { type: Number, required: true },  // tiền gốc của dịch vụ
+    final_amount: { type: Number, required: true }, // tiền sau khi áp voucher, discount
     tip_amount: { type: Number, default: 0 },
-    total_amount: { type: Number },
 
     status: {
       type: String,
       enum: [
-        "pending",      // chờ tasker
-        "assigned",     // hệ thống gán tasker
-        "accepted",     // tasker nhận
-        "departed",     // bắt đầu đi
-        "arrived",     // tasker đã đến
-        "in_progress",  // tasker bắt đầu làm
-        "completed",    // tasker hoàn thành
-        "cancelled",    // hủy
+        "pending", // chờ tasker
+        "assigned", // hệ thống gán tasker
+        "accepted", // tasker nhận
+        "departed", // bắt đầu đi
+        "arrived", // tasker đã đến
+        "in_progress", // tasker bắt đầu làm
+        "completed", // tasker hoàn thành
+        "cancelled", // hủy
       ],
-      default: "pending"
+      default: "pending",
     },
-
-    cancel_reason: { type: String },
-    cancel_at: { type: Date }
   },
-  { timestamps: true }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+   }
 );
 
 // orderSchema.index({ customer_id: 1 });

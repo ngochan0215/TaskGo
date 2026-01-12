@@ -5,7 +5,7 @@ const addressSchema = new mongoose.Schema(
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     label: { type: String, trim: true },
 
-    longtitude: { type: Number, required: true },
+    longitude: { type: Number, required: true },
     latitude: { type: Number, required: true },
     full_address: { type: String, required: true, trim: true },
 
