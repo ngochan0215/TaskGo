@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin - Quản lý Khách hàng</title>
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-animate { animation: fadeIn 0.2s ease-out forwards; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        .filter-btn.active {
+            background-color: #1e293b !important;
+            color: white !important;
+        }
+    </style>
+</head>
+
+<body class="admin-shell">
+<div id="backdrop" class="backdrop" onclick="closeSidebar()"></div>
+
+<aside id="sidebarMobile" class="sidebar-mobile closed lg:hidden">
+    <div class="sidebar-brand">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+            <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+        </div>
+        <div class="sidebar-brand-title">Admin</div>
+    </div>
+    <nav class="sidebar-nav">
+        <a class="sidebar-link" href="./admin_home.html"><span class="material-symbols-outlined">home</span> Trang chủ</a>
+        <a class="sidebar-link active" href="#"><span class="material-symbols-outlined">person</span> Quản lý Customer</a>
+        <a class="sidebar-link" href="./admin_managetaskers.html"><span class="material-symbols-outlined">badge</span> Quản lý Tasker</a>
+        <a class="sidebar-link" href="./admin_manageservices.html"><span class="material-symbols-outlined">design_services</span> Quản lý Dịch vụ</a>
+        <a class="sidebar-link" href="./admin_manageorders.html"><span class="material-symbols-outlined">shopping_bag</span> Quản lý Đơn hàng</a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">bar_chart</span> Quản lý Doanh thu</a>
+        <a class="sidebar-link" href="./admin_managediscounts.html"><span class="material-symbols-outlined">percent_discount</span> Quản lý Khuyến mãi</a>
+        <a class="sidebar-link" href="./admin_managevouchers.html"><span class="material-symbols-outlined">local_activity</span> Quản lý Voucher</a>
+        <a class="sidebar-link" href="#"><span class="material-symbols-outlined">settings</span> Cài đặt</a>
+    </nav>
+    <div class="sidebar-footer">
+        <a class="sidebar-link" href="#" onclick="logout()"><span class="material-symbols-outlined">logout</span> Đăng xuất</a>
+    </div>
+</aside>
+
+<div class="admin-layout">
+    <aside class="sidebar hidden lg:flex">
+        <div class="sidebar-brand">
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+            </div>
+            <div class="sidebar-brand-title">TaskGo Admin</div>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="sidebar-link" href="./admin_home.html"><span class="material-symbols-outlined">home</span> Trang chủ</a>
+            <a class="sidebar-link active" href="#"><span class="material-symbols-outlined">person</span> Quản lý Customer</a>
+            <a class="sidebar-link" href="./admin_managetaskers.html"><span class="material-symbols-outlined">badge</span> Quản lý Tasker</a>
+            <a class="sidebar-link" href="./admin_manageservices.html"><span class="material-symbols-outlined">design_services</span> Quản lý Dịch vụ</a>
+            <a class="sidebar-link" href="./admin_manageorders.html"><span class="material-symbols-outlined">shopping_bag</span> Quản lý Đơn hàng</a>
+            <a class="sidebar-link" href="#"><span class="material-symbols-outlined">bar_chart</span> Quản lý Doanh thu</a>
+            <a class="sidebar-link" href="./admin_managediscounts.html"><span class="material-symbols-outlined">percent_discount</span> Quản lý Khuyến mãi</a>
+            <a class="sidebar-link" href="./admin_managevouchers.html"><span class="material-symbols-outlined">local_activity</span> Quản lý Voucher</a>
+            <a class="sidebar-link" href="#"><span class="material-symbols-outlined">settings</span> Cài đặt</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a class="sidebar-link" href="#" onclick="logout()"><span class="material-symbols-outlined">logout</span> Đăng xuất</a>
+        </div>
+    </aside>
+
+    <div class="main-area">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="topbar-btn lg:hidden" type="button" onclick="openSidebar()" aria-label="Open sidebar">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined">person</span>
+                    <div class="topbar-title">Quản lý Khách hàng</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button class="topbar-btn" type="button">
+                    <span class="material-symbols-outlined">notifications</span> Thông báo
+                </button>
+            </div>
+        </header>
+
+        <div class="content-wrap">
+            <div class="content-card h-full flex flex-col min-h-[600px]">
+
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                    <div class="flex gap-2 bg-slate-100 p-1 rounded-lg w-fit shrink-0 overflow-x-auto no-scrollbar">
+                        <button class="filter-btn active px-4 py-1.5 text-sm font-semibold rounded-md shadow-sm transition-all whitespace-nowrap" onclick="setFilter('all', this)">Tất cả</button>
+                        <button class="filter-btn px-4 py-1.5 text-slate-500 hover:text-slate-700 text-sm font-medium transition-all whitespace-nowrap" onclick="setFilter('active', this)">Hoạt động</button>
+                        <button class="filter-btn px-4 py-1.5 text-slate-500 hover:text-red-600 text-sm font-medium transition-all whitespace-nowrap" onclick="setFilter('banned', this)">Đã chặn</button>
+                    </div>
+
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="relative w-full md:w-56">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">search</span>
+                            <input
+                                    type="text"
+                                    id="searchInput"
+                                    onkeyup="handleSearch(event)"
+                                    placeholder="Tìm kiếm..."
+                                    style="padding-left: 50px !important;"
+                                    class="w-full h-10 pr-4 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-green-500 transition-all"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex-1">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b border-gray-100">
+                            <tr>
+                                <th class="p-4 font-semibold text-slate-700 w-16">STT</th>
+                                <th class="p-4 font-semibold text-slate-700">Khách hàng</th>
+                                <th class="p-4 font-semibold text-slate-700">Liên hệ & Định danh</th>
+                                <th class="p-4 font-semibold text-slate-700 text-center">Uy tín</th>
+                                <th class="p-4 font-semibold text-slate-700 text-center">Trạng thái</th>
+                                <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
+                            </tr>
+                            </thead>
+                            <tbody class="text-sm" id="customerTableBody">
+                            <tr><td colspan="6" class="p-8 text-center text-slate-400">Đang tải dữ liệu...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-auto pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span class="text-sm text-slate-500" id="paginationInfo">Hiển thị <span class="font-bold text-slate-800">0</span> khách hàng</span>
+                    <div class="flex gap-1" id="paginationControls"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="banModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBanModal()"></div>
+
+    <div class="flex items-center justify-center min-h-screen px-4 py-6">
+        <div class="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm modal-animate z-10">
+            <div class="text-center mb-5">
+                <div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                    <span class="material-symbols-outlined text-red-500 text-3xl">gavel</span>
+                </div>
+                <h3 class="text-lg font-bold text-slate-800">Khóa tài khoản?</h3>
+                <p class="text-sm text-slate-500 mt-2 px-2">
+                    Bạn đang thực hiện thao tác khóa tài khoản <span id="banUserName" class="font-bold text-slate-800">...</span>
+                </p>
+                <input type="hidden" id="banUserId" />
+            </div>
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">Lý do khóa</label>
+                    <select class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-red-500 bg-slate-50 focus:bg-white transition-colors">
+                        <option>Vi phạm chính sách cộng đồng</option>
+                        <option>Gian lận/Spam</option>
+                        <option>Yêu cầu từ khách hàng</option>
+                        <option>Khác...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="closeBanModal()" class="py-2.5 rounded-lg border border-gray-300 text-slate-600 font-semibold hover:bg-slate-50 transition cursor-pointer">Hủy bỏ</button>
+                <button onclick="confirmBan()" class="py-2.5 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 shadow-lg shadow-red-200 transition cursor-pointer">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="detailModal" class="fixed inset-0 z-[100] hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeDetailModal()"></div>
+
+    <div class="flex items-center justify-center min-h-screen px-4 py-6">
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl modal-animate overflow-hidden z-10">
+            <div class="bg-slate-800 text-white p-4 flex justify-between items-center">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <span class="material-symbols-outlined">person</span> Hồ sơ Khách hàng
+                </h3>
+                <button onclick="closeDetailModal()" class="hover:text-gray-300 transition flex items-center"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center gap-4 mb-6">
+                    <div id="detailAvatarContainer" class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl overflow-hidden shrink-0">
+                        <span id="detailAvatarText">A</span>
+                        <img id="detailAvatarImg" src="" class="hidden w-full h-full object-cover">
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800" id="detailName">...</h2>
+                        <span class="inline-block mt-1 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-bold" id="detailStatus">Hoạt động</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="p-3 bg-slate-50 rounded-lg border border-gray-100">
+                        <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">Số điện thoại</div>
+                        <div class="font-bold text-slate-700 text-sm truncate" id="detailPhone">...</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-gray-100">
+                        <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">Email</div>
+                        <div class="font-bold text-slate-700 text-sm truncate" id="detailEmail">...</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-gray-100">
+                        <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">CCCD</div>
+                        <div class="font-bold text-slate-700 text-sm truncate" id="detailCCCD">...</div>
+                    </div>
+                    <div class="p-3 bg-slate-50 rounded-lg border border-gray-100">
+                        <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">Ngày tham gia</div>
+                        <div class="font-bold text-slate-700 text-sm truncate" id="detailDate">...</div>
+                    </div>
+                </div>
+
+                <div class="border-t border-gray-100 pt-4 mt-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase mb-3">Thống kê hoạt động</h4>
+                    <div class="flex justify-between text-center">
+                        <div>
+                            <div class="text-xl font-bold text-slate-800" id="detailTotalOrders">0</div>
+                            <div class="text-[10px] text-slate-500 uppercase">Đơn hàng</div>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-yellow-500 flex justify-center items-center gap-1">
+                                <span id="detailRating">0</span> <span class="material-symbols-outlined text-sm">star</span>
+                            </div>
+                            <div class="text-[10px] text-slate-500 uppercase">Đánh giá</div>
+                        </div>
+                        <div>
+                            <div class="text-xl font-bold text-red-500" id="detailCancels">0</div>
+                            <div class="text-[10px] text-slate-500 uppercase">Vi phạm</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="material-symbols-outlined text-indigo-500 text-sm">account_balance</span>
+                        <span class="text-[10px] text-indigo-800 uppercase font-bold">Thông tin ngân hàng</span>
+                    </div>
+                    <div class="text-xs font-medium text-indigo-900 ml-6 flex flex-col gap-1">
+                        <div>Ngân hàng: <span id="detailBin" class="font-bold text-sm">...</span></div>
+                        <div>Số tài khoản: <span id="detailBankNum" class="font-bold font-mono text-sm tracking-wide">...</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 p-4 border-t border-gray-200 flex justify-end">
+                <button onclick="closeDetailModal()" class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition font-medium cursor-pointer text-sm">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE_URL = 'http://localhost:3000/api';
+
+    const BANK_BIN_MAP = {
+        "970436": "Vietcombank", "970415": "VietinBank", "970418": "BIDV", "970405": "Agribank",
+        "970407": "Techcombank", "970416": "ACB", "970422": "MB Bank", "970423": "TPBank",
+        "970432": "VPBank", "970403": "Sacombank", "970441": "VIB", "970443": "SHB",
+        "970437": "HDBank", "970424": "Shinhan Bank", "970426": "MSB"
+    };
+
+    function getBankName(bin) {
+        if (!bin) return 'Chưa cập nhật';
+        return BANK_BIN_MAP[bin] ? BANK_BIN_MAP[bin] : bin;
+    }
+
+    let allCustomers = [];
+    let filteredCustomers = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let currentFilterStatus = 'all';
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        alert("Phiên đăng nhập hết hạn hoặc chưa đăng nhập!");
+        window.location.href = "../auth/login-signup.html";
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchCustomers);
+
+    async function fetchCustomers() {
+        const tbody = document.getElementById('customerTableBody');
+        try {
+            const res = await axios.get(`${API_BASE_URL}/admin/customers/all`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const rawData = res.data.data || res.data;
+            if (Array.isArray(rawData)) {
+                allCustomers = rawData;
+                applyFilterAndRender();
+            } else {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Dữ liệu trả về không đúng định dạng mảng.</td></tr>`;
+            }
+
+        } catch (error) {
+            console.error("API Error:", error);
+            if (error.response && error.response.status === 401) {
+                alert("Token hết hạn. Vui lòng đăng nhập lại.");
+                localStorage.removeItem("token");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Lỗi kết nối API: ${error.message}</td></tr>`;
+        }
+    }
+
+    const sidebarMobile = document.getElementById("sidebarMobile");
+    const backdrop = document.getElementById("backdrop");
+    function openSidebar() { sidebarMobile.classList.remove("closed"); backdrop.style.display = "block"; }
+    function closeSidebar() { sidebarMobile.classList.add("closed"); backdrop.style.display = "none"; }
+    function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "../auth/login-signup.html";
+    }
+
+    function setFilter(status, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('text-slate-500');
+        });
+        btn.classList.add('active');
+        btn.classList.remove('text-slate-500');
+
+        currentFilterStatus = status;
+        currentPage = 1;
+        applyFilterAndRender();
+    }
+
+    function handleSearch(e) {
+        currentPage = 1;
+        applyFilterAndRender();
+    }
+
+    function applyFilterAndRender() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+        filteredCustomers = allCustomers.filter(item => {
+            const user = item.user_id || {};
+            const account = user.account_id || {};
+
+            let matchesStatus = true;
+            const status = account.status || 'inactive';
+
+            if (currentFilterStatus === 'active') matchesStatus = (status === 'active');
+            else if (currentFilterStatus === 'banned') matchesStatus = (status !== 'active');
+
+            const name = (user.full_name || '').toLowerCase();
+            const phone = (user.phone_number || '').toLowerCase();
+            const email = (account.email || '').toLowerCase();
+            let matchesSearch = name.includes(searchTerm) || phone.includes(searchTerm) || email.includes(searchTerm);
+
+            return matchesStatus && matchesSearch;
+        });
+
+        renderTable();
+        renderPagination();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('customerTableBody');
+        tbody.innerHTML = '';
+
+        if (filteredCustomers.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Không tìm thấy dữ liệu.</td></tr>`;
+            return;
+        }
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const pageData = filteredCustomers.slice(start, end);
+
+        pageData.forEach((item, index) => {
+            const user = item.user_id || {};
+            const account = user.account_id || {};
+
+            const id = item._id;
+            const displayIndex = start + index + 1;
+            const fullName = user.full_name || 'Chưa cập nhật';
+            const phone = user.phone_number || '---';
+            const cccd = user.identification || '---';
+            const rating = user.reputation_score || 5.0;
+            const status = account.status || 'unknown';
+            const joinDate = item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : '---';
+
+            let avatarHtml = '';
+            if (user.avatar_url) {
+                avatarHtml = `<img src="${user.avatar_url}" class="w-9 h-9 rounded-full object-cover">`;
+            } else {
+                const char = fullName.charAt(0).toUpperCase();
+                avatarHtml = `<div class="w-9 h-9 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">${char}</div>`;
+            }
+
+            let statusBadge = '';
+            let rowClass = '';
+            if (status === 'active') {
+                statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Hoạt động</span>`;
+            } else {
+                statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-bold">Đã chặn</span>`;
+                rowClass = 'bg-red-50/40 hover:bg-red-50';
+            }
+
+            const tr = document.createElement('tr');
+            tr.className = `border-b border-gray-50 hover:bg-slate-50 transition-colors group ${rowClass}`;
+            tr.innerHTML = `
+                <td class="p-4 text-slate-400 font-medium">${displayIndex}</td>
+                <td class="p-4">
+                    <div class="flex items-center gap-3">
+                        ${avatarHtml}
+                        <div>
+                            <div class="font-medium text-slate-800 group-hover:text-green-600 transition name-cell">${fullName}</div>
+                            <div class="text-xs text-slate-500">Tham gia: ${joinDate}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="p-4">
+                    <div class="font-medium text-slate-700">${phone}</div>
+                    <div class="text-xs text-slate-500">${cccd}</div>
+                </td>
+                <td class="p-4 text-center">
+                    <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold border border-yellow-100">
+                        ${rating} <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+                    </span>
+                </td>
+                <td class="p-4 text-center">${statusBadge}</td>
+                <td class="p-4 text-center">
+                    <div class="flex justify-center space-x-2">
+                        <button onclick="openDetailModal('${id}')" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Xem chi tiết"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
+                        ${status === 'active'
+                            ? `<button onclick="openBanModal('${id}', '${fullName}')" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer" title="Chặn"><span class="material-symbols-outlined text-[20px]">block</span></button>`
+                            : `<button onclick="unlockUser('${id}')" class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors cursor-pointer" title="Mở khóa"><span class="material-symbols-outlined text-[20px]">lock_open</span></button>`
+                        }
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderPagination() {
+        const totalItems = filteredCustomers.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const controls = document.getElementById('paginationControls');
+        const paginationInfo = document.getElementById('paginationInfo');
+
+        paginationInfo.innerHTML = `Hiển thị <span class="font-bold text-slate-800">${totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}-${Math.min(currentPage * itemsPerPage, totalItems)}</span> trên <span class="font-bold text-slate-800">${totalItems}</span> khách hàng`;
+
+        let html = `
+             <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="h-9 w-9 flex items-center justify-center rounded border border-gray-200 hover:bg-slate-50 text-slate-500 disabled:opacity-50 cursor-pointer transition"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+        `;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === currentPage) {
+                html += `<button class="h-9 w-9 flex items-center justify-center rounded !bg-slate-800 !text-white font-bold text-sm shadow-md cursor-default">${i}</button>`;
+            } else {
+                html += `<button onclick="changePage(${i})" class="h-9 w-9 flex items-center justify-center rounded border border-gray-200 hover:bg-slate-50 text-slate-600 text-sm cursor-pointer transition">${i}</button>`;
+            }
+        }
+
+        html += `
+            <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="h-9 w-9 flex items-center justify-center rounded border border-gray-200 hover:bg-slate-50 text-slate-500 disabled:opacity-50 cursor-pointer transition"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+        `;
+
+        controls.innerHTML = html;
+    }
+
+    function changePage(page) {
+        const totalPages = Math.ceil(filteredCustomers.length / itemsPerPage);
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderTable();
+        renderPagination();
+    }
+
+    const detailModal = document.getElementById("detailModal");
+    function openDetailModal(id) {
+        const item = allCustomers.find(c => c._id === id);
+        if (!item) return;
+        const user = item.user_id || {};
+        const account = user.account_id || {};
+
+        document.getElementById('detailName').innerText = user.full_name || 'N/A';
+        document.getElementById('detailPhone').innerText = user.phone_number || 'N/A';
+        document.getElementById('detailEmail').innerText = account.email || 'N/A';
+        document.getElementById('detailCCCD').innerText = user.identification || 'N/A';
+        document.getElementById('detailDate').innerText = item.created_at ? new Date(item.created_at).toLocaleDateString('vi-VN') : '---';
+        document.getElementById('detailTotalOrders').innerText = item.total_completed_orders || 0;
+        document.getElementById('detailCancels').innerText = item.cancellation_count || 0;
+        document.getElementById('detailRating').innerText = user.reputation_score || 0;
+
+        document.getElementById('detailBin').innerText = getBankName(item.BIN);
+        document.getElementById('detailBankNum').innerText = item.account_number || '---';
+
+        const imgEl = document.getElementById('detailAvatarImg');
+        const txtEl = document.getElementById('detailAvatarText');
+        const contEl = document.getElementById('detailAvatarContainer');
+        if (user.avatar_url) {
+            imgEl.src = user.avatar_url;
+            imgEl.classList.remove('hidden');
+            txtEl.classList.add('hidden');
+        } else {
+            imgEl.classList.add('hidden');
+            txtEl.classList.remove('hidden');
+            txtEl.innerText = (user.full_name || 'U').charAt(0).toUpperCase();
+        }
+
+        const statusEl = document.getElementById('detailStatus');
+        const status = account.status || 'unknown';
+        if (status === 'active') {
+            statusEl.innerText = 'Hoạt động';
+            statusEl.className = "inline-block mt-1 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-bold";
+            contEl.className = "w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-2xl overflow-hidden shrink-0";
+        } else {
+            statusEl.innerText = 'Đã chặn';
+            statusEl.className = "inline-block mt-1 px-2 py-0.5 rounded bg-red-100 text-red-700 text-xs font-bold";
+            contEl.className = "w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-700 font-bold text-2xl overflow-hidden shrink-0";
+        }
+        detailModal.classList.remove("hidden");
+    }
+    function closeDetailModal() { detailModal.classList.add("hidden"); }
+
+    const banModal = document.getElementById("banModal");
+    const banUserNameSpan = document.getElementById("banUserName");
+    const banUserIdInput = document.getElementById("banUserId");
+    function openBanModal(id, name) {
+        banUserNameSpan.innerText = name;
+        banUserIdInput.value = id;
+        banModal.classList.remove("hidden");
+    }
+    function closeBanModal() { banModal.classList.add("hidden"); }
+    function confirmBan() {
+        alert('Đã gửi yêu cầu khóa ID: ' + banUserIdInput.value);
+        closeBanModal();
+    }
+    function unlockUser(id) {
+        alert('Đã gửi yêu cầu mở khóa ID: ' + id);
+    }
+</script>
+</body>
+</html>
