@@ -1,4 +1,5 @@
-import { Service, Task } from "../models/index.js";
+import { Service, Task, Order } from "../models/index.js";
+import mongoose from "mongoose";
 
 //---- SERVICE ----//
 export const createService = async (req, res) => {
@@ -306,4 +307,99 @@ export const deleteTask = async (req, res) => {
 	}
 };
 
-// TODO: viết hàm lấy các dịch vụ thường được sử dụng dựa trên lịch sử đơn hàng của user
+// viết hàm lấy các dịch vụ thường được sử dụng dựa trên lịch sử đơn hàng của user
+export const getUserFavoriteTasks = async(req, res) => {
+  try {
+    const limit = 5;
+    const customerId = req.userId;
+
+    return Order.aggregate([
+    // chỉ lấy đơn của user + đã hoàn thành
+    {
+      $match: {
+        customer_id: new mongoose.Types.ObjectId(customerId),
+        status: "completed"
+      }
+    },
+
+    // group theo task
+    {
+      $group: {
+        _id: "$task_id",
+        total_orders: { $sum: 1 },
+        task_name: { $first: "$task_snapshot.name" }
+      }
+    },
+
+    // sort theo số lần đặt
+    {
+      $sort: { total_orders: -1 }
+    },
+
+    // giới hạn
+    {
+      $limit: limit
+    },
+
+    // format
+    {
+      $project: {
+        _id: 0,
+        task_id: "$_id",
+        task_name: 1,
+        total_orders: 1
+      }
+    }
+  ]);
+  } catch (error) {
+    console.error("GET USER FAVORITE TASKS ERROR:", error.message);
+    return res.status(500).json({ success: false, message: "SERVER ERROR: " + error.message });
+  }
+}
+
+// top 5 dịch vụ phổ biến nhất
+export const getTopPopularTasks = async(req, res) => {
+  try {
+    const limit = 5;
+    return Order.aggregate([
+      // chỉ lấy đơn đã hoàn thành
+      {
+        $match: {
+          status: "completed"
+        }
+      },
+
+      // group theo task
+      {
+        $group: {
+          _id: "$task_id",
+          total_orders: { $sum: 1 },
+          task_name: { $first: "$task_snapshot.name" }
+        }
+      },
+
+      // sắp xếp giảm dần theo số lần đặt
+      {
+        $sort: { total_orders: -1 }
+      },
+
+      // lấy top N
+      {
+        $limit: limit
+      },
+
+      // format output
+      {
+        $project: {
+          _id: 0,
+          task_id: "$_id",
+          task_name: 1,
+          total_orders: 1
+        }
+      }
+    ]);
+  } catch (error) {
+    console.error("GET POPULAR TASKS ERROR:", error.message);
+    return res.status(500).json({ success: false, message: "SERVER ERROR: " + error.message });
+  }
+}

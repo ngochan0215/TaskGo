@@ -11,7 +11,9 @@ import {
 	getAllServices,
 	activateService,
 	getServiceById,
-	unactivateService
+	unactivateService,
+	getUserFavoriteTasks,
+	getTopPopularTasks
 } from "../controllers/task.controller.js";
 import { isAdmin } from "../middleware/verifyRole.js";
 import { verifyToken } from "../middleware/verifyToken.js";
@@ -35,5 +37,8 @@ router.get('/all', verifyToken, getAllTasks);
 router.get('/:id', verifyToken, getTaskById);
 router.get('/service/all', verifyToken, getAllServices);
 router.get('/service/:id', verifyToken, getServiceById);
+
+router.get("/favorite/by-user", verifyToken, getUserFavoriteTasks);
+router.get("/top-popular/by-orders", getTopPopularTasks);
 
 export default router;

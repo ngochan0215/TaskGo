@@ -1,7 +1,7 @@
 // import mongoose from "mongoose";
 // import dotenv from "dotenv";
 // import connectDB from "../config/db.js";
-// import { Tasker, Customer } from "../models/index.js";
+// import { Tasker, Customer, Order } from "../models/index.js";
 
 // dotenv.config();
 
@@ -23,12 +23,11 @@
 //     //     }
 //     //     );
 
-//     const result = await Tasker.updateMany(
-//         { type: { $exists: false } },
+//     const result = await Order.updateMany(
+//         { status: { $exists: true } },
 //         {
 //             $set: { 
-//                 total_completed_orders: 0,
-//                 rejection_counts: 0
+//                 status: "completed"
 //             }
 //         }
 //     );
