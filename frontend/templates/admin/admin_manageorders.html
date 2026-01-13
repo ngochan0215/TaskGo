@@ -203,31 +203,11 @@
                             <span class="material-symbols-outlined text-gray-400 text-lg">show_chart</span>
                             Xu hướng đơn hàng (7 ngày qua)
                         </h3>
-                        <div class="h-48 flex items-end justify-between gap-2 px-2">
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[40%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">40</span>
-                            </div>
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[55%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">55</span>
-                            </div>
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[35%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">35</span>
-                            </div>
-                            <div class="w-full bg-primary-500 hover:bg-primary-400 transition-all rounded-t h-[80%] relative group shadow-md">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-primary-600 text-white px-1 rounded font-bold opacity-0 group-hover:opacity-100 transition">80</span>
-                            </div>
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[60%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">60</span>
-                            </div>
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[70%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">70</span>
-                            </div>
-                            <div class="w-full bg-blue-100 hover:bg-blue-200 transition-all rounded-t h-[50%] relative group">
-                                <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition">50</span>
-                            </div>
+                        <div id="trendsChart" class="h-48 flex items-end justify-between gap-2 px-2">
+                            <!-- Chart bars will be inserted here dynamically -->
                         </div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 uppercase font-bold px-1">
-                            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                        <div id="trendsLabels" class="flex justify-between mt-2 text-[10px] text-gray-400 uppercase font-bold px-1">
+                            <!-- Day labels will be inserted here -->
                         </div>
                     </div>
 
@@ -240,28 +220,28 @@
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-green-600 font-medium">Hoàn thành</span>
-                                    <span class="font-bold">78%</span>
+                                    <span id="statusCompletedPercent" class="font-bold">0%</span>
                                 </div>
                                 <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-green-500 h-full w-[78%]"></div>
+                                    <div id="statusCompletedBar" class="bg-green-500 h-full w-[0%]"></div>
                                 </div>
                             </div>
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-yellow-600 font-medium">Đang diễn ra</span>
-                                    <span class="font-bold">12%</span>
+                                    <span id="statusInProgressPercent" class="font-bold">0%</span>
                                 </div>
                                 <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-yellow-500 h-full w-[12%]"></div>
+                                    <div id="statusInProgressBar" class="bg-yellow-500 h-full w-[0%]"></div>
                                 </div>
                             </div>
                             <div>
                                 <div class="flex justify-between text-xs mb-1">
                                     <span class="text-red-600 font-medium">Đã hủy</span>
-                                    <span class="font-bold">10%</span>
+                                    <span id="statusCancelledPercent" class="font-bold">0%</span>
                                 </div>
                                 <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-red-500 h-full w-[10%]"></div>
+                                    <div id="statusCancelledBar" class="bg-red-500 h-full w-[0%]"></div>
                                 </div>
                             </div>
                         </div>
@@ -350,10 +330,12 @@
     let itemsPerPage = 10;
     let currentFilter = "";
     let searchQuery = "";
+    let orderTrends = [];
 
     // Load orders when page loads
     document.addEventListener("DOMContentLoaded", async () => {
         await loadOrders();
+        await loadOrderTrends();
     });
 
     // Fetch all orders from API
@@ -397,6 +379,60 @@
         }
     }
 
+    // Load order trends (7 days)
+    async function loadOrderTrends() {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) return;
+
+            const response = await fetch(`${API_URL}/statistics/trends`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+
+            if (!response.ok) {
+                console.error("Failed to load trends");
+                return;
+            }
+
+            const data = await response.json();
+            if (data.success && data.trends) {
+                orderTrends = data.trends;
+                renderTrendsChart();
+            }
+        } catch (error) {
+            console.error("Error loading trends:", error);
+        }
+    }
+
+    // Render trends chart
+    function renderTrendsChart() {
+        if (orderTrends.length === 0) return;
+
+        const maxTotal = Math.max(...orderTrends.map(t => t.total), 1);
+        const chartContainer = document.getElementById("trendsChart");
+        const labelsContainer = document.getElementById("trendsLabels");
+
+        // Render bars
+        chartContainer.innerHTML = orderTrends.map(trend => {
+            const heightPercent = maxTotal > 0 ? (trend.total / maxTotal) * 100 : 0;
+            const isToday = trend.date === new Date().toISOString().split('T')[0];
+            const barClass = isToday ? 'bg-primary-500 hover:bg-primary-400 shadow-md' : 'bg-blue-100 hover:bg-blue-200';
+            
+            return `
+                <div class="w-full ${barClass} transition-all rounded-t relative group" style="height: ${heightPercent}%">
+                    <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+                        ${trend.total} đơn
+                    </span>
+                </div>
+            `;
+        }).join('');
+
+        // Render labels
+        labelsContainer.innerHTML = orderTrends.map(trend => 
+            `<span>${trend.dayOfWeek}</span>`
+        ).join('');
+    }
+
     // Update statistics cards
     function updateStatistics() {
         const total = allOrders.length;
@@ -408,6 +444,25 @@
         document.getElementById("completedOrders").innerHTML = `${completed} <span class="text-xs font-medium opacity-80">(${total > 0 ? Math.round(completed/total*100) : 0}%)</span>`;
         document.getElementById("ongoingOrders").innerHTML = `${inProgress} <span class="text-xs font-medium opacity-80">(${total > 0 ? Math.round(inProgress/total*100) : 0}%)</span>`;
         document.getElementById("cancelledOrders").innerHTML = `${cancelled} <span class="text-xs font-medium opacity-80">(${total > 0 ? Math.round(cancelled/total*100) : 0}%)</span>`;
+        
+        // Update status percentages chart
+        updateStatusPercentages(total, completed, inProgress, cancelled);
+    }
+
+    // Update status percentage bars
+    function updateStatusPercentages(total, completed, inProgress, cancelled) {
+        const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const inProgressPercent = total > 0 ? Math.round((inProgress / total) * 100) : 0;
+        const cancelledPercent = total > 0 ? Math.round((cancelled / total) * 100) : 0;
+
+        document.getElementById("statusCompletedPercent").textContent = `${completedPercent}%`;
+        document.getElementById("statusCompletedBar").style.width = `${completedPercent}%`;
+
+        document.getElementById("statusInProgressPercent").textContent = `${inProgressPercent}%`;
+        document.getElementById("statusInProgressBar").style.width = `${inProgressPercent}%`;
+
+        document.getElementById("statusCancelledPercent").textContent = `${cancelledPercent}%`;
+        document.getElementById("statusCancelledBar").style.width = `${cancelledPercent}%`;
     }
 
     // Render orders in table
