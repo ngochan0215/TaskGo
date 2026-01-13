@@ -8,7 +8,8 @@ import {
   getAllOrdersByCustomerIdService,
   createOrderService,
   createReceiptService,
-  verifyCustomerOrderStats
+  verifyCustomerOrderStats,
+  getOrderTrendsService
 } from "../services/order.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
@@ -157,6 +158,23 @@ export const getCustomerOrderStats = async (req, res) => {
     res.status(500).json({
       success: false,
       error: err.message,
+    });
+  }
+};
+
+// Get order trends for last 7 days (admin only)
+export const getOrderTrends = async (req, res) => {
+  try {
+    const trends = await getOrderTrendsService();
+
+    res.status(200).json({
+      success: true,
+      trends
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message
     });
   }
 };
