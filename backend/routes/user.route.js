@@ -1,9 +1,10 @@
 import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
-import { getUserProfile, updateUserProfile, changePassword, sendEmail, 
+import { getUserProfile, changePassword, sendEmail, 
     verifyEmail, updateAvatar, addFavoriteTasker, removeFavoriteTasker, 
     getMyFavoriteTaskers, addAddress, getMyAddresses, deleteAddress, setDefaultAddress,
-    getUserPoints, 
+    getUserPoints,
+    updateTaskerProfile, updateCustomerProfile, 
 } from "../controllers/user.controller.js";
 import uploadAvatar from "../middleware/uploadAvatar.js";
 import { isCustomer } from "../middleware/verifyRole.js";
@@ -14,7 +15,10 @@ const router = express.Router();
 router.get("/reputation-score", verifyToken, getUserPoints);
 
 router.get("/profile", verifyToken, getUserProfile);
-router.put("/profile/update", verifyToken, updateUserProfile);
+
+router.put("/profile/update", verifyToken, updateCustomerProfile);
+router.put("/profile/update/tasker", verifyToken, updateTaskerProfile);
+
 router.put("/profile/change-password", verifyToken, changePassword);
 router.post("/profile/change-email/send-otp", verifyToken, sendEmail);
 router.post("/profile/change-email/verify-otp", verifyToken, verifyEmail);

@@ -269,13 +269,111 @@
             updateCircle();
         });
 
-        document.getElementById('tasker-signup-form-3').addEventListener('submit', function(e) {
+        document.getElementById('tasker-signup-form-3').addEventListener('submit', async function(e) {
             e.preventDefault();
-            if (!document.getElementById('result_lat').value) {
-                alert("Đang xác định toạ độ, vui lòng chờ giây lát..."); return;
+
+            const latitude = Number(document.getElementById('result_lat').value);
+            const longitude = Number(document.getElementById('result_lng').value);
+            const city = document.getElementById('result_city').value;
+            const district = document.getElementById('result_district').value;
+            const ward = document.getElementById('result_ward').value;
+            const radius = Number(document.getElementById('result_radius').value);
+            const street = document.getElementById('street').value;
+            const full_address = [street, ward, district, city]
+                .filter(Boolean)
+                .join(', ');
+
+            if (!longitude || !latitude) {
+                alert("Đang xác định toạ độ, vui lòng chờ giây lát..."); 
+                return;
             }
-            window.location.href = 'f_success.html?type=su-registered';
+
+            const step1 = JSON.parse(localStorage.getItem('tasker_signup_step1'));
+            const step2 = JSON.parse(localStorage.getItem('tasker_signup_step2'));
+
+            console.log("step 1: ", step1);
+            console.log("step 2: ", step2);
+            
+            if (!step1 || !step2) {
+                alert('Thiếu dữ liệu đăng ký. Vui lòng thực hiện lại.');
+                return;
+            }
+
+            const payload = {
+                ...step1,
+                ...step2,
+
+                working_area: {
+                    full_address,
+                    longitude,
+                    latitude,
+                },
+
+                working_radius: radius,
+            };
+
+            console.log("SIGN UP TASKER PAYLOAD: ", payload);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/signup/tasker', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || 'Đăng ký thất bại');
+                    return;
+                }
+
+                const addressPayload = {
+                    user_id: data.user._id,
+                    full_address, longitude, latitude,
+                    street, ward, district, city,
+                    note: "Địa chỉ đăng ký đầu tiên của tasker",
+                    is_default: true
+                };
+
+                console.log("ADDRESS PAYLOAD: ", addressPayload);
+                await addAddress(addressPayload);
+
+                localStorage.removeItem('tasker_signup_step1');
+                localStorage.removeItem('tasker_signup_step2');
+
+                alert("Đăng ký thành công! Vui lòng xác thực email.");
+                window.location.href = "otp_verifyEmail.html";
+
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi xảy ra');
+            }
         });
+        
+        async function addAddress(addressPayload)  {
+            try {
+                const response = await fetch('http://localhost:3000/api/user/addresses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(addressPayload),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(data.message || 'Thêm địa chỉ mới thất bại');
+                    return;
+                }
+
+                return data;
+
+            } catch (err) {
+                console.error(err);
+                alert('Có lỗi xảy ra');
+            }
+        }
+
     });
 </script>
 

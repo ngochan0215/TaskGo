@@ -1,17 +1,15 @@
 import express from "express";
 import {
-  signup,
-  verifyEmail,
-  login,
-  logout,
-  forgotPassword,
-  resetPassword,
-  resendVerificationToken
+  signUpCustomer, signUpTasker,
+  verifyEmail, login, logout,
+  forgotPassword, resetPassword, resendVerificationToken
 } from "../controllers/auth.controller.js";
 
 const router = express.Router();
 
-router.post("/signup", signup);
+router.post("/signup/customer", signUpCustomer);
+router.post("/signup/tasker", signUpTasker);
+
 router.post("/verify-email", verifyEmail);
 router.post("/login", login);
 router.post("/logout", logout);
