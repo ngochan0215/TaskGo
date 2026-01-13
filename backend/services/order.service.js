@@ -22,6 +22,10 @@ export async function getAllOrdersService({
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -50,7 +54,14 @@ export async function deleteOrderByIdService(orderId) {
 // Get order by id
 export async function getOrderByIdService(orderId) {
   try {
-    const order = await Order.findById(orderId).select("-__v -created_at -updated_at").lean();
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .select("-__v -created_at -updated_at")
+      .lean();
+      
     if (!order) 
       throw new Error("Order not found");
 
@@ -470,4 +481,58 @@ export async function verifyCustomerOrderStats(customerUserId) {
     cancelled_orders: cancelledCount,
     verified: true,
   };
+}
+
+// Get order trends for the last 7 days (for admin)
+export async function getOrderTrendsService() {
+  try {
+    const trends = [];
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    // Loop through last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() - i);
+      endDate.setHours(23, 59, 59, 999);
+
+      const startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Count orders by status for this day
+      const [totalCount, completedCount, inProgressCount, cancelledCount] = await Promise.all([
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate }
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: "completed"
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: { $in: ["pending", "assigned", "accepted", "departed", "arrived", "in_progress"] }
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: "cancelled"
+        })
+      ]);
+
+      trends.push({
+        date: startDate.toISOString().split('T')[0],
+        dayOfWeek: startDate.toLocaleDateString('en-US', { weekday: 'short' }),
+        total: totalCount,
+        completed: completedCount,
+        in_progress: inProgressCount,
+        cancelled: cancelledCount,
+        completed_percentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+        in_progress_percentage: totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0,
+        cancelled_percentage: totalCount > 0 ? Math.round((cancelledCount / totalCount) * 100) : 0,
+      });
+    }
+
+    return trends;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 }

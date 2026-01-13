@@ -61,6 +61,7 @@
                     <p class="text-xs font-medium text-gray-500">ID: #TK8821</p>
                 </div>
             </div>
+            <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch sử nhận việc</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
             <a href="#" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
@@ -260,13 +261,21 @@
 </footer>
 
 <script>
-    let token = null;
-    token = localStorage.getItem("token");
+    let token = localStorage.getItem("token");
     if (!token) {
-        alert("Vui lòng đăng nhập");
-        location.href = "../auth/login-signup.html";
+        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+        window.location.href = "../auth/login-signup.html";
     }
+
+    const role = localStorage.getItem("system_role");
+    const _id = localStorage.getItem("user_id");
+    console.log("USER: ", role + " " + _id);
     console.log("TOKEN: ", token);
+
+    if (role !== "tasker") {
+        alert("Bạn không phải Tasker. Không có quyền truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
     
     const menuBtn = document.getElementById('menu-btn');
     const menuOverlay = document.getElementById('menu-overlay');

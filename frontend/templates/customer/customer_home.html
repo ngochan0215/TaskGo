@@ -254,13 +254,21 @@
 </footer>
 
 <script>
-    let token = null;
-    token = localStorage.getItem("token");
+    let token = localStorage.getItem("token");
     if (!token) {
-        alert("Vui lòng đăng nhập");
-        location.href = "../auth/login-signup.html";
+        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+        window.location.href = "../auth/login-signup.html";
     }
+
+    const role = localStorage.getItem("system_role");
+    const _id = localStorage.getItem("user_id");
+    console.log("USER: ", role + " " + _id);
     console.log("TOKEN: ", token);
+
+    if (role !== "customer") {
+        alert("Bạn không phải Khách hàng. Không có quyền truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
 
     // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
     const searchContainer = document.getElementById("search-container");

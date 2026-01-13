@@ -358,6 +358,22 @@
 </div>
 
 <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
+
+    const role = localStorage.getItem("system_role");
+    const _id = localStorage.getItem("user_id");
+    console.log("USER: ", role + " " + _id);
+    console.log("TOKEN: ", token);
+
+    if (role !== "admin") {
+        alert("Bạn không phải Admin. Không có quyền truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
+
     const sidebarMobile = document.getElementById("sidebarMobile");
     const backdrop = document.getElementById("backdrop");
 

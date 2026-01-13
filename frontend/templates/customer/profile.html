@@ -19,7 +19,7 @@
         <a href=""><img src="../../public/images/taskgo-logo.png" alt=""></a>
       </div>
 
-      <h1 class="font-bold text-xl text-dark-900">Thông tin cá nhân</h1>
+      <h1 class="font-bold text-xl text-dark-900">PROFILE CÁ NHÂN</h1>
       <div class="w-10 h-10 flex items-center justify-center">
         <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
       </div>
@@ -41,75 +41,120 @@
             </button>
         </div>
         
-        <h1 id="fullName" class="text-2xl font-bold text-dark-900 mt-4"></h1>
+        <h1 id="full-name" class="text-2xl font-bold text-dark-900 mt-4"></h1>
         <div id="editToggle" class="flex items-center text-base text-dark-900 cursor-pointer hover:text-primary-dark">
             <span>Chỉnh sửa thông tin</span>
             <span class="material-symbols-outlined text-base ml-1">edit</span>
         </div>
-
+        <div class="flex items-center space-x-2 mt-1">
+            
+            <div class="flex text-yellow-500 text-xl">
+                <span class="material-symbols-outlined text-xl">star</span>
+                <span class="material-symbols-outlined text-xl">star</span>
+                <span class="material-symbols-outlined text-xl">star</span>
+                <span class="material-symbols-outlined text-xl">star</span>
+                <span class="material-symbols-outlined text-dark-900 text-xl">star</span> 
+            </div>
+            
+            <span class="text-lg font-semibold text-dark-900">4</span>
+        </div>
 
     </div>
 
     <div class="space-y-4">
-        <h2 class="text-base font-semibold text-dark-900 pb-2">Thông tin cá nhân:</h2>
+        <h2 class="text-l font-semibold text-dark-900 pb-2">THÔNG TIN CÁ NHÂN:</h2>
         
-        <div>
-            <label for="email" class="text-base font-medium text-dark-900 block mb-1">Địa chỉ email</label>
-            <input type="email" id="email" readonly
-                class="w-full p-3 border border-gray-300 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-        </div>
-        
-        <div>
-            <label for="phone" class="text-base font-medium text-dark-900 block mb-1">Số điện thoại</label>
-            <input type="tel" id="phone" readonly
-                class="w-full p-3 border border-gray-300 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-        </div>
+        <section class="bg-white rounded-xl shadow-sm p-4 space-y-4">
+          <h2 class="flex items-center gap-2 font-semibold text-dark-900">
+            <span class="material-symbols-outlined text-primary-500">person</span>
+            Thông tin cơ bản
+          </h2>
 
-        <div>
-            <label for="cccd" class="text-base font-medium text-dark-900 block mb-1">Căn cước công dân</label>
-            <input type="text" id="cccd" readonly
-                class="w-full p-3 border border-gray-300 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-        </div>
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Họ tên</label>
+            <input id="full-name-input" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" />
+          </div>
 
-        <div>
-            <label for="rank" class="text-base font-medium text-dark-900 block mb-1">Hạng thành viên:</label>
-            <input type="text" id="rank" readonly
-                class="w-full p-3 border border-gray-300 rounded-lg 
-                       focus:outline-none focus:ring-2 focus:ring-primary-500"
-            />
-        </div>
-        
-        <div>
-            <label for="address-1" class="text-base font-medium text-dark-900 block mb-1">Địa chỉ</label>
-            <div class="flex items-center space-x-2 bg-white p-3 border border-gray-300 rounded-lg">
-                <input type="text" id="address-1" readonly
-                    class="flex-1 border-none focus:outline-none bg-transparent"
-                />
-                <button class="text-gray-100 hover:text-red-500">
-                    <span class="material-symbols-outlined text-xl">delete</span>
-                </button>
-            </div>
-        </div>
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Email</label>
+            <input id="email" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" />
+          </div>
 
-        <button class="w-full flex items-center justify-center p-3 rounded-lg bg-gray-200 text-dark-900 font-medium space-x-1 hover:bg-gray-400 hover:text-white">
-            <span class="material-symbols-outlined text-lg">add</span>
-            <span>Thêm địa chỉ</span>
-        </button>
-        
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Số điện thoại</label>
+            <input id="phone" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">CCCD</label>
+            <input id="cccd" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Hạng khách hàng</label>
+            <input id="rank" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" />
+          </div>
+
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Địa chỉ thường trú</label>
+            <div id="address" class="flex flex-wrap gap-2"></div>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm p-4 space-y-4">
+          <h2 class="flex items-center gap-2 font-semibold text-dark-900">
+            <span class="material-symbols-outlined text-primary-500">account_balance</span>
+            Tài khoản ngân hàng
+          </h2>
+
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">BIN (6 số đầu)</label>
+            <input id="bin" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Chuỗi gồm 6 số đầu tiên của thẻ ngân hàng" />
+          </div>
+
+          <div>
+            <label class="block mb-1 font-medium text-dark-900">Số tài khoản</label>
+            <input id="account-number" readonly class="w-full p-3 border border-gray-300 rounded-lg
+                focus:ring-2 focus:ring-primary-500 outline-none" placeholder="Số tài khoản ngân hàng của bạn"/>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-xl shadow-sm p-4 space-y-3">
+          <h2 class="flex items-center gap-2 font-semibold text-dark-900">
+            <span class="material-symbols-outlined text-primary-500">security</span>
+            Bảo mật tài khoản
+          </h2>
+
+          <a href="../auth/set-password.html?flow=change"
+            class="flex items-center justify-between p-3 rounded-lg border border-orange-300 bg-orange-50 text-orange-700 hover:bg-orange-100 transition">
+            <span class="flex items-center gap-2">
+              <span class="material-symbols-outlined">lock</span>
+              Đổi mật khẩu
+            </span>
+            <span class="material-symbols-outlined">chevron_right</span>
+          </a>
+
+          <a href="../auth/change-email.html"
+            class="flex items-center justify-between p-3 rounded-lg border border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 transition">
+            <span class="flex items-center gap-2">
+              <span class="material-symbols-outlined">mail</span>
+              Đổi email
+            </span>
+            <span class="material-symbols-outlined">chevron_right</span>
+          </a>
+        </section>
     </div>
     <div class="pt-6">
-        <button id="updateBtn" class="action-btn action-btn-hover w-full " onclick="updateProfile()" disabled>
+        <button id="updateBtn" onclick="updateProfile()" class="action-btn action-btn-hover w-full " disabled>
             Cập nhật thông tin
         </button>
     </div>
-    <a href="../auth/set-password.html?flow=change">Đổi mật khẩu</a>
-    <a href="../auth/change-email.html">Đổi email</a>
 
   </main>
 
@@ -135,194 +180,10 @@
       </div>
     </nav>
   </footer>
+</div>
 
-  <!-- <script>
-    let isEditing = false;
-
-    const editBtn = document.getElementById("editToggle");
-    const updateBtn = document.getElementById("updateBtn");
-
-    const editableInputs = [
-      document.getElementById("phone"),
-      document.getElementById("cccd"),
-      document.getElementById("email"),
-      document.getElementById("phone"),
-      document.getElementById("address-1")
-    ];
-
-    editBtn.addEventListener("click", () => {
-      isEditing = !isEditing;
-
-      editableInputs.forEach(input => {
-        input.readOnly = !isEditing;
-        input.classList.toggle("bg-white", isEditing);
-      });
-
-      updateBtn.disabled = !isEditing;
-      updateBtn.classList.toggle("opacity-50", !isEditing);
-      updateBtn.classList.toggle("cursor-not-allowed", !isEditing);
-
-      editBtn.innerHTML = isEditing
-        ? `<span>Hủy chỉnh sửa</span>
-          <span class="material-symbols-outlined ml-1">close</span>`
-        : `<span>Chỉnh sửa thông tin</span>
-          <span class="material-symbols-outlined ml-1">edit</span>`;
-    });
-
-    function mapCustomerType(type) {
-      switch (type) {
-        case "new":
-          return "Khách hàng mới";
-        case "loyal":
-          return "Thành viên thân thiết";
-        case "vip":
-          return "Khách hàng VIP";
-        default:
-          return "Khách hàng";
-      }
-    }
-
-    async function loadUserProfile() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-          window.location.href = "../auth/login-signup.html";
-          return;
-        }
-
-        const res = await fetch("http://localhost:3000/api/user/profile", {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        });
-
-        console.log("TOKEN: ", token);
-        if (res.status === 401) {
-          localStorage.removeItem("token");
-          alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-          window.location.href = "../auth/login-signup.html";
-          return;
-        }
-
-        const data = await res.json();
-        console.log("DATA: ", data);
-        
-        if (!res.ok || !data.success) {
-          alert(data.message || "Không thể lấy thông tin người dùng");
-          return;
-        }
-        const { user, role, email, type } = data;
-
-        // chỉ xử lý customer
-        if (role !== "customer") return;
-
-        // bind data vào UI
-        document.getElementById("fullName").innerText = user.full_name || "";
-        document.getElementById("phone").value = user.phone_number || "";
-        document.getElementById("cccd").value = user.identification || "";
-        document.getElementById("email").value = email || "";
-        document.getElementById("rank").value = mapCustomerType(type) || "Khách hàng mới";
-
-        // avatar
-        document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-
-      } catch (error) {
-        console.error("Lỗi load profile:", error);
-      }
-  }
-
-    async function updateProfile() {
-      try {
-        const token = localStorage.getItem("token");
-
-        const payload = {
-          full_name: document.getElementById("fullName").innerText,
-          phone_number: document.getElementById("phone").value,
-          identification: document.getElementById("cccd").value
-        };
-
-        // loại bỏ field rỗng (rất quan trọng)
-        Object.keys(payload).forEach(
-          key => payload[key] === "" && delete payload[key]
-        );
-
-        const res = await fetch("http://localhost:3000/api/user/profile/update", {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          alert(data.message || "Cập nhật thất bại");
-          return;
-        }
-
-        alert("✅ Cập nhật thông tin thành công");
-
-        if (data.success) {
-          isEditing = false;
-
-          editableInputs.forEach(input => input.readOnly = true);
-          updateBtn.disabled = true;
-          updateBtn.classList.add("opacity-50", "cursor-not-allowed");
-
-          editBtn.innerHTML = `
-            <span>Chỉnh sửa thông tin</span>
-            <span class="material-symbols-outlined ml-1">edit</span>
-          `;
-        }
-
-      } catch (error) {
-        console.error("Update profile error:", error);
-        alert("Có lỗi xảy ra");
-      }
-    }
-
-    async function updateAvatar(event) {
-      try {
-        const token = localStorage.getItem("token");
-        const file = event.target.files[0];
-
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("avatar", file);
-
-        const res = await fetch("http://localhost:3000/api/user/profile/update-avatar", {
-          method: "PUT",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-          alert(data.message || "Upload avatar thất bại");
-          return;
-        }
-
-        document.getElementById("avatar").src = URL.createObjectURL(file);
-        alert("✅ Cập nhật avatar thành công");
-
-      } catch (error) {
-        console.error("Update avatar error:", error);
-        alert("Có lỗi khi upload avatar");
-      }
-    }
-
-    document.addEventListener("DOMContentLoaded", loadUserProfile);
-  </script> -->
   <script src="../js/profile_customer.js" defer></script>
+
 </body>
 
 </html>
