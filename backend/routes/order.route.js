@@ -2,10 +2,8 @@ import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isCustomer } from "../middleware/verifyRole.js";
 import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
-    createOrder, cancelOrderByCustomer,
-    createReceipt, getCustomerOrderStats, getOrderTrends,
+    createOrder, cancelOrderByCustomer, getCustomerOrderStats, getOrderTrends,
  } from "../controllers/order.controller.js";
-
 import { addReview, editReview, getMyReviews, getReviewByOrder } from "../controllers/review.controller.js";
 
 const router = express.Router();
@@ -27,8 +25,7 @@ router.put("/cancel/:orderId", verifyToken, isCustomer, cancelOrderByCustomer);
 // Customer orders - must be after specific routes
 router.get("/customer/:customerId", verifyToken, getAllOrdersByCustomerId);
 
-router.post("/receipt/add", verifyToken, createReceipt);
-
+// reviews
 router.post("/reviews/add", verifyToken, addReview);
 router.get("/reviews/my-reviews", verifyToken, getMyReviews);
 router.get("/reviews/:order_id", verifyToken, getReviewByOrder);

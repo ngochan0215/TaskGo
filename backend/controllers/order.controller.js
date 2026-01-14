@@ -7,7 +7,6 @@ import {
   getOrderByIdService,
   getAllOrdersByCustomerIdService,
   createOrderService,
-  createReceiptService,
   verifyCustomerOrderStats,
   getOrderTrendsService
 } from "../services/order.service.js";
@@ -310,39 +309,5 @@ export const applyVoucherToBooking = async (req, res) => {
     });
   } finally {
     session.endSession();
-  }
-};
-
-export const createReceipt = async (req, res) => {
-  try {
-    const { order_id, payment_method } = req.body;
-
-    if (!order_id || !payment_method) {
-      return res.status(400).json({
-        success: false,
-        message: "Yêu cầu điền đầy đủ thông tin.",
-      });
-    }
-
-    const receipt = await createReceiptService({ order_id, payment_method });
-
-    return res.status(201).json({
-      success: true,
-      data: receipt,
-    });
-
-  } catch (error) {
-    console.error("createReceipt error:", error.message);
-
-    const errorMap = {
-      ORDER_NOT_FOUND: "Order not found",
-      CUSTOMER_NOT_FOUND: "Customer not found",
-      PAID_AMOUNT_NOT_ENOUGH: "Paid amount is not enough",
-    };
-
-    return res.status(400).json({
-      success: false,
-      message: errorMap[error.message] || "Create receipt failed",
-    });
   }
 };

@@ -1,7 +1,8 @@
 import { payOSpayment, payOSpayout } from '../config/payos.js';
-import Transaction  from '../models/transaction.js';
+import  { Transaction, Receipt }  from '../models/index.js';
 import crypto from "crypto";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 // Tạo payment link PayOS và lưu transaction tương ứng
@@ -206,18 +207,72 @@ export const payoutDetail = async (referenceId) => {
 }
 
 
-export const paymentSucceeded = async(orderCode) => {
+export const paymentSucceeded = async (orderCode) => {
+    const transaction = await Transaction.findOne({ order_code: orderCode });
+    if (!transaction) {
+        throw new Error("Không tìm thấy bản ghi giao dịch.");
+    }
+
+    // update transaction
     await Transaction.findOneAndUpdate(
         { order_code: orderCode },
-        { status: 'completed' },
+        { status: "completed" },
         { new: true }
     );
-}
+
+    const receipt = await Receipt.findOne({ order_id: transaction.order_id });
+    if (!receipt) {
+        throw new Error("Không tìm thấy hóa đơn.");
+    }
+
+    // tránh update lại nhiều lần
+    if (receipt.status === "success") {
+        return receipt;
+    }
+
+    const updatedReceipt = await Receipt.findOneAndUpdate(
+        { order_id: transaction.order_id },
+        {
+        status: "success",
+        paid_at: new Date(),
+        transaction_id: transaction._id
+        },
+        { new: true }
+    );
+
+    return updatedReceipt;
+};
 
 export const paymentFailed = async(orderCode) => {
+    const transaction = await Transaction.findOne({ order_code: orderCode });
+    if (!transaction) {
+        throw new Error("Không tìm thấy bản ghi giao dịch.");
+    }
+
     await Transaction.findOneAndUpdate(
         { order_code: orderCode },
         { status: 'failed' },
         { new: true }
     );
+
+    const receipt = await Receipt.findOne({ order_id: transaction.order_id });
+    if (!receipt) {
+        throw new Error("Không tìm thấy hóa đơn.");
+    }
+
+    // tránh update lại nhiều lần
+    if (receipt.status === "failed") {
+        return receipt;
+    }
+
+    const updatedReceipt = await Receipt.findOneAndUpdate(
+        { order_id: transaction.order_id },
+        {
+        status: "failed",
+        transaction_id: transaction._id
+        },
+        { new: true }
+    );
+
+    return updatedReceipt;
 }

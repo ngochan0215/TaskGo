@@ -13,6 +13,7 @@ import Notification from "./notifications.js";
 import Order from "./orders.js";
 import OrderStatusLog from "./orderStatusLog.js";
 import Receipt from "./receipts.js";
+import Transaction from "./transaction.js";
 
 import Service from "./services.js";
 import Task from "./tasks.js";
@@ -21,7 +22,7 @@ import Address from "./addresses.js";
 
 export {
     Account, User, Customer, Tasker, FavoriteTasker,
-    Discount, Voucher, VoucherUsage,
+    Discount, Voucher, VoucherUsage, Transaction,
     Order, OrderStatusLog, Receipt, Address,
     Service, Task, Message, Notification, Review,
 };
