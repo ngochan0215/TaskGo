@@ -24,12 +24,18 @@ export default function registerChatHandlers(io) {
         let order = await Order.findById(order_id);
         if (!order) return ack && ack({ ok: false, error: "order_not_found" });
 
-        const targetChat = await Chat.findOne({order_id: order_id});
+        let targetChat = await Chat.findOne({order_id: order_id});
+        // Create new chat if there's none yet for order with valid status
         if (
           !targetChat &&
           (order.status === "accepted" || order.status === "in_progress")
         ) {
           targetChat = await createNewChatForOrder(order._id);
+        }
+
+        // If it still doesn't exist (e.g. order completed, but no chat history), deny access
+        if (!targetChat) {
+            return ack && ack({ ok: false, error: "chat_not_found_or_unavailable" });
         }
 
         // permission check
@@ -92,7 +98,7 @@ export default function registerChatHandlers(io) {
           content: content,
           message_type: "text",
           attachment_url: "",
-          status: "active",
+          status: "sent",
         });
         await messageDoc.save();
 
@@ -117,7 +123,7 @@ export default function registerChatHandlers(io) {
           sender_id: String(messageDoc.sender_id),
           content: messageDoc.content,
           message_type: messageDoc.message_type,
-          createdAt: messageDoc.createdAt,
+          updatedAt: messageDoc.updated_at,
           status: messageDoc.status,
         };
 
