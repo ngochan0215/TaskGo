@@ -137,4 +137,52 @@ export const rejectTasker = async (req, res) => {
   res.json({ message: "Tasker rejected and kept inactive" });
 };
 
+export const banCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const customer = await Customer.findById(customerId).populate("user_id");
+    if (!customer) 
+      return res.status(404).json({ message: "Không tìm thấy khách hàng." });
+
+    const account = await Account.findOne({ user_id: customer.user_id });
+    if (!account) 
+      return res.status(404).json({ message: "Không tìm thấy tài khoản khách hàng." });
+
+    account.status = "suspended";        
+    await account.save();
+
+    res.json({ message: "Ban tài khoản khách hàng thành công." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const unbanCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const customer = await Customer.findById(customerId).populate("user_id");
+    if (!customer) 
+      return res.status(404).json({ message: "Không tìm thấy khách hàng." });
+
+    const account = await Account.findOne({ user_id: customer.user_id });
+    if (!account) 
+      return res.status(404).json({ message: "Không tìm thấy tài khoản khách hàng." });
+
+    if (account.status !== "suspended") 
+      return res.status(404).json({ message: "Tài khoản khách hàng đang không ở trạng thái bị ban." });
+
+    account.status = "active";        
+    await account.save();
+
+    res.json({ message: "Gỡ ban tài khoản khách hàng thành công." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
 

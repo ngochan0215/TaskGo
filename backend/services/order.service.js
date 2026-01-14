@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
   Voucher, Receipt, VoucherUsage, Customer, 
  } from "../models/index.js";
-import { validateAndGetDiscountSnapshot } from "./discount.js";
-import { checkAndGetVoucherSnapshot } from "./voucher.js";
+ import { suggestTasker } from "./taskers.service.js";
 
 // Get all orders with optional filters + pagination
 export async function getAllOrdersService({
@@ -115,9 +114,6 @@ export async function createOrderService({
         throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
       }
 
-      // if (quantity <= 0) 
-      //   throw new Error("Số giờ đặt phải lớn hơn 0.");
-
       let scheduleDate;
       if (type === "scheduled") {
         scheduleDate = new Date(scheduled_at);
@@ -191,22 +187,25 @@ export async function createOrderService({
 
       // TODO: thêm logic đặt liền
       if (type === "immediate") {
-      //   const suggestion = await suggestTasker(order[0]._id, {});
-      //   if (!suggestion) 
-      //     throw new Error("No available tasker at the moment");
-      // order[0].tasker_id = suggestion.taskerId;
-      // await order[0].save({ session });
+        const suggestion = await suggestTasker(order[0]._id, {});
+        console.log("SUGGESTION TASKER IN CREATE ORDER: ", suggestion);
 
-        // await changeOrderStatus({
-        //   orderId: order[0]._id,
-        //   toStatus: "assigned",
-        //   actorType: "system",
-        //   actorId: null,
-        //   session
-        // });
+        if (!suggestion) 
+          throw new Error("Hiện tại chưa tìm thấy tasker phù hợp.");
 
-        // await session.commitTransaction();
-        // return { order: order[0], assignedTasker: suggestion }      
+        order[0].tasker_id = suggestion.taskerId;
+        await order[0].save({ session });
+
+        await changeOrderStatus({
+          orderId: order[0]._id,
+          toStatus: "assigned",
+          actorType: "system",
+          actorId: null,
+          session
+        });
+
+        await session.commitTransaction();
+        return { order: order[0], assignedTasker: suggestion }      
       }
 
       // nếu đặt lịch trước thì chưa gán tasker liền
