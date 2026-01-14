@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskGo - Hoạt động</title>
+
+    <link rel="stylesheet" href="/../../public/css/output.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+  </head>
+
+  <body class="bg-primary-100 min-h-screen font-montserrat">
+    <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
+      <div class="flex items-center justify-between px-4 relative">
+        <div
+          class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70"
+        >
+          <a href="#"
+            ><img src="/frontend/public/images/taskgo-logo.png" alt="Logo"
+          /></a>
+        </div>
+
+        <h1
+          class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2"
+        >
+          Hoạt động
+        </h1>
+
+        <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
+          <a
+            href="#"
+            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
+            >Trang chủ</a
+          >
+          <a
+            href="#"
+            class="text-dark-900 font-bold border-b-2 border-primary-500"
+            >Hoạt động</a
+          >
+          <a
+            href="#"
+            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
+            >Tin nhắn</a
+          >
+          <a
+            href="#"
+            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
+            >Thông báo</a
+          >
+        </nav>
+
+        <div
+          id="menu-btn"
+          class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer"
+        >
+          <span class="material-symbols-outlined text-primary-500 text-4xl"
+            >menu</span
+          >
+        </div>
+
+        <div class="hidden md:block w-10"></div>
+      </div>
+    </header>
+
+    <div
+      id="mobile-menu"
+      class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden"
+    >
+      <nav class="flex flex-col p-4 space-y-4">
+        <a
+          href="#"
+          class="flex items-center space-x-3 text-primary-500 font-medium"
+        >
+          <span class="material-symbols-outlined">house</span>
+          <span>Trang chủ</span>
+        </a>
+        <a href="#" class="flex items-center space-x-3 text-dark-900 font-bold">
+          <span class="material-symbols-outlined">news</span>
+          <span>Hoạt động</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center space-x-3 text-primary-500 font-medium"
+        >
+          <span class="material-symbols-outlined">chat</span>
+          <span>Tin nhắn</span>
+        </a>
+        <a
+          href="#"
+          class="flex items-center space-x-3 text-primary-500 font-medium"
+        >
+          <span class="material-symbols-outlined">lightbulb</span>
+          <span>Thông báo</span>
+        </a>
+      </nav>
+    </div>
+
+    <main class="p-4 pb-24">
+      <div class="mb-4">
+        <div class="relative">
+          <span
+            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary-500 text-[22px]"
+            >search</span
+          >
+          <input
+            id="searchInput"
+            type="text"
+            placeholder="Tìm theo mã đơn / dịch vụ / địa chỉ..."
+            class="w-full bg-white shadow-md pl-12 pr-4 py-3 rounded-full border border-primary-300 focus:outline-none focus:border-primary-500"
+          />
+        </div>
+      </div>
+
+      <div
+        class="bg-primary-200 rounded-2xl p-1 flex gap-1 shadow-sm border border-primary-300"
+      >
+        <button
+          id="tabUpcoming"
+          type="button"
+          class="flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900"
+        >
+          Đơn sắp tới
+        </button>
+        <button
+          id="tabHistory"
+          type="button"
+          class="flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900"
+        >
+          Lịch sử
+        </button>
+      </div>
+
+      <section id="upcomingSection" class="mt-4">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="font-semibold text-dark-900">Đơn đặt trước</h2>
+          <span
+            id="upcomingCount"
+            class="text-sm text-primary-500 font-semibold"
+            >0 đơn</span
+          >
+        </div>
+
+        <div id="upcomingList" class="space-y-3"></div>
+
+        <div id="upcomingEmpty" class="hidden mt-6">
+          <div
+            class="bg-white rounded-2xl shadow-md border border-primary-300 p-5 text-center"
+          >
+            <div
+              class="w-12 h-12 mx-auto rounded-full bg-primary-100 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-primary-500"
+                >event_available</span
+              >
+            </div>
+            <div class="mt-3 font-bold text-dark-900">Chưa có đơn sắp tới</div>
+            <div class="text-sm text-gray-500 mt-1">
+              Bạn có thể đặt lịch dịch vụ để theo dõi tại đây.
+            </div>
+            <button
+              class="mt-4 bg-primary-500 text-white px-4 py-2 rounded-xl shadow-md font-semibold"
+            >
+              Đặt dịch vụ
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="historySection" class="mt-4 hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="font-semibold text-dark-900">Lịch sử đơn</h2>
+          <span id="historyCount" class="text-sm text-primary-500 font-semibold"
+            >0 đơn</span
+          >
+        </div>
+
+        <div id="historyList" class="space-y-3"></div>
+
+        <div id="historyEmpty" class="hidden mt-6">
+          <div
+            class="bg-white rounded-2xl shadow-md border border-primary-300 p-5 text-center"
+          >
+            <div
+              class="w-12 h-12 mx-auto rounded-full bg-primary-100 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-primary-500"
+                >receipt_long</span
+              >
+            </div>
+            <div class="mt-3 font-bold text-dark-900">Chưa có lịch sử</div>
+            <div class="text-sm text-gray-500 mt-1">
+              Khi bạn hoàn tất đơn, lịch sử sẽ hiển thị ở đây.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
+      <div class="max-w-5xl mx-auto px-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+          <div class="flex flex-col justify-center space-y-3">
+            <div class="space-y-1">
+              <h4
+                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
+              >
+                Frontend
+              </h4>
+              <div class="flex gap-1.5">
+                <span
+                  class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600"
+                  >#ReactJS</span
+                >
+                <span
+                  class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600"
+                  >#TailwindCSS</span
+                >
+              </div>
+            </div>
+            <div class="space-y-1">
+              <h4
+                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
+              >
+                Backend & Database
+              </h4>
+              <div class="flex flex-wrap gap-1.5">
+                <span
+                  class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600"
+                  >#NodeJS</span
+                >
+                <span
+                  class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600"
+                  >#MongoDB</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2"
+          >
+            <div class="flex justify-center items-center space-x-2">
+              <img
+                src="/frontend/public/images/taskgo-logo.png"
+                alt="Logo"
+                class="w-6 h-6 opacity-60"
+              />
+              <span class="text-lg font-black tracking-tighter text-dark-900"
+                >TaskGo</span
+              >
+            </div>
+            <p class="text-xs font-bold text-dark-900 uppercase">
+              Công nghệ Web và ứng dụng
+            </p>
+            <p class="text-[11px] font-medium text-primary-600">
+              SE347.Q14 - NHÓM 8
+            </p>
+          </div>
+
+          <div
+            class="flex flex-col justify-between md:items-end text-center md:text-right py-1"
+          >
+            <div class="space-y-1">
+              <h4
+                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
+              >
+                Giảng viên hướng dẫn
+              </h4>
+              <p class="text-sm font-bold text-dark-900">
+                ThS. Trần Thị Hồng Yến
+              </p>
+              <p class="text-[10px] text-gray-500 font-medium">
+                Đại học Công nghệ Thông tin - ĐHQG TP.HCM
+              </p>
+            </div>
+            <div class="mt-4 md:mt-0">
+              <p
+                class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
+              >
+                © 2025 NHÓM 8 • UIT
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <div id="sheetBackdrop" class="fixed inset-0 bg-black/40 hidden z-40"></div>
+
+    <div id="sheet" class="fixed left-0 right-0 bottom-0 z-50 hidden">
+      <div class="max-w-md md:max-w-2xl mx-auto">
+        <div
+          class="bg-white rounded-t-3xl shadow-2xl border border-primary-300 overflow-hidden"
+        >
+          <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+            <div class="w-10 h-1.5 rounded-full bg-primary-200 mx-auto"></div>
+            <button
+              id="closeSheetBtn"
+              class="w-10 h-10 rounded-full hover:bg-primary-100 inline-flex items-center justify-center -mr-2"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-primary-500"
+                >close</span
+              >
+            </button>
+          </div>
+
+          <div class="px-5 pb-5 max-h-[75vh] overflow-y-auto">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="text-xs text-gray-500">Mã đơn</div>
+                <div id="dOrderId" class="font-bold text-dark-900 truncate">
+                  —
+                </div>
+              </div>
+              <div
+                id="dStatusPill"
+                class="text-xs font-bold px-3 py-1 rounded-full border"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div
+                class="bg-primary-100 border border-primary-300 rounded-2xl p-4"
+              >
+                <div class="text-xs text-gray-500">Dịch vụ</div>
+                <div id="dService" class="font-bold text-dark-900 mt-1">—</div>
+                <div id="dTask" class="text-sm text-primary-500 mt-1">—</div>
+              </div>
+
+              <div
+                class="bg-primary-100 border border-primary-300 rounded-2xl p-4"
+              >
+                <div class="text-xs text-gray-500">Thời gian hẹn</div>
+                <div id="dTime" class="font-bold text-dark-900 mt-1">—</div>
+                <div
+                  id="dCountdown"
+                  class="text-sm text-primary-500 font-bold mt-1 hidden"
+                >
+                  —
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="mt-3 bg-white border border-primary-300 rounded-2xl p-4"
+            >
+              <div class="text-xs text-gray-500">Địa chỉ</div>
+              <div id="dAddress" class="text-sm text-dark-900 mt-1">—</div>
+            </div>
+
+            <div
+              class="mt-3 bg-white border border-primary-300 rounded-2xl p-4"
+            >
+              <div class="flex items-center justify-between">
+                <div class="text-sm font-bold text-dark-900">Tổng tiền</div>
+                <div id="dTotal" class="text-sm font-black text-dark-900">
+                  —
+                </div>
+              </div>
+              <div id="dPaymentNote" class="mt-2 text-xs text-gray-500">
+                Thanh toán: —
+              </div>
+            </div>
+
+            <div class="mt-4 flex gap-2">
+              <button
+                id="primaryActionBtn"
+                class="flex-1 py-3 rounded-2xl bg-primary-500 hover:opacity-90 text-white font-bold shadow-md"
+              >
+                —
+              </button>
+              <button
+                id="secondaryActionBtn"
+                class="flex-1 py-3 rounded-2xl bg-white border border-primary-300 hover:bg-primary-100 text-dark-900 font-bold"
+              >
+                —
+              </button>
+            </div>
+
+            <div class="mt-3">
+              <button
+                id="dangerActionBtn"
+                class="w-full py-3 rounded-2xl bg-red-50 hover:bg-red-100 text-red-700 font-bold hidden"
+              >
+                Huỷ đơn
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+      if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener("click", () =>
+          mobileMenu.classList.toggle("hidden")
+        );
+      }
+
+      const $ = (id) => document.getElementById(id);
+
+      const tabUpcoming = $("tabUpcoming");
+      const tabHistory = $("tabHistory");
+      const upcomingSection = $("upcomingSection");
+      const historySection = $("historySection");
+
+      const upcomingList = $("upcomingList");
+      const historyList = $("historyList");
+      const upcomingEmpty = $("upcomingEmpty");
+      const historyEmpty = $("historyEmpty");
+      const upcomingCount = $("upcomingCount");
+      const historyCount = $("historyCount");
+      const searchInput = $("searchInput");
+
+      const sheetBackdrop = $("sheetBackdrop");
+      const sheet = $("sheet");
+      const closeSheetBtn = $("closeSheetBtn");
+
+      const dOrderId = $("dOrderId");
+      const dStatusPill = $("dStatusPill");
+      const dService = $("dService");
+      const dTask = $("dTask");
+      const dTime = $("dTime");
+      const dCountdown = $("dCountdown");
+      const dAddress = $("dAddress");
+      const dTotal = $("dTotal");
+      const dPaymentNote = $("dPaymentNote");
+      const primaryActionBtn = $("primaryActionBtn");
+      const secondaryActionBtn = $("secondaryActionBtn");
+      const dangerActionBtn = $("dangerActionBtn");
+
+      let currentQuery = "";
+
+      const sampleOrders = [
+        {
+          id: "DH-8821",
+          type: "upcoming",
+          status: "scheduled",
+          service: "Dọn dẹp nhà cửa",
+          task: "Gói 2 giờ (cơ bản)",
+          time: "10:30 - 20/01/2026",
+          timeISO: "2026-01-20T10:30:00+07:00",
+          address: "KTX Khu A, Dĩ An, Bình Dương",
+          total: 150000,
+          payment: "Tiền mặt",
+        },
+        {
+          id: "DH-8802",
+          type: "upcoming",
+          status: "pending",
+          service: "Đi chợ hộ",
+          task: "Theo danh sách",
+          time: "14:00 - 12/01/2026",
+          timeISO: "2026-01-12T14:00:00+07:00",
+          address: "Thủ Đức, TP.HCM",
+          total: 85000,
+          payment: "Ví điện tử",
+        },
+        {
+          id: "DH-8701",
+          type: "history",
+          status: "completed",
+          service: "Vệ sinh thảm và sofa",
+          task: "1 bộ (3 chỗ)",
+          time: "09:00 - 08/01/2026",
+          timeISO: "2026-01-08T09:00:00+07:00",
+          address: "Bcons City, Dĩ An, Bình Dương",
+          total: 450000,
+          payment: "Chuyển khoản",
+        },
+        {
+          id: "DH-8650",
+          type: "history",
+          status: "cancelled",
+          service: "Sửa điện nước",
+          task: "Kiểm tra & sửa đơn giản",
+          time: "16:30 - 02/01/2026",
+          timeISO: "2026-01-02T16:30:00+07:00",
+          address: "Q.9, TP.HCM",
+          total: 120000,
+          payment: "—",
+        },
+      ];
+
+      function formatMoney(v) {
+        try {
+          return (v || 0).toLocaleString("vi-VN") + "đ";
+        } catch {
+          return v + "đ";
+        }
+      }
+
+      function statusUI(status) {
+        if (status === "scheduled")
+          return {
+            text: "Đặt trước",
+            cls: "bg-blue-50 text-blue-700 border-blue-200",
+          };
+        if (status === "pending")
+          return {
+            text: "Chờ xác nhận",
+            cls: "bg-yellow-50 text-yellow-700 border-yellow-200",
+          };
+        if (status === "ongoing")
+          return {
+            text: "Đang thực hiện",
+            cls: "bg-primary-100 text-primary-500 border-primary-300",
+          };
+        if (status === "completed")
+          return {
+            text: "Hoàn tất",
+            cls: "bg-green-50 text-green-700 border-green-200",
+          };
+        if (status === "cancelled")
+          return {
+            text: "Đã huỷ",
+            cls: "bg-red-50 text-red-700 border-red-200",
+          };
+        return {
+          text: status || "—",
+          cls: "bg-gray-50 text-gray-700 border-gray-200",
+        };
+      }
+
+      function calcCountdown(iso) {
+        const t = new Date(iso).getTime();
+        const now = Date.now();
+        const diff = t - now;
+        if (!isFinite(diff) || diff <= 0) return null;
+        const d = Math.floor(diff / (24 * 60 * 60 * 1000));
+        const h = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+        if (d > 0) return `Còn ${d} ngày ${h} giờ`;
+        return `Còn ${h} giờ`;
+      }
+
+      function cardTemplate(o) {
+        const st = statusUI(o.status);
+        return `
+      <button type="button" data-order="${o.id}"
+              class="w-full text-left bg-white rounded-2xl shadow-md border border-primary-300 p-4 hover:opacity-95 transition">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="font-bold text-dark-900 truncate">${o.service}</div>
+            <div class="text-sm text-primary-500 truncate">${o.task}</div>
+
+            <div class="mt-3 space-y-1">
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <span class="material-symbols-outlined text-[18px] text-primary-500">schedule</span>
+                <span class="truncate">${o.time}</span>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <span class="material-symbols-outlined text-[18px] text-primary-500">location_on</span>
+                <span class="truncate">${o.address}</span>
+              </div>
+            </div>
+
+            <div class="mt-3 flex items-center justify-between">
+              <div class="text-xs text-gray-500 font-semibold">#${o.id}</div>
+              <div class="font-black text-dark-900">${formatMoney(
+                o.total
+              )}</div>
+            </div>
+          </div>
+
+          <span class="text-[11px] font-black px-3 py-1 rounded-full border ${
+            st.cls
+          }">
+            ${st.text}
+          </span>
+        </div>
+      </button>
+    `;
+      }
+
+      function applySearch(list) {
+        if (!currentQuery) return list;
+        const q = currentQuery.toLowerCase();
+        return list.filter(
+          (o) =>
+            (o.id || "").toLowerCase().includes(q) ||
+            (o.service || "").toLowerCase().includes(q) ||
+            (o.task || "").toLowerCase().includes(q) ||
+            (o.address || "").toLowerCase().includes(q)
+        );
+      }
+
+      function render() {
+        const upcoming = applySearch(
+          sampleOrders.filter((o) => o.type === "upcoming")
+        );
+        const history = applySearch(
+          sampleOrders.filter((o) => o.type === "history")
+        );
+
+        upcomingCount.textContent = `${upcoming.length} đơn`;
+        historyCount.textContent = `${history.length} đơn`;
+
+        upcomingList.innerHTML = upcoming.map(cardTemplate).join("");
+        historyList.innerHTML = history.map(cardTemplate).join("");
+
+        upcomingEmpty.classList.toggle("hidden", upcoming.length !== 0);
+        historyEmpty.classList.toggle("hidden", history.length !== 0);
+
+        document.querySelectorAll("[data-order]").forEach((btn) => {
+          btn.addEventListener("click", () =>
+            openDetail(btn.getAttribute("data-order"))
+          );
+        });
+      }
+
+      function openDetail(orderId) {
+        const o = sampleOrders.find((x) => x.id === orderId);
+        if (!o) return;
+
+        const st = statusUI(o.status);
+
+        dOrderId.textContent = "#" + o.id;
+        dStatusPill.textContent = st.text;
+        dStatusPill.className = `text-xs font-bold px-3 py-1 rounded-full border ${st.cls}`;
+
+        dService.textContent = o.service || "—";
+        dTask.textContent = o.task || "—";
+        dTime.textContent = o.time || "—";
+        dAddress.textContent = o.address || "—";
+        dTotal.textContent = formatMoney(o.total);
+        dPaymentNote.textContent = `Thanh toán: ${o.payment || "—"}`;
+
+        const cd = o.type === "upcoming" ? calcCountdown(o.timeISO) : null;
+        if (cd) {
+          dCountdown.textContent = cd;
+          dCountdown.classList.remove("hidden");
+        } else {
+          dCountdown.classList.add("hidden");
+        }
+
+        dangerActionBtn.classList.add("hidden");
+
+        if (o.type === "upcoming") {
+          primaryActionBtn.textContent = "Liên hệ hỗ trợ";
+          secondaryActionBtn.textContent = "Xem chi tiết";
+          if (o.status === "scheduled" || o.status === "pending") {
+            dangerActionBtn.classList.remove("hidden");
+          }
+        } else {
+          if (o.status === "completed") {
+            primaryActionBtn.textContent = "Đặt lại";
+            secondaryActionBtn.textContent = "Đánh giá";
+          } else {
+            primaryActionBtn.textContent = "Đặt lại";
+            secondaryActionBtn.textContent = "Xem chi tiết";
+          }
+        }
+
+        sheetBackdrop.classList.remove("hidden");
+        sheet.classList.remove("hidden");
+      }
+
+      function closeDetail() {
+        sheetBackdrop.classList.add("hidden");
+        sheet.classList.add("hidden");
+      }
+
+      function setTab(tab) {
+        if (tab === "upcoming") {
+          tabUpcoming.className =
+            "flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900";
+          tabHistory.className =
+            "flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900";
+          upcomingSection.classList.remove("hidden");
+          historySection.classList.add("hidden");
+        } else {
+          tabHistory.className =
+            "flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900";
+          tabUpcoming.className =
+            "flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900";
+          historySection.classList.remove("hidden");
+          upcomingSection.classList.add("hidden");
+        }
+      }
+
+      tabUpcoming.addEventListener("click", () => setTab("upcoming"));
+      tabHistory.addEventListener("click", () => setTab("history"));
+      closeSheetBtn.addEventListener("click", closeDetail);
+      sheetBackdrop.addEventListener("click", closeDetail);
+
+      searchInput.addEventListener("input", (e) => {
+        currentQuery = (e.target.value || "").trim();
+        render();
+      });
+
+      primaryActionBtn.addEventListener("click", () =>
+        alert("Action 1 (demo)")
+      );
+      secondaryActionBtn.addEventListener("click", () =>
+        alert("Action 2 (demo)")
+      );
+      dangerActionBtn.addEventListener("click", () => alert("Huỷ đơn (demo)"));
+
+      render();
+      setTab("upcoming");
+    </script>
+  </body>
+</html>

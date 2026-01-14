@@ -1,26 +1,5 @@
 import { User, Account, Tasker, Customer } from "../models/index.js";
 
-// export const getAllTaskerss = async (req, res) => {
-//   try {
-//     const taskers = await Tasker.find()
-//       .select("-__v")
-//       .populate({
-//         path: "user_id",
-//         select: "-_id",
-//         populate: {
-//           path: "account_id",
-//           select: "email status -_id",
-//         },
-//       });
-
-//     res.status(200).json(taskers);
-//   } catch (error) {
-//     res.status(500).json({ message: "SERVER ERROR", error: error.message });
-//   }
-// };
-
-// Show all customers in the system along with their information
-
 export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find()
@@ -34,6 +13,25 @@ export const getAllCustomers = async (req, res) => {
       });
 
     res.status(200).json(customers);
+  } catch (error) {
+    res.status(500).json({ message: "SERVER ERROR", error: error.message });
+  }
+};
+
+export const getAllTaskers = async (req, res) => {
+  try {
+    const taskers = await Tasker.find()
+      .select("-__v")
+      .populate({
+        path: "user_id",
+        select: "-_id",
+        populate: {
+          path: "account_id",
+          select: "email status -_id",
+        },
+      });
+
+    res.status(200).json(taskers);
   } catch (error) {
     res.status(500).json({ message: "SERVER ERROR", error: error.message });
   }
