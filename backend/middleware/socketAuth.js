@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
 export const socketAuth = (socket, next) => {
-  console.log("Socket attempt to connect!");
+  //console.log("Socket attempt to connect!");
   try {
     const raw = socket.handshake?.auth?.token;
     if (!raw) return next(new Error("Authentication error: token required"));
