@@ -1491,6 +1491,10 @@ header {
   height: 40%;
 }
 
+.h-\[400px\] {
+  height: 400px;
+}
+
 .h-\[45\%\] {
   height: 45%;
 }
@@ -1527,16 +1531,8 @@ header {
   height: 100vh;
 }
 
-.h-\[300px\] {
-  height: 300px;
-}
-
-.h-\[320px\] {
-  height: 320px;
-}
-
-.h-\[400px\] {
-  height: 400px;
+.max-h-\[60vh\] {
+  max-height: 60vh;
 }
 
 .max-h-\[75vh\] {
@@ -1545,10 +1541,6 @@ header {
 
 .max-h-\[90vh\] {
   max-height: 90vh;
-}
-
-.max-h-\[60vh\] {
-  max-height: 60vh;
 }
 
 .min-h-0 {
@@ -1694,10 +1686,6 @@ header {
 
 .w-full {
   width: 100%;
-}
-
-.w-\[95\%\] {
-  width: 95%;
 }
 
 .min-w-0 {

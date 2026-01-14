@@ -12,12 +12,19 @@ let addressState = {
   radius: 5,
 };
 
+// validate authorization
 let token = localStorage.getItem("token");
 if (!token) {
-    alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-    window.location.href = "../auth/login-signup.html";
+  alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+  window.location.href = "../auth/login-signup.html";
 }
 console.log("TOKEN: ", token);
+
+const role = localStorage.getItem("system_role");
+if (role !== "tasker") {
+  alert("Bạn không phải Tasker. Không có quyền truy cập.");
+  window.location.href = "../auth/login-signup.html";
+}
 
 const editBtn = document.getElementById("editToggle");
 const updateBtn = document.getElementById("updateBtn");
