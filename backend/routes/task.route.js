@@ -33,7 +33,7 @@ router.patch('/update/:id', verifyToken, isAdmin, updateTask);
 router.delete('/delete/:id', verifyToken, isAdmin, deleteTask);
 
 // users can see all tasks and services
-router.get('/all', verifyToken, getAllTasks);
+router.get('/all', getAllTasks);
 router.get('/:id', verifyToken, getTaskById);
 router.get('/service/all', verifyToken, getAllServices);
 router.get('/service/:id', verifyToken, getServiceById);
