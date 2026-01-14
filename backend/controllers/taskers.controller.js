@@ -316,3 +316,49 @@ export const getAllTaskers = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error", error });
   }
 };
+
+// tasker nhấn nút sẵn sàng làm việc/nghỉ làm việc
+export const updateWorkingStatus = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { working_status } = req.body;
+
+    if (!["available", "inactive"].includes(working_status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Trạng thái làm việc không hợp lệ, chỉ được cập nhật sang Không hoạt động hoặc Đang rảnh."
+      });
+    }
+
+    const tasker = await Tasker.findOne({ user_id: userId });
+    if (!tasker) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tasker"
+      });
+    }
+
+    // Không cho bật available nếu chưa được duyệt
+    if (tasker.status !== "working" && working_status === "available") {
+      return res.status(403).json({
+        success: false,
+        message: "Tasker chưa được duyệt thành công."
+      });
+    }
+
+    tasker.working_status = working_status;
+    await tasker.save();
+
+    return res.json({
+      success: true,
+      working_status: tasker.working_status
+    });
+
+  } catch (err) {
+    console.error("UPDATE WORKING STATUS ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống"
+    });
+  }
+};

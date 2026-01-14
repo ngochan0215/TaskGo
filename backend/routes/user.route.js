@@ -28,7 +28,9 @@ router.post("/favorites/taskers/", verifyToken, isCustomer, addFavoriteTasker);
 router.delete("/favorites/taskers/:tasker_id", verifyToken, isCustomer, removeFavoriteTasker);
 router.get("/favorites/taskers", verifyToken, isCustomer, getMyFavoriteTaskers);
 
-router.post("/addresses/", verifyToken, isCustomer, addAddress);
+router.post("/addresses/", verifyToken, addAddress);
+router.post("/tasker-signup/first-address", addAddress);
+
 router.get("/addresses/my", verifyToken, isCustomer, getMyAddresses);
 router.delete("/addresses/:address_id", verifyToken, isCustomer, deleteAddress);
 router.patch("/addresses/:address_id/set-default", verifyToken, isCustomer, setDefaultAddress);

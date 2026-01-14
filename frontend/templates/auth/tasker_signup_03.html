@@ -353,7 +353,7 @@
         
         async function addAddress(addressPayload)  {
             try {
-                const response = await fetch('http://localhost:3000/api/user/addresses', {
+                const response = await fetch('http://localhost:3000/api/user/tasker-signup/first-address', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(addressPayload),
