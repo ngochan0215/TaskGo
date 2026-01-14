@@ -1,5 +1,5 @@
 import express from "express";
-import { getMessagesByOrder } from "../controllers/chat.controller.js";
+import { getMessagesByOrder, getAllChats } from "../controllers/chat.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 
 const router = express.Router();
@@ -10,5 +10,8 @@ router.get(
   verifyToken, 
   getMessagesByOrder
 );
+
+// Get all conversations for the current user
+router.get("/", verifyToken, getAllChats);
 
 export default router;
