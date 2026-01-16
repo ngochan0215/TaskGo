@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGo - Chi tiết công việc</title>
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+
+    <style>
+        body { font-family: 'Montserrat', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+
+        /* Timeline styles */
+        .step-line {
+            position: absolute; left: 19px; top: 40px; bottom: -20px; width: 2px; background-color: #E5E7EB; z-index: 0;
+        }
+        .step-item:last-child .step-line { display: none; }
+
+        .step-active .step-icon { background-color: #3730A3; color: white; border-color: #3730A3; }
+        .step-active .step-line { background-color: #3730A3; }
+        .step-completed .step-icon { background-color: #3730A3; color: white; border-color: #3730A3; }
+        .step-completed .step-line { background-color: #3730A3; }
+
+        @keyframes subtle-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(55, 48, 163, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(55, 48, 163, 0); }
+        }
+        .btn-pulse { animation: subtle-pulse 2s infinite; }
+    </style>
+</head>
+
+<body style="background-color: #F3F4F6;" class="text-[#111827] min-h-screen flex flex-col">
+
+<nav class="sticky top-0 z-[100] bg-white shadow-sm">
+    <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
+        <div class="flex items-center gap-3">
+            <a href="./tasker_home.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Chi tiết công việc</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="tel:0909123123" class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition">
+                <span class="material-symbols-outlined text-[#111827]">call</span>
+            </a>
+            <button class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition">
+                <span class="material-symbols-outlined text-[#111827]">chat</span>
+            </button>
+        </div>
+    </header>
+</nav>
+
+<main class="flex-grow p-4 md:py-6 md:px-6">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <div class="lg:col-span-7 space-y-4">
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+
+                <div class="p-6 border-b border-gray-100 flex justify-between items-start bg-gray-50/50">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-1">Công việc</span>
+                        <h2 class="text-2xl font-bold text-[#3730A3] leading-tight">Vệ sinh nhà cửa</h2>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-2xl font-black text-gray-900">120k</span>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase bg-white border border-gray-200 px-2 py-0.5 rounded">Tiền mặt</span>
+                    </div>
+                </div>
+
+                <div class="p-6 pt-5">
+
+                    <div class="flex items-center gap-4 pb-6 border-b border-gray-100 mb-6">
+                        <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5">
+                            <img src="https://ui-avatars.com/api/?name=Chi+Lan&background=A5B4FC&color=3730A3" class="w-full h-full object-cover rounded-full">
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-gray-400 text-[10px] font-bold uppercase mb-0.5">Khách hàng</p>
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="font-bold text-lg text-gray-800 leading-tight">Chị Lan</p>
+                                    <p class="text-xs text-gray-500 font-medium">0909 *** 123</p>
+                                </div>
+
+                                <div class="flex items-center gap-2">
+                                    <button onclick="window.location.href='../chat.html'" class="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-2 rounded-full font-bold text-xs hover:bg-blue-100 transition shadow-sm active:scale-95 border border-blue-200">
+                                        <span class="material-symbols-outlined text-[18px]">chat</span>
+                                        Nhắn tin
+                                    </button>
+
+                                    <a href="tel:0909123123" class="flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-2 rounded-full font-bold text-xs hover:bg-green-100 transition shadow-sm active:scale-95 border border-green-200">
+                                        <span class="material-symbols-outlined text-[18px]">call</span>
+                                        Gọi ngay
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 mt-0.5 border border-gray-100">
+                                <span class="material-symbols-outlined text-[18px]">schedule</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-700 text-sm">Thời gian</p>
+                                <p class="text-gray-900 text-base font-medium">14:00 - 16:00 <span class="text-gray-500 text-sm font-normal">(Hôm nay)</span></p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 shrink-0 mt-0.5 border border-gray-100">
+                                <span class="material-symbols-outlined text-[18px]">location_on</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-gray-700 text-sm">Địa điểm</p>
+                                <p class="text-gray-900 text-base font-medium">Landmark 81, Vinhomes Central Park</p>
+                                <p class="text-gray-500 text-sm mt-0.5">208 Nguyễn Hữu Cảnh, P.22, Bình Thạnh</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+                <p class="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">sticky_note_2</span> Lưu ý từ khách
+                </p>
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-gray-700 text-sm italic">
+                    "Nhà có chó nhỏ, vui lòng cẩn thận khi mở cửa. Cần dọn kỹ khu vực bếp."
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-5 relative">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 lg:sticky lg:top-24">
+                <div class="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+                    <h3 class="font-bold text-gray-800 text-lg">Tiến độ</h3>
+                    <span class="px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide">Đang thực hiện</span>
+                </div>
+
+                <div class="relative pl-2 mb-8" id="timeline-container">
+                    <div class="step-item relative flex gap-4 pb-8" id="step-1">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">directions_car</span>
+                            </div>
+                            <div class="step-line"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đang di chuyển</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-1">--:--</p>
+                        </div>
+                    </div>
+                    <div class="step-item relative flex gap-4 pb-8" id="step-2">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">location_on</span>
+                            </div>
+                            <div class="step-line"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đã đến nơi</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-2">--:--</p>
+                        </div>
+                    </div>
+                    <div class="step-item relative flex gap-4 pb-8" id="step-3">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                            </div>
+                            <div class="step-line"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đang làm việc</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-3">--:--</p>
+                        </div>
+                    </div>
+                    <div class="step-item relative flex gap-4" id="step-4">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Hoàn thành</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-4">--:--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button id="main-action-btn" class="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-95 btn-pulse" style="background-color: #3730A3;">
+                        <span class="material-symbols-outlined text-[20px]">near_me</span>
+                        <span id="btn-text">Xác nhận khởi hành</span>
+                    </button>
+
+                    <button id="cancel-btn" class="w-full mt-3 py-2 text-red-500 font-bold text-xs hover:bg-red-50 rounded-lg transition">
+                        Hủy nhận đơn này
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<footer class="mt-auto py-6 border-t border-gray-200 bg-white">
+    <div class="text-center text-xs text-gray-400">
+        &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
+    </div>
+</footer>
+
+<script>
+    // Logic Javascript giữ nguyên
+    let token = localStorage.getItem("token");
+    // if (!token) window.location.href = "../auth/login-signup.html";
+
+    let currentState = 0;
+
+    const btnText = document.getElementById('btn-text');
+    const mainBtn = document.getElementById('main-action-btn');
+    const btnIcon = mainBtn.querySelector('.material-symbols-outlined');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    const stepsConfig = [
+        { btnText: "Xác nhận khởi hành", icon: "near_me", color: "#3730A3", stepId: "step-1" },
+        { btnText: "Xác nhận đã đến nơi", icon: "location_on", color: "#F59E0B", stepId: "step-2" },
+        { btnText: "Bắt đầu làm việc", icon: "play_circle", color: "#10B981", stepId: "step-3" },
+        { btnText: "Hoàn thành & Thu tiền", icon: "check_circle", color: "#3730A3", stepId: "step-4" }
+    ];
+
+    function updateUI() {
+        if (currentState >= 4) {
+            alert("Hoàn thành công việc!");
+            window.location.href = "./tasker_home.html";
+            return;
+        }
+
+        const config = stepsConfig[currentState];
+        btnText.innerText = config.btnText;
+        btnIcon.innerText = config.icon;
+        mainBtn.style.backgroundColor = config.color;
+
+        const currentStepEl = document.getElementById(config.stepId);
+        currentStepEl.classList.add('step-active');
+
+        const now = new Date();
+        const timeString = now.getHours() + ":" + (now.getMinutes()<10?'0':'') + now.getMinutes();
+
+        if(currentState > 0) {
+            const prevConfig = stepsConfig[currentState - 1];
+            const prevStepEl = document.getElementById(prevConfig.stepId);
+
+            prevStepEl.classList.remove('step-active');
+            prevStepEl.classList.add('step-completed');
+            document.getElementById(`time-step-${currentState}`).innerText = timeString;
+
+            if(currentState >= 2) cancelBtn.style.display = 'none';
+        }
+    }
+
+    updateUI();
+
+    mainBtn.addEventListener('click', () => {
+        const originalText = btnText.innerText;
+        btnText.innerText = "Đang xử lý...";
+        mainBtn.disabled = true;
+        mainBtn.classList.remove('btn-pulse');
+        mainBtn.style.opacity = "0.7";
+
+        setTimeout(() => {
+            currentState++;
+            updateUI();
+            mainBtn.disabled = false;
+            mainBtn.classList.add('btn-pulse');
+            mainBtn.style.opacity = "1";
+        }, 500);
+    });
+</script>
+</body>
+</html>
