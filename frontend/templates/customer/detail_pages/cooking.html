@@ -321,12 +321,15 @@
                 task_id: task_id,
                 type: "immediate",
                 base_amount: total,
+                final_amount: total,
+
                 task_snapshot: {
                     code: "COOKING",
                     name: task_name,
                     pricing: basePrice,
                     unit: task_unit
                 },
+                
                 task_payload: {
                     people: state.people,
                     dishes: state.dishes,

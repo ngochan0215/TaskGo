@@ -1316,6 +1316,10 @@ header {
   margin-right: 0.125rem;
 }
 
+.mr-2 {
+  margin-right: 0.5rem;
+}
+
 .mt-0\.5 {
   margin-top: 0.125rem;
 }
@@ -1948,12 +1952,6 @@ header {
 
 .gap-y-4 {
   row-gap: 1rem;
-}
-
-.space-x-1 > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(0.25rem * var(--tw-space-x-reverse));
-  margin-left: calc(0.25rem * calc(1 - var(--tw-space-x-reverse)));
 }
 
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
@@ -2940,10 +2938,6 @@ header {
   font-weight: 700;
 }
 
-.font-extrabold {
-  font-weight: 800;
-}
-
 .font-medium {
   font-weight: 500;
 }
@@ -3006,11 +3000,6 @@ header {
 .text-\[\#3730A3\] {
   --tw-text-opacity: 1;
   color: rgb(55 48 163 / var(--tw-text-opacity, 1));
-}
-
-.text-\[\#9F2169\] {
-  --tw-text-opacity: 1;
-  color: rgb(159 33 105 / var(--tw-text-opacity, 1));
 }
 
 .text-\[\#FFBE18\] {

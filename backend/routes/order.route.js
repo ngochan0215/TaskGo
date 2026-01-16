@@ -4,7 +4,8 @@ import { isAdmin, isCustomer } from "../middleware/verifyRole.js";
 
 import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
     createOrder, cancelOrderByCustomer, getCustomerOrderStats, getOrderTrends,
- } from "../controllers/order.controller.js";
+    findTaskerForOrder, getOrderDetailsForCustomer
+} from "../controllers/order.controller.js";
 
 import { getReceiptById, createReceipt, getAllReceipts, 
     updateReceiptStatus, markReceiptPaid
@@ -26,6 +27,8 @@ router.get("/detail/:id", verifyToken, getOrderById);
 
 // CUSTOMER routes
 router.post("/create", verifyToken, isCustomer, createOrder);
+router.get("/:orderId/details", verifyToken, isCustomer, getOrderDetailsForCustomer);
+router.post("/:orderId/find-tasker", verifyToken, isCustomer, findTaskerForOrder);
 router.put("/cancel/:orderId", verifyToken, isCustomer, cancelOrderByCustomer);
 
 // Customer orders - must be after specific routes

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
   Voucher, Receipt, VoucherUsage, Customer, 
- } from "../models/index.js";
- import { suggestTasker } from "./taskers.service.js";
- import { pushNotification } from "./notification.service.js";
+} from "../models/index.js";
+import { suggestTasker, changeTaskerStatus } from "./taskers.service.js";
+import { pushNotification } from "./notification.service.js";
 
 // Get all orders with optional filters + pagination
 export async function getAllOrdersService({
@@ -72,25 +72,39 @@ export async function getOrderByIdService(orderId) {
   }
 }
 
-// Get all orders of a customer, with pagination + filter by status
+// Get all orders of a customer, with pagination + filter by status or category
 export async function getAllOrdersByCustomerIdService({
   customerId,
   status,
+  category, // "upcoming" or "history"
   page = 1,
   limit = 50,
 }) {
   try {
     const q = {};
-    if (customerId) q.customer = customerId;
-    if (status) q.status = status;
+    if (customerId) q.customer_id = customerId;
+    
+    // Filter by category (upcoming vs history)
+    if (category === "upcoming") {
+      // Upcoming: all statuses except completed and cancelled
+      q.status = { $nin: ["completed", "cancelled"] };
+    } else if (category === "history") {
+      // History: only completed and cancelled
+      q.status = { $in: ["completed", "cancelled"] };
+    } else if (status) {
+      // If specific status is provided, use it
+      q.status = status;
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
-      .populate("task_id")
+      .populate("task_id", "task_name unit base_price")
+      .populate("tasker_id", "full_name phone_number email")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
 
     return orders;
   } catch (err) {
@@ -234,12 +248,19 @@ export async function assignTaskerService(order) {
     throw new Error("Không tìm thấy tasker phù hợp.");
   }
 
-  order.tasker_id = suggestion.taskerId;
+  order.tasker_id = suggestion.user_id;
   await order.save();
 
   await changeOrderStatus({
     orderId: order._id,
     toStatus: "assigned",
+    actorType: "system",
+    actorId: null,
+  });
+
+  await changeTaskerStatus({
+    taskerId: suggestion.tasker_id,
+    toStatus: "busy",
     actorType: "system",
     actorId: null,
   });
@@ -259,7 +280,7 @@ export async function assignTaskerService(order) {
   await pushNotification(
     suggestion.user_id,                 // userId (tasker user)
     "Có đơn hàng mới",
-    "Bạn có một đơn hàng mới phù hợp, hãy phản hồi sớm.",
+    `Bạn có một đơn hàng có ID: ${order._id} phù hợp, vui lòng phản hồi sớm trong vòng 2 phút.`,
     "order",                              // type
     "Order",                              // kind
     order._id,                         // refId
@@ -267,6 +288,89 @@ export async function assignTaskerService(order) {
   );
 
   return { suggestion, suggestTaskers };
+}
+
+// Check if order can be cancelled by customer
+export async function canCancelOrderByCustomer({ orderId, customerId }) {
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return { canCancel: false, reason: "Không tìm thấy đơn hàng." };
+    }
+
+    if (customerId && String(order.customer_id) !== String(customerId)) {
+      return { canCancel: false, reason: "Người dùng không có quyền hủy đơn này." };
+    }
+
+    const validStatus = ["pending", "assigned", "accepted"];
+    if (!validStatus.includes(order.status)) {
+      return { 
+        canCancel: false, 
+        reason: "Đơn hàng chỉ có thể hủy khi ở trạng thái: chờ xác nhận, đã gán tasker, hoặc tasker đã nhận." 
+      };
+    }
+
+    const now = new Date();
+
+    // For scheduled orders
+    if (order.type === "scheduled") {
+      const scheduledAt = new Date(order.scheduled_at);
+      const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      // Can't cancel if less than 1 hour before scheduled time
+      if (diffHours <= 1) {
+        return { 
+          canCancel: false, 
+          reason: "Không được phép hủy 1 tiếng trước giờ hẹn lịch làm." 
+        };
+      }
+
+      // Penalty if less than 5 hours
+      const penaltyAmount = diffHours < 5 ? order.final_amount * 0.3 : 0;
+      return { canCancel: true, penaltyAmount };
+    }
+
+    // For immediate orders - check if tasker has accepted
+    if (order.status === "accepted") {
+      const acceptedLog = await OrderStatusLog.findOne({
+        order_id: orderId,
+        to_status: "accepted"
+      }).sort({ created_at: -1 });
+
+      if (acceptedLog) {
+        const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+        // Can't cancel if more than 15 minutes after tasker accepted
+        if (diffMinutes > 15) {
+          return { 
+            canCancel: false, 
+            reason: "Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn." 
+          };
+        }
+      }
+    }
+
+    // Check daily cancellation limit
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const cancelCountToday = await OrderStatusLog.countDocuments({
+      actor_type: "customer",
+      actor_id: customerId,
+      to_status: "cancelled",
+      created_at: { $gte: startOfDay }
+    });
+
+    if (cancelCountToday >= 5) {
+      return { 
+        canCancel: false, 
+        reason: "Đã hết số lần được phép hủy trong ngày (5 lần)." 
+      };
+    }
+
+    return { canCancel: true, penaltyAmount: 0 };
+  } catch (err) {
+    return { canCancel: false, reason: err.message };
+  }
 }
 
 // customer cancels order
@@ -284,13 +388,15 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       throw new Error("Người dùng không có quyền hủy đơn này.");
     }
 
-    const validStatus = ["accepted", "pending", "assigned"];
-    if (!validStatus.includes(order.status))
-      throw new Error("Đơn hàng chỉ có thể hủy trước khi tasker được chỉ định bắt đầu di chuyển.");
+    const validStatus = ["pending", "assigned", "accepted"];
+    if (!validStatus.includes(order.status)) {
+      throw new Error("Đơn hàng chỉ có thể hủy khi ở trạng thái: chờ xác nhận, đã gán tasker, hoặc tasker đã nhận.");
+    }
 
-    // nếu là đơn đặt trước
+    const now = new Date();
     let penaltyAmount = 0;
 
+    // For scheduled orders
     if (order.type === "scheduled") {
       const scheduledAt = new Date(order.scheduled_at);
       const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -302,28 +408,27 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
 
       // dưới 5 tiếng thì phạt 30% tổng bill
       if (diffHours < 5) {
-        penaltyAmount = order.total_amount * 0.3;
+        penaltyAmount = order.final_amount * 0.3;
       }
     }
 
-    // nếu là đơn đặt liền
-    // lấy thời điểm tasker accept
-    const acceptedLog = await OrderStatusLog.findOne({
-      order_id: orderId,
-      to_status: "accepted"
-    })
-      .sort({ created_at: -1 })
-      .session(session);
+    // For immediate orders - check if tasker has accepted
+    if (order.status === "accepted") {
+      const acceptedLog = await OrderStatusLog.findOne({
+        order_id: orderId,
+        to_status: "accepted"
+      })
+        .sort({ created_at: -1 })
+        .session(session);
 
-    if (!acceptedLog)
-      throw new Error("Accepted timestamp not found");
-
-    const now = new Date();
-    const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
-
-    // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
-    if (diffMinutes > 15)
-      throw new Error("Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn.");
+      if (acceptedLog) {
+        const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+        // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
+        if (diffMinutes > 15) {
+          throw new Error("Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn.");
+        }
+      }
+    }
 
     // kiểm tra số lần huỷ trong ngày
     const startOfDay = new Date();
@@ -336,8 +441,9 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       created_at: { $gte: startOfDay }
     }).session(session);
 
-    if (cancelCountToday >= 5)
+    if (cancelCountToday >= 5) {
       throw new Error("Đã hết số lần được phép hủy trong ngày (5 lần).");
+    }
 
     // đổi trạng thái và log
     await changeOrderStatus({

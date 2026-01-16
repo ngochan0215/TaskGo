@@ -24,6 +24,18 @@ export const acceptTask = async (req, res) =>{
         const tasker_name = tasker.full_name.toString();
         console.log("tasker", tasker);
 
+        // gửi thông báo xác nhận cho tasker
+        await pushNotification(
+            req.userId,
+            "Bạn đã nhận đơn hàng!",
+            `Bạn đã nhận đơn hàng có ID: ${orderId}`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
+
+        // gửi thông báo cho khách hàng
         await pushNotification(
             customerUserId,
             "Đơn hàng đã được chấp nhận!",
@@ -58,10 +70,25 @@ export const confirmDeparture = async (req, res) =>{
         const tasker = await User.findById(req.userId).select("full_name");
         const tasker_name = tasker.full_name || "Nhân viên";
 
+        const now = new Date();
+
+        // gửi thông báo xác nhận cho tasker
+        await pushNotification(
+            req.userId,
+            "Bạn đã xác nhận bắt đầu khởi hành đến điểm đến!",
+            `Bạn đã xác nhận khởi hành cho đơn hàng có ID: ${orderId}.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
+
+        // gửi thông báo cho khách
         await pushNotification(
             customerUserId,
             "Tasker đang trên đường đến!",
-            `Tasker ${tasker_name} đã xác nhận khởi hành đến địa điểm của bạn.`,
+            `Tasker ${tasker_name} đã xác nhận khởi hành đến địa điểm của bạn. 
+                Hãy để ý điện thoại trong thời gian này nhé.`,
             "order",
             "Order",
             orderId,
@@ -91,65 +118,40 @@ export const denyTask = async (req, res) =>{
         const tasker = await User.findById(req.userId);
         const tasker_name = tasker.full_name.toString();
 
+        // thông báo xác nhận cho tasker
         await pushNotification(
-            customerUserId,
-            "Đơn hàng đã bị tasker từ chối",
-            `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm tasker khác cho bạn.`,
+            req.userId,
+            "Bạn đã từ chối đơn hàng!",
+            `Bạn đã từ chối đơn hàng có ID: ${orderId}. Hãy chú ý đến điểm uy tín của mình nhé.`,
             "order",
             "Order",
             orderId,
             "unread"
         );
+
+        // thông báo cho khách
+        // await pushNotification(
+        //     customerUserId,
+        //     "Đơn hàng đã bị tasker từ chối",
+        //     `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm tasker khác cho bạn.`,
+        //     "order",
+        //     "Order",
+        //     orderId,
+        //     "unread"
+        // );
 
         const newTasker = await denyTaskRequest(req.userId, orderId, reason);
 
         await pushNotification(
-            newTasker.taskerId,
+            newTasker.user_id,
             "Bạn có đơn hàng mới.",
-            `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}).`,
+            `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}). 
+                Vui lòng xác nhận sớm trong vòng 2 phút kể từ lúc nhận thông báo.`,
             "order",
             "Order",
             orderId,
             "unread"
         );
-
-        // const notification = await Notification.create({
-        //     user_id: user_id,
-        //     title: "Đơn hàng đã bị từ chối",
-        //     content: `Tasker ${tasker_name} đã từ chối đơn hàng của bạn. Hệ thống đang tìm
-        //     tasker khác cho bạn.`,
-        //     type: "order",
-        //     reference: { kind: "Order", refId: orderId },
-        //     status: "unread",
-        // });
-
-        // const io = getSocketInstance();
-        // io.to(`user:${user_id}`).emit("notification", {
-        //     id: notification._id,
-        //     title: notification.title,
-        //     content: notification.message,
-        //     type: notification.type,
-        //     created_at: notification.created_at,
-        //     reference: notification.reference,
-        // });
-
-        // const newTaskerNoti = await Notification.create({
-        //     user_id: newTasker.taskerId,
-        //     title: "Bạn có đơn hàng mới.",
-        //     message: `Bạn vừa được chỉ định thực hiện đơn hàng mới (ID: ${orderId}).`,
-        //     type: "order",
-        //     reference: { kind: "Order", refId: orderId },
-        //     status: "unread",
-        // });
-
-        //  io.to(`user:${newTasker.taskerId}`).emit("notification", {
-        //     id: newTaskerNoti._id,
-        //     title: newTaskerNoti.title,
-        //     content: newTaskerNoti.content,
-        //     type: newTaskerNoti.type,
-        //     created_at: newTaskerNoti.created_at,
-        //     reference: newTaskerNoti.reference,
-        // });
 
         res.status(200).json({ message: "Order denied and assign task to another tasker successfully" });
     }
@@ -175,10 +177,21 @@ export const confirmArriving = async (req, res) => {
         const tasker = await User.findById(req.userId);
         const taskerName = tasker.full_name ?? "Nhân viên";
 
+        // xác nhận với tasker
+        await pushNotification(
+            req.userId,
+            "Bạn đã xác nhận đến điểm đến!",
+            `Bạn đã xác nhận đến điểm đến. Hãy nhanh chóng liên lạc với khách hàng nhé.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
+        // thông báo cho khách
         await pushNotification(
             customerUserId,
             "Tasker đã đến nơi!",
-            `Tasker ${taskerName} đã đến địa điểm của bạn.`,
+            `Tasker ${taskerName} đã đến địa điểm của bạn. Vui lòng chú ý điện thoại.`,
             "order",
             "Order",
             orderId,
@@ -209,10 +222,23 @@ export const confirmStart = async (req, res) => {
         const tasker = await User.findById(req.userId).select("full_name");
         const taskerName = tasker?.full_name || "Nhân viên";
 
+        // xác nhận với tasker
+        await pushNotification(
+            req.userId,
+            "Bạn đã xác nhận bắt đầu đơn hàng!",
+            `Bạn đã xác nhận bắt đầu thực hiện đơn hàng có ID: ${orderId}. 
+                Hãy cố gắng hoàn thành tốt và đúng giờ nhé.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
+        // gửi cho khách
         await pushNotification(
             customerUserId,
             "Công việc đã được bắt đầu",
-            `Tasker ${taskerName} đã bắt đầu thực hiện dịch vụ.`,
+            `Tasker ${taskerName} đã bắt đầu thực hiện dịch vụ. 
+                Nếu có thắc mắc hoặc cần hỗ trợ, hãy liên lạc với tasker nhé.`,
             "order",
             "Order",
             orderId,
@@ -243,10 +269,22 @@ export const confirmComplete = async (req, res) => {
         const tasker = await User.findById(req.userId).select("full_name");
         const taskerName = tasker?.full_name || "Anoymous";
 
+        // xác nhận với tasker
+        await pushNotification(
+            req.userId,
+            "Bạn đã xác nhận hoàn thành đơn hàng!",
+            `Bạn đã xác nhận hoàn thành đơn hàng có ID: ${orderId}.
+                Nhớ đánh giá khách hàng nhé.`,
+            "order",
+            "Order",
+            orderId,
+            "unread"
+        );
+        // thông báo cho khách
         await pushNotification(
             customerUserId,
             "Dịch vụ đã hoàn thành",
-            `Tasker ${taskerName} đã hoàn tất đơn hàng của bạn.`,
+            `Tasker ${taskerName} đã xác nhận hoàn tất đơn hàng của bạn. Hãy đánh giá tasker nhé.`,
             "order",
             "Order",
             orderId,

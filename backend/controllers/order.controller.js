@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Voucher, VoucherUsage, Order, Customer, User } from "../models/index.js";
+import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -8,7 +8,9 @@ import {
   getAllOrdersByCustomerIdService,
   createOrderService,
   verifyCustomerOrderStats,
-  getOrderTrendsService, assignTaskerService
+  getOrderTrendsService,
+  assignTaskerService,
+  canCancelOrderByCustomer
 } from "../services/order.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
@@ -46,16 +48,112 @@ export const getOrderById = async (req, res) => {
   }
 };
 
+// Get order details with reviews and receipt for customer activity page
+export const getOrderDetailsForCustomer = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const customerId = req.userId;
+
+    // Get order with all populated fields
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng."
+      });
+    }
+
+    // Verify ownership
+    if (String(order.customer_id._id || order.customer_id) !== String(customerId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem đơn hàng này."
+      });
+    }
+
+    // Get receipt
+    const receipt = await Receipt.findOne({ order_id: orderId }).lean();
+
+    // Get reviews (customer reviewing tasker)
+    const review = await Review.findOne({
+      order_id: orderId,
+      reviewer_id: customerId,
+      reviewee_role: "tasker",
+      status: "visible"
+    })
+      .populate('reviewer_id', 'full_name avatar_url')
+      .populate('reviewee_id', 'full_name avatar_url')
+      .lean();
+
+    // Check if can cancel
+    const cancelCheck = await canCancelOrderByCustomer({
+      orderId: order._id,
+      customerId: customerId
+    });
+
+    res.status(200).json({
+      success: true,
+      order,
+      receipt: receipt || null,
+      review: review || null,
+      canCancel: cancelCheck.canCancel,
+      cancelReason: cancelCheck.reason || null,
+      penaltyAmount: cancelCheck.penaltyAmount || 0
+    });
+
+  } catch (err) {
+    console.error("Error in getOrderDetailsForCustomer:", err);
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
-    const { customerId } = req.params || req.userId;
+    // Use customerId from params if provided and not "me", otherwise use authenticated user's ID
+    const customerId = req.params.customerId 
+      ? req.params.customerId : req.userId;
+    
+    console.log("customerId: ", customerId);
+    // Extract query parameters
+    const { status, category, page = 1, limit = 50 } = req.query;
 
     const orders = await getAllOrdersByCustomerIdService({
       customerId,
-      ...req.query,
+      status,
+      category, // "upcoming" or "history"
+      page: Number(page),
+      limit: Number(limit),
     });
     
-    res.status(200).json({ success: true, orders });
+    // Populate receipt for payment method (if exists)
+    const ordersWithReceipts = await Promise.all(
+      orders.map(async (order) => {
+        const receipt = await Receipt.findOne({ order_id: order._id }).lean();
+        return {
+          ...order,
+          receipt: receipt || null,
+        };
+      })
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      orders: ordersWithReceipts,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: ordersWithReceipts.length
+      }
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
@@ -74,51 +172,10 @@ export const createOrder = async (req, res) => {
     const order = result.order;
     console.log("RESULT ORDER: ", order);
 
-    // const order = result.order;
-    // const assignedTasker = result.assignedTasker;
-    // console.log("ORDER: ", order);
-    // console.log("ASSIGNED TASKER: ", assignedTasker);
-
-    // const io = getSocketInstance();
-
-    // io.to(`user:${req.userId}`).emit("order-created", {
-    //   order_id: order._id,
-    //   order: order,
-    // });
-
-    // console.log("Emitted order-created to user:", req.userId);
-
-    // // Gợi ý tasker dựa trên thuật toán xếp hạng
-    // const taskers = await buildTaskerRanking(order._id);
-    // console.log("Tasker (buildTaskerRanking): ", taskers);
-
-    // if (Array.isArray(taskers)) {
-    //   console.log("Taskers to notify:", taskers);
-    //   for (const tasker of taskers) {
-    //     if (tasker._id) {
-    //       console.log("Notifying tasker:", tasker._id);
-    //       io.to(`user:${tasker._id}`).emit("suggest-tasker", {
-    //         order_id: result._id,
-    //         customer_id: req.userId,
-    //         suggestion: tasker,
-    //       });
-    //       console.log("Emitted suggest-tasker to tasker:", tasker._id);
-    //     }
-    //   }
-    // }
-
-    let assignedTasker = null;
-    if (order.type === "immediate") {
-      const { suggestion } = await assignTaskerService(order);
-      //console.log("SUGGESTION TASKER (createOrderController): ", suggestion);
-      assignedTasker = suggestion;
-    }
-
     return res.status(201).json({
       success: true,
       message: "Tạo đơn hàng thành công.",
       order: order,
-      assignedTasker: assignedTasker,
     });
 
   } catch (err) {
@@ -185,6 +242,84 @@ export const getOrderTrends = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Find and assign tasker for an order
+export const findTaskerForOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const customerId = req.userId;
+
+    // Get order as Mongoose document (not lean) because assignTaskerService needs to call save()
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng."
+      });
+    }
+
+    // Check if order belongs to the customer
+    const orderCustomerId = order.customer_id?._id || order.customer_id;
+    if (String(orderCustomerId) !== String(customerId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập đơn hàng này."
+      });
+    }
+
+    // Check if order already has a tasker assigned and is not in pending status
+    if (order.tasker_id && order.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Đơn hàng đã được gán tasker và không thể tìm lại.",
+        order: order.toObject()
+      });
+    }
+
+    // If order is not pending, don't allow finding tasker
+    if (order.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể tìm tasker cho đơn hàng ở trạng thái "${order.status}".`
+      });
+    }
+
+    // Only find tasker for immediate orders
+    if (order.type !== "immediate") {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ có thể tìm tasker cho đơn hàng đặt liền."
+      });
+    }
+
+    // Find and assign tasker
+    const { suggestion, suggestTaskers } = await assignTaskerService(order);
+
+    // Refresh order to get updated data
+    await order.populate('tasker_id', 'full_name phone_number email');
+    const updatedOrder = await getOrderByIdService(orderId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã tìm thấy tasker phù hợp.",
+      order: updatedOrder,
+      assignedTasker: suggestion,
+      suggestedTaskers: suggestTaskers
+    });
+
+  } catch (err) {
+    console.log("Error in findTaskerForOrder:", err);
+    return res.status(400).json({
       success: false,
       message: err.message
     });

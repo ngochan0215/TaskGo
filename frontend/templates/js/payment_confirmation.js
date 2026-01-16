@@ -593,11 +593,12 @@ async function submitOrder() {
 
     if (payment_method === "cash") {
         // dọn draft sau khi tạo đơn thành công với tiền mặt
-        bookingDraft = null;
-        voucherDraft = null;
-        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-        localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+        // bookingDraft = null;
+        // voucherDraft = null;
+        // localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        // localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
 
+        console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS: ", bookingDraft);
         location.href = "./ordering_success.html";
     }
     else if (payment_method === "bank_transfer") {
@@ -616,10 +617,10 @@ async function submitOrder() {
         }));
 
         // dọn draft sau khi đã lưu paymentPending
-        bookingDraft = null;
-        voucherDraft = null;
-        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-        localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+        // bookingDraft = null;
+        // voucherDraft = null;
+        // localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        // localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
 
         // Redirect sang PayOS
         window.location.href = paymentLink.checkoutUrl;

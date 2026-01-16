@@ -26,11 +26,11 @@ const orderStatusLogSchema = new mongoose.Schema(
       required: true
     },
 
-    created_at: { type: Date, default: Date.now },
-
     reason: { type: String  }
   },
-  { versionKey: false }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" }
+  }
 );
 
 const OrderStatusLog = mongoose.models.OrderStatusLog || mongoose.model("OrderStatusLog", orderStatusLogSchema);
