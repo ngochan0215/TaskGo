@@ -8,11 +8,10 @@ import {
   getAllOrdersByCustomerIdService,
   createOrderService,
   verifyCustomerOrderStats,
-  getOrderTrendsService
+  getOrderTrendsService, assignTaskerService
 } from "../services/order.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
-import { buildTaskerRanking } from "../services/taskers.service.js";
 
 export const getAllOrders = async (req, res) => {
   try {
@@ -63,7 +62,7 @@ export const getAllOrdersByCustomerId = async (req, res) => {
 };
 
 export const createOrder = async (req, res) => {
-  console.log("req.body", req.body);
+  console.log("req.body in createOrder", req.body);
   try {
     console.log("Creating order for user:", req.userId);
 
@@ -72,40 +71,54 @@ export const createOrder = async (req, res) => {
       ...req.body,
     });
 
-    console.log("ORDER: ", result);
-    const io = getSocketInstance();
+    const order = result.order;
+    console.log("RESULT ORDER: ", order);
 
-    io.to(`user:${req.userId}`).emit("order-created", {
-      order_id: result._id,
-      order: result,
-    });
+    // const order = result.order;
+    // const assignedTasker = result.assignedTasker;
+    // console.log("ORDER: ", order);
+    // console.log("ASSIGNED TASKER: ", assignedTasker);
 
-    console.log("Emitted order-created to user:", req.userId);
+    // const io = getSocketInstance();
 
-    // Gợi ý tasker dựa trên thuật toán xếp hạng
-    const taskers = await buildTaskerRanking(result.order._id);
-    console.log("Tasker ", taskers);
+    // io.to(`user:${req.userId}`).emit("order-created", {
+    //   order_id: order._id,
+    //   order: order,
+    // });
 
-    if (Array.isArray(taskers)) {
-      console.log("Taskers to notify:", taskers);
-      for (const tasker of taskers) {
-        if (tasker._id) {
-          console.log("Notifying tasker:", tasker._id);
-          io.to(`user:${tasker._id}`).emit("suggest-tasker", {
-            order_id: result._id,
-            customer_id: req.userId,
-            suggestion: tasker,
-          });
-          console.log("Emitted suggest-tasker to tasker:", tasker._id);
-        }
-      }
+    // console.log("Emitted order-created to user:", req.userId);
+
+    // // Gợi ý tasker dựa trên thuật toán xếp hạng
+    // const taskers = await buildTaskerRanking(order._id);
+    // console.log("Tasker (buildTaskerRanking): ", taskers);
+
+    // if (Array.isArray(taskers)) {
+    //   console.log("Taskers to notify:", taskers);
+    //   for (const tasker of taskers) {
+    //     if (tasker._id) {
+    //       console.log("Notifying tasker:", tasker._id);
+    //       io.to(`user:${tasker._id}`).emit("suggest-tasker", {
+    //         order_id: result._id,
+    //         customer_id: req.userId,
+    //         suggestion: tasker,
+    //       });
+    //       console.log("Emitted suggest-tasker to tasker:", tasker._id);
+    //     }
+    //   }
+    // }
+
+    let assignedTasker = null;
+    if (order.type === "immediate") {
+      const { suggestion } = await assignTaskerService(order);
+      //console.log("SUGGESTION TASKER (createOrderController): ", suggestion);
+      assignedTasker = suggestion;
     }
 
     return res.status(201).json({
       success: true,
-      message: "Order created successfully.",
-      order: result,
-      assignedTasker: result.assignedTasker,
+      message: "Tạo đơn hàng thành công.",
+      order: order,
+      assignedTasker: assignedTasker,
     });
 
   } catch (err) {

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Receipt, Order } from "../models";
+import { Receipt, Order } from "../models/index.js";
 
 export const createReceipt = async (req, res) => {
   const session = await mongoose.startSession();

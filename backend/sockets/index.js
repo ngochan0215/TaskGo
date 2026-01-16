@@ -7,6 +7,7 @@ import registerOrderHandlers from "./order.handler.js";
 import { userSocketsMap } from "./presence.js";
 
 export function initSocket(httpServer) {
+  console.log("IM CALLED");
   const io = new Server(httpServer, {
     cors: {
       origin: "*", 

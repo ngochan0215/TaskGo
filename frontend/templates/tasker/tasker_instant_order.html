@@ -28,11 +28,9 @@
   <body
     class="bg-[#95DA97] flex justify-center py-8 font-montserrat min-h-screen"
   >
-    <!-- Khung "điện thoại" -->
     <div
       class="w-full max-w-xs bg-[#EAFED9] rounded-3xl shadow-xl overflow-hidden flex flex-col"
     >
-      <!-- HEADER -->
       <header class="bg-[#95DA97] px-4 py-3 flex items-center justify-between">
         <div class="flex items-center">
           <div
@@ -59,9 +57,7 @@
         </div>
       </header>
 
-      <!-- MAIN -->
       <main class="flex-1 pt-6 pb-6 flex flex-col gap-4">
-        <!-- CARD ĐƠN -->
         <section
           class="bg-[#FFFFFF] rounded-[32px] shadow-md px-5 py-5 flex flex-col gap-4 w-[90%] mx-auto"
         >
@@ -146,7 +142,6 @@
         </div>
       </main>
 
-      <!-- FOOTER -->
       <footer class="bg-[#95DA97] border-t border-[#5C956C]">
         <nav class="flex justify-around py-2 text-xs">
           <a
@@ -181,6 +176,13 @@
           </a>
         </nav>
       </footer>
+
+      <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+      <script type="module">
+          import { initSocket } from "../js/socket.js";
+
+          initSocket();
+      </script>
     </div>
   </body>
 </html>

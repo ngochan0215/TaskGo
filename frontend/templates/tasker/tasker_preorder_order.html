@@ -215,6 +215,7 @@
           </div>
         </section>
       </main>
+
       <footer class="bg-[#95DA97] border-t border-[#5C956C]">
         <nav class="flex justify-around py-2 text-xs">
           <a
@@ -249,6 +250,13 @@
           </a>
         </nav>
       </footer>
+
+      <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+      <script type="module">
+          import { initSocket } from "../js/socket.js";
+
+          initSocket();
+      </script>
     </div>
   </body>
 </html>

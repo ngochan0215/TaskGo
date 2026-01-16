@@ -59,19 +59,19 @@
     <footer>
         <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
             <div class="flex justify-around py-2 text-base">
-                <a href="#" class="flex flex-col items-center text-primary-500">
+                <a href="../customer_home.html" class="flex flex-col items-center text-primary-500">
                     <span class="material-symbols-outlined text-4xl">house</span>
                     Trang chủ
                 </a>
-                <a href="#" class="flex flex-col items-center text-white">
+                <a href="../customer_activity.html" class="flex flex-col items-center text-white">
                     <span class="material-symbols-outlined text-4xl">news</span>
                     Hoạt động
                 </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
+                <a href="../../notification.html" class="flex flex-col items-center text-primary-500">
                     <span class="material-symbols-outlined text-4xl">chat</span>
                     Tin nhắn
                 </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
+                <a href="../../notification.html" class="flex flex-col items-center text-primary-500">
                     <span class="material-symbols-outlined text-4xl">lightbulb</span>
                     Thông báo
                 </a>
@@ -79,6 +79,12 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
     <script>
         const bookingDraft = localStorage.getItem("bookingDraft");
         console.log("BOOKING DRAFT: ", bookingDraft);

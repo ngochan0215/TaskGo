@@ -12,6 +12,7 @@ export async function pushNotification(userId, title, content, type, kind, refId
     });
 
     const io = getSocketInstance();
+    
     io.to(`user:${userId}`).emit("notification", {
         id: notification._id,
         title: notification.title,

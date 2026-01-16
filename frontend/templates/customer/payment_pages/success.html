@@ -213,12 +213,15 @@
             <div class="loader"></div>
             <p class="status-message">Đang xác nhận thanh toán...</p>
         </div>
-
-        <!-- <div class="hidden" id="actionSection">
-            <a href="/customer/scheduled.html" class="btn">Xem đơn hàng của bạn</a>
-        </div> -->
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
+    
     <script>
         // Lấy orderId từ URL query params
         const urlParams = new URLSearchParams(window.location.search);

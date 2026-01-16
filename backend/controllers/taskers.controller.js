@@ -323,7 +323,7 @@ export const updateWorkingStatus = async (req, res) => {
     const userId = req.userId;
     const { working_status } = req.body;
 
-    if (!["available", "inactive"].includes(working_status)) {
+    if (!["available", "offline"].includes(working_status)) {
       return res.status(400).json({
         success: false,
         message: "Trạng thái làm việc không hợp lệ, chỉ được cập nhật sang Không hoạt động hoặc Đang rảnh."

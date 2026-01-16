@@ -253,6 +253,13 @@
     </div>
 </footer>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script type="module">
+    import { initSocket } from "../js/socket.js";
+
+    initSocket();
+</script>
+
 <script>
     let token = localStorage.getItem("token");
     if (!token) {

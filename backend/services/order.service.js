@@ -3,6 +3,7 @@ import { Task, Order, OrderStatusLog, Address,
   Voucher, Receipt, VoucherUsage, Customer, 
  } from "../models/index.js";
  import { suggestTasker } from "./taskers.service.js";
+ import { pushNotification } from "./notification.service.js";
 
 // Get all orders with optional filters + pagination
 export async function getAllOrdersService({
@@ -185,38 +186,87 @@ export async function createOrderService({
         await voucher.save({ session });
       }
 
-      // TODO: thêm logic đặt liền
-      if (type === "immediate") {
-        const suggestion = await suggestTasker(order[0]._id, {});
-        console.log("SUGGESTION TASKER IN CREATE ORDER: ", suggestion);
+      // if (type === "immediate") {
+      //   const { suggestTaskers, suggestion } = await suggestTasker(order[0]._id, {});
 
-        if (!suggestion) 
-          throw new Error("Hiện tại chưa tìm thấy tasker phù hợp.");
+      //   console.log("SUGGESTION TASKER (createOrderService): ", suggestion);
+      //   console.log("SUGGESTING TASKERS (createOrderService): ", suggestTaskers);
 
-        order[0].tasker_id = suggestion.taskerId;
-        await order[0].save({ session });
+      //   if (!suggestion || !suggestTaskers) {
+      //     throw new Error("Hiện tại chưa tìm thấy tasker phù hợp.");
+      //   }
 
-        await changeOrderStatus({
-          orderId: order[0]._id,
-          toStatus: "assigned",
-          actorType: "system",
-          actorId: null,
-          session
-        });
+      //   order[0].tasker_id = suggestion.taskerId;
+      //   await order[0].save({ session });
 
-        await session.commitTransaction();
-        return { order: order[0], assignedTasker: suggestion }      
-      }
+      //   await changeOrderStatus({
+      //     orderId: order[0]._id,
+      //     toStatus: "assigned",
+      //     actorType: "system",
+      //     actorId: null,
+      //     session
+      //   });
+
+      //   await session.commitTransaction();
+      //   return { order: order[0], assignedTasker: suggestion }      
+      // }
 
       // nếu đặt lịch trước thì chưa gán tasker liền
       await session.commitTransaction();
-      return { order: order[0], assignedTasker: null };
+      return { order: order[0] };
 
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
       throw new Error(err.message);
     }
+}
+
+export async function assignTaskerService(order) {
+  console.log("ORDER (assignTaskerService): ", order);
+
+  const { suggestTaskers, suggestion } = await suggestTasker(order._id);
+
+  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+
+  if (!suggestion || !suggestTaskers) {
+    throw new Error("Không tìm thấy tasker phù hợp.");
+  }
+
+  order.tasker_id = suggestion.taskerId;
+  await order.save();
+
+  await changeOrderStatus({
+    orderId: order._id,
+    toStatus: "assigned",
+    actorType: "system",
+    actorId: null,
+  });
+
+  // thông báo cho khách
+  await pushNotification(
+    order.customer_id,
+    "Tạo đơn hàng thành công",
+    "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  // thông báo cho tasker được gán
+  await pushNotification(
+    suggestion.user_id,                 // userId (tasker user)
+    "Có đơn hàng mới",
+    "Bạn có một đơn hàng mới phù hợp, hãy phản hồi sớm.",
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  return { suggestion, suggestTaskers };
 }
 
 // customer cancels order
