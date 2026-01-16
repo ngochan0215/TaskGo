@@ -9,8 +9,10 @@ import { userSocketsMap } from "./presence.js";
 export function initSocket(httpServer) {
   console.log("IM CALLED");
   const io = new Server(httpServer, {
+    pingTimeout: 60000,
+    pingInterval: 10000,
     cors: {
-      origin: "*", 
+      origin: "*",
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -31,6 +33,7 @@ export function initSocket(httpServer) {
 
     userSocketsMap.get(userId).add(socket.id);
 
+    console.log("Current userSocketsMap:", userSocketsMap);
     socket.join(`user:${userId}`);
 
     if (role === "tasker") {
@@ -50,7 +53,7 @@ export function initSocket(httpServer) {
   });
 
   registerChatHandlers(io);
-  registerNotificationHandlers(io);
+//   registerNotificationHandlers(io);
   registerOrderHandlers(io);
 
   setSocketInstance(io);

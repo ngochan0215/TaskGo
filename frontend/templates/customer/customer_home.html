@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,7 @@
     <link rel="stylesheet" href="../../public/css/output.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
     <link rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <style>
         .modal {
             display: none;
@@ -19,13 +20,15 @@
             width: 100%;
             height: 100%;
             overflow: auto;
-            background-color: rgba(0,0,0,0.4);
+            background-color: rgba(0, 0, 0, 0.4);
             align-items: center;
             justify-content: center;
         }
+
         .modal.show {
             display: flex;
         }
+
         .modal-content {
             background-color: #fefefe;
             margin: auto;
@@ -37,10 +40,19 @@
             position: relative;
             animation: fadeIn 0.3s;
         }
+
         @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(-20px);}
-            to {opacity: 1; transform: translateY(0);}
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
+
         .close-modal {
             color: #aaa;
             float: right;
@@ -48,6 +60,7 @@
             font-weight: bold;
             cursor: pointer;
         }
+
         .close-modal:hover,
         .close-modal:focus {
             color: black;
@@ -56,50 +69,55 @@
         }
     </style>
 </head>
+
 <body class="bg-primary-100 min-h-screen font-montserrat">
 
-<header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
-    <div class="flex items-center justify-between px-4 relative">
-        <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-            <a href="#"><img src="../../public/images/taskgo-logo.png" alt=""></a>
+    <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
+        <div class="flex items-center justify-between px-4 relative">
+            <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
+                <a href="#"><img src="../../public/images/taskgo-logo.png" alt=""></a>
+            </div>
+
+            <h1 class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2">Trang chủ</h1>
+
+            <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
+                <a href="#" class="text-dark-900 font-bold border-b-2 border-primary-500">Trang chủ</a>
+                <a href="./customer_activity.html"
+                    class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Hoạt động</a>
+                <a href="../chat.html" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Tin
+                    nhắn</a>
+                <a href="../notification.html"
+                    class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Thông báo</a>
+            </nav>
+
+            <div id="menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer">
+                <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
+            </div>
+
+            <div class="hidden md:block w-10"></div>
         </div>
+    </header>
 
-        <h1 class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2">Trang chủ</h1>
-
-        <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
-            <a href="#" class="text-dark-900 font-bold border-b-2 border-primary-500">Trang chủ</a>
-            <a href="./customer_activity.html" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Hoạt động</a>
-            <a href="../chat.html" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Tin nhắn</a>
-            <a href="../notification.html" class="text-primary-500 hover:text-dark-900 font-medium transition-colors">Thông báo</a>
+    <div id="mobile-menu"
+        class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden">
+        <nav class="flex flex-col p-4 space-y-4">
+            <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
+                <span class="material-symbols-outlined">house</span> <span>Trang chủ</span>
+            </a>
+            <a href="./customer_activity.html" class="flex items-center space-x-3 text-primary-500 font-medium">
+                <span class="material-symbols-outlined">news</span> <span>Hoạt động</span>
+            </a>
+            <a href="../chat.html" class="flex items-center space-x-3 text-primary-500 font-medium">
+                <span class="material-symbols-outlined">chat</span> <span>Tin nhắn</span>
+            </a>
+            <a href="../notification.html" class="flex items-center space-x-3 text-primary-500 font-medium">
+                <span class="material-symbols-outlined">lightbulb</span> <span>Thông báo</span>
+            </a>
         </nav>
-
-        <div id="menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer">
-            <span class="material-symbols-outlined text-primary-500 text-4xl">menu</span>
-        </div>
-
-        <div class="hidden md:block w-10"></div>
     </div>
-</header>
 
-<div id="mobile-menu" class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden">
-    <nav class="flex flex-col p-4 space-y-4">
-        <a href="#" class="flex items-center space-x-3 text-primary-500 font-medium">
-            <span class="material-symbols-outlined">house</span> <span>Trang chủ</span>
-        </a>
-        <a href="./customer_activity.html" class="flex items-center space-x-3 text-primary-500 font-medium">
-            <span class="material-symbols-outlined">news</span> <span>Hoạt động</span>
-        </a>
-        <a href="../chat.html" class="flex items-center space-x-3 text-primary-500 font-medium">
-            <span class="material-symbols-outlined">chat</span> <span>Tin nhắn</span>
-        </a>
-        <a href="../notification.html" class="flex items-center space-x-3 text-primary-500 font-medium">
-            <span class="material-symbols-outlined">lightbulb</span> <span>Thông báo</span>
-        </a>
-    </nav>
-</div>
-
-<main class="p-4 pb-24">
-    <div id="search-container"></div>
+    <main class="p-4 pb-24">
+        <div id="search-container"></div>
 
     <section class="mb-6">
         <div class="flex items-center justify-between mb-2">
@@ -137,33 +155,33 @@
         </div>
     </section>
 
-    <section class="mb-6">
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="font-semibold text-dark-900">Tasker yêu thích</h2>
-            <a href="#" class="text-primary-500 text-sm cursor-pointer hover:underline">Xem tất cả</a>
-        </div>
-        <div id="favorite-taskers-list" class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4 scrollbar-hide">
-        </div>
-    </section>
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="font-semibold text-dark-900">Tasker yêu thích</h2>
+                <a href="#" class="text-primary-500 text-sm cursor-pointer hover:underline">Xem tất cả</a>
+            </div>
+            <div id="favorite-taskers-list" class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4 scrollbar-hide">
+            </div>
+        </section>
 
-    <section class="mb-6">
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="font-semibold text-dark-900">Dịch vụ yêu thích của bạn</h2>
-        </div>
-        <div id="favorite-services" class="grid grid-cols-2 gap-3"></div>
-    </section>
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="font-semibold text-dark-900">Dịch vụ yêu thích của bạn</h2>
+            </div>
+            <div id="favorite-services" class="grid grid-cols-2 gap-3"></div>
+        </section>
 
-    <section class="mb-6">
-        <div class="flex justify-between items-center mb-2">
-            <h2 class="font-semibold text-dark-900">Các dịch vụ phổ biến</h2>
-            <a href="service_listpage.html" class="text-primary-500 text-sm cursor-pointer">Xem thêm →</a>
-        </div>
-        <div id="service-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
-    </section>
+        <section class="mb-6">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="font-semibold text-dark-900">Các dịch vụ phổ biến</h2>
+                <a href="service_listpage.html" class="text-primary-500 text-sm cursor-pointer">Xem thêm →</a>
+            </div>
+            <div id="service-list" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </section>
 
-    <section class="mb-6">
-        <div id="banner-container"></div>
-    </section>
+        <section class="mb-6">
+            <div id="banner-container"></div>
+        </section>
 
     <div class="text-center pb-10">
         <p class="text-gray-500 text-sm">Chưa thấy dịch vụ bạn cần?</p>
@@ -171,73 +189,83 @@
     </div>
 </main>
 
-<div id="tasker-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-modal">&times;</span>
-        <div class="flex flex-col items-center mb-4">
-            <img id="modal-tasker-avatar" src="" alt="Avatar" class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500">
-            <h3 id="modal-tasker-name" class="text-xl font-bold text-dark-900"></h3>
-            <div class="flex items-center text-yellow-500 text-sm font-medium">
-                <span id="modal-tasker-rating"></span>
-                <span class="material-symbols-outlined text-sm ml-1">star</span>
-                <span class="text-gray-400 ml-1" id="modal-tasker-reviews"></span>
+    <div id="tasker-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="flex flex-col items-center mb-4">
+                <img id="modal-tasker-avatar" src="" alt="Avatar"
+                    class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500">
+                <h3 id="modal-tasker-name" class="text-xl font-bold text-dark-900"></h3>
+                <div class="flex items-center text-yellow-500 text-sm font-medium">
+                    <span id="modal-tasker-rating"></span>
+                    <span class="material-symbols-outlined text-sm ml-1">star</span>
+                    <span class="text-gray-400 ml-1" id="modal-tasker-reviews"></span>
+                </div>
             </div>
-        </div>
 
-        <div class="space-y-3 text-sm">
-            <div class="flex justify-between border-b border-gray-100 pb-2">
-                <span class="text-gray-500">Chuyên môn:</span>
-                <span id="modal-tasker-skill" class="font-medium text-dark-900"></span>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="text-gray-500">Chuyên môn:</span>
+                    <span id="modal-tasker-skill" class="font-medium text-dark-900"></span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="text-gray-500">Số việc đã làm:</span>
+                    <span id="modal-tasker-jobs" class="font-medium text-dark-900"></span>
+                </div>
+                <div class="flex justify-between border-b border-gray-100 pb-2">
+                    <span class="text-gray-500">Khu vực:</span>
+                    <span id="modal-tasker-location" class="font-medium text-dark-900"></span>
+                </div>
+                <div>
+                    <span class="text-gray-500 block mb-1">Giới thiệu:</span>
+                    <p id="modal-tasker-bio" class="text-gray-700 italic bg-gray-50 p-2 rounded"></p>
+                </div>
             </div>
-            <div class="flex justify-between border-b border-gray-100 pb-2">
-                <span class="text-gray-500">Số việc đã làm:</span>
-                <span id="modal-tasker-jobs" class="font-medium text-dark-900"></span>
-            </div>
-            <div class="flex justify-between border-b border-gray-100 pb-2">
-                <span class="text-gray-500">Khu vực:</span>
-                <span id="modal-tasker-location" class="font-medium text-dark-900"></span>
-            </div>
-            <div>
-                <span class="text-gray-500 block mb-1">Giới thiệu:</span>
-                <p id="modal-tasker-bio" class="text-gray-700 italic bg-gray-50 p-2 rounded"></p>
-            </div>
-        </div>
 
-        <div class="mt-6 flex gap-3">
-            <button class="flex-1 py-2 rounded-lg border border-primary-500 text-primary-500 font-medium hover:bg-primary-50">Nhắn tin</button>
-            <button class="flex-1 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 shadow-md">Đặt lịch ngay</button>
+            <div class="mt-6 flex gap-3">
+                <button
+                    class="flex-1 py-2 rounded-lg border border-primary-500 text-primary-500 font-medium hover:bg-primary-50">Nhắn
+                    tin</button>
+                <button
+                    class="flex-1 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 shadow-md">Đặt
+                    lịch ngay</button>
+            </div>
         </div>
     </div>
-</div>
 
-<footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
-    <div class="max-w-5xl mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            <div class="flex flex-col justify-center space-y-3">
-                <div class="space-y-1">
-                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
-                    <div class="flex gap-1.5">
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#ReactJS</span>
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
+    <footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
+        <div class="max-w-5xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+                <div class="flex flex-col justify-center space-y-3">
+                    <div class="space-y-1">
+                        <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
+                        <div class="flex gap-1.5">
+                            <span
+                                class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#ReactJS</span>
+                            <span
+                                class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Backend & Database
+                        </h4>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span
+                                class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#NodeJS</span>
+                            <span
+                                class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#MongoDB</span>
+                        </div>
                     </div>
                 </div>
-                <div class="space-y-1">
-                    <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Backend & Database</h4>
-                    <div class="flex flex-wrap gap-1.5">
-                        <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#NodeJS</span>
-                        <span class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600">#MongoDB</span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
-                <div class="flex justify-center items-center space-x-2">
-                    <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
-                    <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
+                <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
+                    <div class="flex justify-center items-center space-x-2">
+                        <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
+                        <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
+                    </div>
+                    <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
+                    <p class="text-[11px] font-medium text-primary-600">SE347.Q14 - NHÓM 8</p>
                 </div>
-                <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>
-                <p class="text-[11px] font-medium text-primary-600">SE347.Q14 - NHÓM 8</p>
-            </div>
 
             <div class="flex flex-col justify-between md:items-end text-center md:text-right py-1">
                 <div class="space-y-1">
@@ -260,17 +288,17 @@
     initSocket();
 </script>
 
-<script>
-    let token = localStorage.getItem("token");
-    if (!token) {
-        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-        window.location.href = "../auth/login-signup.html";
-    }
+    <script>
+        let token = localStorage.getItem("token");
+        if (!token) {
+            alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
 
-    const role = localStorage.getItem("system_role");
-    const _id = localStorage.getItem("user_id");
-    console.log("USER: ", role + " " + _id);
-    console.log("TOKEN: ", token);
+        const role = localStorage.getItem("system_role");
+        const _id = localStorage.getItem("user_id");
+        console.log("USER: ", role + " " + _id);
+        console.log("TOKEN: ", token);
 
     if (role !== "customer") {
         alert("Bạn không phải Khách hàng. Không có quyền truy cập.");
@@ -289,13 +317,13 @@
       active: "#"
     };
 
-    // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
-    const searchContainer = document.getElementById("search-container");
-    const inputDiv = document.createElement("div");
-    inputDiv.className = "mb-4";
-    inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
+        // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
+        const searchContainer = document.getElementById("search-container");
+        const inputDiv = document.createElement("div");
+        inputDiv.className = "mb-4";
+        inputDiv.innerHTML = `<input type="text" placeholder="Tìm kiếm dịch vụ, ưu đãi..."
                    class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
-    searchContainer.appendChild(inputDiv);
+        searchContainer.appendChild(inputDiv);
 
     async function loadFavoriteTasks() {
         try {
@@ -420,8 +448,8 @@
         }
     }
 
-    const bannerContainer = document.getElementById("banner-container");
-    bannerContainer.innerHTML = `
+        const bannerContainer = document.getElementById("banner-container");
+        bannerContainer.innerHTML = `
         <div class="relative">
             <img src="/public/images/dichvudondep.png" class="rounded-2xl w-full h-60 object-cover shadow-lg">
             <div class="absolute bottom-6 left-6 text-white font-bold text-3xl drop-shadow-xl">
@@ -433,125 +461,125 @@
         </div>
     `;
 
-    // const favoriteContainer = document.getElementById("favorite-services");
-    // document.addEventListener("click", e => {
-    //     const btn = e.target.closest(".heart-btn");
-    //     if (!btn) return;
+        // const favoriteContainer = document.getElementById("favorite-services");
+        // document.addEventListener("click", e => {
+        //     const btn = e.target.closest(".heart-btn");
+        //     if (!btn) return;
 
-    //     const heart = btn.querySelector(".heart-icon");
-    //     const item = btn.closest(".service-item");
-    //     const name = item.dataset.name;
-    //     const img = item.dataset.img;
+        //     const heart = btn.querySelector(".heart-icon");
+        //     const item = btn.closest(".service-item");
+        //     const name = item.dataset.name;
+        //     const img = item.dataset.img;
 
-    //     const existingFav = Array.from(favoriteContainer.children)
-    //         .find(c => c.querySelector("p").innerText === name);
+        //     const existingFav = Array.from(favoriteContainer.children)
+        //         .find(c => c.querySelector("p").innerText === name);
 
-    //     if (!existingFav) {
-    //         heart.style.color = "red";
-    //         const favItem = document.createElement("div");
-    //         favItem.className = "service-item";
-    //         favItem.innerHTML = `
-    //             <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-    //             <p class="mt-1 text-sm font-medium">${name}</p>
-    //         `;
-    //         favoriteContainer.appendChild(favItem);
-    //     } else {
-    //         heart.style.color = "white";
-    //         favoriteContainer.removeChild(existingFav);
-    //     }
-    // });
+        //     if (!existingFav) {
+        //         heart.style.color = "red";
+        //         const favItem = document.createElement("div");
+        //         favItem.className = "service-item";
+        //         favItem.innerHTML = `
+        //             <img src="${img}" class="rounded-xl w-full h-48 object-cover">
+        //             <p class="mt-1 text-sm font-medium">${name}</p>
+        //         `;
+        //         favoriteContainer.appendChild(favItem);
+        //     } else {
+        //         heart.style.color = "white";
+        //         favoriteContainer.removeChild(existingFav);
+        //     }
+        // });
 
-    async function loadCustomerStats() {
-        try {
-            const statsRes= await fetch("http://localhost:3000/api/order/statistics/completed-cancelled", 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
+        async function loadCustomerStats() {
+            try {
+                const statsRes = await fetch("http://localhost:3000/api/order/statistics/completed-cancelled",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                const pointsRes = await fetch("http://localhost:3000/api/user/reputation-score",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                console.log("TOKEN: ", token);
+                if (statsRes.status === 401 || pointsRes.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+                    window.location.href = "../auth/login-signup.html";
+                    return;
                 }
-            });
 
-            const pointsRes= await fetch("http://localhost:3000/api/user/reputation-score", 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
+                const statsJson = await statsRes.json();
+                const pointsJson = await pointsRes.json();
+
+                console.log("statistics json: ", statsJson);
+                console.log("points json: ", pointsJson);
+
+                if (!statsJson.success || !pointsJson.success) {
+                    throw new Error("Không lấy được dữ liệu khách hàng");
                 }
-            });
 
-            console.log("TOKEN: ", token);
-            if (statsRes.status === 401 || pointsRes.status === 401) {
-                localStorage.removeItem("token");
-                alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-                window.location.href = "../auth/login-signup.html";
-                return;
-            }
-
-            const statsJson = await statsRes.json();
-            const pointsJson = await pointsRes.json();
-
-            console.log("statistics json: ", statsJson);
-            console.log("points json: ", pointsJson);
-
-            if (!statsJson.success || !pointsJson.success) {
-                throw new Error("Không lấy được dữ liệu khách hàng");
-            }
-
-            const { completed_orders, cancelled_orders } = statsJson.data;
-            console.log("statistics data: ", statsJson.data);
+                const { completed_orders, cancelled_orders } = statsJson.data;
+                console.log("statistics data: ", statsJson.data);
 
             document.getElementById("customer-points").textContent =
                 pointsJson.data?.points ?? 0;
 
-            document.getElementById("customer-completed-orders").textContent =
-                completed_orders;
+                document.getElementById("customer-completed-orders").textContent =
+                    completed_orders;
 
-            document.getElementById("customer-cancelled-orders").textContent =
-                cancelled_orders;
+                document.getElementById("customer-cancelled-orders").textContent =
+                    cancelled_orders;
 
-        } catch (err) {
-            console.error("Load customer stats error:", err);
+            } catch (err) {
+                console.error("Load customer stats error:", err);
+            }
         }
-    }
 
-    async function loadFavoriteTaskers() {
-        try {
-            const res = await fetch("http://localhost:3000/api/user/favorites/taskers", 
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+        async function loadFavoriteTaskers() {
+            try {
+                const res = await fetch("http://localhost:3000/api/user/favorites/taskers",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
 
-            const json = await res.json();
+                const json = await res.json();
 
-            const container = document.getElementById("favorite-taskers-list");
-            container.innerHTML = "";
+                const container = document.getElementById("favorite-taskers-list");
+                container.innerHTML = "";
 
-            if (!json.data || json.data.length === 0) {
-            container.innerHTML = `
+                if (!json.data || json.data.length === 0) {
+                    container.innerHTML = `
                 <p class="text-sm text-gray-400 px-4">Bạn chưa có tasker yêu thích</p>
             `;
-            return;
-            }
+                    return;
+                }
 
-            json.data.forEach(item => {
-                const tasker = item.tasker;
-                const user = item.user;
-                const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
+                json.data.forEach(item => {
+                    const tasker = item.tasker;
+                    const user = item.user;
+                    const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
 
-                const card = document.createElement("div");
-                card.className = "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
-                card.onclick = () => openTaskerModal({
-                    name: user.full_name,
-                    avatar,
-                    rating: tasker.reputation_score || 0,
-                    reviews: tasker.reviews_count || 0,
-                    skill: tasker.skill || "—",
-                    jobs: tasker.total_completed_tasks || 0,
-                    location: tasker.location || "—",
-                    bio: tasker.introduction || ""
-                });
+                    const card = document.createElement("div");
+                    card.className = "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
+                    card.onclick = () => openTaskerModal({
+                        name: user.full_name,
+                        avatar,
+                        rating: tasker.reputation_score || 0,
+                        reviews: tasker.reviews_count || 0,
+                        skill: tasker.skill || "—",
+                        jobs: tasker.total_completed_tasks || 0,
+                        location: tasker.location || "—",
+                        bio: tasker.introduction || ""
+                    });
 
-                card.innerHTML = `
+                    card.innerHTML = `
                     <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:border-primary-500 transition-colors">
                     <img src="${avatar}" class="w-full h-full object-cover">
                     </div>
@@ -564,49 +592,52 @@
                     </div>
                 `;
 
-                container.appendChild(card);
-            });
+                    container.appendChild(card);
+                });
 
-        } catch (err) {
-            console.error("Load favorite taskers error:", err);
+            } catch (err) {
+                console.error("Load favorite taskers error:", err);
+            }
         }
-    }
 
-    const modal = document.getElementById("tasker-modal");
-    const closeModalBtn = document.querySelector(".close-modal");
+        const modal = document.getElementById("tasker-modal");
+        const closeModalBtn = document.querySelector(".close-modal");
 
-    // Hàm mở modal và điền dữ liệu
-    function openTaskerModal(tasker) {
-        document.getElementById("modal-tasker-avatar").src = tasker.avatar;
-        document.getElementById("modal-tasker-name").textContent = tasker.name;
-        document.getElementById("modal-tasker-rating").textContent = tasker.rating;
-        document.getElementById("modal-tasker-reviews").textContent = `(${tasker.reviews} đánh giá)`;
-        document.getElementById("modal-tasker-skill").textContent = tasker.skill;
-        document.getElementById("modal-tasker-jobs").textContent = `${tasker.jobs} việc`;
-        document.getElementById("modal-tasker-location").textContent = tasker.location;
-        document.getElementById("modal-tasker-bio").textContent = tasker.bio;
+        // Hàm mở modal và điền dữ liệu
+        function openTaskerModal(tasker) {
+            document.getElementById("modal-tasker-avatar").src = tasker.avatar;
+            document.getElementById("modal-tasker-name").textContent = tasker.name;
+            document.getElementById("modal-tasker-rating").textContent = tasker.rating;
+            document.getElementById("modal-tasker-reviews").textContent = `(${tasker.reviews} đánh giá)`;
+            document.getElementById("modal-tasker-skill").textContent = tasker.skill;
+            document.getElementById("modal-tasker-jobs").textContent = `${tasker.jobs} việc`;
+            document.getElementById("modal-tasker-location").textContent = tasker.location;
+            document.getElementById("modal-tasker-bio").textContent = tasker.bio;
+
+            modal.classList.add("show");
+        }
 
         modal.classList.add("show");
     }
 
-    closeModalBtn.onclick = function() {
-        modal.classList.remove("show");
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
+        closeModalBtn.onclick = function () {
             modal.classList.remove("show");
         }
-    }
 
-    const menuBtn = document.getElementById("menu-btn");
-    const mobileMenu = document.getElementById("mobile-menu");
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.classList.remove("show");
+            }
+        }
 
-    if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener("click", () => {
-            mobileMenu.classList.toggle("hidden");
-        });
-    }
+        const menuBtn = document.getElementById("menu-btn");
+        const mobileMenu = document.getElementById("mobile-menu");
+
+        if (menuBtn && mobileMenu) {
+            menuBtn.addEventListener("click", () => {
+                mobileMenu.classList.toggle("hidden");
+            });
+        }
 
     loadCustomerStats();
     loadFavoriteTaskers();
@@ -615,4 +646,5 @@
 </script>
 
 </body>
+
 </html>

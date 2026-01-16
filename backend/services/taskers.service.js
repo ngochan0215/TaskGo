@@ -28,22 +28,25 @@ function getDistanceKm(lat1, lon1, lat2, lon2) {
 }
 
 export async function findEligibleTaskers(order) {
-    const io = getSocketInstance();
-    if (!io) return [];
+  const io = getSocketInstance();
+  if (!io) return [];
 
     const onlineUserIds = getOnlineTaskerUserIds(io);
     console.log("ONLINE TASKERS (findEligibleTaskers): ", onlineUserIds);
     if (!onlineUserIds.length) return [];
 
-    const { task_id, address_snapshot: { latitude, longitude } } = order;
+  const {
+    task_id,
+    address_snapshot: { latitude, longitude },
+  } = order;
 
-    // tìm tasker available và online
-    const taskers = await Tasker.find({
-        user_id: { $in: onlineUserIds },
-        working_status: "available",
-        status: { $ne: "resign" },
-        skills: task_id
-    }).lean();
+  // tìm tasker available và online
+  const taskers = await Tasker.find({
+    user_id: { $in: onlineUserIds },
+    working_status: "available",
+    status: { $ne: "resign" },
+    skills: task_id,
+  }).lean();
 
     if (!taskers.length) return [];
     // Lọc theo khoảng cách 
@@ -70,17 +73,17 @@ export async function findEligibleTaskers(order) {
         // console.log("DISTANCE (findEligibleTaskers): ", distance);
         // console.log("TASKER WORKING RADIUS: ", tasker.working_radius);
 
-        if (distance > tasker.working_radius) return null;
+      if (distance > tasker.working_radius) return null;
 
-        return {
-            ...tasker,
-            distance_km: Number(distance.toFixed(2))
-        };
-        })
-        .filter(Boolean);
+      return {
+        ...tasker,
+        distance_km: Number(distance.toFixed(2)),
+      };
+    })
+    .filter(Boolean);
 
-    // Sort theo khoảng cách gần nhất
-    matchedTaskers.sort((a, b) => a.distance_km - b.distance_km);
+  // Sort theo khoảng cách gần nhất
+  matchedTaskers.sort((a, b) => a.distance_km - b.distance_km);
 
     //console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
     // Giới hạn số lượng tasker gửi job
@@ -111,22 +114,35 @@ function getNextBatch(allRanked, offset) {
   return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
 }
 
-export const buildTaskerRanking = async (orderId) => {
+export const buildTaskerRanking = async (orderOrId) => {
   const serviceModel = Service;
   const taskModel = Task;
   const orderModel = Order;
   const customerModel = Customer;
   const userModel = User;
 
-  // validate
-  const order = await orderModel.findById(orderId);
-  if (!order) 
+  let order;
+  // Kiểm tra nếu đầu vào là ID thì mới query, nếu là Object thì dùng luôn
+  if (
+    typeof orderOrId === "string" ||
+    mongoose.Types.ObjectId.isValid(orderOrId)
+  ) {
+    console.log("DEBUG: buildTaskerRanking đang tìm ID từ DB:", orderOrId);
+    order = await orderModel.findById(orderOrId).lean();
+  } else {
+    order = orderOrId;
+  }
+
+  if (!order) {
+    console.error("DEBUG: Không tìm thấy order với tham số:", orderOrId);
     throw new Error("Order not found");
+  }
 
-  const task = await taskModel.findById(order.task_id);
-  if (!task) 
-    throw new Error("Task not found");
+  // 1. Tìm Task (Dùng lean để tăng tốc độ)
+  const task = await taskModel.findById(order.task_id).lean();
+  if (!task) throw new Error("Task not found");
 
+  // 2. Tìm Service
   const service = await serviceModel.findById(task.service_id).lean();
   if (!service) throw new Error("Service not found");
 
@@ -160,25 +176,29 @@ export const buildTaskerRanking = async (orderId) => {
     .lean();
 
   const reputationMap = new Map(
-    reputations.map(u => [String(u._id), u.reputation_score ?? 0])
+    reputations.map((u) => [String(u._id), u.reputation_score ?? 0])
   );
 
-  // tính khoảng cách và thời gian
-   const ranked = (
+  // 6. Tính toán thực tế (Khoảng cách & Thời gian di chuyển)
+  const ranked = (
     await Promise.all(
       eligibleTaskers.map(async (tasker) => {
-        const { latitude, longitude } = tasker.working_area || {};
-        if (!latitude || !longitude) return null;
+        const tLat = tasker.working_area?.latitude;
+        const tLon = tasker.working_area?.longitude;
+
+        if (!tLat || !tLon) return null;
 
         const destination = `${latitude},${longitude}`;
         //console.log("TASKER WORKING AREA (buildTaskerRanking): ", destination);
 
-        const { distance, duration } = await getCachedRouteSummary(
-          origin,
-          destination
-        );
+        try {
+          const { distance, duration } = await getCachedRouteSummary(
+            origin,
+            destination
+          );
 
-        if (!Number.isFinite(distance) || !Number.isFinite(duration)) return null;
+          if (!Number.isFinite(distance) || !Number.isFinite(duration))
+            return null;
 
         return {
           tasker_id: tasker._id,
@@ -191,6 +211,7 @@ export const buildTaskerRanking = async (orderId) => {
     )
   ).filter(Boolean);
 
+  // 7. Sắp xếp: Ưu tiên gần nhất > Nhanh nhất > Uy tín nhất
   ranked.sort(
     (a, b) =>
       a.distance - b.distance ||
@@ -203,22 +224,25 @@ export const buildTaskerRanking = async (orderId) => {
 };
 
 // get the best suitable tasker list for this one customer
-export const suggestTasker = async (orderId, { excludedTaskerIds = [] } = {}) => {
-    const key = String(orderId);
-    if (!rankingCache.has(key)) {
-        console.log("NO CACHE for user, Creating new list", key);
+export const suggestTasker = async (
+  orderId,
+  { excludedTaskerIds = [] } = {}
+) => {
+  const key = String(orderId);
+  if (!rankingCache.has(key)) {
+    console.log("NO CACHE for user, Creating new list", key);
 
-        const ranked = await buildTaskerRanking(orderId);
+    const ranked = await buildTaskerRanking(orderId);
 
-        rankingCache.set(key, {
-            allRanked: ranked,
-            currentBatch: ranked.slice(0, DEFAULT_TASKER_BATCH_SIZE),
-            offset: DEFAULT_TASKER_BATCH_SIZE,
-        });
-    }
+    rankingCache.set(key, {
+      allRanked: ranked,
+      currentBatch: ranked.slice(0, DEFAULT_TASKER_BATCH_SIZE),
+      offset: DEFAULT_TASKER_BATCH_SIZE,
+    });
+  }
 
-    const cache = rankingCache.get(key);
-    const skip = new Set(excludedTaskerIds.map(String));
+  const cache = rankingCache.get(key);
+  const skip = new Set(excludedTaskerIds.map(String));
 
     cache.currentBatch = cache.currentBatch.filter(
         (t) => !skip.has(String(t.taskerId))
@@ -255,28 +279,27 @@ export const acceptTaskRequest = async (taskerUserId, orderId) =>{
         }
         const taskerId = tasker._id;
 
-        const order = await Order.findById(orderId)
-        if (!order) {
-            throw new Error("Order not found")
-        }
-        if (order.status !== "assigned") {
-            throw new Error("Order is not assigned yet!");
-        }
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+    if (order.status !== "assigned") {
+      throw new Error("Order is not assigned yet!");
+    }
 
-        if (!order.tasker_id) {
-            order.tasker_id = taskerUserId;
-        } 
-        else if (order.tasker_id.toString() !== taskerUserId.toString()) {
-            throw new Error("You are not assigned to this order");
-        }
+    if (!order.tasker_id) {
+      order.tasker_id = taskerUserId;
+    } else if (order.tasker_id.toString() !== taskerUserId.toString()) {
+      throw new Error("You are not assigned to this order");
+    }
 
-        // update order status
-        const orderLog = await changeOrderStatus({
-            orderId,
-            toStatus: "accepted",
-            actorType: "tasker",
-            actorId: taskerUserId
-        });
+    // update order status
+    const orderLog = await changeOrderStatus({
+      orderId,
+      toStatus: "accepted",
+      actorType: "tasker",
+      actorId: taskerUserId,
+    });
 
         console.log("ORDER STATUS LOG (acceptTask): ", orderLog);
 
@@ -299,10 +322,10 @@ export const acceptTaskRequest = async (taskerUserId, orderId) =>{
         //     runValidators: true
         // })
 
-        rankingCache.delete(String(order.user_id));
-    } catch (error) {
-        throw new Error(error.message);
-    }
+    rankingCache.delete(String(order.user_id));
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
@@ -324,14 +347,14 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             throw new Error("Order must be in assigned state to be denied")
         }
 
-        // update tasker rejection count
-        await Tasker.updateOne(
-            { user_id: taskerUserId },
-            {
-                $inc: { rejection_count: 1 }
-            },
-            { runValidators: true }
-        );
+    // update tasker rejection count
+    await Tasker.updateOne(
+      { user_id: taskerUserId },
+      {
+        $inc: { rejection_count: 1 },
+      },
+      { runValidators: true }
+    );
 
         // log order status 
         const orderLog = await changeOrderStatus({
@@ -351,12 +374,12 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             reason: reason || "Tasker denied the task"
         });
 
-        const orderLogg = await changeOrderStatus({
-            orderId,
-            toStatus: "pending",
-            actorType: "system",
-            actorId: null,
-        });
+    const orderLogg = await changeOrderStatus({
+      orderId,
+      toStatus: "pending",
+      actorType: "system",
+      actorId: null,
+    });
 
         // tìm tasker khác
         const { suggestTaskers, suggestion } = await suggestTasker(orderId, {
@@ -393,25 +416,25 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
     }
 };
 
-export const confirmDepartureService = async (taskerUserId, orderId) =>{
-    try {
-        console.log(taskerUserId, orderId);
+export const confirmDepartureService = async (taskerUserId, orderId) => {
+  try {
+    console.log(taskerUserId, orderId);
 
-        const tasker = await Tasker.findOne({ user_id: taskerUserId })
-        if (!tasker) {
-            throw new Error("Tasker not found")
-        }
+    const tasker = await Tasker.findOne({ user_id: taskerUserId });
+    if (!tasker) {
+      throw new Error("Tasker not found");
+    }
 
-        const order = await Order.findById(orderId)
-        if (!order) {
-            throw new Error("Order not found")
-        }
-        if (order.tasker_id.toString() !== taskerUserId.toString()) {
-            throw new Error("You are not assigned to this order")
-        }
-        if (order.status !== "accepted") {
-            throw new Error("Order is not accepted")
-        }
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+    if (order.tasker_id.toString() !== taskerUserId.toString()) {
+      throw new Error("You are not assigned to this order");
+    }
+    if (order.status !== "accepted") {
+      throw new Error("Order is not accepted");
+    }
 
         // update order status
         const orderLog = await changeOrderStatus({
@@ -429,66 +452,61 @@ export const confirmDepartureService = async (taskerUserId, orderId) =>{
 };
 
 export const confirmArrivingService = async (taskerUserId, orderId) => {
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) 
-            throw new Error("Order not found");
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerUserId.toString())
-            throw new Error("You are not assigned to this order");
+    if (order.tasker_id.toString() !== taskerUserId.toString())
+      throw new Error("You are not assigned to this order");
 
         if (order.status !== "departed")
             throw new Error("Order must be departed before arriving");
 
-        const orderLog = await changeOrderStatus({
-            orderId,
-            toStatus: "arrived",
-            actorType: "tasker",
-            actorId: taskerUserId
-        });
-
-    } catch (error) {
-        throw new Error(error.message);
-    }
+    const orderLog = await changeOrderStatus({
+      orderId,
+      toStatus: "arrived",
+      actorType: "tasker",
+      actorId: taskerUserId,
+    });
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 export const confirmStartService = async (taskerUserId, orderId) => {
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) 
-            throw new Error("Order not found");
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
 
-        const tasker = await Tasker.findOne({ user_id: taskerUserId })
-        if (!tasker) {
-            throw new Error("Tasker not found")
-        }
-
-        if (order.tasker_id.toString() !== taskerUserId.toString())
-            throw new Error("You are not assigned to this order");
-
-        if (order.status !== "arrived")
-            throw new Error("Tasker must be arrived before starting the task.");
-
-        const orderLog = await changeOrderStatus({
-            orderId,
-            toStatus: "in_progress",
-            actorType: "tasker",
-            actorId: taskerUserId
-        });
-
-    } catch (error) {
-        throw new Error(error.message);
+    const tasker = await Tasker.findOne({ user_id: taskerUserId });
+    if (!tasker) {
+      throw new Error("Tasker not found");
     }
+
+    if (order.tasker_id.toString() !== taskerUserId.toString())
+      throw new Error("You are not assigned to this order");
+
+    if (order.status !== "arrived")
+      throw new Error("Tasker must be arrived before starting the task.");
+
+    const orderLog = await changeOrderStatus({
+      orderId,
+      toStatus: "in_progress",
+      actorType: "tasker",
+      actorId: taskerUserId,
+    });
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 export const confirmCompleteService = async (taskerUserId, orderId) => {
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) 
-            throw new Error("Order not found");
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerUserId.toString())
-            throw new Error("You are not assigned to this order");
+    if (order.tasker_id.toString() !== taskerUserId.toString())
+      throw new Error("You are not assigned to this order");
 
         const tasker = await Tasker.findOne({ user_id: taskerUserId })
         if (!tasker) {
@@ -514,22 +532,20 @@ export const confirmCompleteService = async (taskerUserId, orderId) => {
             actorId: null
         });
 
-        // update tasker completed orders count
-        await Tasker.updateOne(
-            { user_id: taskerUserId },
-            {
-                $inc: { total_completed_tasks: 1 },
-                $set: { working_status: "available" }
-            },
-            { runValidators: true }
-        );
+    // update tasker completed orders count
+    await Tasker.updateOne(
+      { user_id: taskerUserId },
+      {
+        $inc: { total_completed_tasks: 1 },
+        $set: { working_status: "available" },
+      },
+      { runValidators: true }
+    );
 
-        if (order.customer_id) 
-            rankingCache.delete(String(order.customer_id));
-
-    } catch (error) {
-        throw new Error(error.message);
-    }
+    if (order.customer_id) rankingCache.delete(String(order.customer_id));
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 // change order status and log it

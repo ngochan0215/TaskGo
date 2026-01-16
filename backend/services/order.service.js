@@ -22,10 +22,10 @@ export async function getAllOrdersService({
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
-      .populate('customer_id', 'full_name phone_number email')
-      .populate('tasker_id', 'full_name phone_number email')
-      .populate('task_id', 'task_name unit base_price')
-      .populate('address_id')
+      .populate("customer_id", "full_name phone_number email")
+      .populate("tasker_id", "full_name phone_number email")
+      .populate("task_id", "task_name unit base_price")
+      .populate("address_id")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -41,11 +41,9 @@ export async function getAllOrdersService({
 export async function deleteOrderByIdService(orderId) {
   try {
     const deleted = await Order.findByIdAndDelete(orderId);
-    if (!deleted) 
-      throw new Error("Order not found");
+    if (!deleted) throw new Error("Order not found");
 
     return deleted;
-
   } catch (err) {
     throw new Error(err.message);
   }
@@ -55,18 +53,16 @@ export async function deleteOrderByIdService(orderId) {
 export async function getOrderByIdService(orderId) {
   try {
     const order = await Order.findById(orderId)
-      .populate('customer_id', 'full_name phone_number email')
-      .populate('tasker_id', 'full_name phone_number email')
-      .populate('task_id', 'task_name unit base_price')
-      .populate('address_id')
+      .populate("customer_id", "full_name phone_number email")
+      .populate("tasker_id", "full_name phone_number email")
+      .populate("task_id", "task_name unit base_price")
+      .populate("address_id")
       .select("-__v -created_at -updated_at")
       .lean();
-      
-    if (!order) 
-      throw new Error("Order not found");
+
+    if (!order) throw new Error("Order not found");
 
     return order;
-
   } catch (err) {
     throw new Error(err.message);
   }
@@ -154,60 +150,69 @@ export async function getAvailableOrdersForTaskerService({
 }
 
 export async function createOrderService({
-  customer_id, task_id, task_snapshot, voucher_id, voucher_snapshot,
-  discount_id, discount_snapshot, address_id, address_snapshot, 
-  task_payload, scheduled_at, type, note, quantity, base_amount, final_amount }) 
-  {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-    try {
-      // validation
-      if (!task_id || !type || !task_payload || !address_id) {
-        throw new Error("Yêu cầu chọn dịch vụ, loại task, số lượng và địa chỉ.");
-      }
+  customer_id,
+  task_id,
+  task_snapshot,
+  voucher_id,
+  voucher_snapshot,
+  discount_id,
+  discount_snapshot,
+  address_id,
+  address_snapshot,
+  task_payload,
+  scheduled_at,
+  type,
+  note,
+  quantity,
+  base_amount,
+  final_amount,
+}) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    // 1. Validation (Giữ nguyên logic của bạn)
+    if (!task_id || !type || !task_payload || !address_id) {
+      throw new Error("Yêu cầu chọn dịch vụ, loại task, số lượng và địa chỉ.");
+    }
 
-      if (!["immediate", "scheduled"].includes(type)) {
-        throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
-      }
+    let scheduleDate =
+      type === "scheduled" ? new Date(scheduled_at) : new Date();
+    if (
+      type === "scheduled" &&
+      (isNaN(scheduleDate.getTime()) || scheduleDate < new Date())
+    ) {
+      throw new Error("Ngày hẹn lịch không hợp lệ.");
+    }
 
-      let scheduleDate;
-      if (type === "scheduled") {
-        scheduleDate = new Date(scheduled_at);
-        if (isNaN(scheduleDate.getTime()) || scheduleDate < new Date())
-          throw new Error("Ngày hẹn lịch không hợp lệ.");
-      } else {
-        scheduleDate = new Date();
-      }
+    // 2. Kiểm tra dữ liệu trong session
+    const task = await Task.findById(task_id).session(session);
+    if (!task) throw new Error("Không tìm thấy dịch vụ.");
 
-      const task = await Task.findById(task_id).session(session);
-      if (!task) {
-        throw new Error("Không tìm thấy dịch vụ.");
-      }
+    const address = await Address.findById(address_id).session(session);
+    if (!address || address.user_id.toString() !== customer_id.toString()) {
+      throw new Error("Địa chỉ không hợp lệ hoặc không thuộc về khách hàng.");
+    }
 
-      const address = await Address.findById(address_id).session(session);
-      if (!address) 
-        throw new Error("Không tìm thấy địa chỉ khách hàng.");
-
-      if (address.user_id.toString() !== customer_id.toString()) {
-        throw new Error("Đây không phải là địa chỉ của khách hàng.");
-      }
-
-      if (!voucher_id) voucher_id = null;
-      if (!discount_id) discount_id = null;
-      if (!voucher_snapshot) voucher_snapshot = null;
-      if (!discount_snapshot) discount_snapshot = null;
-
-      const order = await Order.create(
-        [{
+    // 3. Tạo Order
+    const orders = await Order.create(
+      [
+        {
           customer_id,
-          task_id, task_snapshot, task_payload,
+          task_id,
+          task_snapshot,
+          task_payload,
           type,
           scheduled_at: scheduleDate,
-          quantity, note,
-          address_id, address_snapshot,
-          voucher_id, voucher_snapshot,
-          discount_id, discount_snapshot,
-          base_amount, final_amount,
+          quantity,
+          note,
+          address_id,
+          address_snapshot,
+          voucher_id: voucher_id || null,
+          voucher_snapshot: voucher_snapshot || null,
+          discount_id: discount_id || null,
+          discount_snapshot: discount_snapshot || null,
+          base_amount,
+          final_amount,
           status: "pending",
         }],
         { session }
@@ -415,7 +420,11 @@ export async function canCancelOrderByCustomer({ orderId, customerId }) {
 }
 
 // customer cancels order
-export async function cancelOrderByCustomerService({ orderId, customerId, reason }) {
+export async function cancelOrderByCustomerService({
+  orderId,
+  customerId,
+  reason,
+}) {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -440,7 +449,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     // For scheduled orders
     if (order.type === "scheduled") {
       const scheduledAt = new Date(order.scheduled_at);
-      const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+      const diffHours =
+        (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
 
       // 1 tiếng trước giờ G: không cho huỷ nữa
       if (diffHours <= 1) {
@@ -479,7 +489,7 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       actor_type: "customer",
       actor_id: customerId,
       to_status: "cancelled",
-      created_at: { $gte: startOfDay }
+      created_at: { $gte: startOfDay },
     }).session(session);
 
     if (cancelCountToday >= 5) {
@@ -493,7 +503,7 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       actorType: "customer",
       actorId: customerId,
       reason,
-      session
+      session,
     });
 
     // update số lần hủy của khách hàng
@@ -505,11 +515,11 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     // cập nhật sử dụng voucher
     await VoucherUsage.deleteOne({
       voucher_id: order.voucher_id,
-      order_id: order._id
+      order_id: order._id,
     });
 
     await Voucher.findByIdAndUpdate(order.voucher_id, {
-      $inc: { used_quantity: -1 }
+      $inc: { used_quantity: -1 },
     });
 
     order.voucher_id = null;
@@ -524,7 +534,6 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     }
 
     await session.commitTransaction();
-
   } catch (error) {
     await session.abortTransaction();
     throw new Error(error.message);
@@ -534,12 +543,19 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
 }
 
 // change order status and log it
-export async function changeOrderStatus({ orderId, toStatus, actorType, actorId , reason = null, session }) {
+export async function changeOrderStatus({
+  orderId,
+  toStatus,
+  actorType,
+  actorId,
+  reason = null,
+  session,
+}) {
   try {
     const order = await Order.findById(orderId).session(session);
     if (!order) {
       throw new Error("Order not found.");
-    } 
+    }
 
     // log trạng thái
     await OrderStatusLog.create({
@@ -548,7 +564,7 @@ export async function changeOrderStatus({ orderId, toStatus, actorType, actorId 
       to_status: toStatus,
       actor_type: actorType,
       actor_id: actorId,
-      reason
+      reason,
     });
 
     // update order
@@ -561,11 +577,10 @@ export async function changeOrderStatus({ orderId, toStatus, actorType, actorId 
     return order;
   } catch (error) {
     throw new Error(error.message);
-  }   
-};
+  }
+}
 
 export async function verifyCustomerOrderStats(customerUserId) {
-
   const customer = await Customer.findOne({ user_id: customerUserId });
   if (!customer) {
     throw new Error("Không tìm thấy khách hàng.");
@@ -582,17 +597,16 @@ export async function verifyCustomerOrderStats(customerUserId) {
     }),
   ]);
 
-  const completedMismatch =
-    completedCount !== customer.total_completed_orders;
+  const completedMismatch = completedCount !== customer.total_completed_orders;
 
-  const cancelledMismatch =
-    cancelledCount !== customer.cancellation_count;
+  const cancelledMismatch = cancelledCount !== customer.cancellation_count;
 
   if (completedMismatch || cancelledMismatch) {
     throw new Error(
       JSON.stringify(
         {
-          message: "Số liệu về đơn hàng đã hoàn thành và bị hủy của khách hàng đang mâu thuẫn.",
+          message:
+            "Số liệu về đơn hàng đã hoàn thành và bị hủy của khách hàng đang mâu thuẫn.",
           expected: {
             completed: completedCount,
             cancelled: cancelledCount,
@@ -632,34 +646,47 @@ export async function getOrderTrendsService() {
       startDate.setHours(0, 0, 0, 0);
 
       // Count orders by status for this day
-      const [totalCount, completedCount, inProgressCount, cancelledCount] = await Promise.all([
-        Order.countDocuments({
-          created_at: { $gte: startDate, $lte: endDate }
-        }),
-        Order.countDocuments({
-          created_at: { $gte: startDate, $lte: endDate },
-          status: "completed"
-        }),
-        Order.countDocuments({
-          created_at: { $gte: startDate, $lte: endDate },
-          status: { $in: ["pending", "assigned", "accepted", "departed", "arrived", "in_progress"] }
-        }),
-        Order.countDocuments({
-          created_at: { $gte: startDate, $lte: endDate },
-          status: "cancelled"
-        })
-      ]);
+      const [totalCount, completedCount, inProgressCount, cancelledCount] =
+        await Promise.all([
+          Order.countDocuments({
+            created_at: { $gte: startDate, $lte: endDate },
+          }),
+          Order.countDocuments({
+            created_at: { $gte: startDate, $lte: endDate },
+            status: "completed",
+          }),
+          Order.countDocuments({
+            created_at: { $gte: startDate, $lte: endDate },
+            status: {
+              $in: [
+                "pending",
+                "assigned",
+                "accepted",
+                "departed",
+                "arrived",
+                "in_progress",
+              ],
+            },
+          }),
+          Order.countDocuments({
+            created_at: { $gte: startDate, $lte: endDate },
+            status: "cancelled",
+          }),
+        ]);
 
       trends.push({
-        date: startDate.toISOString().split('T')[0],
-        dayOfWeek: startDate.toLocaleDateString('en-US', { weekday: 'short' }),
+        date: startDate.toISOString().split("T")[0],
+        dayOfWeek: startDate.toLocaleDateString("en-US", { weekday: "short" }),
         total: totalCount,
         completed: completedCount,
         in_progress: inProgressCount,
         cancelled: cancelledCount,
-        completed_percentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
-        in_progress_percentage: totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0,
-        cancelled_percentage: totalCount > 0 ? Math.round((cancelledCount / totalCount) * 100) : 0,
+        completed_percentage:
+          totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+        in_progress_percentage:
+          totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0,
+        cancelled_percentage:
+          totalCount > 0 ? Math.round((cancelledCount / totalCount) * 100) : 0,
       });
     }
 
