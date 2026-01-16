@@ -2,8 +2,8 @@ import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
   Voucher, Receipt, VoucherUsage, Customer, 
  } from "../models/index.js";
-import { validateAndGetDiscountSnapshot } from "./discount.js";
-import { checkAndGetVoucherSnapshot } from "./voucher.js";
+ import { suggestTasker } from "./taskers.service.js";
+ import { pushNotification } from "./notification.service.js";
 
 // Get all orders with optional filters + pagination
 export async function getAllOrdersService({
@@ -115,9 +115,6 @@ export async function createOrderService({
         throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
       }
 
-      // if (quantity <= 0) 
-      //   throw new Error("Số giờ đặt phải lớn hơn 0.");
-
       let scheduleDate;
       if (type === "scheduled") {
         scheduleDate = new Date(scheduled_at);
@@ -189,35 +186,87 @@ export async function createOrderService({
         await voucher.save({ session });
       }
 
-      // TODO: thêm logic đặt liền
-      if (type === "immediate") {
-      //   const suggestion = await suggestTasker(order[0]._id, {});
-      //   if (!suggestion) 
-      //     throw new Error("No available tasker at the moment");
-      // order[0].tasker_id = suggestion.taskerId;
-      // await order[0].save({ session });
+      // if (type === "immediate") {
+      //   const { suggestTaskers, suggestion } = await suggestTasker(order[0]._id, {});
 
-        // await changeOrderStatus({
-        //   orderId: order[0]._id,
-        //   toStatus: "assigned",
-        //   actorType: "system",
-        //   actorId: null,
-        //   session
-        // });
+      //   console.log("SUGGESTION TASKER (createOrderService): ", suggestion);
+      //   console.log("SUGGESTING TASKERS (createOrderService): ", suggestTaskers);
 
-        // await session.commitTransaction();
-        // return { order: order[0], assignedTasker: suggestion }      
-      }
+      //   if (!suggestion || !suggestTaskers) {
+      //     throw new Error("Hiện tại chưa tìm thấy tasker phù hợp.");
+      //   }
+
+      //   order[0].tasker_id = suggestion.taskerId;
+      //   await order[0].save({ session });
+
+      //   await changeOrderStatus({
+      //     orderId: order[0]._id,
+      //     toStatus: "assigned",
+      //     actorType: "system",
+      //     actorId: null,
+      //     session
+      //   });
+
+      //   await session.commitTransaction();
+      //   return { order: order[0], assignedTasker: suggestion }      
+      // }
 
       // nếu đặt lịch trước thì chưa gán tasker liền
       await session.commitTransaction();
-      return { order: order[0], assignedTasker: null };
+      return { order: order[0] };
 
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
       throw new Error(err.message);
     }
+}
+
+export async function assignTaskerService(order) {
+  console.log("ORDER (assignTaskerService): ", order);
+
+  const { suggestTaskers, suggestion } = await suggestTasker(order._id);
+
+  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+
+  if (!suggestion || !suggestTaskers) {
+    throw new Error("Không tìm thấy tasker phù hợp.");
+  }
+
+  order.tasker_id = suggestion.taskerId;
+  await order.save();
+
+  await changeOrderStatus({
+    orderId: order._id,
+    toStatus: "assigned",
+    actorType: "system",
+    actorId: null,
+  });
+
+  // thông báo cho khách
+  await pushNotification(
+    order.customer_id,
+    "Tạo đơn hàng thành công",
+    "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  // thông báo cho tasker được gán
+  await pushNotification(
+    suggestion.user_id,                 // userId (tasker user)
+    "Có đơn hàng mới",
+    "Bạn có một đơn hàng mới phù hợp, hãy phản hồi sớm.",
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  return { suggestion, suggestTaskers };
 }
 
 // customer cancels order
@@ -367,70 +416,6 @@ export async function changeOrderStatus({ orderId, toStatus, actorType, actorId 
     throw new Error(error.message);
   }   
 };
-
-//---- RECEIPT ----//
-export async function createReceiptService({ order_id, payment_method }) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    if (!order_id)
-      throw new Error("order_id là bắt buộc.");
-
-    if (!["cash", "credit_card", "bank_transfer", "ewallet"].includes(payment_method)) {
-      throw new Error("Phương thức thanh toán không hợp lệ.");
-    }
-
-    const order = await Order.findById(order_id).session(session);
-    if (!order)
-      throw new Error("Không tìm thấy đơn hàng.");
-
-    const allowedStatuses = ["pending", "awaiting_payment"];
-    if (!allowedStatuses.includes(order.status)) {
-      throw new Error(
-        `Không thể tạo hóa đơn khi đơn hàng đang ở trạng thái: ${order.status}`
-      );
-    }
-
-    if (order.type === "scheduled" && payment_method !== "bank") {
-      throw new Error("Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản");
-    }
-
-    let deposit_paid_amount = 0;
-    if (order.type === "scheduled") {
-      deposit_paid_amount = Math.round(order.base_amount * 0.3);
-    }
-
-    const existingReceipt = await Receipt.findOne({ order_id: order._id }).session(session);
-
-    if (existingReceipt) {
-      await session.commitTransaction();
-      return { receipt: existingReceipt, order };
-    }
-
-    const receipt = await Receipt.create(
-      [
-        {
-          order_id: order._id,
-          total_amount: order.base_amount,
-          deposit_paid_amount,
-          payment_method,
-          status: "pending"
-        }
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-    return { receipt: receipt[0], order };
-
-  } catch (err) {
-    await session.abortTransaction();
-    throw err;
-  } finally {
-    session.endSession();
-  }
-}
 
 export async function verifyCustomerOrderStats(customerUserId) {
 

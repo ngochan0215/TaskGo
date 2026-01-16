@@ -1,14 +1,30 @@
 let isEditing = false;
 let currentSkills = [];
-let longitude = 0;
-let latitude = 0;
 
+let addressState = {
+  full_address: "",
+  city: "",
+  district: "",
+  ward: "",
+  street: "",
+  latitude: null,
+  longitude: null,
+  radius: 5,
+};
+
+// validate authorization
 let token = localStorage.getItem("token");
 if (!token) {
-    alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-    window.location.href = "../auth/login-signup.html";
+  alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+  window.location.href = "../auth/login-signup.html";
 }
 console.log("TOKEN: ", token);
+
+const role = localStorage.getItem("system_role");
+if (role !== "tasker") {
+  alert("Bạn không phải Tasker. Không có quyền truy cập.");
+  window.location.href = "../auth/login-signup.html";
+}
 
 const editBtn = document.getElementById("editToggle");
 const updateBtn = document.getElementById("updateBtn");
@@ -43,6 +59,9 @@ editBtn.addEventListener("click", () => {
         <span class="material-symbols-outlined ml-1">edit</span>`;
 
     renderSkills(currentSkills);
+
+    document.getElementById("editAddressBtn").classList.toggle("hidden", !isEditing);
+
 });
 
 async function getTaskById(taskId) {
@@ -214,7 +233,8 @@ async function loadUserProfile() {
     const { working_area, working_radius, working_year, hourly_rate, 
       introduction, skills, BIN, account_number } = data.tasker;
 
-    console.log("PROFILE DATA: ", data.user);
+    console.log("PROFILE DATA: ", data);
+    console.log("working area: ", working_area);
 
     // chỉ xử lý customer
     if (role !== "tasker") {
@@ -243,9 +263,352 @@ async function loadUserProfile() {
     // avatar
     document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Charlie";
 
+    addressState.latitude = working_area.latitude;
+    addressState.longitude = working_area.longitude;
+    addressState.radius = working_radius || 5;
+    addressState.full_address = working_area.full_address;
+    
+    // Parse address components from full_address
+    if (working_area.full_address) {
+      const addressParts = working_area.full_address.split(',').map(s => s.trim());
+      if (addressParts.length >= 4) {
+        addressState.street = addressParts[0] || '';
+        addressState.ward = addressParts[1] || '';
+        addressState.district = addressParts[2] || '';
+        addressState.city = addressParts[3] || '';
+      } else if (addressParts.length === 3) {
+        addressState.ward = addressParts[0] || '';
+        addressState.district = addressParts[1] || '';
+        addressState.city = addressParts[2] || '';
+      }
+    }
+
     } catch (error) {
         console.error("Lỗi load profile:", error);
     }
+}
+
+// logic xử lý phần địa chỉ
+let map = null;
+let marker = null;
+let workCircle = null;
+let mapInitialized = false;
+let selectsInitialized = false;
+
+function adjustRadius(delta) {
+  const input = document.getElementById('work_radius');
+  let val = parseInt(input.value) || 5;
+  val += delta;
+  if (val < 1) val = 1;
+  if (val > 50) val = 50;
+  input.value = val;
+  input.dispatchEvent(new Event('input'));
+  if (workCircle) {
+    updateCircle();
+    if (map) {
+      map.fitBounds(workCircle.getBounds());
+    }
+  }
+}
+
+function updateCircle() {
+  if (!marker || !workCircle) return;
+  const latLng = marker.getLatLng();
+  const radiusMeters = document.getElementById('work_radius').value * 1000;
+  workCircle.setLatLng(latLng);
+  workCircle.setRadius(radiusMeters);
+}
+
+async function moveMapTo(query, zoomLevel) {
+  if (!map || !marker) return;
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data && data.length > 0) {
+      const lat = parseFloat(data[0].lat);
+      const lon = parseFloat(data[0].lon);
+      const newLatLng = new L.LatLng(lat, lon);
+
+      marker.setLatLng(newLatLng);
+      map.setView(newLatLng, zoomLevel);
+      updateCircle();
+
+      document.getElementById('result_lat').value = lat;
+      document.getElementById('result_lng').value = lon;
+      addressState.latitude = lat;
+      addressState.longitude = lon;
+      console.log(`Đã bay tới: ${query}`);
+    }
+  } catch (e) { 
+    console.error("Lỗi tìm map:", e); 
+  }
+}
+
+function initAddressMap() {
+  if (mapInitialized && map) return;
+  
+  const defaultCoords = addressState.latitude && addressState.longitude 
+    ? [addressState.latitude, addressState.longitude]
+    : [10.8231, 106.6297];
+  
+  map = L.map('map').setView(defaultCoords, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+    attribution: '&copy; OpenStreetMap' 
+  }).addTo(map);
+
+  marker = L.marker(defaultCoords, { draggable: true }).addTo(map);
+  const radiusMeters = (addressState.radius || 5) * 1000;
+  workCircle = L.circle(defaultCoords, { 
+    color: '#68A776', 
+    fillColor: '#ACCFB2', 
+    fillOpacity: 0.4, 
+    radius: radiusMeters 
+  }).addTo(map);
+
+  if (addressState.latitude && addressState.longitude) {
+    const latLng = new L.LatLng(addressState.latitude, addressState.longitude);
+    marker.setLatLng(latLng);
+    map.setView(latLng, 13);
+    updateCircle();
+    document.getElementById('result_lat').value = addressState.latitude;
+    document.getElementById('result_lng').value = addressState.longitude;
+  }
+  
+  // Invalidate size after a short delay to ensure proper rendering
+  setTimeout(() => {
+    if (map) {
+      map.invalidateSize();
+    }
+  }, 200);
+
+  document.getElementById('work_radius').addEventListener('input', function() {
+    addressState.radius = Number(this.value);
+    updateCircle();
+    map.fitBounds(workCircle.getBounds());
+  });
+
+  document.getElementById('btn-search-map').addEventListener('click', async function() {
+    const city = document.getElementById('result_city').value;
+    const district = document.getElementById('result_district').value;
+    const ward = document.getElementById('result_ward').value;
+    const street = document.getElementById('street').value;
+
+    if (!city) { 
+      alert("Vui lòng chọn Tỉnh/Thành phố!"); 
+      return; 
+    }
+
+    if (street) {
+      const query = `${street}, ${ward}, ${district}, ${city}`;
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data && data.length > 0) {
+          moveMapTo(query, 17);
+        } else {
+          alert("Không tìm thấy số nhà này, nhưng nó chỉ ở gần đây thôi, bản đồ sẽ giữ nguyên vị trí ở Phường/Xã để bạn tự kéo ghim.");
+        }
+      } catch(e) { 
+        console.error(e); 
+      }
+    } else {
+      map.fitBounds(workCircle.getBounds());
+    }
+  });
+
+  marker.on('drag', () => {
+    if (workCircle) {
+      workCircle.setLatLng(marker.getLatLng());
+    }
+  });
+  
+  marker.on('dragend', () => {
+    const pos = marker.getLatLng();
+    addressState.latitude = pos.lat;
+    addressState.longitude = pos.lng;
+    document.getElementById('result_lat').value = pos.lat;
+    document.getElementById('result_lng').value = pos.lng;
+    updateCircle();
+  });
+
+  mapInitialized = true;
+}
+
+function initAddressSelects() {
+  if (selectsInitialized) return;
+  
+  const host = "https://provinces.open-api.vn/api/";
+  const elCity = document.getElementById('city');
+  const elDistrict = document.getElementById('district');
+  const elWard = document.getElementById('ward');
+
+  fetch(host + "?depth=1").then(res => res.json()).then(data => {
+    let html = '<option value="" selected disabled>Chọn Tỉnh / Thành phố</option>';
+    data.forEach(item => html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`);
+    elCity.innerHTML = html;
+    
+    // Try to select existing city if available
+    if (addressState.city) {
+      const cityOption = Array.from(elCity.options).find(opt => opt.getAttribute('data-name') === addressState.city);
+      if (cityOption) {
+        elCity.value = cityOption.value;
+        elCity.dispatchEvent(new Event('change'));
+      }
+    }
+  });
+
+  elCity.addEventListener('change', function() {
+    const cityName = this.options[this.selectedIndex].getAttribute('data-name');
+    document.getElementById('result_city').value = cityName;
+    addressState.city = cityName;
+
+    moveMapTo(cityName, 10);
+
+    elDistrict.innerHTML = '<option value="" selected disabled>Đang tải...</option>';
+    elDistrict.disabled = true;
+    elWard.innerHTML = '<option value="" selected disabled>-- Vui lòng chọn Quận trước --</option>';
+    elWard.disabled = true;
+
+    fetch(host + "p/" + this.value + "?depth=2").then(res => res.json()).then(data => {
+      let html = '<option value="" selected disabled>Chọn Quận / Huyện</option>';
+      data.districts.forEach(item => html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`);
+      elDistrict.innerHTML = html;
+      elDistrict.disabled = false;
+      
+      // Try to select existing district if available
+      if (addressState.district) {
+        const distOption = Array.from(elDistrict.options).find(opt => opt.getAttribute('data-name') === addressState.district);
+        if (distOption) {
+          elDistrict.value = distOption.value;
+          elDistrict.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  });
+
+  elDistrict.addEventListener('change', function() {
+    const distName = this.options[this.selectedIndex].getAttribute('data-name');
+    const cityName = document.getElementById('result_city').value;
+    document.getElementById('result_district').value = distName;
+    addressState.district = distName;
+
+    moveMapTo(`${distName}, ${cityName}`, 13);
+
+    elWard.innerHTML = '<option value="" selected disabled>Đang tải...</option>';
+    elWard.disabled = true;
+
+    fetch(host + "d/" + this.value + "?depth=2").then(res => res.json()).then(data => {
+      let html = '<option value="" selected disabled>Chọn Phường / Xã</option>';
+      data.wards.forEach(item => html += `<option value="${item.code}" data-name="${item.name}">${item.name}</option>`);
+      elWard.innerHTML = html;
+      elWard.disabled = false;
+      
+      // Try to select existing ward if available
+      if (addressState.ward) {
+        const wardOption = Array.from(elWard.options).find(opt => opt.getAttribute('data-name') === addressState.ward);
+        if (wardOption) {
+          elWard.value = wardOption.value;
+          elWard.dispatchEvent(new Event('change'));
+        }
+      }
+    });
+  });
+
+  elWard.addEventListener('change', function() {
+    const wardName = this.options[this.selectedIndex].getAttribute('data-name');
+    const distName = document.getElementById('result_district').value;
+    const cityName = document.getElementById('result_city').value;
+    document.getElementById('result_ward').value = wardName;
+    addressState.ward = wardName;
+
+    moveMapTo(`${wardName}, ${distName}, ${cityName}`, 15);
+  });
+  
+  selectsInitialized = true;
+}
+
+function initAddressMapIfNeeded() {
+  if (!mapInitialized) {
+    setTimeout(() => {
+      initAddressMap();
+      initAddressSelects();
+    }, 100);
+  } else {
+    // Update map position if address state has changed
+    if (addressState.latitude && addressState.longitude && map && marker) {
+      const latLng = new L.LatLng(addressState.latitude, addressState.longitude);
+      marker.setLatLng(latLng);
+      map.setView(latLng, 13);
+      updateCircle();
+      map.invalidateSize();
+    }
+  }
+}
+
+function applyAddress() {
+  const lat = document.getElementById('result_lat').value;
+  const lng = document.getElementById('result_lng').value;
+  const city = document.getElementById('result_city').value;
+  const district = document.getElementById('result_district').value;
+  const ward = document.getElementById('result_ward').value;
+  const street = document.getElementById('street').value;
+  const radius = Number(document.getElementById('work_radius').value);
+
+  if (!lat || !lng) {
+    alert("Vui lòng xác định vị trí trên bản đồ");
+    return;
+  }
+
+  const full_address = [street, ward, district, city]
+    .filter(Boolean)
+    .join(", ");
+
+  addressState.full_address = full_address;
+  addressState.latitude = parseFloat(lat);
+  addressState.longitude = parseFloat(lng);
+  addressState.radius = radius;
+  addressState.city = city;
+  addressState.district = district;
+  addressState.ward = ward;
+  addressState.street = street;
+
+  document.getElementById("working-area").value = full_address;
+  document.getElementById("working-radius").value = radius;
+  
+  closeAddressModal();
+}
+
+function openAddressModal() {
+  const modal = document.getElementById("addressModal");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  
+  // Set initial values
+  document.getElementById('work_radius').value = addressState.radius || 5;
+  document.getElementById('street').value = addressState.street || '';
+  document.getElementById('result_lat').value = addressState.latitude || '';
+  document.getElementById('result_lng').value = addressState.longitude || '';
+  document.getElementById('result_city').value = addressState.city || '';
+  document.getElementById('result_district').value = addressState.district || '';
+  document.getElementById('result_ward').value = addressState.ward || '';
+  
+  initAddressMapIfNeeded();
+  
+  // Invalidate map size after modal is shown
+  setTimeout(() => {
+    if (map) {
+      map.invalidateSize();
+    }
+  }, 100);
+}
+
+function closeAddressModal() {
+  const modal = document.getElementById("addressModal");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
 }
 
 async function updateProfile() {
@@ -258,16 +621,13 @@ async function updateProfile() {
     
     const introduction = document.getElementById("intro").value;
 
-    const areaInput = document.getElementById("working-area").value;
-    const working_area = areaInput ? {
-        full_address: areaInput,
-        longitude, 
-        latitude,
-    } : {
-        full_address: "Hàn Thuyên, Khu phố 6, Phường Thủ Đức, Thành phố Hồ Chí Minh, Việt Nam",
-        longitude: 10.870219615908955,
-        latitude: 106.80305409412628
+    const working_area = {
+      full_address: document.getElementById("working-area").value,
+      longitude: addressState.longitude,
+      latitude: addressState.latitude,
     };
+
+    //const working_radius = addressState.radius;
 
     const working_radius = document.getElementById("working-radius").value?
       Number(document.getElementById("working-radius").value) : 20;
@@ -333,39 +693,43 @@ async function updateProfile() {
 
 async function updateAvatar(event) {
     try {
-    const token = localStorage.getItem("token");
-    const file = event.target.files[0];
+      const token = localStorage.getItem("token");
+      const file = event.target.files[0];
 
-    if (!file) return;
+      if (!file) return;
 
-    const formData = new FormData();
-    formData.append("avatar", file);
+      const formData = new FormData();
+      formData.append("avatar", file);
 
-    const res = await fetch("http://localhost:3000/api/user/profile/update-avatar", {
-        method: "PUT",
-        headers: {
-        "Authorization": `Bearer ${token}`
-        },
-        body: formData
-    });
+      const res = await fetch("http://localhost:3000/api/user/profile/update-avatar", {
+          method: "PUT",
+          headers: {
+          "Authorization": `Bearer ${token}`
+          },
+          body: formData
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok || !data.success) {
-        alert(data.message || "Upload avatar thất bại");
-        return;
-    }
+      if (!res.ok || !data.success) {
+          alert(data.message || "Upload avatar thất bại");
+          return;
+      }
 
-    document.getElementById("avatar").src = URL.createObjectURL(file);
-    alert("✅ Cập nhật avatar thành công");
+      document.getElementById("avatar").src = URL.createObjectURL(file);
+      alert("✅ Cập nhật avatar thành công");
 
     } catch (error) {
-    console.error("Update avatar error:", error);
-    alert("Có lỗi khi upload avatar");
+      console.error("Update avatar error:", error);
+      alert("Có lỗi khi upload avatar");
     }
 }
 
 window.updateProfile = updateProfile;
 window.updateAvatar = updateAvatar;
+window.adjustRadius = adjustRadius;
+window.openAddressModal = openAddressModal;
+window.closeAddressModal = closeAddressModal;
+window.applyAddress = applyAddress;
 
 document.addEventListener("DOMContentLoaded", loadUserProfile);

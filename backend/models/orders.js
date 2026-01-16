@@ -64,6 +64,7 @@ const orderSchema = new mongoose.Schema(
         "arrived", // tasker đã đến
         "in_progress", // tasker bắt đầu làm
         "completed", // tasker hoàn thành
+        "awaiting_payment",  // chờ thanh toán
         "cancelled", // hủy
       ],
       default: "pending",

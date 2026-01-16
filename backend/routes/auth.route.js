@@ -1,4 +1,5 @@
 import express from "express";
+import { verifyToken } from "../middleware/verifyToken.js";
 import {
   signUpCustomer, signUpTasker,
   verifyEmail, login, logout,
@@ -12,7 +13,7 @@ router.post("/signup/tasker", signUpTasker);
 
 router.post("/verify-email", verifyEmail);
 router.post("/login", login);
-router.post("/logout", logout);
+router.post("/logout", verifyToken, logout);
 router.post("/resend-otp", resendVerificationToken);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);

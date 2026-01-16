@@ -40,7 +40,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
+            <button id="notification-btn" class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
                 <span class="material-symbols-outlined text-[#111827]">notifications</span>
                 <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>
             </button>
@@ -64,7 +64,7 @@
             <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch sử nhận việc</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
-            <a href="#" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
+            <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
                 <span class="material-symbols-outlined">logout</span> Đăng xuất
             </a>
         </nav>
@@ -260,7 +260,15 @@
     </div>
 </footer>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script type="module">
+  import { initSocket } from "../js/socket.js";
+
+  initSocket();
+</script>
+
 <script>
+    // validate authorization
     let token = localStorage.getItem("token");
     if (!token) {
         alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
@@ -308,6 +316,7 @@
         });
     }
 
+    // logic nút thay đổi trạng thái
     const statusToggle = document.getElementById('status-toggle');
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
@@ -328,6 +337,178 @@
             }
         });
     }
+
+    // logic đăng xuất
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            try {
+                const res = await fetch("http://localhost:3000/api/auth/logout", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user_id");
+                    localStorage.removeItem("system_role");
+
+                    alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                    window.location.href = "../auth/login-signup.html";
+                } else {
+                    alert("Đăng xuất thất bại. Vui lòng thử lại.");
+                }
+            } catch (err) {
+                console.error("LOGOUT ERROR:", err);
+                alert("Có lỗi xảy ra khi đăng xuất.");
+            }
+        });
+    }
+
+    // logic show thông báo
+    const notificationBtn = document.getElementById("notification-btn");
+    if (notificationBtn){
+        notificationBtn.addEventListener("click", async (e) => {
+            window.location.href = "../notification.html";
+        });
+    }
+  
+    // logic load thông tin tổng quát
+    async function loadTaskerHome() {
+        try {
+            const res = await fetch("http://localhost:3000/api/user/profile", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (!data.success) return;
+
+            const { user, tasker, account } = data;
+
+            // menu hamburger
+            const menuName = document.querySelector('#menu-overlay p.text-lg');
+            const menuId = document.querySelector('#menu-overlay p.text-xs');
+
+            if (menuName) menuName.innerText = user.full_name;
+            if (menuId) menuId.innerText = `ID: #${user._id.slice(-6).toUpperCase()}`;
+
+            // header
+            const greeting = document.querySelector('h2');
+            if (greeting) {
+                greeting.innerText = `Chào ${user.full_name}! 👋`;
+            }
+ 
+            const avatarImgs = document.querySelectorAll('img');
+            avatarImgs.forEach(img => {
+                if (img.alt?.toLowerCase().includes('avatar')) {
+                    img.src = user.avatar_url;
+                }
+            });
+
+            // working status
+            const statusToggle = document.getElementById('status-toggle');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            if (statusToggle) {
+                statusToggle.addEventListener('change', async function () {
+                    const newStatus = this.checked ? "available" : "offline";
+
+                    try {
+                        const res = await fetch(
+                            "http://localhost:3000/api/tasker/update/working-status",
+                            {
+                                method: "PATCH",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ working_status: newStatus })
+                            }
+                        );
+
+                        const data = await res.json();
+
+                        if (!res.ok || !data.success) {
+                            throw new Error(data.message || "Cập nhật thất bại");
+                        }
+
+                        // update UI khi backend OK
+                        if (newStatus === "available") {
+                            statusDot.className = "w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse";
+                            statusText.className = "text-xs font-bold text-green-600 uppercase";
+                            statusText.innerText = "Đang trực tuyến";
+                            jobList.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+                        } else if (newStatus === "offline") {
+                            statusDot.className = "w-2.5 h-2.5 bg-gray-400 rounded-full";
+                            statusText.className = "text-xs font-bold text-gray-500 uppercase";
+                            statusText.innerText = "Tasker hiện đã offline - nghỉ làm việc";
+                            jobList.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+                        }
+
+                    } catch (err) {
+                        alert(err.message);
+                        // rollback UI
+                        this.checked = !this.checked;
+                    }
+                });
+            }
+
+            if (tasker.working_status === 'available') {
+                statusToggle.checked = true;
+                statusDot.className = "w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse";
+                statusText.innerText = "Đang trực tuyến";
+                statusText.className = "text-xs font-bold text-green-600 uppercase";
+            } else if (tasker.working_status === 'paused') {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-gray-400 rounded-full";
+                statusText.innerText = "Tạm nghỉ";
+                statusText.className = "text-xs font-bold text-gray-500 uppercase";
+            } else if (tasker.working_status === 'pending') {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-blue-500 rounded-full";
+                statusText.innerText = "Hồ sơ đang được xem xét";
+                statusText.className = "text-xs font-bold text-blue-500 uppercase";
+            } else if (tasker.working_status === 'busy'){
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-orange-500 rounded-full";
+                statusText.innerText = "Tasker hiện đang làm việc cho khách hàng";
+                statusText.className = "text-xs font-bold text-orange-500 uppercase";
+            } else {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-gray-700 rounded-full";
+                statusText.innerText = "Tasker hiện đã offline - nghỉ làm việc.";
+                statusText.className = "text-xs font-bold text-dark-700 uppercase";
+            }
+
+            // điểm uy tín
+            const reputationEl = document.querySelector('.text-lg.font-bold.text-gray-800');
+            if (reputationEl) {
+                reputationEl.innerHTML = `
+                    ${user.reputation_score || '--'} 
+                    <span class="text-[#FFBE18] text-sm">★</span>
+                `;
+            }
+
+            // working_area
+            console.log("WORKING AREA:", tasker.working_area.full_address);
+
+        } catch (err) {
+            console.error("LOAD TASKER HOME ERROR:", err);
+        }
+    }
+
+    loadTaskerHome();
+
 </script>
 </body>
 

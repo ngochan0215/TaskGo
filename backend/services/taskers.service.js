@@ -7,25 +7,85 @@ import { getOnlineTaskerUserIds } from "../sockets/presence.js";
 
 const DEFAULT_TASKER_BATCH_SIZE = 10;
 
-export async function getOnlineAvailableTaskers(categoryName) {
-  const io = getSocketInstance();
-  if (!io) return [];
+const routeCache = new Map();
+const rankingCache = new Map();
 
-  const onlineUserIds = getOnlineTaskerUserIds(io);
-  console.log("Online tasker user IDs:", onlineUserIds);
-  if (!onlineUserIds.length) return [];
+function getDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // bán kính Trái Đất (km)
 
-  const taskers = await Tasker.find({
-    user_id: { $in: onlineUserIds },
-    working_status: "available",
-    // working_area: { $in: [categoryName] },
-  }).lean();
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
-  return taskers;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
-// save the route for later use
-const routeCache = new Map();
+export async function findEligibleTaskers(order) {
+    const io = getSocketInstance();
+    if (!io) return [];
+
+    const onlineUserIds = getOnlineTaskerUserIds(io);
+    console.log("ONLINE TASKERS (findEligibleTaskers): ", onlineUserIds);
+    if (!onlineUserIds.length) return [];
+
+    const { task_id, address_snapshot: { latitude, longitude } } = order;
+
+    // tìm tasker available và online
+    const taskers = await Tasker.find({
+        user_id: { $in: onlineUserIds },
+        working_status: "available",
+        status: { $ne: "resign" },
+        skills: task_id
+    }).lean();
+
+    if (!taskers.length) return [];
+    // Lọc theo khoảng cách 
+    const matchedTaskers = taskers
+        .map(tasker => {
+        if (
+            !tasker.working_area?.latitude ||
+            !tasker.working_area?.longitude
+        ) {
+            console.log("surprises");
+            return null;
+        }
+
+        // console.log("ORDER:", latitude, longitude);
+        // console.log("TASKER:", tasker.working_area.latitude, tasker.working_area.longitude);
+
+        const distance = getDistanceKm(
+            tasker.working_area.latitude,
+            tasker.working_area.longitude,
+            latitude,
+            longitude
+        );
+
+        // console.log("DISTANCE (findEligibleTaskers): ", distance);
+        // console.log("TASKER WORKING RADIUS: ", tasker.working_radius);
+
+        if (distance > tasker.working_radius) return null;
+
+        return {
+            ...tasker,
+            distance_km: Number(distance.toFixed(2))
+        };
+        })
+        .filter(Boolean);
+
+    // Sort theo khoảng cách gần nhất
+    matchedTaskers.sort((a, b) => a.distance_km - b.distance_km);
+
+    //console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
+    // Giới hạn số lượng tasker gửi job
+    return matchedTaskers.slice(0, 10);
+}
 
 // create the unique key for each route
 function makeCacheKey(origin, destination) {
@@ -47,10 +107,11 @@ async function getCachedRouteSummary(origin, destination) {
   return summary;
 }
 
-// return
+function getNextBatch(allRanked, offset) {
+  return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
+}
+
 export const buildTaskerRanking = async (orderId) => {
-  const addressModel = Address;
-  const taskerModel = Tasker;
   const serviceModel = Service;
   const taskModel = Task;
   const orderModel = Order;
@@ -74,65 +135,57 @@ export const buildTaskerRanking = async (orderId) => {
   });
   if (!customer) throw new Error("Customer not found");
   
+  // lấy địa chỉ đơn hàng
   const orderAddress = { 
     longitude: order.address_snapshot.longitude,
     latitude: order.address_snapshot.latitude
   };
-  if (!orderAddress) throw new Error("Order address not found");
+  //console.log("ORDER ADDRESS (buldTaskerRanking): ", orderAddress);
+  
+  if (!orderAddress) 
+    throw new Error("Địa chỉ đơn hàng không hợp lệ.");
 
-  // find available taskers for the assigned service
-  const availableTaskers = await getOnlineAvailableTaskers(
-    service.category_name
-  );
-  if (!availableTaskers.length) return [];
-  console.log("Available taskers:", availableTaskers);
+  // lấy danh sách tasker đã lọc
+  const eligibleTaskers = await findEligibleTaskers(order);
+  console.log("ELIGIBLE TASKERS (buildTaskerRanking): ", eligibleTaskers);
+  if (!eligibleTaskers.length) return [];
 
-  const taskerIds = availableTaskers.map(({ user_id }) => user_id);
-
-  // get each tasker's distance and reputation score, then store
-  const [taskerAddresses, userReputations] = await Promise.all([
-    addressModel.find({ user_id: { $in: taskerIds } }).lean(),
-    userModel
-      .find({ _id: { $in: taskerIds } })
-      .select("reputation_score")
-      .lean(),
-  ]);
-
-  const addressByUserId = new Map(
-    taskerAddresses.map((a) => [String(a.user_id), a])
-  );
-  const reputationByUserId = new Map(
-    userReputations.map((u) => [String(u._id), u.reputation_score ?? 0])
-  );
-
-  // calculate the distance between customer and tasker
   const origin = `${orderAddress.latitude},${orderAddress.longitude}`;
 
-  const ranked = (
-    await Promise.all(
-      availableTaskers.map(async (tasker) => {
-        const taskerAddress = addressByUserId.get(String(tasker.user_id));
-        if (!taskerAddress) return null;
+  // lấy reputation score của tasker
+  const userIds = eligibleTaskers.map(t => t.user_id);
 
-        const destination = `${taskerAddress.latitude},${taskerAddress.longtitude}`;
+  const reputations = await User.find({ _id: { $in: userIds } })
+    .select("_id reputation_score")
+    .lean();
+
+  const reputationMap = new Map(
+    reputations.map(u => [String(u._id), u.reputation_score ?? 0])
+  );
+
+  // tính khoảng cách và thời gian
+   const ranked = (
+    await Promise.all(
+      eligibleTaskers.map(async (tasker) => {
+        const { latitude, longitude } = tasker.working_area || {};
+        if (!latitude || !longitude) return null;
+
+        const destination = `${latitude},${longitude}`;
+        //console.log("TASKER WORKING AREA (buildTaskerRanking): ", destination);
+
         const { distance, duration } = await getCachedRouteSummary(
           origin,
           destination
         );
-        console.log("Route summary", {
-          origin,
-          destination,
-          distance,
-          duration,
-        });
-        if (!Number.isFinite(distance) || !Number.isFinite(duration))
-          return null;
+
+        if (!Number.isFinite(distance) || !Number.isFinite(duration)) return null;
 
         return {
-          taskerId: tasker._id,
-          distance,
-          duration,
-          reputation: reputationByUserId.get(String(tasker.user_id)) ?? 0,
+          tasker_id: tasker._id,
+          user_id: tasker.user_id,
+          distance,           // mét
+          duration,           // giây
+          reputation: reputationMap.get(String(tasker.user_id)) ?? 0,
         };
       })
     )
@@ -144,53 +197,53 @@ export const buildTaskerRanking = async (orderId) => {
       a.duration - b.duration ||
       b.reputation - a.reputation
   );
-  console.log("Ranked taskers:", ranked);
+
+  console.log("RANKED TASKERS (buildTaskerRanking):", ranked);
   return ranked;
 };
-
-const rankingCache = new Map();
-
-function getNextBatch(allRanked, offset) {
-  return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
-}
 
 // get the best suitable tasker list for this one customer
 export const suggestTasker = async (orderId, { excludedTaskerIds = [] } = {}) => {
     const key = String(orderId);
     if (!rankingCache.has(key)) {
-    console.log("NO CACHE for user, Creating new list", key);
-    const ranked = await buildTaskerRanking(orderId);
-    rankingCache.set(key, {
-      allRanked: ranked,
-      currentBatch: ranked.slice(0, DEFAULT_TASKER_BATCH_SIZE),
-      offset: DEFAULT_TASKER_BATCH_SIZE,
-    });
-  }
+        console.log("NO CACHE for user, Creating new list", key);
 
-  const cache = rankingCache.get(key);
-  const skip = new Set(excludedTaskerIds.map(String));
+        const ranked = await buildTaskerRanking(orderId);
 
-  cache.currentBatch = cache.currentBatch.filter(
-    (t) => !skip.has(String(t.taskerId))
-  );
-  console.log("Filtered current batch:", cache.currentBatch);
-  if (
-    cache.currentBatch.length === 0 &&
-    cache.offset < cache.allRanked.length
-  ) {
-    const nextBatch = getNextBatch(cache.allRanked, cache.offset);
-    cache.currentBatch = nextBatch;
-    cache.offset += DEFAULT_TASKER_BATCH_SIZE;
-  }
+        rankingCache.set(key, {
+            allRanked: ranked,
+            currentBatch: ranked.slice(0, DEFAULT_TASKER_BATCH_SIZE),
+            offset: DEFAULT_TASKER_BATCH_SIZE,
+        });
+    }
 
-  console.log("Final current batch:", cache.currentBatch);
-  if (!cache.currentBatch.length) {
-    throw new Error("No suitable tasker found");
-  }
+    const cache = rankingCache.get(key);
+    const skip = new Set(excludedTaskerIds.map(String));
 
-  const suggestion = cache.currentBatch[0];
-  console.log("Suggesting tasker", suggestion);
-  return suggestion;
+    cache.currentBatch = cache.currentBatch.filter(
+        (t) => !skip.has(String(t.taskerId))
+    );
+    console.log("Filtered current batch:", cache.currentBatch);
+
+    if (
+        cache.currentBatch.length === 0 &&
+        cache.offset < cache.allRanked.length
+    ) {
+        const nextBatch = getNextBatch(cache.allRanked, cache.offset);
+        cache.currentBatch = nextBatch;
+        cache.offset += DEFAULT_TASKER_BATCH_SIZE;
+    }
+
+    console.log("Final current batch:", cache.currentBatch);
+    if (!cache.currentBatch.length) {
+        throw new Error("Hệ thống chưa tìm thấy tasker nào phù hợp.");
+    }
+
+    const suggestTaskers = cache.currentBatch;
+    const suggestion = cache.currentBatch[0];
+    //console.log("Final suggesting tasker (suggestTasker): ", suggestion);
+
+    return { suggestTaskers, suggestion };
 };
 
 // tasker confirms different stages of the order
@@ -282,23 +335,26 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
         });
 
         // tìm tasker khác
-        const newTasker = await suggestTasker(orderId, {
+        const { suggestTaskers, suggestion } = await suggestTasker(orderId, {
             excludedTaskerIds: [tasker._id]
-        })
+        });
 
-        if (newTasker) {
+        console.log("Final suggesting tasker (denyTaskRequest): ", suggestion);
+        console.log("Suggesting tasker list (denyTaskRequest): ", suggestTaskers);
+
+        if (suggestion) {
             const orderLog = await changeOrderStatus({
                 orderId,
                 toStatus: "assigned",
                 actorType: "system",
-                actorId: newTasker.taskerId,
+                actorId: suggestion.taskerId,
             });
         }
         
         if (order.customer_id) 
             rankingCache.delete(String(order.customer_id));
         
-        return newTasker;
+        return suggestion;
 
     } catch (error) {
         throw new Error(error.message);

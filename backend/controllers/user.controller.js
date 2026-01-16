@@ -512,12 +512,12 @@ const MAX_ADDRESS_PER_USER = 5;
 export const addAddress = async (req, res) => {
   try {
 
-    const { user_id, label, longtitude, latitude, full_address,
+    const { user_id, label, longitude, latitude, full_address,
       street, ward, district, city, note, is_default } = req.body;
 
     const userId = req.userId? req.userId : user_id;
 
-    if ( longtitude === undefined || latitude === undefined || !full_address ||
+    if ( longitude === undefined || latitude === undefined || !full_address ||
       !street || !ward || !district || !city
     ) {
       return res.status(400).json({
@@ -525,7 +525,7 @@ export const addAddress = async (req, res) => {
       });
     }
 
-    if ( typeof longtitude !== "number" || typeof latitude !== "number" ) {
+    if ( typeof longitude !== "number" || typeof latitude !== "number" ) {
       return res.status(400).json({
         message: "Tọa độ không hợp lệ"
       });
@@ -551,7 +551,7 @@ export const addAddress = async (req, res) => {
     const address = await Address.create({
       user_id: userId,
       label,
-      longtitude,
+      longitude,
       latitude,
       full_address,
       street,

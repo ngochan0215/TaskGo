@@ -251,7 +251,7 @@ function showToast(item) {
     setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    }, 15000);
 }
 
 document.addEventListener("DOMContentLoaded", () => {

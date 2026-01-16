@@ -1,5 +1,4 @@
-let isEditing = false;
-let addresses = [];
+let addressMap = {};
 
 let addressState = {
   full_address: "",
@@ -13,170 +12,141 @@ let addressState = {
 
 let token = localStorage.getItem("token");
 if (!token) {
-    alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-    window.location.href = "../auth/login-signup.html";
+    alert("Vui lòng đăng nhập");
+    location.href = "../../auth/login-signup.html";
 }
 console.log("TOKEN: ", token);
 
-const editBtn = document.getElementById("editToggle");
-const updateBtn = document.getElementById("updateBtn");
+let order_id = null;
+let newOrder = null;
+let payment_method = "cash";
+let bookingDraft = null;
+let voucherDraft = null;
 
-const editableInputs = [
-    document.getElementById("phone"),
-    document.getElementById("full-name-input"),
-    document.getElementById("cccd"),
-    document.getElementById("bin"),
-    document.getElementById("account-number"),
-];
+const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
-editBtn.addEventListener("click", () => {
-    isEditing = !isEditing;
-
-    editableInputs.forEach(input => {
-    input.readOnly = !isEditing;
-    input.classList.toggle("bg-white", isEditing);
+payment_method = document.querySelector("input[name='payment']:checked")?.value;
+document.querySelectorAll("input[name='payment']").forEach(radio => {
+    radio.addEventListener("change", e => {
+        payment_method = e.target.value;
+        console.log("LATEST PAYMENT METHOD:", payment_method);
     });
-
-    updateBtn.disabled = !isEditing;
-    updateBtn.classList.toggle("opacity-50", !isEditing);
-    updateBtn.classList.toggle("cursor-not-allowed", !isEditing);
-
-    editBtn.innerHTML = isEditing
-    ? `<span>Hủy chỉnh sửa</span>
-        <span class="material-symbols-outlined ml-1">close</span>`
-    : `<span>Chỉnh sửa thông tin</span>
-        <span class="material-symbols-outlined ml-1">edit</span>`;
-
-    renderAddresses();
 });
 
-function mapCustomerType(type) {
-    switch (type) {
-    case "new":
-        return "Khách hàng mới";
-    case "loyal":
-        return "Thành viên thân thiết";
-    case "vip":
-        return "Khách hàng VIP";
-    default:
-        return "Khách hàng";
+document.getElementById("submitBtn").addEventListener("click", submitOrder);
+
+function loadBookingDraft() {
+    const raw = localStorage.getItem("bookingDraft");
+    if (!raw) {
+        alert("Không tìm thấy thông tin đặt dịch vụ");
+        location.href = "/";
+        return;
     }
+    bookingDraft = JSON.parse(raw);
+    console.log("BOOKING DRAFT IN PAYMENT CONFIRMATION: ", bookingDraft);
 }
 
-async function loadUserAddresses() {
-    try {
-        const res = await fetch("http://localhost:3000/api/user/addresses/my", {
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
-            }
+function initVoucherDraft() {
+    voucherDraft =
+        JSON.parse(localStorage.getItem("voucherDraft")) || {
+        base_amount: bookingDraft.base_amount,
+        voucher_code: null,
+        discount_amount: 0,
+        final_amount: bookingDraft.base_amount
+        };
+
+    voucherDraft.base_amount = bookingDraft.base_amount;
+    localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+}
+
+function renderAmounts() {
+    document.getElementById("baseAmount").innerText =
+        formatCurrency(bookingDraft.final_amount);
+
+    document.getElementById("voucherAmount").innerText =
+        voucherDraft.discount_amount
+        ? `-${formatCurrency(voucherDraft.discount_amount)}`
+        : "0 VND";
+
+    document.getElementById("finalAmount").innerText =
+        formatCurrency(bookingDraft.final_amount);
+
+    document.getElementById("finalAmountt").innerText =
+        formatCurrency(bookingDraft.final_amount);
+}
+
+function bindAddressSelect() {
+    document
+        .getElementById("addressSelect")
+        .addEventListener("change", (e) => {
+            saveSelectedAddress(e.target.value);
         });
-
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../auth/login-signup.html";
-            return;
-        }
-
-        const result = await res.json();
-
-        if (!res.ok) {
-            alert(result.message || "Không lấy được địa chỉ");
-            return;
-        }
-
-        addresses = result.data || [];
-        console.log("ADDRESSES: ", addresses);
-        renderAddresses();
-
-    } catch (err) {
-        console.error("Load address error:", err);
-    }
 }
 
-function renderAddresses() {
-    const container = document.getElementById("address");
-    container.innerHTML = "";
-
-    if (!addresses.length) {
-        container.innerHTML = `<span class="text-gray-400">Chưa có địa chỉ</span>`;
-    }
-
-    addresses.forEach(addr => {
-        const div = document.createElement("div");
-        div.className = `
-            flex items-center gap-2 px-3 py-2 rounded-lg border
-            ${addr.is_default ? "border-primary-500 bg-primary-50" : "border-gray-300 bg-gray-50"}
-        `;
-
-        div.innerHTML = `
-            <span class="text-sm">${addr.full_address}</span>
-
-            ${addr.is_default ? `
-              <span class="material-symbols-outlined text-primary-500 text-sm">
-                check_circle
-              </span>
-            ` : ""}
-
-            ${isEditing ? `
-              <button onclick="deleteAddress('${addr._id}')"
-                class="material-symbols-outlined text-red-500 text-sm">
-                delete
-              </button>
-            ` : ""}
-        `;
-
-        container.appendChild(div);
-    });
-
-    if (isEditing) {
-        const addBtn = document.createElement("button");
-        addBtn.className = `
-          flex items-center gap-1 px-3 py-2 rounded-lg
-          border border-dashed border-primary-400
-          text-primary-500
-        `;
-        addBtn.innerHTML = `
-          <span class="material-symbols-outlined text-sm">add</span>
-          <span class="text-sm">Thêm địa chỉ</span>
-        `;
-        addBtn.onclick = openAddAddressModal;
-        container.appendChild(addBtn);
-    }
-}
-
-async function deleteAddress(addressId) {
-    if (!confirm("Xóa địa chỉ này?")) return;
-
+async function loadMyAddresses() {
     try {
         const res = await fetch(
-            `http://localhost:3000/api/user/addresses/${addressId}`,
+            "http://localhost:3000/api/user/addresses/my",
             {
-                method: "DELETE",
                 headers: {
-                    "Authorization": `Bearer ${token}`,
+                Authorization: `Bearer ${token}`
                 }
             }
         );
 
-        const data = await res.json();
-
-        if (!res.ok) {
-            alert(data.message || "Xóa địa chỉ thất bại");
+        if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert("Phiên đăng nhập hết hạn");
+            location.href = "../../login-signup.html";
             return;
         }
 
-        addresses = addresses.filter(a => a._id !== addressId);
-        renderAddresses();
-        location.reload();
+        const { data } = await res.json();
+        console.log("ADDRESSES: ", data);
+        const select = document.getElementById("addressSelect");
 
+        select.innerHTML = `<option value="">-- Chọn địa chỉ --</option>`;
+        addressMap = {};
+
+        if (!data || data.length === 0) {
+            select.innerHTML += `<option disabled>Chưa có địa chỉ</option>`;
+            return;
+        }
+
+        data.forEach((addr) => {
+            addressMap[addr._id] = addr;
+
+            const opt = document.createElement("option");
+            opt.value = addr._id;
+            opt.textContent = addr.full_address;
+
+            if (addr.is_default) {
+                opt.selected = true;
+                saveSelectedAddress(addr._id);
+            }
+
+            select.appendChild(opt);
+        });
     } catch (err) {
-        console.error("Delete address error:", err);
-        alert("Có lỗi khi xóa địa chỉ");
+        console.error(err);
+        alert("Không thể tải danh sách địa chỉ");
     }
 }
 
+function saveSelectedAddress(addressId) {
+    if (!addressMap[addressId]) return;
+
+    bookingDraft.address_id = addressId;
+    bookingDraft.address_snapshot = {
+        full_address: addressMap[addressId].full_address,
+        latitude: addressMap[addressId].latitude,
+        longitude: addressMap[addressId].longitude
+    };
+
+    localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+}
+
+// logic thêm địa chỉ
 function openAddAddressModal() {
     // Reset address state for new address
     addressState = {
@@ -220,6 +190,8 @@ function openAddAddressModal() {
         }
     }, 100);
 }
+
+window.openAddAddressModal = openAddAddressModal;
 
 // logic xử lý phần địa chỉ
 let map = null;
@@ -489,7 +461,7 @@ async function saveAddress() {
       return;
     }
 
-    await loadUserAddresses();
+    await loadMyAddresses();
     closeAddressModal();
     alert("✅ Thêm địa chỉ thành công");
 
@@ -513,157 +485,156 @@ function closeAddressModal() {
     mapInitialized = false;
 }
 
-async function loadUserProfile() {
-    try {
-        const res = await fetch("http://localhost:3000/api/user/profile", {
-            method: "GET",
-            headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-            }
-        });
+async function createPaymentLink(orderId, receiptId) {
+    console.log("ORDER ID IN CREATE PAYMENT LINK: ", orderId);
+    console.log("BOOKING DRAFT IN CREATE PAYMENT LINK: ", bookingDraft);
+    console.log("VOUCHER DRAFT IN CREATE PAYMENT LINK: ", voucherDraft);
 
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../auth/login-signup.html";
-            return;
-        }
+    // const amount =
+    //     (voucherDraft && typeof voucherDraft.final_amount === "number"
+    //         ? voucherDraft.final_amount
+    //         : bookingDraft?.base_amount) || 0;
 
-        const data = await res.json();
-        console.log("DATA: ", data);
-        
-        if (!res.ok || !data.success) {
-            alert(data.message || "Không thể lấy thông tin người dùng");
-            return;
-        }
+    const amount = bookingDraft.final_amount;
 
-        const { role, email } = data.account;
-        const user = data.user;
-        const { BIN, account_number, type } = data.customer;
+    const shortOrderId = orderId.toString().slice(-6);
 
-        // chỉ xử lý customer
-        if (role !== "customer") return;
-
-        // bind data vào UI
-        document.getElementById("full-name").innerText = user.full_name || "";
-        document.getElementById("full-name-input").value = user.full_name || "";
-        document.getElementById("phone").value = user.phone_number || "";
-        document.getElementById("cccd").value = user.identification || "";
-        document.getElementById("email").value = email || "";
-        document.getElementById("rank").value = mapCustomerType(type) || "Khách hàng mới";
-        document.getElementById("bin").value = BIN;
-        document.getElementById("account-number").value = account_number;
-
-        // avatar
-        document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-
-        await loadUserAddresses();
-
-    } catch (error) {
-        console.error("Lỗi load profile:", error);
-    }
-}
-
-async function updateProfile() {
-    try {
-        const full_name = document.getElementById("full-name-input").value;
-        const phone_number =  document.getElementById("phone").value;
-        const identification = document.getElementById("cccd").value;
-        
-        const BIN = document.getElementById("bin").value;
-        const account_number = document.getElementById("account-number").value;
-
-        if (!BIN || !account_number) {
-        return alert("Yêu cầu nhập đầy đủ thông tin tài khoản ngân hàng.");
-        }
-        
-        const payload = {
-            full_name, phone_number, identification, BIN, account_number,
-        };
-
-        Object.keys(payload).forEach(
-            key => payload[key] === "" && delete payload[key]
-        );
-
-        const res = await fetch("http://localhost:3000/api/user/profile/update", {
-            method: "PUT",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json"
+    const transactionPayload = {
+        order_id: orderId,
+        receipt_id: receiptId,
+        amount,
+        description: `TT DH ${shortOrderId}`,
+        items: [
+            {
+                name: bookingDraft?.task_snapshot?.name || "TaskGo service",
+                quantity: 1,
+                price: amount,
             },
-            body: JSON.stringify(payload)
-        });
+        ],
+    };
 
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-            alert(data.message || "Cập nhật thất bại");
-            return;
+    const res = await fetch(
+        `http://localhost:3000/api/transaction/paymentLink/${newOrder.customer_id}`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify(transactionPayload)
         }
+    );
 
-        alert("Cập nhật thông tin thành công");
+    const result = await res.json();
 
-        if (data.success) {
-            isEditing = false;
-
-            editableInputs.forEach(input => input.readOnly = true);
-            updateBtn.disabled = true;
-            updateBtn.classList.add("opacity-50", "cursor-not-allowed");
-
-            editBtn.innerHTML = `
-            <span>Chỉnh sửa thông tin</span>
-            <span class="material-symbols-outlined ml-1">edit</span>
-            `;
-        }
-
-        //renderAddress();
-        location.reload();
-
-    } catch (error) {
-        console.error("Update profile error:", error);
-        alert("Có lỗi xảy ra");
+    if (!res.ok || !result.success) {
+        alert(result.message || result.error || "Không thể tạo link thanh toán");
+        return null;
     }
+
+    return result.data; // PayOS payment link object (checkoutUrl, orderCode, id,...)
 }
 
-async function updateAvatar(event) {
-    try {
-    const file = event.target.files[0];
-
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("avatar", file);
-
-    const res = await fetch("http://localhost:3000/api/user/profile/update-avatar", {
-        method: "PUT",
+async function createOrderReceipt() {
+    const payload = { order_id, payment_method };
+    console.log("PAYLOAD FOR RECEIPT: ", payload);
+    const res = await fetch("http://localhost:3000/api/order/receipt/add", {
+        method: "POST",
         headers: {
-        "Authorization": `Bearer ${token}`
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
         },
-        body: formData
+        body: JSON.stringify(payload)
     });
 
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-        alert(data.message || "Upload avatar thất bại");
+    const result = await res.json();
+    if (!res.ok) {
+        alert(result.message || "Tạo hóa đơn cho đơn hàng thất bại!");
         return;
     }
 
-    document.getElementById("avatar").src = URL.createObjectURL(file);
-    alert("✅ Cập nhật avatar thành công");
+    console.log("RECEIPT CREATED:", result.data);
+    return result;
+}
 
-    } catch (error) {
-    console.error("Update avatar error:", error);
-    alert("Có lỗi khi upload avatar");
+async function submitOrder() {
+    const payload = {
+        ...bookingDraft
+    };
+
+    if (!bookingDraft.address_id) {
+        alert("Vui lòng chọn địa chỉ làm việc");
+        return;
+    }
+
+    const res = await fetch("http://localhost:3000/api/order/create", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+        alert(result.message || "Tạo đơn hàng thất bại");
+        return;
+    }
+
+    console.log("ORDER CREATED:", result.order);
+    newOrder = result.order;
+    order_id = result.order._id;
+    localStorage.setItem("orderCreated", JSON.stringify(result.order));
+
+    // tạo hóa đơn
+    const receipt = await createOrderReceipt();
+
+    if (payment_method === "cash") {
+        // dọn draft sau khi tạo đơn thành công với tiền mặt
+        bookingDraft = null;
+        voucherDraft = null;
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+        location.href = "./ordering_success.html";
+    }
+    else if (payment_method === "bank_transfer") {
+        const paymentLink = await createPaymentLink(order_id, receipt?.data?._id);
+
+        if (!paymentLink || !paymentLink.checkoutUrl) {
+            alert("Không tạo được link thanh toán");
+            return;
+        }
+
+        // Lưu thông tin để success page check lại
+        localStorage.setItem("paymentPending", JSON.stringify({
+            order_id,
+            paymentId: paymentLink.id,
+            orderCode: paymentLink.orderCode
+        }));
+
+        // dọn draft sau khi đã lưu paymentPending
+        bookingDraft = null;
+        voucherDraft = null;
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+
+        // Redirect sang PayOS
+        window.location.href = paymentLink.checkoutUrl;
     }
 }
 
-window.updateProfile = updateProfile;
-window.updateAvatar = updateAvatar;
+loadBookingDraft();
+initVoucherDraft();
+renderAmounts();
+bindAddressSelect();
+loadMyAddresses();
+
 window.openAddAddressModal = openAddAddressModal;
 window.closeAddressModal = closeAddressModal;
 window.saveAddress = saveAddress;
-window.deleteAddress = deleteAddress;
 
-document.addEventListener("DOMContentLoaded", loadUserProfile);
+console.log("FINAL BOOKING DRAFT: ", bookingDraft);
+//document.addEventListener("DOMContentLoaded");

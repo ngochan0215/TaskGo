@@ -318,11 +318,19 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid email!" });
     }
 
-    if (account.status !== "active") {
+    if (account.status === "inactive") {
       return res.status(400).json({
         success: false,
         message:
-          "Account is not active. Please verify your email or contact support.",
+          "Tài khoản chưa được kích hoạt hoặc bạn đã ngưng hoạt động. Vui lòng xem lại.",
+      });
+    }
+
+    if (account.status === "suspended") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Tài khoản của bạn đã bị ban bởi admin. Vui lòng xem lại.",
       });
     }
 

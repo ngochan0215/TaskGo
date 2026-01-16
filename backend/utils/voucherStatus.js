@@ -3,8 +3,8 @@ import { Voucher, VoucherUsage } from "../models/index.js";
 
 export const voucherStatusCron = () => {
 
-  // chạy mỗi 1 phút
-  cron.schedule("* * * * *", async () => {
+  // chạy mỗi ngày lúc 0h
+  cron.schedule("0 0 * * *", async () => {
     try {
       const now = new Date();
 
@@ -34,6 +34,9 @@ export const voucherStatusCron = () => {
             is_active: false,
             status: "finished"
           }
+        },
+        {
+          timezone: "Asia/Ho_Chi_Minh"
         }
       );
 

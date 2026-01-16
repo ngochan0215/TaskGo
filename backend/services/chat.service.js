@@ -4,17 +4,19 @@ import Account from "../models/accounts.js";
 import Chat from "../models/chats.js";
 
 export async function createNewChatForOrder(order_id) {
-  if (!mongoose.Types.ObjectId.isValid(order_id)) throw new Error("Invalid order id");
+  if (!mongoose.Types.ObjectId.isValid(order_id))
+    throw new Error("invalid_order_id");
   const order = await Order.findById(order_id).exec();
-  if (!order) throw new Error("Order not found");
+  if (!order) throw new Error("order_not_found");
   if (order.status !== "accepted" && order.status !== "in_progress")
-    throw new Error("Can't create new chat for pending or completed orders");
+    throw new Error("invalid_order_status");
 
   const customer = await Account.findOne({ user_id: order.customer_id }).exec();
   const tasker = await Account.findOne({ user_id: order.tasker_id }).exec();
 
-  if (!customer || !tasker) throw new Error("Participant account not found");
-  if (customer.role !== "customer" || tasker.role !== "tasker") throw new Error("Only allow chat between customer and tasker");
+  if (!customer || !tasker) throw new Error("participant_not_found");
+  if (customer.role !== "customer" || tasker.role !== "tasker")
+    throw new Error("invalid_participant_roles");
 
   const chat = await Chat.findOneAndUpdate(
     { order_id: order._id },
@@ -31,6 +33,46 @@ export async function createNewChatForOrder(order_id) {
     },
     { new: true, upsert: true, setDefaultsOnInsert: true }
   ).exec();
+
+  return chat;
+}
+
+export async function fetchChat(orderId, userId, checkActive = false) {
+  // Validate ID format
+  if (!orderId || !mongoose.Types.ObjectId.isValid(orderId)) {
+    throw new Error("invalid_order_id");
+  }
+
+  // Find Chat
+  let chat = await Chat.findOne({ order_id: orderId });
+
+  if (!chat) {
+    try {
+      chat = await createNewChatForOrder(orderId);
+    } catch (err) {
+      // If creation fails (e.g. Order is 'pending' or 'cancelled'), 
+      // we map it back to "chat_not_found" so the Controller returns 404 
+      // instead of a 500 Server Error.
+      if (err.message === "invalid_order_status" || err.message === "order_not_found") {
+         throw new Error("chat_not_found");
+      }
+      throw err; 
+    }
+  }
+
+  // Check Status 
+  if (checkActive && chat.status === "completed") {
+    throw new Error("chat_closed_after_order_completion");
+  }
+
+  // Check Permission
+  const isParticipant = chat.participants.some(
+    (p) => String(p.user_id) === userId
+  );
+
+  if (!isParticipant) {
+    throw new Error("no_permission");
+  }
 
   return chat;
 }
