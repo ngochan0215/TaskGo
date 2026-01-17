@@ -562,6 +562,11 @@ export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorI
         // update tasker
         tasker.working_status = toStatus;
         await tasker.save();
+        return tasker;
+    } catch (error) {
+        throw error;
+    }
+}
 // export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
 //   try {
 //     const tasker = await Tasker.findById(taskerId).session(session);
@@ -613,52 +618,52 @@ export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorI
 // };
 
 export async function changeTaskerStatus({
-  taskerId,
-  toStatus,
-  actorType,
-  actorId,
-  reason = null,
-  session
+    taskerId,
+    toStatus,
+    actorType,
+    actorId,
+    reason = null,
+    session
 }) {
-  try {
-    let taskerQuery = Tasker.findById(taskerId);
-    if (session) taskerQuery = taskerQuery.session(session);
+    try {
+        let taskerQuery = Tasker.findById(taskerId);
+        if (session) taskerQuery = taskerQuery.session(session);
 
-    const tasker = await taskerQuery;
-    if (!tasker) throw new Error("Không tìm thấy tasker.");
+        const tasker = await taskerQuery;
+        if (!tasker) throw new Error("Không tìm thấy tasker.");
 
-    const now = new Date();
-    const fromStatus = tasker.working_status;
+        const now = new Date();
+        const fromStatus = tasker.working_status;
 
-    if (fromStatus !== toStatus) {
-      let logQuery = TaskerStatusLog.findOne({
-        tasker_id: taskerId,
-        end_time: null
-      }).sort({ start_time: -1 });
+        if (fromStatus !== toStatus) {
+            let logQuery = TaskerStatusLog.findOne({
+                tasker_id: taskerId,
+                end_time: null
+            }).sort({ start_time: -1 });
 
-      if (session) logQuery = logQuery.session(session);
+            if (session) logQuery = logQuery.session(session);
 
-      const activeLog = await logQuery;
+            const activeLog = await logQuery;
 
-      if (activeLog) {
-        activeLog.end_time = now;
-        await activeLog.save(session ? { session } : {});
-      }
+            if (activeLog) {
+                activeLog.end_time = now;
+                await activeLog.save(session ? { session } : {});
+            }
 
-      await TaskerStatusLog.create([{
-        tasker_id: taskerId,
-        from_status: fromStatus,
-        to_status: toStatus,
-        actor_type: actorType,
-        actor_id: actorId,
-        reason: reason || "",
-        start_time: now,
-        end_time: null
-      }], session ? { session } : {});
+            await TaskerStatusLog.create([{
+                tasker_id: taskerId,
+                from_status: fromStatus,
+                to_status: toStatus,
+                actor_type: actorType,
+                actor_id: actorId,
+                reason: reason || "",
+                start_time: now,
+                end_time: null
+            }], session ? { session } : {});
 
-      tasker.working_status = toStatus;
-      await tasker.save(session ? { session } : {});
-    }
+            tasker.working_status = toStatus;
+            await tasker.save(session ? { session } : {});
+        }
 
         return tasker;
     } catch (error) {
@@ -714,7 +719,7 @@ export async function cashOutForTasker(userId) {
                 continue;
             }
 
-            const payoutState =result?._data?.[0]?.transactions?.[0]?.state;
+            const payoutState = result?._data?.[0]?.transactions?.[0]?.state;
             console.log('Payout state:', payoutState);
             if (!payoutState) {
                 lastError = new Error('Không lấy được trạng thái payout');
@@ -734,7 +739,7 @@ export async function cashOutForTasker(userId) {
                 );
 
                 state = 'SUCCEEDED';
-                return true; 
+                return true;
             }
 
             if (payoutState === 'FAILED') {
@@ -812,7 +817,7 @@ export const availableCashout = async (userId) => {
             throw new Error('Tasker not found');
         }
         const taskerId = tasker._id;
-        
+
         const bills = await PayoutTasker.find({
             tasker_id: taskerId,
             status: 'pending'
@@ -823,8 +828,4 @@ export const availableCashout = async (userId) => {
         throw new Error(error.message);
     }
 };
-    return tasker;
-  } catch (error) {
-    throw error;
-  }
-}
+
