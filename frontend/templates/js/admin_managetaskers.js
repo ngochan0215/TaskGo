@@ -1,18 +1,16 @@
-
 const API_BASE_URL = 'http://localhost:3000/api/admin'; 
-const getToken = () => localStorage.getItem('token'); 
 
-// Format tiền tệ VND
+const getToken = () => localStorage.getItem('accessToken'); 
+
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
-// Hàm gọi API chung để tái sử dụng
 async function apiCall(endpoint, method = 'GET', body = null) {
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` })
+        ...(token && { 'Authorization': `Bearer ${token}` }) 
     };
 
     const config = { method, headers };
@@ -28,7 +26,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
         return data;
     } catch (error) {
         console.error("API Error:", error);
-        alert(error.message); // Thông báo lỗi đơn giản
+        alert(error.message); 
         return null;
     }
 }
@@ -36,10 +34,8 @@ async function apiCall(endpoint, method = 'GET', body = null) {
 async function loadTaskers() {
     const tableBody = document.getElementById('data-table-body');
     
-    // Hiển thị loading trong lúc chờ
     tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center">Đang tải dữ liệu...</td></tr>`;
 
-    // Gọi API: GET /taskers/all
     const taskers = await apiCall('/taskers/all');
 
     if (!taskers || taskers.length === 0) {
@@ -47,11 +43,9 @@ async function loadTaskers() {
         return;
     }
 
-    tableBody.innerHTML = ''; // Xóa loading
+    tableBody.innerHTML = '';
 
     taskers.forEach(tasker => {
-        // Mapping dữ liệu an toàn (tránh lỗi null/undefined)
-        // Lưu ý: User model không được cung cấp, giả định có field full_name hoặc lấy email
         const user = tasker.user_id || {};
         const account = user.account_id || {};
         
@@ -59,18 +53,13 @@ async function loadTaskers() {
         const experience = `${tasker.working_year || 0} năm`;
         const rate = formatCurrency(tasker.hourly_rate || 0) + "/h";
         
-        // Status từ backend
         const accStatus = account.status || 'inactive'; // active, inactive, banned...
         const workStatus = tasker.working_status || 'pending'; // pending, available, busy, inactive
         const mainStatus = tasker.status || 'pending'; // pending, working, resign
 
-        // Tạo dòng HTML giữ nguyên class thiết kế
         const tr = document.createElement('tr');
         tr.className = "border-b border-gray-50 hover:bg-slate-50 transition-colors";
         
-        // Logic hiển thị nút bấm:
-        // Nếu đang chờ duyệt (pending) -> Hiện nút Approve/Reject
-        // Nếu đã duyệt (working) -> Hiện nút Edit/Save
         let actionButtons = '';
         
         if (mainStatus === 'pending') {
@@ -90,7 +79,6 @@ async function loadTaskers() {
             `;
         }
 
-        // Render HTML
         tr.innerHTML = `
             <td class="p-4 font-medium text-slate-800">${name}</td>
             <td class="p-4 max-w-[100px] font-medium text-slate-800">${experience}</td>
@@ -127,10 +115,6 @@ async function loadTaskers() {
     });
 }
 
-/**
- * ACTIONS: XỬ LÝ SỰ KIỆN
- */
-
 // 1. Approve Tasker
 async function approveTasker(taskerId) {
     if (!confirm('Bạn có chắc chắn muốn duyệt Tasker này?')) return;
@@ -139,7 +123,7 @@ async function approveTasker(taskerId) {
     const result = await apiCall(`/taskers/approve/${taskerId}`, 'PATCH');
     if (result) {
         alert('Duyệt thành công!');
-        loadTaskers(); // Reload lại bảng
+        loadTaskers();
     }
 }
 
@@ -155,18 +139,14 @@ async function rejectTasker(taskerId) {
     }
 }
 
-// 3. Update Tasker Profile (Sử dụng 2 select box)
+// 3. Update Tasker Profile
 async function updateTasker(taskerId) {
-    // Lấy giá trị từ các ô select
     const accStatusVal = document.getElementById(`acc-status-${taskerId}`).value;
     const workStatusVal = document.getElementById(`work-status-${taskerId}`).value;
 
-    // Chuẩn bị body theo yêu cầu của controller updateTaskerProfile
-    // Controller yêu cầu: { account_status, tasker_status }
     const body = {
         account_status: accStatusVal,
         tasker_status: workStatusVal
-        // hourly_rate: ... (Nếu muốn sửa giá thì cần thêm input field vào HTML, hiện tại HTML không có input edit giá)
     };
 
     if (!confirm('Lưu các thay đổi trạng thái?')) return;
@@ -179,5 +159,4 @@ async function updateTasker(taskerId) {
     }
 }
 
-// Khởi chạy khi trang load xong
 document.addEventListener('DOMContentLoaded', loadTaskers);
