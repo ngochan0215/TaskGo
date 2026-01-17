@@ -38,6 +38,7 @@ export const createPayment = async (transaction, userId) => {
         items,
         cancelUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/cancel.html',
         returnUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/success.html',
+        expiredAt: Math.floor(Date.now() / 1000) + (5 * 60),
     };
 
     // tạo bản ghi transaction trước
