@@ -126,6 +126,13 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../js/socket.js";
+
+        initSocket();
+    </script>
+    
     <script>
         const workdateInput = document.getElementById("workdate");
         const previewBox = document.getElementById("selectedDatePreview");

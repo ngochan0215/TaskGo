@@ -1,12 +1,6 @@
-/**
- * CẤU HÌNH HỆ THỐNG
- * Base URL dựa trên router của bạn (ví dụ: /api/admin)
- */
-const API_BASE_URL = 'http://localhost:3000/api/admin'; 
 
-// Giả định bạn lưu token đăng nhập trong localStorage
-// Nếu bạn lưu ở cookie, cần điều chỉnh lại phần headers
-const getToken = () => localStorage.getItem('accessToken'); 
+const API_BASE_URL = 'http://localhost:3000/api/admin'; 
+const getToken = () => localStorage.getItem('token'); 
 
 // Format tiền tệ VND
 const formatCurrency = (amount) => {
@@ -18,7 +12,7 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     const token = getToken();
     const headers = {
         'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }) // Thêm Bearer Token nếu có
+        ...(token && { 'Authorization': `Bearer ${token}` })
     };
 
     const config = { method, headers };
@@ -39,9 +33,6 @@ async function apiCall(endpoint, method = 'GET', body = null) {
     }
 }
 
-/**
- * LOGIC CHÍNH: RENDER BẢNG
- */
 async function loadTaskers() {
     const tableBody = document.getElementById('data-table-body');
     

@@ -443,5 +443,16 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+// Update back button to include orderId
+function updateBackButton() {
+    const backButton = document.getElementById('backButton');
+    if (backButton && state.currentOrderId) {
+        backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
+    }
+}
+
 // Start
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    updateBackButton();
+});

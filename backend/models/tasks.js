@@ -15,6 +15,7 @@ const taskSchema = new mongoose.Schema(
     icon: { type: String },
     task_type: { type: String },
     status: { type: String, enum: ["active", "inactive", "launching"], default: "launching" },
+    avatar_url: { type: String },
   },
   { timestamps: true }
 );

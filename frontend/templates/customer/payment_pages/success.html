@@ -213,16 +213,25 @@
             <div class="loader"></div>
             <p class="status-message">Đang xác nhận thanh toán...</p>
         </div>
-
-        <!-- <div class="hidden" id="actionSection">
-            <a href="/customer/scheduled.html" class="btn">Xem đơn hàng của bạn</a>
-        </div> -->
     </div>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
+    
     <script>
         // Lấy orderId từ URL query params
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderCode') || urlParams.get('orderId');
+
+        const bookingDraft = localStorage.getItem("bookingDraft");
+        console.log("booking draft in success: ", bookingDraft);
+
+        const paymentPending = localStorage.getItem("paymentPending");
+        console.log("payment pending in success: ", paymentPending);
 
         async function updateSuccessfulTransaction() {
             if (!orderId) {
@@ -282,6 +291,7 @@
 
                 if (remaining <= 0) {
                     clearInterval(timer);
+                    console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS (success payment): ", bookingDraft);
                     window.location.href = REDIRECT_URL;
                 }
             }, 1000);

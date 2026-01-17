@@ -38,7 +38,10 @@
     <div class="flex-1 bg-white md:rounded-2xl shadow-sm border border-gray-200 flex overflow-hidden w-full h-full relative">
 
         <aside class="w-[80px] md:w-[320px] flex-none border-r border-gray-100 flex flex-col bg-white">
-            <div class="p-4 border-b border-gray-100 h-[70px] flex items-center shrink-0">
+            <div class="p-4 border-b border-gray-100 h-[70px] flex items-center justify-between shrink-0">
+                <a id="backButton" href="./customer/customer_activity.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </a>
                 <h2 class="hidden md:block font-bold text-xl text-dark-900">Tin nhắn</h2>
             </div>
             <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -125,6 +128,13 @@
 </main>
 
 <app-footer></app-footer>
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script type="module">
+    import { initSocket } from "../js/socket.js";
+
+    initSocket();
+</script>
 
 </body>
 </html>

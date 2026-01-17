@@ -145,6 +145,13 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
+
     <script>
         const MIN_PEOPLE = 1;
         const MAX_PEOPLE = 8;
@@ -314,12 +321,15 @@
                 task_id: task_id,
                 type: "immediate",
                 base_amount: total,
+                final_amount: total,
+
                 task_snapshot: {
                     code: "COOKING",
                     name: task_name,
                     pricing: basePrice,
                     unit: task_unit
                 },
+                
                 task_payload: {
                     people: state.people,
                     dishes: state.dishes,

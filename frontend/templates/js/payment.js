@@ -164,13 +164,14 @@ function initVoucherDraft() {
   voucherDraft.base_amount = bookingDraft.base_amount;
   localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
 
-  bookingDraft.final_amount = voucherDraft.final_amount;
+  bookingDraft.final_amount = voucherDraft.discount_amount? 
+    voucherDraft.final_amount : bookingDraft.final_amount;
   localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
 }
 
 function renderAmounts() {
   document.getElementById("baseAmount").innerText =
-    formatCurrency(bookingDraft.base_amount);
+    formatCurrency(bookingDraft.final_amount);
 
   document.getElementById("voucherAmount").innerText =
     voucherDraft.discount_amount
@@ -178,10 +179,10 @@ function renderAmounts() {
       : "0 VND";
 
   document.getElementById("finalAmount").innerText =
-    formatCurrency(voucherDraft.final_amount);
+    formatCurrency(bookingDraft.final_amount);
 
   document.getElementById("finalAmountt").innerText =
-    formatCurrency(voucherDraft.final_amount);
+    formatCurrency(bookingDraft.final_amount);
 }
 
 function renderServiceSummary() {

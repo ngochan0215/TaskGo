@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Receipt, Order } from "../models";
+import { Receipt, Order } from "../models/index.js";
 
 export const createReceipt = async (req, res) => {
   const session = await mongoose.startSession();
@@ -27,16 +27,16 @@ export const createReceipt = async (req, res) => {
       });
     }
 
-    const allowedStatuses = ["pending", "awaiting_payment"];
-    if (!allowedStatuses.includes(order.status)) {
-      return res.status(400).json({
-        message: `Không thể tạo hóa đơn khi đơn hàng đang ở trạng thái: ${order.status}`
-      });
-    }
+    // const allowedStatuses = ["pending", "awaiting_payment"];
+    // if (!allowedStatuses.includes(order.status)) {
+    //   return res.status(400).json({
+    //     message: `Không thể tạo hóa đơn khi đơn hàng đang ở trạng thái: ${order.status}`
+    //   });
+    // }
 
     if (order.type === "scheduled" && payment_method !== "bank") {
       return res.status(400).json({
-        message: "Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản"
+        message: "Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản để đảm bảo sự uy tín."
       });
     }
 
@@ -202,6 +202,35 @@ export const updateReceiptStatus = async (req, res) => {
     });
   }
 };
+
+export async function markReceiptPaidService({ receiptId, transactionId = null, session }) {
+  if (!mongoose.Types.ObjectId.isValid(receiptId)) {
+    throw new Error("ID hóa đơn không hợp lệ");
+  }
+
+  let query = Receipt.findById(receiptId);
+  if (session) query = query.session(session);
+
+  const receipt = await query;
+  if (!receipt) {
+    throw new Error("Không tìm thấy hóa đơn");
+  }
+
+  if (receipt.status === "success") {
+    throw new Error("Hóa đơn đã được thanh toán trước đó");
+  }
+
+  console.log("HELLO ANYONE SEE ME.");
+  receipt.status = "success";
+  receipt.paid_at = new Date();
+  receipt.transaction_id = transactionId;
+
+  await receipt.save(session ? { session } : {});
+
+  console.log("DONE UPDATING RECEIPT");
+
+  return receipt;
+}
 
 // dùng cho thanh toán tiền mặt
 export const markReceiptPaid = async (req, res) => {

@@ -1,10 +1,17 @@
 import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isTasker } from "../middleware/verifyRole.js"
-import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus} from "../controllers/taskers.controller.js";
+import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, getOrderDetailsForTasker, getAvailableOrdersForTasker} from "../controllers/taskers.controller.js";
 
 const router = express.Router();
 
+// Get available orders for tasker (for home page)
+router.get("/orders/available", verifyToken, isTasker, getAvailableOrdersForTasker);
+
+// Get order details for tasker
+router.get("/order/:orderId", verifyToken, isTasker, getOrderDetailsForTasker);
+
+// Tasker actions
 router.put("/accept/:orderId", verifyToken, isTasker, acceptTask);
 router.put("/deny/:orderId", verifyToken, isTasker, denyTask);
 router.put("/confirm/depart/:orderId", verifyToken, isTasker, confirmDeparture);

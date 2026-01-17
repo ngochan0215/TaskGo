@@ -7,7 +7,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron } from "./utils/voucherStatus.js";
+import { voucherStatusCron, orderStatusCron } from "./utils/cronJobStatus.js";
+import '../backend/jobs/transactionStatusJob.js'; 
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -48,6 +49,8 @@ app.use("/api/transaction", transactionRoutes);
 app.use("/api/notification", notificationRoutes);
 
 voucherStatusCron();
+//orderStatusCron();
+
 app.use("/api/chats", chatRoutes);
 
 const httpServer = http.createServer(app);

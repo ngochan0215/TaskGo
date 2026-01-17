@@ -147,6 +147,12 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
     <script>
         const ok = confirm("Dịch vụ này chỉ giành cho bé từ 12 tháng tuổi đến 11 tuổi. Xin quý khách lưu ý!");
         if (!ok) {

@@ -1,10 +1,71 @@
 import { Service, Task, Order } from "../models/index.js";
 import mongoose from "mongoose";
 
+//---- AVATAR UPLOAD ----//
+export const updateServiceAvatar = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		if (!req.file || !req.file.path) {
+			return res.status(400).json({ success: false, message: "Không có file nào được chọn." });
+		}
+
+		const avatarUrl = req.file.path;
+
+		const service = await Service.findById(id);
+		if (!service) {
+			return res.status(404).json({ success: false, message: "Service not found." });
+		}
+
+		service.avatar_url = avatarUrl;
+		await service.save();
+
+		return res.status(200).json({
+			success: true,
+			message: "Cập nhật avatar thành công",
+			avatar_url: service.avatar_url,
+		});
+
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+	}
+};
+
+export const updateTaskAvatar = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		if (!req.file || !req.file.path) {
+			return res.status(400).json({ success: false, message: "Không có file nào được chọn." });
+		}
+
+		const avatarUrl = req.file.path;
+
+		const task = await Task.findById(id);
+		if (!task) {
+			return res.status(404).json({ success: false, message: "Task not found." });
+		}
+
+		task.avatar_url = avatarUrl;
+		await task.save();
+
+		return res.status(200).json({
+			success: true,
+			message: "Cập nhật avatar thành công",
+			avatar_url: task.avatar_url,
+		});
+
+	} catch (err) {
+		console.error(err);
+		return res.status(500).json({ success: false, message: "SERVER ERROR:", err: err.message });
+	}
+};
+
 //---- SERVICE ----//
 export const createService = async (req, res) => {
 	try {
-		const { category_name, description } = req.body;
+		const { category_name, description, avatar_url } = req.body;
 		if (!category_name || !description) 
 			return res.status(400).json({ success: false, message: "Data required." });
 
@@ -12,7 +73,7 @@ export const createService = async (req, res) => {
 		if (existing) 
 			return res.status(400).json({ success: false, message: "Service (category) already exists." });
 
-		const s = new Service({ category_name, description });
+		const s = new Service({ category_name, description, avatar_url });
 		await s.save();
 
 		return res.status(201).json({ success: true, service: s });
@@ -26,7 +87,7 @@ export const createService = async (req, res) => {
 export const updateService = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { category_name, description } = req.body;
+		const { category_name, description, avatar_url, status } = req.body;
 
 		const service = await Service.findById(id);
 		if (!service) 
@@ -34,6 +95,22 @@ export const updateService = async (req, res) => {
 
 		if (category_name) service.category_name = category_name;
 		if (description) service.description = description;
+		if (avatar_url !== undefined) service.avatar_url = avatar_url;
+		if (status && ["active", "inactive", "launching"].includes(status)) {
+			service.status = status;
+			// If activating/deactivating, update related tasks
+			if (status === "active") {
+				await Task.updateMany(
+					{ service_id: service._id },
+					{ $set: { status: "active" } }
+				);
+			} else if (status === "inactive") {
+				await Task.updateMany(
+					{ service_id: service._id },
+					{ $set: { status: "inactive" } }
+				);
+			}
+		}
 
 		await service.save();
 		return res.status(200).json({ success: true, service });
@@ -197,7 +274,7 @@ export const getServiceById = async (req, res) => {
 //---- TASK ----//
 export const createTask = async (req, res) => {
 	try {
-		const { service_id, task_name, description, pricing, task_type } = req.body;
+		const { service_id, task_name, description, pricing, task_type, avatar_url, unit } = req.body;
 		let status = "launching";
 
 		if (!service_id || !task_name || !description || !pricing) 
@@ -216,7 +293,7 @@ export const createTask = async (req, res) => {
 		if (existing) 
 			return res.status(400).json({ success: false, message: "Task already exists for this service." });
 
-		const task = new Task({ service_id, task_name, description, pricing, task_type, status });
+		const task = new Task({ service_id, task_name, description, pricing, task_type, avatar_url, unit, status });
 		await task.save();
 		return res.status(201).json({ success: true, task });
 
@@ -267,7 +344,7 @@ export const getAllTasks = async (req, res) => {
 export const updateTask = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { task_name, description, pricing, status, task_type } = req.body;
+		const { task_name, description, pricing, status, task_type, avatar_url } = req.body;
 
 		const task = await Task.findById(id);
 		if (!task) 
@@ -277,10 +354,8 @@ export const updateTask = async (req, res) => {
 		if (description) task.description = description;
 		if (pricing) task.pricing = pricing;
 		if (task_type) task.task_type = task_type;
-
-		if (status && status !== 'inactive') {
-			return res.status(400).json({ success: false, message: "You can only update task's status to inactive." });
-		}
+		if (avatar_url !== undefined) task.avatar_url = avatar_url;
+		if (status) task.status = status;
 
 		await task.save();
 		return res.status(200).json({ success: true, task });
@@ -308,98 +383,116 @@ export const deleteTask = async (req, res) => {
 };
 
 // viết hàm lấy các dịch vụ thường được sử dụng dựa trên lịch sử đơn hàng của user
-export const getUserFavoriteTasks = async(req, res) => {
+export const getUserFavoriteTasks = async (req, res) => {
   try {
-    const limit = 5;
     const customerId = req.userId;
 
-    return Order.aggregate([
-    // chỉ lấy đơn của user + đã hoàn thành
-    {
-      $match: {
-        customer_id: new mongoose.Types.ObjectId(customerId),
-        status: "completed"
-      }
-    },
-
-    // group theo task
-    {
-      $group: {
-        _id: "$task_id",
-        total_orders: { $sum: 1 },
-        task_name: { $first: "$task_snapshot.name" }
-      }
-    },
-
-    // sort theo số lần đặt
-    {
-      $sort: { total_orders: -1 }
-    },
-
-    // giới hạn
-    {
-      $limit: limit
-    },
-
-    // format
-    {
-      $project: {
-        _id: 0,
-        task_id: "$_id",
-        task_name: 1,
-        total_orders: 1
-      }
-    }
-  ]);
-  } catch (error) {
-    console.error("GET USER FAVORITE TASKS ERROR:", error.message);
-    return res.status(500).json({ success: false, message: "SERVER ERROR: " + error.message });
-  }
-}
-
-// top 5 dịch vụ phổ biến nhất
-export const getTopPopularTasks = async(req, res) => {
-  try {
-    const limit = 5;
-    return Order.aggregate([
-      // chỉ lấy đơn đã hoàn thành
+    const data = await Order.aggregate([
       {
         $match: {
+          customer_id: new mongoose.Types.ObjectId(customerId),
           status: "completed"
         }
       },
 
-      // group theo task
+      {
+        $project: {
+          task_id: 1,
+          task_name: "$task_snapshot.name",
+          task_code: "$task_snapshot.code"
+        }
+      },
+
       {
         $group: {
           _id: "$task_id",
           total_orders: { $sum: 1 },
-          task_name: { $first: "$task_snapshot.name" }
+          task_name: { $first: "$task_name" },
+          task_code: { $first: "$task_code" }
         }
       },
 
-      // sắp xếp giảm dần theo số lần đặt
-      {
-        $sort: { total_orders: -1 }
-      },
+      { $sort: { total_orders: -1 } },
+      { $limit: 5 }
+    ]);
 
-      // lấy top N
-      {
-        $limit: limit
-      },
+    // Populate task details
+    const tasksWithDetails = await Promise.all(
+      data.map(async (item) => {
+        const task = await Task.findById(item._id)
+          .select("task_name description pricing unit avatar_url task_type")
+          .lean();
+        
+        return {
+          task_id: item._id,
+          task_name: task?.task_name || item.task_name,
+          description: task?.description || "",
+          pricing: task?.pricing || 0,
+          unit: task?.unit || "hour",
+          avatar_url: task?.avatar_url || null,
+          total_orders: item.total_orders,
+		  task_type: task.task_type,
+        };
+      })
+    );
 
-      // format output
+    return res.json({ success: true, data: tasksWithDetails });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+// top 5 dịch vụ phổ biến nhất
+export const getTopPopularTasks = async (req, res) => {
+  try {
+    const data = await Order.aggregate([
+      { $match: { status: "completed" } },
+
       {
         $project: {
-          _id: 0,
-          task_id: "$_id",
-          task_name: 1,
-          total_orders: 1
+          task_id: 1,
+          task_name: "$task_snapshot.name",
+          task_code: "$task_snapshot.code"
         }
-      }
+      },
+
+      {
+        $group: {
+          _id: "$task_id",
+          total_orders: { $sum: 1 },
+          task_name: { $first: "$task_name" },
+          task_code: { $first: "$task_code" }
+        }
+      },
+
+      { $sort: { total_orders: -1 } },
+      { $limit: 5 }
     ]);
+
+    // Populate task details
+    const tasksWithDetails = await Promise.all(
+      data.map(async (item) => {
+        const task = await Task.findById(item._id)
+          .select("task_name description pricing unit avatar_url")
+          .lean();
+        
+        return {
+          task_id: item._id,
+          task_name: task?.task_name || item.task_name,
+          description: task?.description || "",
+          pricing: task?.pricing || 0,
+          unit: task?.unit || "hour",
+          avatar_url: task?.avatar_url || null,
+          total_orders: item.total_orders
+        };
+      })
+    );
+
+    return res.json({ success: true, data: tasksWithDetails });
   } catch (error) {
-    console.error("GET POPULAR TASKS ERROR:", error.message);
-    return res.status(500).json({ success: false, message: "SERVER ERROR: " + error.message });
+    console.error(error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};

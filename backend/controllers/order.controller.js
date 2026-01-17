@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Voucher, VoucherUsage, Order, Customer, User } from "../models/index.js";
+import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review, Account, OrderStatusLog } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -8,11 +8,14 @@ import {
   getAllOrdersByCustomerIdService,
   createOrderService,
   verifyCustomerOrderStats,
-  getOrderTrendsService
+  getOrderTrendsService,
+  assignTaskerService,
+  canCancelOrderByCustomer,
+  changeOrderStatus,
 } from "../services/order.service.js";
+import { pushNotification } from "../services/notification.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
-import { buildTaskerRanking } from "../services/taskers.service.js";
 
 export const getAllOrders = async (req, res) => {
   try {
@@ -47,23 +50,126 @@ export const getOrderById = async (req, res) => {
   }
 };
 
+// Get order details with reviews and receipt for customer activity page
+export const getOrderDetailsForCustomer = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const customerId = req.userId;
+
+    // Get order with all populated fields
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng."
+      });
+    }
+
+    // Verify ownership
+    if (String(order.customer_id._id || order.customer_id) !== String(customerId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem đơn hàng này."
+      });
+    }
+
+    // Get receipt
+    const receipt = await Receipt.findOne({ order_id: orderId }).lean();
+
+    // Get reviews (customer reviewing tasker)
+    const review = await Review.findOne({
+      order_id: orderId,
+      reviewer_id: customerId,
+      reviewee_role: "tasker",
+      status: "visible"
+    })
+      .populate('reviewer_id', 'full_name avatar_url')
+      .populate('reviewee_id', 'full_name avatar_url')
+      .lean();
+
+    // Check if can cancel
+    const cancelCheck = await canCancelOrderByCustomer({
+      orderId: order._id,
+      customerId: customerId
+    });
+
+    // Get order status logs for timeline
+    const statusLogs = await OrderStatusLog.find({ order_id: orderId })
+      .sort({ created_at: 1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      order,
+      receipt: receipt || null,
+      review: review || null,
+      canCancel: cancelCheck.canCancel,
+      cancelReason: cancelCheck.reason || null,
+      penaltyAmount: cancelCheck.penaltyAmount || 0,
+      statusLogs: statusLogs || []
+    });
+
+  } catch (err) {
+    console.error("Error in getOrderDetailsForCustomer:", err);
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
 export const getAllOrdersByCustomerId = async (req, res) => {
   try {
-    const { customerId } = req.params || req.userId;
+    // Use customerId from params if provided and not "me", otherwise use authenticated user's ID
+    const customerId = req.params.customerId 
+      ? req.params.customerId : req.userId;
+    
+    console.log("customerId: ", customerId);
+    // Extract query parameters
+    const { status, category, page = 1, limit = 50 } = req.query;
 
     const orders = await getAllOrdersByCustomerIdService({
       customerId,
-      ...req.query,
+      status,
+      category, // "upcoming" or "history"
+      page: Number(page),
+      limit: Number(limit),
     });
     
-    res.status(200).json({ success: true, orders });
+    // Populate receipt for payment method (if exists)
+    const ordersWithReceipts = await Promise.all(
+      orders.map(async (order) => {
+        const receipt = await Receipt.findOne({ order_id: order._id }).lean();
+        return {
+          ...order,
+          receipt: receipt || null,
+        };
+      })
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      orders: ordersWithReceipts,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: ordersWithReceipts.length
+      }
+    });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });
   }
 };
 
+// khachs hangf taoj ddonw 
 export const createOrder = async (req, res) => {
-  console.log("req.body", req.body);
+  console.log("req.body in createOrder", req.body);
   try {
     console.log("Creating order for user:", req.userId);
 
@@ -72,40 +178,41 @@ export const createOrder = async (req, res) => {
       ...req.body,
     });
 
-    console.log("ORDER: ", result);
-    const io = getSocketInstance();
+    const order = result.order;
+    console.log("RESULT ORDER: ", order);
 
-    io.to(`user:${req.userId}`).emit("order-created", {
-      order_id: result._id,
-      order: result,
-    });
+    const admin = await Account.find({ role: "admin" }).select("user_id");
+    // gửi thông báo cho admin
+    await Promise.all(
+      admin.map(ad =>
+          pushNotification(
+              ad.user_id,
+              "Có đơn hàng mới!",
+              `Khách hàng có ID: ${req.userId} vừa đặt đơn hàng mới. Vui lòng kiểm tra nếu 
+                quá lâu không tìm thấy tasker phù hợp.`,
+              "order",
+              "Order",
+              order._id,
+              "unread"
+          )
+      )
+    );
 
-    console.log("Emitted order-created to user:", req.userId);
-
-    // Gợi ý tasker dựa trên thuật toán xếp hạng
-    const taskers = await buildTaskerRanking(result.order._id);
-    console.log("Tasker ", taskers);
-
-    if (Array.isArray(taskers)) {
-      console.log("Taskers to notify:", taskers);
-      for (const tasker of taskers) {
-        if (tasker._id) {
-          console.log("Notifying tasker:", tasker._id);
-          io.to(`user:${tasker._id}`).emit("suggest-tasker", {
-            order_id: result._id,
-            customer_id: req.userId,
-            suggestion: tasker,
-          });
-          console.log("Emitted suggest-tasker to tasker:", tasker._id);
-        }
-      }
-    }
+    // const orderId = order._id;
+    // // đổi trạng thái và log
+    // await changeOrderStatus({
+    //   orderId,
+    //   toStatus: "cancelled",
+    //   actorType: "customer",
+    //   actorId: customerId,
+    //   reason: reason,
+    //   session
+    // });
 
     return res.status(201).json({
       success: true,
-      message: "Order created successfully.",
-      order: result,
-      assignedTasker: result.assignedTasker,
+      message: "Tạo đơn hàng thành công.",
+      order: order,
     });
 
   } catch (err) {
@@ -127,13 +234,51 @@ export const cancelOrderByCustomer = async (req, res) => {
       reason: req.body.reason,
     });
 
-    const io = getSocketInstance();
+    if (order.tasker_id) {
+      await pushNotification(
+        order.tasker_id,                 
+        "Đơn hàng đã bị hủy",
+        `Bạn có một đơn hàng có ID: ${order._id} của khách hàng ${order.customer_id} đã bị khách hàng hủy.`,
+        "order",                              
+        "Order",                              
+        order._id,                         
+        "unread"                              
+      );
+    }
 
-    // notify all sockets in order room
-    io.to(`order:${orderId}`).emit("order-cancelled", {
-      order_id: orderId,
-      reason: req.body.reason,
-    });
+    // gửi thông báo cho khách
+    await pushNotification(
+      order.customer_id,                 
+      "Đơn hàng đã bị hủy",
+      `Bạn đã hủy đơn hàng có ID: ${order._id}. Hãy chú ý đến điểm uy tín của mình nhé.`,
+      "order",                              
+      "Order",                              
+      order._id,                         
+      "unread"                              
+    );
+
+    const admin = await Account.find({ role: "admin" }).select("user_id");
+    // gửi thông báo cho admin
+    await Promise.all(
+      admin.map(ad =>
+        pushNotification(
+          admin.user_id,
+          "Một đơn hàng đã bị hủy!",
+          `Khách hàng có ID: ${req.userId} đã hủy đơn hàng của bản thân.`,
+          "order",
+          "Order",
+          order._id,
+          "unread"
+        )
+      )
+    );
+
+    // const io = getSocketInstance();
+    // // notify all sockets in order room
+    // io.to(`order:${orderId}`).emit("order-cancelled", {
+    //   order_id: orderId,
+    //   reason: req.body.reason,
+    // });
 
     return res.status(200).json({ success: true, order });
     
@@ -142,7 +287,7 @@ export const cancelOrderByCustomer = async (req, res) => {
   }
 };
 
-// trả về số đơn đã hoàn thành và hủy
+// trả về số đơn đã hoàn thành và đã hủy
 export const getCustomerOrderStats = async (req, res) => {
   try {
     const customerUserId = req.userId;
@@ -172,6 +317,75 @@ export const getOrderTrends = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Find and assign tasker for an order
+export const findTaskerForOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const customerId = req.userId;
+
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id');
+    
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng."
+      });
+    }
+
+    // Check if order belongs to the customer
+    const orderCustomerId = order.customer_id?._id || order.customer_id;
+    if (String(orderCustomerId) !== String(customerId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập đơn hàng này."
+      });
+    }
+
+    // Check if order already has a tasker assigned and is not in pending status
+    if (order.tasker_id && order.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Đơn hàng đã được gán tasker và không thể tìm lại.",
+        order: order.toObject()
+      });
+    }
+
+    // If order is not pending, don't allow finding tasker
+    if (order.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: `Không thể tìm tasker cho đơn hàng ở trạng thái "${order.status}".`
+      });
+    }
+
+    // Find and assign tasker
+    const { suggestion, suggestTaskers } = await assignTaskerService(order);
+
+    // Refresh order to get updated data
+    await order.populate('tasker_id', 'full_name phone_number email');
+    const updatedOrder = await getOrderByIdService(orderId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã tìm thấy tasker phù hợp.",
+      order: updatedOrder,
+      assignedTasker: suggestion,
+      suggestedTaskers: suggestTaskers
+    });
+
+  } catch (err) {
+    console.log("Error in findTaskerForOrder:", err);
+    return res.status(400).json({
       success: false,
       message: err.message
     });
