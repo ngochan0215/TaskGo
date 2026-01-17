@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskGo - Tin nhắn dịch vụ</title>
 
-    <link rel="stylesheet" href="../public/css/output.css">
+    <link rel="stylesheet" href="../../public/css/output.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
@@ -23,25 +24,29 @@
         }
     </style>
 
-    <script src="../components/cus_header.js" defer></script>
-    <script src="../components/cus_footer.js" defer></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <script src="./chat.js" defer></script>
+    <script src="../js/tasker_chat.js" defer></script>
 </head>
 
 <body class="bg-[#F0FDF4] h-screen w-full overflow-hidden font-montserrat flex flex-col">
 
-<app-header active="chat"></app-header>
+<nav class="sticky top-0 z-[100] bg-white shadow-sm">
+    <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
+        <div class="flex items-center gap-3">
+            <a id="backButton" href="./tasker_order_progress.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Tin nhắn</h1>
+        </div>
+    </header>
+</nav>
 
 <main class="flex-1 flex flex-col min-h-0 w-full max-w-[1440px] mx-auto md:p-4">
 
     <div class="flex-1 bg-white md:rounded-2xl shadow-sm border border-gray-200 flex overflow-hidden w-full h-full relative">
 
         <aside class="w-[80px] md:w-[320px] flex-none border-r border-gray-100 flex flex-col bg-white">
-            <div class="p-4 border-b border-gray-100 h-[70px] flex items-center justify-between shrink-0">
-                <a id="backButton" href="./customer/customer_activity.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
-                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                </a>
+            <div class="p-4 border-b border-gray-100 h-[70px] flex items-center shrink-0">
                 <h2 class="hidden md:block font-bold text-xl text-dark-900">Tin nhắn</h2>
             </div>
             <div id="conversations-list" class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
@@ -59,7 +64,7 @@
                     </div>
                 </div>
 
-                <h3 class="text-3xl font-bold text-white mb-2 tracking-tight">Nguyễn Văn A</h3>
+                <h3 class="text-3xl font-bold text-white mb-2 tracking-tight" id="call-partner-name">Nguyễn Văn A</h3>
                 <p class="text-green-400 font-medium mb-16 flex items-center gap-2 text-lg">
                     <span class="material-symbols-outlined text-[20px] animate-spin">sync</span>
                     Đang kết nối...
@@ -126,15 +131,6 @@
         </section>
     </div>
 </main>
-
-<app-footer></app-footer>
-
-<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script type="module">
-    import { initSocket } from "../js/socket.js";
-
-    initSocket();
-</script>
 
 </body>
 </html>

@@ -491,9 +491,9 @@
             console.log("statistics json: ", statsJson);
             console.log("points json: ", pointsJson);
 
-            if (!statsJson.success || !pointsJson.success) {
-                throw new Error("Không lấy được dữ liệu khách hàng");
-            }
+            // if (!statsJson.success || !pointsJson.success) {
+            //     throw new Error("Không lấy được dữ liệu khách hàng");
+            // }
 
             const { completed_orders, cancelled_orders } = statsJson.data;
             console.log("statistics data: ", statsJson.data);
@@ -502,10 +502,10 @@
                 pointsJson.data?.points ?? 0;
 
             document.getElementById("customer-completed-orders").textContent =
-                completed_orders;
+                completed_orders?? 0;
 
             document.getElementById("customer-cancelled-orders").textContent =
-                cancelled_orders;
+                cancelled_orders?? 0;
 
         } catch (err) {
             console.error("Load customer stats error:", err);

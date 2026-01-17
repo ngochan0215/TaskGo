@@ -5,6 +5,7 @@ import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
+import { markReceiptPaidService } from "./receipt.controller.js";
 
 // tasker nhận task
 export const acceptTask = async (req, res) =>{
@@ -14,7 +15,7 @@ export const acceptTask = async (req, res) =>{
 
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ message: "Không tìm thấy đơn hàng."});
+          return res.status(404).json({ message: "Không tìm thấy đơn hàng."});
         }
 
         const customerUserId = order.customer_id.toString();
@@ -26,29 +27,29 @@ export const acceptTask = async (req, res) =>{
 
         // gửi thông báo xác nhận cho tasker
         await pushNotification(
-            req.userId,
-            "Bạn đã nhận đơn hàng!",
-            `Bạn đã nhận đơn hàng có ID: ${orderId}`,
-            "order",
-            "Order",
-            orderId,
-            "unread"
+          req.userId,
+          "Bạn đã nhận đơn hàng!",
+          `Bạn đã nhận đơn hàng có ID: ${orderId}`,
+          "order",
+          "Order",
+          orderId,
+          "unread"
         );
 
         // gửi thông báo cho khách hàng
         await pushNotification(
-            customerUserId,
-            "Đơn hàng đã được chấp nhận!",
-            `Tasker ${tasker_name} đã nhận đơn hàng của bạn!`,
-            "order",
-            "Order",
-            orderId,
-            "unread"
+          customerUserId,
+          "Đơn hàng đã được chấp nhận!",
+          `Tasker ${tasker_name} đã nhận đơn hàng của bạn!`,
+          "order",
+          "Order",
+          orderId,
+          "unread"
         );
 
         res.status(200).json({ 
-            success: true,
-            message: "Order accepted successfully" 
+          success: true,
+          message: "Order accepted successfully" 
         });
     }
     catch (error) {
@@ -284,63 +285,98 @@ export const confirmStart = async (req, res) => {
 
 // tasker xác nhận hoàn thành công việc
 export const confirmComplete = async (req, res) => {
-    const { orderId } = req.params;
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) {
-            throw new Error("Order not found.");
-        }
+  const { orderId } = req.params;
 
-        await confirmCompleteService(req.userId, orderId);
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) throw new Error("Order not found.");
 
-        const customerUserId = order.customer_id.toString();
-        console.log("user_id of customer", customerUserId);
-
-        const tasker = await User.findById(req.userId).select("full_name");
-        const taskerName = tasker?.full_name || "Anoymous";
-
-        // xác nhận với tasker
-        await pushNotification(
-            req.userId,
-            "Bạn đã xác nhận hoàn thành đơn hàng!",
-            `Bạn đã xác nhận hoàn thành đơn hàng có ID: ${orderId}.
-                Nhớ đánh giá khách hàng nhé.`,
-            "order",
-            "Order",
-            orderId,
-            "unread"
-        );
-        // thông báo cho khách
-        await pushNotification(
-            customerUserId,
-            "Dịch vụ đã hoàn thành",
-            `Tasker ${taskerName} đã xác nhận hoàn tất đơn hàng của bạn. Hãy đánh giá tasker nhé.`,
-            "order",
-            "Order",
-            orderId,
-            "unread"
-        );
-
-        // await Customer.updateOne(
-        //     { user_id: customerUserId },
-        //     {
-        //         $inc: { total_completed_orders: 1 }
-        //     },
-        //     { runValidators: true }
-        // );
-
-        res.status(200).json({ 
-            success: true,
-            message: "Task completed successfully" 
-        });
+    if (order.status === "completed") {
+      return res.status(400).json({
+        success: false,
+        message: "Đơn hàng đã được hoàn thành trước đó."
+      });
     }
-    catch (err) {
-        res.status(400).json({ 
-            success: false,
-            message: err.message || "Failed to complete task"
-        });
+
+    await confirmCompleteService(req.userId, orderId);
+
+    const customerUserId = order.customer_id.toString();
+
+    const tasker = await User.findById(req.userId).select("full_name");
+    const taskerName = tasker?.full_name || "Anonymous";
+
+    const receipt = await Receipt.findOne({ order_id: order._id });
+    if (!receipt) throw new Error("Không tìm thấy hóa đơn.");
+
+    if (receipt.payment_method === "cash") {
+      console.log("IM HERE IN CONFIRM COMPLETE");
+      await markReceiptPaidService(receipt._id);
+
+      // update số đơn hoàn thành của khách hàng và điểm danh tiếng
+      await Customer.updateOne(
+        { user_id: customerUserId },
+        { $inc: { total_completed_orders: 1 } }
+      );
+
+      const reputationDelta = Math.floor(receipt.total_amount * 0.1);
+      if (reputationDelta === 0) reputationDelta = 10;
+      await User.updateOne(
+        { _id: customerUserId },
+        { $inc: { reputation_score: reputationDelta } }
+      );
+
     }
+
+    await pushNotification(
+      req.userId,
+      "Bạn đã xác nhận hoàn thành đơn hàng!",
+      `Bạn đã xác nhận hoàn thành đơn hàng ${orderId}.`,
+      "order",
+      "Order",
+      orderId,
+      "unread"
+    );
+
+    await pushNotification(
+      customerUserId,
+      "Dịch vụ đã hoàn thành",
+      `Tasker ${taskerName} đã xác nhận hoàn tất đơn hàng của bạn.`,
+      "order",
+      "Order",
+      orderId,
+      "unread"
+    );
+
+    const admins = await Account.find({ role: "admin" }).select("user_id");
+    await Promise.all(
+      admins.map(ad =>
+        pushNotification(
+          ad.user_id,
+          "Đơn hàng đã hoàn thành!",
+          `Đơn hàng ${orderId} đã được xác nhận hoàn thành.`,
+          "order",
+          "Order",
+          orderId,
+          "unread"
+        )
+      )
+    );
+
+    console.log("DONE CONFIRM COMPLETE");
+
+    res.status(200).json({
+      success: true,
+      message: "Đơn hàng hoàn thành."
+    });
+
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message || "Failed to complete task"
+    });
+  }
 };
+
 
 // Lấy danh sách tất cả tasker với phân trang, lọc và sắp xếp
 export const getAllTaskers = async (req, res) => {
@@ -495,6 +531,7 @@ export const updateWorkingStatus = async (req, res) => {
         message: "Không tìm thấy tasker"
       });
     }
+    const taskerId = tasker._id;
 
     // Không cho bật available nếu chưa được duyệt
     if (tasker.status !== "working" && working_status === "available") {
@@ -503,6 +540,14 @@ export const updateWorkingStatus = async (req, res) => {
         message: "Tasker chưa được duyệt thành công."
       });
     }
+
+    // log trạng thái tasker
+    const taskerLog = await changeTaskerStatus({
+      taskerId,
+      toStatus: working_status,
+      actorType: "tasker",
+      actorId: null
+    });
 
     tasker.working_status = working_status;
     await tasker.save();

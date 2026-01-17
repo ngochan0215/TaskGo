@@ -36,7 +36,7 @@ let socket;
 function initSocket() {
     if (!state.token) {
         alert("Vui lòng đăng nhập");
-        window.location.href = '/login.html';
+        window.location.href = '../auth/login-signup.html';
         return;
     }
 
@@ -61,7 +61,7 @@ function initSocket() {
         // Only append if it belongs to current chat
         if (payload.chat_id === state.currentChatId) {
             appendMessageToUI(payload);
-            //scrollToBottom();
+            scrollToBottom();
             socket.emit('mark-read', { target_order_id: state.currentOrderId });
         }
     });
@@ -82,8 +82,6 @@ async function init() {
     initSocket();
     setupEventListeners();
     
-    // NOTE: Your backend code provided didn't show an API to "Get All Chats".
-    // If you add one (e.g., GET /api/orders/mine), uncomment the line below.
     loadSidebarConversations(); 
 
     if (state.currentOrderId) {
@@ -141,7 +139,7 @@ async function loadChatHistory(cursor = null) {
     if (cursor) els.loadingHistory.classList.remove('hidden');
 
     try {
-        // CHANGE: Construct URL with cursor if exists
+        // Construct URL with cursor if exists
         let url = `${API_URL}/chats/orders/${state.currentOrderId}/messages`;
         if (cursor) url += `?before=${cursor}`;
 
@@ -150,17 +148,15 @@ async function loadChatHistory(cursor = null) {
         });
         
         const res = await response.json();
-        if (!response.ok) throw new Error(res.message || "Error loading chat");
+        if (!response.ok) throw new Error(res.error || "Error loading chat");
 
         const messages = res.data || [];
         
-        // CHANGE: Update cursor from backend response
+        // Update cursor from backend response
         state.nextCursor = res.nextCursor; 
 
         if (!cursor) {
             // === INITIAL LOAD ===
-            // Clear everything except the loader
-            // (Note: We keep the loader element in DOM, just hide it)
             els.loadingHistory.classList.add('hidden');
             
             // Remove old messages (keeping the loader div intact)
@@ -231,12 +227,9 @@ async function loadChatHistory(cursor = null) {
             }
         }
 
-        // If we have more history (nextCursor) BUT the content is too short
-        // to create a scrollbar (scrollHeight <= clientHeight), the user is "stuck".
-        // We must auto-load the next batch immediately.
+        // Auto-load more if content is too short
         if (state.nextCursor && els.msgContainer.scrollHeight <= els.msgContainer.clientHeight) {
             console.log("Content too short to scroll. Auto-loading older messages...");
-            // Use setTimeout to allow 'finally' block to run and reset isLoadingHistory flag
             setTimeout(() => {
                 loadChatHistory(state.nextCursor);
             }, 100);
@@ -286,13 +279,12 @@ function appendMessageToUI(msg) {
 function prependMessagesToUI(messages) {
     // Backend returns [Oldest, ..., Newest] for the requested batch.
     // We want them to appear at the TOP of the current list.
-    // The visual order of the batch must remain Oldest -> Newest.
     
     // Create a fragment to insert strictly after the loader, but before existing messages
     const fragment = document.createDocumentFragment();
     
     messages.forEach(msg => {
-        const msgDiv = createMessageElement(msg); // Refactored creation logic
+        const msgDiv = createMessageElement(msg);
         fragment.appendChild(msgDiv);
     });
 
@@ -311,7 +303,7 @@ function createMessageElement(msg) {
         : "flex items-end gap-2 mb-4 max-w-[85%]";
 
     const avatarUrl = state.partnerAvatar || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-    // (Same HTML structure as before)
+    
     if (isMe) {
         div.innerHTML = `
             <div class="bg-green-500 text-white px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-md break-words">
@@ -358,7 +350,7 @@ function createSidebarItem(chat, isActive) {
     div.innerHTML = `
         <div class="relative shrink-0 w-12 h-12">
             <img src="${chat.partner.avatar_url || 'https://i.pravatar.cc/150'}" class="w-full h-full rounded-full object-cover border border-gray-200">
-            </div>
+        </div>
         <div class="hidden md:flex flex-1 min-w-0 flex-col justify-center">
             <div class="flex justify-between items-center">
                 <p class="font-bold text-dark-900 text-sm truncate">${chat.partner.full_name}</p>
@@ -385,6 +377,7 @@ function createSidebarItem(chat, isActive) {
             loadSidebarConversations(); // Re-render sidebar to update active state
             loadChatHistory(null); // Load new messages
             joinChatRoom(chat.order_id); // Join new socket room
+            updateBackButton(); // Update back button
         }
     });
 
@@ -402,6 +395,7 @@ function setupEventListeners() {
 
     // Typing Indicator Logic
     els.input.addEventListener('input', () => {
+        if (!state.currentOrderId) return;
         socket.emit('start-typing', { target_order_id: state.currentOrderId });
         
         clearTimeout(state.typingTimeout);
@@ -455,7 +449,7 @@ function escapeHtml(text) {
 function updateBackButton() {
     const backButton = document.getElementById('backButton');
     if (backButton && state.currentOrderId) {
-        backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
+        backButton.href = `./tasker_order_progress.html?orderId=${state.currentOrderId}`;
     }
 }
 

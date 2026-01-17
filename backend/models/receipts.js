@@ -13,10 +13,11 @@ const receiptSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["success", "pending", "failed", "refunded"],
+      enum: ["success", "pending", "failed", "refunded", "cancelled"],
       default: "pending",
     },
     
+    cancelled_at: { type: Date },
     paid_at: { type: Date },
     transaction_id: { type: String, trim: true },
   },
