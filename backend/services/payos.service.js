@@ -91,7 +91,7 @@ export const payOut = async (payoutData, userId) => {
         order_code: rand,
         amount: payoutData.amount,
         description: payoutData.description,
-        status: 'completed',
+        status: 'pending',
         type: 'payout',
     });
     const payoutBatch = await payOSpayout.payouts.batch.create({
@@ -110,6 +110,7 @@ export const payOut = async (payoutData, userId) => {
     });
 
     console.log('Payout ID:', payoutBatch.id);
+    return "payout_" +rand;
 }
 
 export const payoutDetailList = async () => {

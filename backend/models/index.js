@@ -20,10 +20,11 @@ import Service from "./services.js";
 import Task from "./tasks.js";
 import Review from "./reviews.js";
 import Address from "./addresses.js";
+import PayoutTasker from "./payoutTasker.js";
 
 export {
     Account, User, Customer, Tasker, FavoriteTasker,
     Discount, Voucher, VoucherUsage, Transaction,
     Order, OrderStatusLog, Receipt, Address, TaskerStatusLog,
-    Service, Task, Message, Notification, Review,
+    Service, Task, Message, Notification, Review, PayoutTasker,
 };

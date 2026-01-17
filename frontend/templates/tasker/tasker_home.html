@@ -115,18 +115,23 @@
                     <div class="p-5 space-y-4">
                         <div class="text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Hôm nay kiếm được</p>
-                            <p style="color: #3730A3;" class="text-3xl font-black">450.000đ</p>
+                            <p id="todayEarnings" style="color: #3730A3;" class="text-3xl font-black">—</p>
                         </div>
 
                         <div style="background-color: #EEF2FF; border-color: #C7D2FE;" class="border rounded-xl p-3 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] text-gray-500 font-bold uppercase mb-0.5">Số dư khả dụng</p>
-                                <p style="color: #3730A3;" class="text-sm font-bold">1.250.000đ</p>
+                                <p id="availableBalance" style="color: #3730A3;" class="text-sm font-bold">—</p>
                             </div>
-                            <button class="bg-white text-[#3730A3] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform">
-                                Rút ngay
+                            <button id="cashoutBtn" class="bg-white text-[#3730A3] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span id="cashoutBtnText">Rút ngay</span>
+                                <svg id="cashoutSpinner" xmlns="http://www.w3.org/2000/svg" class="hidden ml-2 h-4 w-4 text-[#3730A3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0" />
+                                </svg>
                             </button>
                         </div>
+
+                        <div id="toast" class="fixed top-6 right-6 hidden z-50"></div>
 
                         <div class="grid grid-cols-2 gap-3 pt-1">
                             <div class="text-center p-2 bg-gray-50 rounded-lg border border-gray-100">
@@ -509,6 +514,101 @@
 
     loadTaskerHome();
 
+</script>
+<script>
+// Cashout UI logic: load amounts, handle cashout
+function formatCurrency(amount) {
+    try {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
+    } catch (e) {
+        return amount;
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.innerHTML = '';
+    const el = document.createElement('div');
+    el.className = `px-4 py-2 rounded shadow ${type === 'success' ? 'bg-green-500 text-white' : type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'}`;
+    el.textContent = message;
+    toast.appendChild(el);
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+async function loadCashoutInfo() {
+    try {
+        const [todayRes, availRes] = await Promise.all([
+            fetch('http://localhost:3000/api/tasker/cashOut', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+            fetch('http://localhost:3000/api/tasker/cashOut/available', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        ]);
+        const todayJson = await todayRes.json();
+        const availJson = await availRes.json();
+
+        const today = todayJson && todayJson.success ? todayJson.data : 0;
+        const available = availJson && availJson.success ? availJson.data : 0;
+
+        const todayEl = document.getElementById('todayEarnings');
+        const availEl = document.getElementById('availableBalance');
+        const btn = document.getElementById('cashoutBtn');
+
+        if (todayEl) todayEl.textContent = formatCurrency(today);
+        if (availEl) availEl.textContent = formatCurrency(available);
+
+        if (btn) {
+            if (!available || Number(available) <= 0) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        }
+    } catch (err) {
+        console.error('loadCashoutInfo error', err);
+        showToast('Không thể tải thông tin rút tiền', 'error');
+    }
+}
+
+async function performCashout() {
+    const btn = document.getElementById('cashoutBtn');
+    const spinner = document.getElementById('cashoutSpinner');
+    const text = document.getElementById('cashoutBtnText');
+    if (!btn) return;
+    try {
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        text.textContent = 'Đang xử lý...';
+
+        const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const body = await res.json();
+        if (body && body.success) {
+            showToast('Yêu cầu rút tiền thành công', 'success');
+            await loadCashoutInfo();
+        } else {
+            showToast(body && body.message ? body.message : 'Rút tiền thất bại', 'error');
+        }
+    } catch (err) {
+        console.error('performCashout error', err);
+        showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+    } finally {
+        spinner.classList.add('hidden');
+        text.textContent = 'Rút ngay';
+        const availEl = document.getElementById('availableBalance');
+        const btnNow = document.getElementById('cashoutBtn');
+        const availNum = availEl ? Number((availEl.textContent || '').replace(/\D/g, '')) : 0;
+        if (availNum <= 0) btnNow.disabled = true;
+        else btnNow.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadCashoutInfo();
+    const btn = document.getElementById('cashoutBtn');
+    if (btn) btn.addEventListener('click', performCashout);
+});
 </script>
 </body>
 
