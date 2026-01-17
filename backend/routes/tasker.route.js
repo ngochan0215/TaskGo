@@ -1,8 +1,7 @@
 import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isTasker } from "../middleware/verifyRole.js"
-import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, cashOut, amountCashout, availableCashoutAmount} from "../controllers/taskers.controller.js";
-import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, getOrderDetailsForTasker, getAvailableOrdersForTasker} from "../controllers/taskers.controller.js";
+import { acceptTask, confirmDeparture, denyTask, confirmArriving, confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, cashOut, amountCashout, availableCashoutAmount, getOrderDetailsForTasker, getAvailableOrdersForTasker} from "../controllers/taskers.controller.js";
 
 const router = express.Router();
 
