@@ -1,4 +1,3 @@
-// 1. CONFIGURATION & STATE
 const API_URL = "http://localhost:3000/api";
 const SOCKET_URL = "http://localhost:3000";
 
@@ -30,7 +29,7 @@ const els = {
     callOverlay: document.getElementById('call-overlay')
 };
 
-// 2. SOCKET INITIALIZATION
+// SOCKET INITIALIZATION
 let socket;
 
 function initSocket() {
@@ -56,7 +55,6 @@ function initSocket() {
         console.error("Socket error:", err.message);
     });
 
-    // Event: Receive Message
     socket.on('receive-message', (payload) => {
         // Only append if it belongs to current chat
         if (payload.chat_id === state.currentChatId) {
@@ -66,7 +64,6 @@ function initSocket() {
         }
     });
 
-    // Event: Typing Indicators
     socket.on('start-typing', () => {
         els.typingIndicator.classList.remove('hidden');
     });
@@ -76,14 +73,12 @@ function initSocket() {
     });
 }
 
-// 3. MAIN LOGIC
+// MAIN LOGIC
 
 async function init() {
     initSocket();
     setupEventListeners();
     
-    // NOTE: Your backend code provided didn't show an API to "Get All Chats".
-    // If you add one (e.g., GET /api/orders/mine), uncomment the line below.
     loadSidebarConversations(); 
 
     if (state.currentOrderId) {
@@ -141,7 +136,7 @@ async function loadChatHistory(cursor = null) {
     if (cursor) els.loadingHistory.classList.remove('hidden');
 
     try {
-        // CHANGE: Construct URL with cursor if exists
+        // Construct URL with cursor if exists
         let url = `${API_URL}/chats/orders/${state.currentOrderId}/messages`;
         if (cursor) url += `?before=${cursor}`;
 
@@ -154,13 +149,12 @@ async function loadChatHistory(cursor = null) {
 
         const messages = res.data || [];
         
-        // CHANGE: Update cursor from backend response
+        // Update cursor from backend response
         state.nextCursor = res.nextCursor; 
 
         if (!cursor) {
             // === INITIAL LOAD ===
             // Clear everything except the loader
-            // (Note: We keep the loader element in DOM, just hide it)
             els.loadingHistory.classList.add('hidden');
             
             // Remove old messages (keeping the loader div intact)
@@ -212,7 +206,7 @@ async function loadChatHistory(cursor = null) {
                 els.headerScore.innerHTML = "";
             }
 
-            // Render messages (Oldest -> Newest)
+            // Render messages
             messages.forEach(msg => appendMessageToUI(msg));
             scrollToBottom();
         } else {
@@ -260,7 +254,7 @@ function sendMessage() {
     const content = els.input.value.trim();
     if (!content) return;
 
-    // 1. Emit to Socket
+    // Emit to Socket
     socket.emit('send-message', {
         target_order_id: state.currentOrderId,
         content: content
@@ -270,18 +264,17 @@ function sendMessage() {
         }
     });
 
-    // 2. Clear Input
+    // Clear Input
     els.input.value = '';
     socket.emit('stop-typing', { target_order_id: state.currentOrderId });
 }
 
-// UI: Append Message
 function appendMessageToUI(msg) {
     const div = createMessageElement(msg);
     els.msgContainer.appendChild(div);
 }
 
-// 4. UTILS & EVENT LISTENERS
+// UTILS & EVENT LISTENERS
 
 function prependMessagesToUI(messages) {
     // Backend returns [Oldest, ..., Newest] for the requested batch.
@@ -292,7 +285,7 @@ function prependMessagesToUI(messages) {
     const fragment = document.createDocumentFragment();
     
     messages.forEach(msg => {
-        const msgDiv = createMessageElement(msg); // Refactored creation logic
+        const msgDiv = createMessageElement(msg); 
         fragment.appendChild(msgDiv);
     });
 
@@ -311,7 +304,6 @@ function createMessageElement(msg) {
         : "flex items-end gap-2 mb-4 max-w-[85%]";
 
     const avatarUrl = state.partnerAvatar || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-    // (Same HTML structure as before)
     if (isMe) {
         div.innerHTML = `
             <div class="bg-green-500 text-white px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-md break-words">
@@ -361,7 +353,7 @@ function createSidebarItem(chat, isActive) {
             </div>
         <div class="hidden md:flex flex-1 min-w-0 flex-col justify-center">
             <div class="flex justify-between items-center">
-                <p class="font-bold text-dark-900 text-sm truncate">${chat.partner.full_name}</p>
+                <p class="font-bold text-dark-900 text-sm truncate"> ${escapeHtml(chat.order_name || "Đơn hàng")} </p>
                 <span class="text-[10px] text-gray-400 font-medium">${timeString}</span>
             </div>
             <p class="text-xs ${msgClass} truncate">${escapeHtml(previewText)}</p>
