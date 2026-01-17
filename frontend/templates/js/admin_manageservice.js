@@ -11,446 +11,797 @@ function closeSidebar() {
   backdrop.classList.add("hidden");
 }
 
-function logout() {
-  localStorage.removeItem("token");
-  localStorage.removeItem("accessToken");
-  showToast("logout", "Đã đăng xuất", "Bạn đã đăng xuất khỏi hệ thống.");
+const $ = (id) => document.getElementById(id);
+
+// Check authentication
+const token = localStorage.getItem("token");
+const role = localStorage.getItem("system_role");
+
+if (!token || role !== "admin") {
+  alert("Bạn không có quyền truy cập trang này");
+  window.location.href = "../auth/login-signup.html";
 }
 
-function getApiBase() {
-  const isSameBackend = window.location.port === "3000";
-  return isSameBackend ? "" : "http://localhost:3000";
+const API_BASE = "http://localhost:3000/api/task";
+
+const state = {
+  tab: "categories",
+  search: "",
+  filterCategory: "all",
+  filterStatus: "all",
+  catMode: "add",
+  srvMode: "add",
+  editingCatId: null,
+  editingSrvId: null,
+  deleteCtx: null,
+  categories: [],
+  services: [],
+};
+
+function fmtMoney(v) {
+  const n = Number(v || 0);
+  return n.toLocaleString("vi-VN") + "đ";
 }
 
-function getAuthHeaders() {
-  const token =
-    localStorage.getItem("token") || localStorage.getItem("accessToken");
-  const headers = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-  return headers;
-}
-
-async function apiFetch(path, options = {}) {
-  const base = getApiBase();
-  const res = await fetch(base + path, {
-    credentials: "include",
-    ...options,
-    headers: { ...getAuthHeaders(), ...(options.headers || {}) },
-  });
-
-  const text = await res.text();
-  let data = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch (_) {
-    data = { raw: text };
+function statusChip(status) {
+  if (status === "active") {
+    return `
+      <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">
+        Active
+      </span>`;
   }
-
-  if (!res.ok) {
-    const msg =
-      data && (data.message || data.error || data.err)
-        ? data.message || data.error || data.err
-        : `HTTP ${res.status}`;
-    throw new Error(typeof msg === "string" ? msg : JSON.stringify(msg));
-  }
-
-  return data;
-}
-
-const servicesTbody = document.getElementById("servicesTbody");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const statTotal = document.getElementById("statTotal");
-const statActive = document.getElementById("statActive");
-const statInactive = document.getElementById("statInactive");
-const resultHint = document.getElementById("resultHint");
-const pageRange = document.getElementById("pageRange");
-const pageTotal = document.getElementById("pageTotal");
-const pageButtons = document.getElementById("pageButtons");
-const btnPrev = document.getElementById("btnPrev");
-const btnNext = document.getElementById("btnNext");
-
-const toast = document.getElementById("toast");
-const toastIcon = document.getElementById("toastIcon");
-const toastTitle = document.getElementById("toastTitle");
-const toastMsg = document.getElementById("toastMsg");
-let toastTimer = null;
-
-function showToast(type, title, msg) {
-  clearTimeout(toastTimer);
-  toast.classList.remove("hidden");
-
-  const map = {
-    ok: { icon: "check_circle", title: title || "Thành công" },
-    err: { icon: "error", title: title || "Lỗi" },
-    info: { icon: "info", title: title || "Thông báo" },
-    logout: { icon: "logout", title: title || "Đăng xuất" },
-  };
-
-  const t = map[type] || map.info;
-  toastIcon.textContent = t.icon;
-  toastTitle.textContent = t.title;
-  toastMsg.textContent = msg || "";
-
-  toastTimer = setTimeout(() => hideToast(), 3500);
-}
-
-function hideToast() {
-  toast.classList.add("hidden");
-}
-
-function escapeHtml(str) {
-  if (!str) return "";
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function badge(status) {
-  const s = (status || "").toLowerCase();
-  if (s === "active") {
-    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Active</span>`;
-  }
-  if (s === "inactive") {
-    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600 border border-gray-200">Inactive</span>`;
-  }
-  if (s === "launching") {
-    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">Launching</span>`;
-  }
-  return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">${escapeHtml(
-    status || "-"
-  )}</span>`;
-}
-
-let currentPage = 1;
-let totalItems = 0;
-let pageSize = 10;
-let totalPages = 1;
-
-function renderRow(service) {
-  const id = service._id;
-  const name = service.category_name || "-";
-  const desc = service.description || "";
-  const status = service.status || "launching";
-  const tasksCount = Array.isArray(service.tasks) ? service.tasks.length : 0;
-
-  const toggleBtn =
-    String(status).toLowerCase() === "active"
-      ? `<button class="px-2 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50 text-gray-600" onclick="unactivateService('${id}')">Unactivate</button>`
-      : `<button class="px-2 py-1 text-xs rounded-md bg-primary-500 text-white hover:bg-primary-600" onclick="activateService('${id}')">Activate</button>`;
-
-  const safeName = escapeHtml(name).replaceAll("&#039;", "\\'");
-  const safeDesc = escapeHtml(desc).replaceAll("&#039;", "\\'");
-
   return `
-    <tr class="hover:bg-gray-50 transition-colors">
-      <td class="px-4 py-3">
-        <div class="font-semibold text-gray-800">${escapeHtml(name)}</div>
-        <div class="text-xs text-gray-500 break-all">${escapeHtml(id)}</div>
-      </td>
-      <td class="px-4 py-3">
-        <div class="text-sm text-gray-700 leading-snug">
-          ${escapeHtml(desc).slice(0, 140)}${desc.length > 140 ? "..." : ""}
-        </div>
-      </td>
-      <td class="px-4 py-3 text-center">${badge(status)}</td>
-      <td class="px-4 py-3 text-center font-bold">${tasksCount}</td>
-      <td class="px-4 py-3">
-        <div class="flex items-center justify-center gap-2 flex-wrap">
-          <button class="px-2 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50 text-gray-600" onclick="openDetail('${id}')">Xem chi tiết</button>
-          <button class="px-2 py-1 text-xs rounded-md border border-gray-200 hover:bg-gray-50 text-gray-600" onclick="openEditModal('${id}', '${safeName}', '${safeDesc}')">Sửa</button>
-          ${toggleBtn}
-          <button class="px-2 py-1 text-xs rounded-md border border-red-200 hover:bg-red-50 text-red-600" onclick="openDeleteModal('${id}', '${safeName}')">Xóa</button>
-        </div>
-      </td>
-    </tr>
-  `;
+    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">
+      Inactive
+    </span>`;
 }
 
-function renderPagination() {
-  pageButtons.innerHTML = "";
+function unitLabel(unit) {
+  if (unit === "hour") return "Giờ";
+  if (unit === "job") return "Gói";
+  return "Lần";
+}
 
-  const maxBtns = 5;
-  let start = Math.max(1, currentPage - Math.floor(maxBtns / 2));
-  let end = Math.min(totalPages, start + maxBtns - 1);
-  start = Math.max(1, end - maxBtns + 1);
+function openModal(id) {
+  $(id).classList.remove("hidden");
+}
 
-  for (let p = start; p <= end; p++) {
-    const active = p === currentPage;
-    const cls = active
-      ? "w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
-      : "w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm";
-    pageButtons.innerHTML += `<button class="${cls}" onclick="loadServices(${p})">${p}</button>`;
+function closeModal(id) {
+  $(id).classList.add("hidden");
+}
+
+function toast(msg) {
+  $("toastText").textContent = msg;
+  $("toast").classList.remove("hidden");
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => $("toast").classList.add("hidden"), 1600);
+}
+
+function applyRole() {
+  const role = (localStorage.getItem("role") || "admin").toLowerCase();
+  document.querySelectorAll("[data-admin-only]").forEach((el) => {
+    if (role !== "admin") el.classList.add("hidden");
+    else el.classList.remove("hidden");
+  });
+}
+
+function switchTab(tab) {
+  state.tab = tab;
+  if (tab === "categories") {
+    $("panelCategories").classList.remove("hidden");
+    $("panelServices").classList.add("hidden");
+    $("tabCategories").classList.add(
+      "bg-white",
+      "shadow-sm",
+      "text-gray-900",
+      "font-semibold"
+    );
+    $("tabServices").classList.remove(
+      "bg-white",
+      "shadow-sm",
+      "text-gray-900",
+      "font-semibold"
+    );
+    $("tabServices").classList.add("text-gray-700");
+    $("hintText").textContent = "Quản lý danh mục (loại) dịch vụ";
+    $("btnAddCategory").classList.remove("hidden");
+    $("btnAddService").classList.add("hidden");
+    $("serviceFilters").classList.add("hidden");
+  } else {
+    $("panelCategories").classList.add("hidden");
+    $("panelServices").classList.remove("hidden");
+    $("tabServices").classList.add(
+      "bg-white",
+      "shadow-sm",
+      "text-gray-900",
+      "font-semibold"
+    );
+    $("tabCategories").classList.remove(
+      "bg-white",
+      "shadow-sm",
+      "text-gray-900",
+      "font-semibold"
+    );
+    $("tabCategories").classList.add("text-gray-700");
+    $("hintText").textContent = "Quản lý dịch vụ (task) trong hệ thống";
+    $("btnAddCategory").classList.add("hidden");
+    $("btnAddService").classList.remove("hidden");
+    $("serviceFilters").classList.remove("hidden");
   }
-
-  btnPrev.disabled = currentPage <= 1;
-  btnNext.disabled = currentPage >= totalPages;
+  render();
 }
 
-function updateRange() {
-  const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const end = Math.min(currentPage * pageSize, totalItems);
-  pageRange.textContent = `${start}-${end}`;
-  pageTotal.textContent = `${totalItems}`;
+function resetUI() {
+  state.search = "";
+  state.filterCategory = "all";
+  state.filterStatus = "all";
+  $("searchInput").value = "";
+  $("filterCategory").value = "all";
+  $("filterStatus").value = "all";
+  render();
+  toast("Đã reset bộ lọc");
 }
 
-function goPrev() {
-  if (currentPage > 1) loadServices(currentPage - 1);
-}
-
-function goNext() {
-  if (currentPage < totalPages) loadServices(currentPage + 1);
-}
-
-function resetFilters() {
-  searchInput.value = "";
-  statusFilter.value = "";
-  loadServices(1);
-}
-
-async function loadServices(page = 1) {
-  currentPage = page;
-
-  const qSearch = searchInput.value.trim();
-  const qStatus = statusFilter.value.trim();
-
-  const params = new URLSearchParams();
-  params.set("page", String(currentPage));
-  params.set("limit", String(pageSize));
-  if (qSearch) params.set("search", qSearch);
-  if (qStatus) params.set("status", qStatus);
-
-  resultHint.textContent = "Đang tải dữ liệu...";
-  servicesTbody.innerHTML = `<tr><td colspan="5" class="px-4 py-10 text-center text-gray-500">Đang tải...</td></tr>`;
-
+async function loadCategories() {
   try {
-    const data = await apiFetch(`/api/task/service/all?${params.toString()}`, {
-      method: "GET",
+    const res = await fetch(`${API_BASE}/service/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     });
-    const services = Array.isArray(data.services) ? data.services : [];
 
-    totalItems = Number(data.total || services.length || 0);
-    totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
-
-    const activeCount = services.filter(
-      (s) => String(s.status || "").toLowerCase() === "active"
-    ).length;
-    const inactiveCount = services.filter(
-      (s) => String(s.status || "").toLowerCase() === "inactive"
-    ).length;
-
-    statTotal.textContent = String(totalItems);
-    statActive.textContent = String(activeCount);
-    statInactive.textContent = String(inactiveCount);
-
-    if (!services.length) {
-      servicesTbody.innerHTML = `<tr><td colspan="5" class="px-4 py-10 text-center text-gray-500">Không có dữ liệu phù hợp.</td></tr>`;
-      resultHint.textContent = "Không có dữ liệu.";
-    } else {
-      servicesTbody.innerHTML = services.map(renderRow).join("");
-      resultHint.textContent = `Đã tải ${services.length} bản ghi (trang ${currentPage}/${totalPages}).`;
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      window.location.href = "../auth/login-signup.html";
+      return;
     }
 
-    updateRange();
-    renderPagination();
+    const data = await res.json();
+    if (data.success) {
+      state.categories = data.services || [];
+      render();
+    }
   } catch (err) {
-    servicesTbody.innerHTML = `<tr><td colspan="5" class="px-4 py-10 text-center text-red-600">Lỗi tải dữ liệu: ${escapeHtml(
-      err.message
-    )}</td></tr>`;
-    resultHint.textContent = "Lỗi tải dữ liệu.";
-    showToast("err", "Không tải được", err.message);
+    console.error("Error loading categories:", err);
+    toast("Không thể tải danh sách loại dịch vụ");
   }
 }
 
-const serviceModal = document.getElementById("serviceModal");
-const serviceModalTitle = document.getElementById("serviceModalTitle");
-const serviceId = document.getElementById("serviceId");
-const categoryNameInput = document.getElementById("categoryNameInput");
-const descriptionInput = document.getElementById("descriptionInput");
+async function loadServices() {
+  try {
+    const res = await fetch(`${API_BASE}/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
 
-function openCreateModal() {
-  serviceModalTitle.textContent = "Thêm dịch vụ";
-  serviceId.value = "";
-  categoryNameInput.value = "";
-  descriptionInput.value = "";
-  serviceModal.classList.remove("modal-hidden");
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      window.location.href = "../auth/login-signup.html";
+      return;
+    }
+
+    const data = await res.json();
+    if (data.success) {
+      state.services = data.tasks || [];
+      render();
+    }
+  } catch (err) {
+    console.error("Error loading services:", err);
+    toast("Không thể tải danh sách dịch vụ");
+  }
 }
 
-function openEditModal(id, name, desc) {
-  serviceModalTitle.textContent = "Sửa dịch vụ";
-  serviceId.value = id;
-  categoryNameInput.value = name || "";
-  descriptionInput.value = desc || "";
-  serviceModal.classList.remove("modal-hidden");
+function openCategoryModal(mode, id) {
+  state.catMode = mode;
+  state.editingCatId = id || null;
+  $("catModalTitle").textContent =
+    mode === "add" ? "Thêm loại dịch vụ" : "Sửa loại dịch vụ";
+
+  const cat =
+    mode === "edit" ? state.categories.find((c) => c._id === id || c.id === id) : null;
+  $("catName").value = cat ? cat.category_name : "";
+  $("catDesc").value = cat ? cat.description : "";
+  $("catStatus").value = cat ? cat.status : "active";
+  $("catAvatarUrl").value = cat ? (cat.avatar_url || "") : "";
+
+  // Reset file input and preview
+  $("catAvatarFile").value = "";
+  $("catAvatarFileName").textContent = "";
+  $("catAvatarPreview").classList.add("hidden");
+  $("catAvatarPreview").src = "";
+  if (cat && cat.avatar_url) {
+    $("catAvatarPreview").src = cat.avatar_url;
+    $("catAvatarPreview").classList.remove("hidden");
+  }
+
+  openModal("modalCategory");
 }
 
-function closeServiceModal() {
-  serviceModal.classList.add("modal-hidden");
+async function handleCategoryAvatarChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 3 * 1024 * 1024) {
+    toast("File quá lớn. Vui lòng chọn file nhỏ hơn 3MB");
+    return;
+  }
+
+  $("catAvatarFileName").textContent = file.name;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    $("catAvatarPreview").src = e.target.result;
+    $("catAvatarPreview").classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
 }
 
-async function saveService() {
-  const id = serviceId.value.trim();
-  const category_name = categoryNameInput.value.trim();
-  const description = descriptionInput.value.trim();
+async function saveCategory() {
+  const category_name = $("catName").value.trim();
+  const description = $("catDesc").value.trim();
+  const status = $("catStatus").value;
+  let avatar_url = $("catAvatarUrl").value.trim();
 
-  if (!category_name || !description) {
-    showToast(
-      "err",
-      "Thiếu dữ liệu",
-      "Vui lòng nhập đầy đủ Tên danh mục và Mô tả."
-    );
+  if (!category_name) {
+    toast("Vui lòng nhập Tên loại dịch vụ");
     return;
   }
 
   try {
-    if (!id) {
-      await apiFetch("/api/task/service/new", {
+    // Upload avatar if file is selected
+    const avatarFile = $("catAvatarFile").files[0];
+    if (avatarFile) {
+      const formData = new FormData();
+      formData.append("avatar", avatarFile);
+      
+      const serviceId = state.catMode === "edit" ? state.editingCatId : null;
+      if (serviceId) {
+        // Update existing service avatar
+        const uploadRes = await fetch(`${API_BASE}/service/update-avatar/${serviceId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
+
+        const uploadData = await uploadRes.json();
+        if (uploadRes.ok && uploadData.success) {
+          avatar_url = uploadData.avatar_url;
+        } else {
+          toast(uploadData.message || "Tải ảnh lên thất bại");
+          return;
+        }
+      } else {
+        // For new service, we'll upload after creation
+        // For now, skip avatar upload on create (can be added later)
+        toast("Vui lòng tải ảnh sau khi tạo loại dịch vụ");
+      }
+    }
+
+    if (state.catMode === "add") {
+      const res = await fetch(`${API_BASE}/service/new`, {
         method: "POST",
-        body: JSON.stringify({ category_name, description }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ category_name, description, avatar_url, status })
       });
-      showToast("ok", "Đã tạo", "Tạo dịch vụ thành công.");
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Upload avatar after creation if file was selected
+        if (avatarFile && data.service && data.service._id) {
+          const formData = new FormData();
+          formData.append("avatar", avatarFile);
+          
+          const uploadRes = await fetch(`${API_BASE}/service/update-avatar/${data.service._id}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (uploadRes.ok) {
+            await loadCategories();
+          }
+        } else {
+          await loadCategories();
+        }
+        toast("Đã thêm loại dịch vụ");
+      } else {
+        toast(data.message || "Thêm loại dịch vụ thất bại");
+      }
     } else {
-      await apiFetch(`/api/task/service/update/${id}`, {
+      const serviceId = state.editingCatId;
+      const res = await fetch(`${API_BASE}/service/update/${serviceId}`, {
         method: "PATCH",
-        body: JSON.stringify({ category_name, description }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ category_name, description, avatar_url, status })
       });
-      showToast("ok", "Đã cập nhật", "Cập nhật dịch vụ thành công.");
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast("Đã cập nhật loại dịch vụ");
+        await loadCategories();
+      } else {
+        toast(data.message || "Cập nhật loại dịch vụ thất bại");
+      }
     }
 
-    closeServiceModal();
-    loadServices(1);
+    closeModal("modalCategory");
   } catch (err) {
-    showToast("err", "Thất bại", err.message);
+    console.error("Error saving category:", err);
+    toast("Có lỗi xảy ra khi lưu loại dịch vụ");
   }
 }
 
-async function activateService(id) {
-  try {
-    await apiFetch(`/api/task/service/activate/${id}`, { method: "PATCH" });
-    showToast("ok", "Đã kích hoạt", "Dịch vụ đã chuyển sang Active.");
-    loadServices(currentPage);
-  } catch (err) {
-    showToast("err", "Không thể kích hoạt", err.message);
+function openServiceModal(mode, id) {
+  state.srvMode = mode;
+  state.editingSrvId = id || null;
+  $("srvModalTitle").textContent =
+    mode === "add" ? "Thêm dịch vụ" : "Sửa dịch vụ";
+
+  rebuildCategorySelects();
+
+  const srv =
+    mode === "edit" ? state.services.find((s) => s._id === id || s.id === id) : null;
+  $("srvName").value = srv ? srv.task_name : "";
+  $("srvCategory").value = srv && srv.service_id
+    ? String(srv.service_id._id || srv.service_id)
+    : state.categories[0]
+    ? String(state.categories[0]._id || state.categories[0].id)
+    : "";
+  $("srvUnit").value = srv ? srv.unit : "hour";
+  $("srvPrice").value = srv ? String(srv.pricing || srv.price) : "";
+  $("srvDesc").value = srv ? srv.description : "";
+  $("srvStatus").value = srv ? srv.status : "active";
+  $("srvAvatarUrl").value = srv ? (srv.avatar_url || "") : "";
+  
+  // Reset file input and preview
+  $("srvAvatarFile").value = "";
+  $("srvAvatarFileName").textContent = "";
+  $("srvAvatarPreview").classList.add("hidden");
+  $("srvAvatarPreview").src = "";
+  if (srv && srv.avatar_url) {
+    $("srvAvatarPreview").src = srv.avatar_url;
+    $("srvAvatarPreview").classList.remove("hidden");
   }
+
+  openModal("modalService");
 }
 
-async function unactivateService(id) {
-  try {
-    await apiFetch(`/api/task/service/unactivate/${id}`, { method: "PATCH" });
-    showToast("ok", "Đã ngưng", "Dịch vụ đã chuyển sang Inactive.");
-    loadServices(currentPage);
-  } catch (err) {
-    showToast("err", "Không thể ngưng", err.message);
+async function handleServiceAvatarChange(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.size > 3 * 1024 * 1024) {
+    toast("File quá lớn. Vui lòng chọn file nhỏ hơn 3MB");
+    return;
   }
+
+  $("srvAvatarFileName").textContent = file.name;
+  
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    $("srvAvatarPreview").src = e.target.result;
+    $("srvAvatarPreview").classList.remove("hidden");
+  };
+  reader.readAsDataURL(file);
 }
 
-const detailModal = document.getElementById("detailModal");
-const detailSubtitle = document.getElementById("detailSubtitle");
-const detailStatus = document.getElementById("detailStatus");
-const detailTaskCount = document.getElementById("detailTaskCount");
-const detailId = document.getElementById("detailId");
-const detailDesc = document.getElementById("detailDesc");
-const detailTasksTbody = document.getElementById("detailTasksTbody");
+async function saveService() {
+  const task_name = $("srvName").value.trim();
+  const service_id = $("srvCategory").value;
+  const unit = $("srvUnit").value;
+  const pricing = Number($("srvPrice").value || 0);
+  const description = $("srvDesc").value.trim();
+  const status = $("srvStatus").value;
+  let avatar_url = $("srvAvatarUrl").value.trim();
 
-function closeDetailModal() {
-  detailModal.classList.add("modal-hidden");
-}
-
-async function openDetail(id) {
-  detailModal.classList.remove("modal-hidden");
-  detailSubtitle.textContent = "Đang tải chi tiết...";
-  detailStatus.textContent = "-";
-  detailTaskCount.textContent = "-";
-  detailId.textContent = id;
-  detailDesc.textContent = "-";
-  detailTasksTbody.innerHTML = `<tr><td colspan="4" class="px-4 py-10 text-center text-gray-500">Đang tải...</td></tr>`;
+  if (!task_name || !service_id) {
+    toast("Vui lòng nhập Tên + Loại dịch vụ");
+    return;
+  }
 
   try {
-    const data = await apiFetch(`/api/task/service/${id}`, { method: "GET" });
-    const svc =
-      data && (data.data || data.service || data)
-        ? data.data || data.service || data
-        : null;
-    if (!svc) throw new Error("Không có dữ liệu chi tiết.");
+    // Upload avatar if file is selected
+    const avatarFile = $("srvAvatarFile").files[0];
+    if (avatarFile) {
+      const formData = new FormData();
+      formData.append("avatar", avatarFile);
+      
+      const taskId = state.srvMode === "edit" ? state.editingSrvId : null;
+      if (taskId) {
+        // Update existing task avatar
+        const uploadRes = await fetch(`${API_BASE}/update-avatar/${taskId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: formData
+        });
 
-    detailSubtitle.textContent = svc.category_name || "";
-    detailStatus.textContent = String(svc.status || "launching");
-    const tasks = Array.isArray(svc.tasks) ? svc.tasks : [];
-    detailTaskCount.textContent = String(tasks.length);
-    detailId.textContent = svc._id || id;
-    detailDesc.textContent = svc.description || "-";
+        const uploadData = await uploadRes.json();
+        if (uploadRes.ok && uploadData.success) {
+          avatar_url = uploadData.avatar_url;
+        } else {
+          toast(uploadData.message || "Tải ảnh lên thất bại");
+          return;
+        }
+      }
+    }
 
-    if (!tasks.length) {
-      detailTasksTbody.innerHTML = `<tr><td colspan="4" class="px-4 py-10 text-center text-gray-500">Không có task thuộc dịch vụ này.</td></tr>`;
+    if (state.srvMode === "add") {
+      const res = await fetch(`${API_BASE}/new`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ service_id, task_name, description, pricing, unit, avatar_url })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Upload avatar after creation if file was selected
+        if (avatarFile && data.task && data.task._id) {
+          const formData = new FormData();
+          formData.append("avatar", avatarFile);
+          
+          const uploadRes = await fetch(`${API_BASE}/update-avatar/${data.task._id}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (uploadRes.ok) {
+            await loadServices();
+          }
+        } else {
+          await loadServices();
+        }
+        toast("Đã thêm dịch vụ");
+      } else {
+        toast(data.message || "Thêm dịch vụ thất bại");
+      }
     } else {
-      detailTasksTbody.innerHTML = tasks
-        .map((t) => {
-          const price =
-            t.pricing !== undefined && t.pricing !== null
-              ? String(t.pricing)
-              : "-";
-          const tStatus = t.status || "-";
-          return `
-          <tr class="hover:bg-gray-50 transition-colors">
-            <td class="px-4 py-3 font-semibold text-gray-800">${escapeHtml(
-              t.task_name || "-"
-            )}</td>
-            <td class="px-4 py-3 text-gray-600">${escapeHtml(
-              (t.description || "").slice(0, 120)
-            )}${(t.description || "").length > 120 ? "..." : ""}</td>
-            <td class="px-4 py-3 text-right font-bold">${escapeHtml(price)}</td>
-            <td class="px-4 py-3 text-center">${badge(tStatus)}</td>
-          </tr>
-        `;
-        })
-        .join("");
+      const taskId = state.editingSrvId;
+      console.log("task status: ", status);
+      const res = await fetch(`${API_BASE}/update/${taskId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ task_name, description, pricing, unit, avatar_url, status })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast("Đã cập nhật dịch vụ");
+        await loadServices();
+      } else {
+        toast(data.message || "Cập nhật dịch vụ thất bại");
+      }
     }
+
+    closeModal("modalService");
   } catch (err) {
-    detailTasksTbody.innerHTML = `<tr><td colspan="4" class="px-4 py-10 text-center text-red-600">Lỗi: ${escapeHtml(
-      err.message
-    )}</td></tr>`;
-    showToast("err", "Không tải được chi tiết", err.message);
+    console.error("Error saving service:", err);
+    toast("Có lỗi xảy ra khi lưu dịch vụ");
   }
 }
 
-const deleteModal = document.getElementById("deleteModal");
-const deleteServiceId = document.getElementById("deleteServiceId");
-const deleteServiceName = document.getElementById("deleteServiceName");
-const forceDelete = document.getElementById("forceDelete");
-
-function openDeleteModal(id, name) {
-  deleteServiceId.value = id;
-  deleteServiceName.textContent = name || "";
-  forceDelete.checked = false;
-  deleteModal.classList.remove("modal-hidden");
-}
-
-function closeDeleteModal() {
-  deleteModal.classList.add("modal-hidden");
+function askDelete(type, id) {
+  state.deleteCtx = { type, id };
+  if (type === "category") {
+    const cat = state.categories.find((c) => (c._id || c.id) === id);
+    $("confirmText").textContent = `Xóa loại dịch vụ "${
+      cat ? (cat.category_name || cat.name) : ""
+    }"? Dịch vụ thuộc loại này sẽ bị chuyển sang "Không xác định".`;
+  } else {
+    const srv = state.services.find((s) => (s._id || s.id) === id);
+    $("confirmText").textContent = `Xóa dịch vụ "${
+      srv ? (srv.task_name || srv.name) : ""
+    }"?`;
+  }
+  openModal("modalConfirm");
 }
 
 async function confirmDelete() {
-  const id = deleteServiceId.value.trim();
-  const isForce = forceDelete.checked;
+  if (!state.deleteCtx) return;
+  const { type, id } = state.deleteCtx;
 
   try {
-    const url = isForce
-      ? `/api/task/service/delete/${id}?force=true`
-      : `/api/task/service/delete/${id}`;
-    await apiFetch(url, { method: "DELETE" });
-    showToast("ok", "Đã xóa", "Xóa dịch vụ thành công.");
-    closeDeleteModal();
-    loadServices(1);
+    if (type === "category") {
+      const res = await fetch(`${API_BASE}/service/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast("Đã xóa loại dịch vụ");
+        await loadCategories();
+        await loadServices();
+      } else {
+        toast(data.message || "Xóa loại dịch vụ thất bại");
+      }
+    } else {
+      const res = await fetch(`${API_BASE}/delete/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast("Đã xóa dịch vụ");
+        await loadServices();
+      } else {
+        toast(data.message || "Xóa dịch vụ thất bại");
+      }
+    }
+
+    state.deleteCtx = null;
+    closeModal("modalConfirm");
   } catch (err) {
-    showToast("err", "Xóa thất bại", err.message);
+    console.error("Error deleting:", err);
+    toast("Có lỗi xảy ra khi xóa");
   }
 }
 
-searchInput.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") loadServices(1);
+function rebuildCategorySelects() {
+  const filter = $("filterCategory");
+  const srvCat = $("srvCategory");
+
+  const cats = state.categories.slice();
+
+  if (filter) {
+    const cur = filter.value || "all";
+    filter.innerHTML =
+      `<option value="all">Tất cả loại</option>` +
+      cats
+        .map((c) => `<option value="${c._id || c.id}">${c.category_name || c.name}</option>`)
+        .join("");
+    if ([...filter.options].some((o) => o.value === cur))
+      filter.value = cur;
+    else filter.value = "all";
+    state.filterCategory = filter.value;
+  }
+
+  if (srvCat) {
+    const cur2 = srvCat.value;
+    srvCat.innerHTML = cats.length
+      ? cats
+          .map((c) => `<option value="${c._id || c.id}">${c.category_name || c.name}</option>`)
+          .join("")
+      : `<option value="">Chưa có loại dịch vụ</option>`;
+    if (cats.length && [...srvCat.options].some((o) => o.value === cur2))
+      srvCat.value = cur2;
+    else if (cats.length) srvCat.value = String(cats[0]._id || cats[0].id);
+  }
+}
+
+function getCatName(id) {
+  if (!id) return "Không xác định";
+  const cat = state.categories.find((c) => (c._id || c.id) === (id._id || id) || String(c._id || c.id) === String(id));
+  if (cat) return cat.category_name || cat.name;
+  return "Không xác định";
+}
+
+function renderStats() {
+  $("statCategories").textContent = String(state.categories.length);
+  $("statServices").textContent = String(state.services.length);
+  const active = state.services.filter(
+    (s) => s.status === "active"
+  ).length;
+  const inactive = state.services.length - active;
+  $("statActive").textContent = String(active);
+  $("statInactive").textContent = String(inactive);
+}
+
+function renderCategories() {
+  const q = state.search.toLowerCase();
+  const rows = state.categories
+    .filter((c) => {
+      if (!q) return true;
+      const name = c.category_name || c.name || "";
+      const desc = c.description || c.desc || "";
+      return (name + " " + desc).toLowerCase().includes(q);
+    })
+    .map((c) => {
+      const id = c._id || c.id;
+      const name = c.category_name || c.name || "";
+      const desc = c.description || c.desc || "";
+      return `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3">
+            <div class="font-medium">${name}</div>
+          </td>
+          <td class="px-4 py-3 text-gray-500">${id}</td>
+          <td class="px-4 py-3 text-gray-600">${desc}</td>
+          <td class="px-4 py-3 text-center">${statusChip(c.status)}</td>
+          <td class="px-4 py-3 text-center">
+            <div class="inline-flex items-center gap-1">
+              <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-primary-500 transition" title="Sửa" onclick="openCategoryModal('edit', '${id}')">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+              <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-red-500 transition" title="Xóa" onclick="askDelete('category', '${id}')">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    })
+    .join("");
+
+  $("categoriesBody").innerHTML =
+    rows ||
+    `
+    <tr>
+      <td class="px-4 py-8 text-center text-gray-500" colspan="5">Không có dữ liệu</td>
+    </tr>`;
+
+  const total = state.categories.filter((c) => {
+    if (!q) return true;
+    const name = c.category_name || c.name || "";
+    const desc = c.description || c.desc || "";
+    return (name + " " + desc).toLowerCase().includes(q);
+  }).length;
+
+  $("catTotal").textContent = String(total);
+  $("catRange").textContent = total ? `1-${total}` : "0";
+}
+
+function renderServices() {
+  const q = state.search.toLowerCase();
+  const catFilter = state.filterCategory;
+  const stFilter = state.filterStatus;
+
+  const rows = state.services
+    .filter((s) => {
+      const serviceId = s.service_id?._id || s.service_id || s.categoryId;
+      if (
+        catFilter !== "all" &&
+        String(serviceId) !== String(catFilter)
+      )
+        return false;
+      if (stFilter !== "all" && s.status !== stFilter) return false;
+      if (!q) return true;
+      const name = s.task_name || s.name || "";
+      const desc = s.description || s.desc || "";
+      return (
+        name +
+        " " +
+        getCatName(serviceId) +
+        " " +
+        desc
+      )
+        .toLowerCase()
+        .includes(q);
+    })
+    .map((s) => {
+      const id = s._id || s.id;
+      const name = s.task_name || s.name || "";
+      const serviceId = s.service_id?._id || s.service_id || s.categoryId;
+      const unit = s.unit || "hour";
+      const price = s.pricing || s.price || 0;
+      const desc = s.description || s.desc || "";
+      return `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="px-4 py-3">
+            <div class="font-medium">${name}</div>
+          </td>
+          <td class="px-4 py-3 text-gray-600">${getCatName(serviceId)}</td>
+          <td class="px-4 py-3 text-gray-500">${unitLabel(unit)}</td>
+          <td class="px-4 py-3 text-right font-bold">${fmtMoney(price)}</td>
+          <td class="px-4 py-3 text-gray-600">${desc}</td>
+          <td class="px-4 py-3 text-center">${statusChip(s.status)}</td>
+          <td class="px-4 py-3 text-center">
+            <div class="inline-flex items-center gap-1">
+              <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-primary-500 transition" title="Sửa" onclick="openServiceModal('edit', '${id}')">
+                <span class="material-symbols-outlined text-[20px]">edit</span>
+              </button>
+              <button data-admin-only="1" class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500 hover:text-red-500 transition" title="Xóa" onclick="askDelete('service', '${id}')">
+                <span class="material-symbols-outlined text-[20px]">delete</span>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+    })
+    .join("");
+
+  $("servicesBody").innerHTML =
+    rows ||
+    `
+    <tr>
+      <td class="px-4 py-8 text-center text-gray-500" colspan="7">Không có dữ liệu</td>
+    </tr>`;
+
+  const total = state.services.filter((s) => {
+    const serviceId = s.service_id?._id || s.service_id || s.categoryId;
+    if (catFilter !== "all" && String(serviceId) !== String(catFilter))
+      return false;
+    if (stFilter !== "all" && s.status !== stFilter) return false;
+    if (!q) return true;
+    const name = s.task_name || s.name || "";
+    const desc = s.description || s.desc || "";
+    return (
+      name +
+      " " +
+      getCatName(serviceId) +
+      " " +
+      desc
+    )
+      .toLowerCase()
+      .includes(q);
+  }).length;
+
+  $("srvTotal").textContent = String(total);
+  $("srvRange").textContent = total ? `1-${total}` : "0";
+}
+
+function render() {
+  renderStats();
+  rebuildCategorySelects();
+  if (state.tab === "categories") renderCategories();
+  else renderServices();
+  applyRole();
+}
+
+// Event listeners
+$("searchInput").addEventListener("input", (e) => {
+  state.search = e.target.value || "";
+  render();
 });
 
-loadServices(1);
+$("filterCategory").addEventListener("change", (e) => {
+  state.filterCategory = e.target.value;
+  render();
+});
+
+$("filterStatus").addEventListener("change", (e) => {
+  state.filterStatus = e.target.value;
+  render();
+});
+
+// Expose functions to window
+window.switchTab = switchTab;
+window.openCategoryModal = openCategoryModal;
+window.openServiceModal = openServiceModal;
+window.saveCategory = saveCategory;
+window.saveService = saveService;
+window.askDelete = askDelete;
+window.confirmDelete = confirmDelete;
+window.closeModal = closeModal;
+window.resetUI = resetUI;
+window.handleCategoryAvatarChange = handleCategoryAvatarChange;
+window.handleServiceAvatarChange = handleServiceAvatarChange;
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+
+// Load data on page load
+async function init() {
+  await loadCategories();
+  await loadServices();
+  render();
+}
+
+init();

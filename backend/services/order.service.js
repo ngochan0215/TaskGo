@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
-  Voucher, Receipt, VoucherUsage, Customer, 
+  Voucher, Receipt, VoucherUsage, Customer, Tasker,
 } from "../models/index.js";
 import { suggestTasker, changeTaskerStatus } from "./taskers.service.js";
 import { pushNotification } from "./notification.service.js";
@@ -112,6 +112,43 @@ export async function getAllOrdersByCustomerIdService({
   }
 }
 
+// Get available orders for tasker (pending orders + orders assigned to this tasker)
+export async function getAvailableOrdersForTaskerService({
+  taskerUserId,
+  page = 1,
+  limit = 50,
+}) {
+  try {
+    const q = {
+      status: { $nin: ["completed", "cancelled"] },
+      $or: [
+        { status: "pending", tasker_id: null },
+        { status: "assigned", tasker_id: taskerUserId },
+        { 
+          status: { $in: ["accepted", "departed", "arrived", "in_progress"] },
+          tasker_id: taskerUserId
+        }
+      ]
+    };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
 export async function createOrderService({
   customer_id, task_id, task_snapshot, voucher_id, voucher_snapshot,
   discount_id, discount_snapshot, address_id, address_snapshot, 
@@ -200,32 +237,6 @@ export async function createOrderService({
         await voucher.save({ session });
       }
 
-      // if (type === "immediate") {
-      //   const { suggestTaskers, suggestion } = await suggestTasker(order[0]._id, {});
-
-      //   console.log("SUGGESTION TASKER (createOrderService): ", suggestion);
-      //   console.log("SUGGESTING TASKERS (createOrderService): ", suggestTaskers);
-
-      //   if (!suggestion || !suggestTaskers) {
-      //     throw new Error("Hiện tại chưa tìm thấy tasker phù hợp.");
-      //   }
-
-      //   order[0].tasker_id = suggestion.taskerId;
-      //   await order[0].save({ session });
-
-      //   await changeOrderStatus({
-      //     orderId: order[0]._id,
-      //     toStatus: "assigned",
-      //     actorType: "system",
-      //     actorId: null,
-      //     session
-      //   });
-
-      //   await session.commitTransaction();
-      //   return { order: order[0], assignedTasker: suggestion }      
-      // }
-
-      // nếu đặt lịch trước thì chưa gán tasker liền
       await session.commitTransaction();
       return { order: order[0] };
 
@@ -236,6 +247,7 @@ export async function createOrderService({
     }
 }
 
+// assign taskers for an order
 export async function assignTaskerService(order) {
   console.log("ORDER (assignTaskerService): ", order);
 
@@ -451,30 +463,58 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       toStatus: "cancelled",
       actorType: "customer",
       actorId: customerId,
-      reason,
+      reason: reason,
       session
     });
+
+    // log trạng thái mới của tasker được gán nếu có
+    if (order.tasker_id) {
+      const tasker = await Tasker.findOne({ user_id: order.tasker_id }).session(session);
+      const taskerId = tasker._id;
+  
+      await changeTaskerStatus({
+        taskerId,
+        toStatus: "available",
+        actorType: "customer",
+        actorId: customerId,
+        reason: reason,
+        session
+      });
+
+    }
 
     // update số lần hủy của khách hàng
     await Customer.findOneAndUpdate(
       { user_id: customerId },
-      { $inc: { cancellation_count: 1 } }
+      { $inc: { cancellation_count: 1 } },
+      { session }
     );
 
-    // cập nhật sử dụng voucher
-    await VoucherUsage.deleteOne({
-      voucher_id: order.voucher_id,
-      order_id: order._id
-    });
+    if (order.voucher_id) {
+      // cập nhật sử dụng voucher (quay lại ban đầu)
+      await VoucherUsage.deleteOne({
+        voucher_id: order.voucher_id,
+        order_id: order._id
+      }, { session });
 
-    await Voucher.findByIdAndUpdate(order.voucher_id, {
-      $inc: { used_quantity: -1 }
-    });
+      await Voucher.findByIdAndUpdate(order.voucher_id, {
+        $inc: { used_quantity: -1 }
+      }, { session });
 
-    order.voucher_id = null;
-    order.discount_amount = 0;
-    order.final_amount = order.total_amount;
-    await order.save();
+      order.voucher_id = null;
+      order.voucher_snapshot = null;
+      order.final_amount += order.voucher_snapshot.discount_amount;
+    }
+
+    await order.save({ session });
+
+    // update trạng thái hóa đơn
+    const receipt = await Receipt.findOne({ order_id: order._id }).session(session);
+    if (receipt) {
+      receipt.status = "cancelled";
+      receipt.cancelled_at = new Date();
+      await receipt.save({ session });
+    }
 
     // TODO: Xử lý phí phạt
     if (penaltyAmount > 0) {

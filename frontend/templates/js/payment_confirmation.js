@@ -562,6 +562,8 @@ async function submitOrder() {
         ...bookingDraft
     };
 
+    console.log("payload in submit order (UI): ", payload);
+
     if (!bookingDraft.address_id) {
         alert("Vui lòng chọn địa chỉ làm việc");
         return;
@@ -611,9 +613,9 @@ async function submitOrder() {
 
         // Lưu thông tin để success page check lại
         localStorage.setItem("paymentPending", JSON.stringify({
-            order_id,
-            paymentId: paymentLink.id,
-            orderCode: paymentLink.orderCode
+          order_id,
+          paymentId: paymentLink.id,
+          orderCode: paymentLink.orderCode
         }));
 
         // dọn draft sau khi đã lưu paymentPending
@@ -623,6 +625,7 @@ async function submitOrder() {
         // localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
 
         // Redirect sang PayOS
+        console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS (bank): ", bookingDraft);
         window.location.href = paymentLink.checkoutUrl;
     }
 }

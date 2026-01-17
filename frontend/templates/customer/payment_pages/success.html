@@ -227,6 +227,12 @@
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderCode') || urlParams.get('orderId');
 
+        const bookingDraft = localStorage.getItem("bookingDraft");
+        console.log("booking draft in success: ", bookingDraft);
+
+        const paymentPending = localStorage.getItem("paymentPending");
+        console.log("payment pending in success: ", paymentPending);
+
         async function updateSuccessfulTransaction() {
             if (!orderId) {
                 showError('Không tìm thấy mã đơn hàng');
@@ -285,6 +291,7 @@
 
                 if (remaining <= 0) {
                     clearInterval(timer);
+                    console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS (success payment): ", bookingDraft);
                     window.location.href = REDIRECT_URL;
                 }
             }, 1000);

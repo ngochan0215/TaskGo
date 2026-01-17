@@ -26,7 +26,20 @@ const orderStatusLogSchema = new mongoose.Schema(
       required: true
     },
 
-    reason: { type: String  }
+    reasons: [{
+        type: String,
+        enum: [
+            "too_far",
+            "busy",
+            "price_not_ok",
+            "time_not_suitable",
+            "skill_not_match",
+            "other"
+        ],
+        default: "time_not_suitable"
+    }],
+
+    note: { type: String, default: "" },
   },
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" }

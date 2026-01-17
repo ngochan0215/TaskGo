@@ -704,24 +704,31 @@ export const updateVoucher = async (req, res) => {
         return res.status(400).json({ message: "Giá trị đơn hàng tối thiểu phải lớn hơn 0." });
       }
 
-      voucher.conditions = conditions;
+      voucher.conditions = payload.conditions;
     }
 
-    if (total_quantity) {
-      if (total_quantity < 1)
+    if (payload.total_quantity !== undefined) {
+      if (payload.total_quantity < 1)
         return res.status(400).json({ message: "Tổng số voucher ít nhất phải là 1." });
 
-      voucher.total_quantity = total_quantity;
+      voucher.total_quantity = payload.total_quantity;
     }
 
-    if (per_user_limit) {
-      if (per_user_limit < 1)
+    if (payload.per_user_limit !== undefined) {
+      if (payload.per_user_limit < 1)
         return res.status(400).json({ message: "Số lượt voucher một khách hàng được sử dụng ít nhất phải là 1." });
 
-      voucher.per_user_limit = per_user_limit;
+      voucher.per_user_limit = payload.per_user_limit;
     }
 
-    Object.assign(voucher, payload);
+    if (payload.description !== undefined) {
+      voucher.description = payload.description;
+    }
+
+    if (payload.applicable_model !== undefined) {
+      voucher.applicable_model = payload.applicable_model;
+    }
+
     await voucher.save();
 
     return res.status(200).json({

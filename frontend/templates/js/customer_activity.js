@@ -43,6 +43,7 @@ const dPaymentNote = $("dPaymentNote");
 const primaryActionBtn = $("primaryActionBtn");
 const secondaryActionBtn = $("secondaryActionBtn");
 const dangerActionBtn = $("dangerActionBtn");
+const chatActionBtn = $("chatActionBtn");
 
 let currentQuery = "";
 let allOrders = [];
@@ -479,6 +480,18 @@ async function openDetail(orderData) {
   // Action buttons
   dangerActionBtn.classList.add("hidden");
   
+  // Show/hide chat button based on order status
+  // Only show chat if order has been accepted or is in progress (has a tasker assigned)
+  const canChat = order.status === "accepted" || order.status === "departed" || 
+                   order.status === "arrived" || order.status === "in_progress" || 
+                   order.status === "completed";
+  
+  if (canChat && order.tasker_id) {
+    chatActionBtn.classList.remove("hidden");
+  } else {
+    chatActionBtn.classList.add("hidden");
+  }
+  
   if (isUpcoming) {
     primaryActionBtn.textContent = "Liên hệ hỗ trợ";
     secondaryActionBtn.textContent = "Xem chi tiết";
@@ -491,7 +504,7 @@ async function openDetail(orderData) {
   } else {
     if (order.status === "completed") {
       primaryActionBtn.textContent = "Đặt lại";
-      secondaryActionBtn.textContent = review ? "Xem đánh giá" : "Đánh giá";
+      secondaryActionBtn.textContent = review ? "Xem chi tiết đơn hàng" : "Xem chi tiết và Đánh giá";
     } else {
       primaryActionBtn.textContent = "Đặt lại";
       secondaryActionBtn.textContent = "Xem chi tiết";
@@ -623,7 +636,21 @@ primaryActionBtn.addEventListener("click", () => {
 });
 
 secondaryActionBtn.addEventListener("click", () => {
-  alert("Tính năng đang phát triển");
+  if (currentOrderDetail && currentOrderDetail.order && currentOrderDetail.order._id) {
+    const orderId = currentOrderDetail.order._id;
+    window.location.href = `./customer_order_progress.html?orderId=${orderId}`;
+  }
+});
+
+document.getElementById("orderIfNone").addEventListener("click", () => {
+  window.location.href = "service_listpage.html";
+});
+
+chatActionBtn.addEventListener("click", () => {
+  if (currentOrderDetail && currentOrderDetail.order && currentOrderDetail.order._id) {
+    const orderId = currentOrderDetail.order._id;
+    window.location.href = `../chat.html?orderId=${orderId}`;
+  }
 });
 
 dangerActionBtn.addEventListener("click", () => {

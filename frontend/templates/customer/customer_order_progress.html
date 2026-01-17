@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskGo - Chi tiết công việc</title>
+    <title>TaskGo - Chi tiết đơn hàng</title>
 
     <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
@@ -39,10 +39,10 @@
 <nav class="sticky top-0 z-[100] bg-white shadow-sm">
     <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
         <div class="flex items-center gap-3">
-            <a href="./tasker_home.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+            <a href="./customer_activity.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
                 <span class="material-symbols-outlined text-[20px]">arrow_back</span>
             </a>
-            <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Chi tiết công việc</h1>
+            <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Chi tiết đơn hàng</h1>
         </div>
 
         <div class="flex items-center gap-2">
@@ -61,18 +61,18 @@
 
         <div class="lg:col-span-7 space-y-4">
 
-            <!-- Customer Info Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <!-- Tasker Info Card (if assigned) -->
+            <div id="taskerInfoCard" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hidden">
                 <div class="flex items-center gap-4">
                     <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5">
-                        <img id="customerAvatar" src="https://ui-avatars.com/api/?name=Chi+Lan&background=A5B4FC&color=3730A3" class="w-full h-full object-cover rounded-full">
+                        <img id="taskerAvatar" src="https://ui-avatars.com/api/?name=Tasker&background=A5B4FC&color=3730A3" class="w-full h-full object-cover rounded-full">
                     </div>
                     <div class="flex-1">
-                        <p class="text-gray-400 text-[10px] font-bold uppercase mb-0.5">Khách hàng</p>
+                        <p class="text-gray-400 text-[10px] font-bold uppercase mb-0.5">Tasker</p>
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <p id="customerName" class="font-bold text-lg text-gray-800 leading-tight">Chị Lan</p>
-                                <p id="customerPhone" class="text-xs text-gray-500 font-medium">0909 *** 123</p>
+                                <p id="taskerName" class="font-bold text-lg text-gray-800 leading-tight">Đang tìm tasker...</p>
+                                <p id="taskerPhone" class="text-xs text-gray-500 font-medium">—</p>
                             </div>
 
                             <div class="flex items-center gap-2">
@@ -127,11 +127,16 @@
             <!-- Customer Note -->
             <div id="noteSection" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 hidden">
                 <p class="text-xs font-bold text-gray-400 uppercase mb-2 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">sticky_note_2</span> Lưu ý từ khách
+                    <span class="material-symbols-outlined text-sm">sticky_note_2</span> Lưu ý từ bạn
                 </p>
                 <div id="orderNote" class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-gray-700 text-sm italic">
                     <!-- Content will be rendered by JavaScript -->
                 </div>
+            </div>
+
+            <!-- Review Section -->
+            <div id="reviewSection" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 hidden">
+                <!-- Content will be rendered by JavaScript -->
             </div>
         </div>
 
@@ -143,8 +148,34 @@
                 </div>
 
                 <div class="relative pl-2 mb-8" id="timeline-container">
-                    <!-- Accept step (for assigned status) -->
-                    <div class="step-item relative flex gap-4 pb-8 hidden" id="step-0">
+                    <!-- Pending step -->
+                    <div class="step-item relative flex gap-4 pb-8" id="step-pending">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">schedule</span>
+                            </div>
+                            <div class="step-line"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Chờ xử lý</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-pending">--:--</p>
+                        </div>
+                    </div>
+                    <!-- Assigned step -->
+                    <div class="step-item relative flex gap-4 pb-8 hidden" id="step-assigned">
+                        <div class="flex flex-col items-center relative z-10">
+                            <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
+                                <span class="material-symbols-outlined text-[16px]">person</span>
+                            </div>
+                            <div class="step-line"></div>
+                        </div>
+                        <div class="pt-1">
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đã gán tasker</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-assigned">--:--</p>
+                        </div>
+                    </div>
+                    <!-- Accepted step -->
+                    <div class="step-item relative flex gap-4 pb-8 hidden" id="step-accepted">
                         <div class="flex flex-col items-center relative z-10">
                             <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
                                 <span class="material-symbols-outlined text-[16px]">check_circle</span>
@@ -152,11 +183,12 @@
                             <div class="step-line"></div>
                         </div>
                         <div class="pt-1">
-                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Nhận đơn hàng</p>
-                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-0">--:--</p>
+                            <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Tasker đã nhận</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-accepted">--:--</p>
                         </div>
                     </div>
-                    <div class="step-item relative flex gap-4 pb-8" id="step-1">
+                    <!-- Departed step -->
+                    <div class="step-item relative flex gap-4 pb-8" id="step-departed">
                         <div class="flex flex-col items-center relative z-10">
                             <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
                                 <span class="material-symbols-outlined text-[16px]">directions_car</span>
@@ -165,10 +197,11 @@
                         </div>
                         <div class="pt-1">
                             <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đang di chuyển</p>
-                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-1">--:--</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-departed">--:--</p>
                         </div>
                     </div>
-                    <div class="step-item relative flex gap-4 pb-8" id="step-2">
+                    <!-- Arrived step -->
+                    <div class="step-item relative flex gap-4 pb-8" id="step-arrived">
                         <div class="flex flex-col items-center relative z-10">
                             <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
                                 <span class="material-symbols-outlined text-[16px]">location_on</span>
@@ -177,10 +210,11 @@
                         </div>
                         <div class="pt-1">
                             <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đã đến nơi</p>
-                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-2">--:--</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-arrived">--:--</p>
                         </div>
                     </div>
-                    <div class="step-item relative flex gap-4 pb-8" id="step-3">
+                    <!-- In Progress step -->
+                    <div class="step-item relative flex gap-4 pb-8" id="step-in-progress">
                         <div class="flex flex-col items-center relative z-10">
                             <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
                                 <span class="material-symbols-outlined text-[16px]">play_arrow</span>
@@ -189,10 +223,11 @@
                         </div>
                         <div class="pt-1">
                             <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Đang làm việc</p>
-                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-3">--:--</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-in-progress">--:--</p>
                         </div>
                     </div>
-                    <div class="step-item relative flex gap-4" id="step-4">
+                    <!-- Completed step -->
+                    <div class="step-item relative flex gap-4" id="step-completed">
                         <div class="flex flex-col items-center relative z-10">
                             <div class="step-icon w-8 h-8 rounded-full border-2 border-gray-200 bg-white flex items-center justify-center transition-all duration-300 shrink-0">
                                 <span class="material-symbols-outlined text-[16px]">check_circle</span>
@@ -200,20 +235,20 @@
                         </div>
                         <div class="pt-1">
                             <p class="step-title font-bold text-gray-400 text-sm uppercase transition-colors">Hoàn thành</p>
-                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-4">--:--</p>
+                            <p class="text-xs text-gray-400 mt-0.5" id="time-step-completed">--:--</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- nhắc đánh giá -->
+                <!-- Review Reminder Section (for customer reviewing tasker) -->
                 <div id="reviewReminderSection" class="hidden mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4">
                     <div class="flex items-start gap-3">
                         <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
                             <span class="material-symbols-outlined text-amber-600 text-[20px]">star</span>
                         </div>
                         <div class="flex-1">
-                            <p class="font-bold text-amber-900 text-sm mb-1">Đánh giá khách hàng</p>
-                            <p class="text-xs text-amber-700 mb-3">Hãy chia sẻ trải nghiệm của bạn về khách hàng này</p>
+                            <p class="font-bold text-amber-900 text-sm mb-1">Đánh giá Tasker</p>
+                            <p class="text-xs text-amber-700 mb-3">Hãy chia sẻ trải nghiệm của bạn về tasker này</p>
                             <button id="openReviewBtn" class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition">
                                 Đánh giá ngay
                             </button>
@@ -221,7 +256,7 @@
                     </div>
                 </div>
 
-                <!-- nếu đã đánh giá rồi thì sẽ hiện chỗ này -->
+                <!-- Review Display Section (if already reviewed) -->
                 <div id="reviewDisplaySection" class="hidden mb-4 bg-green-50 border border-green-200 rounded-xl p-4">
                     <div class="flex items-start gap-3">
                         <div class="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -230,20 +265,20 @@
                         <div class="flex-1">
                             <p class="font-bold text-green-900 text-sm mb-2">Đã đánh giá</p>
                             <div id="reviewDisplayContent" class="text-xs text-green-700">
-                                <!-- nội dung đánh giá hiện chỗ này -->
+                                <!-- Review content will be inserted here -->
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <button id="main-action-btn" class="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-95 btn-pulse" style="background-color: #3730A3;">
-                        <span id="btn-icon" class="material-symbols-outlined text-[20px]">near_me</span>
-                        <span id="btn-text">Xác nhận khởi hành</span>
+                    <button id="main-action-btn" class="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-95 hidden">
+                        <span id="btn-icon" class="material-symbols-outlined text-[20px]"></span>
+                        <span id="btn-text">—</span>
                     </button>
 
-                    <button id="cancel-btn" class="w-full mt-3 py-2 text-red-500 font-bold text-xs hover:bg-red-50 rounded-lg transition">
-                        Hủy nhận đơn này
+                    <button id="cancel-btn" class="w-full mt-3 py-2 text-red-500 font-bold text-xs hover:bg-red-50 rounded-lg transition hidden">
+                        Huỷ đơn
                     </button>
                 </div>
             </div>
@@ -258,7 +293,7 @@
     </div>
 </footer>
 
-<!-- form đánh giá -->
+<!-- Review Modal -->
 <div id="reviewModal" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/40" onclick="closeReviewModal()"></div>
     <div class="relative w-full h-full flex items-center justify-center p-4">
@@ -266,7 +301,7 @@
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-gray-400">star</span>
-                    <div class="font-bold text-gray-800">Đánh giá khách hàng</div>
+                    <div class="font-bold text-gray-800">Đánh giá Tasker</div>
                 </div>
                 <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeReviewModal()">
                     <span class="material-symbols-outlined">close</span>
@@ -304,6 +339,6 @@
     </div>
 </div>
 
-<script src="../js/tasker_order_progress.js"></script>
+<script src="../js/customer_order_progress.js"></script>
 </body>
 </html>
