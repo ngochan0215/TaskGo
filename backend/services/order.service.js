@@ -112,6 +112,47 @@ export async function getAllOrdersByCustomerIdService({
   }
 }
 
+// Get available orders for tasker (pending orders + orders assigned to this tasker)
+export async function getAvailableOrdersForTaskerService({
+  taskerUserId,
+  page = 1,
+  limit = 50,
+}) {
+  try {
+    // Get orders that are either:
+    // 1. Pending (not assigned to anyone yet) - available for all taskers
+    // 2. Assigned to this tasker (status = "assigned" and tasker_id = taskerUserId)
+    // 3. Already accepted by this tasker (status in ["accepted", "departed", "arrived", "in_progress"] and tasker_id = taskerUserId)
+    const q = {
+      status: { $nin: ["completed", "cancelled"] },
+      $or: [
+        { status: "pending", tasker_id: null },
+        { status: "assigned", tasker_id: taskerUserId },
+        { 
+          status: { $in: ["accepted", "departed", "arrived", "in_progress"] },
+          tasker_id: taskerUserId
+        }
+      ]
+    };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
 export async function createOrderService({
   customer_id, task_id, task_snapshot, voucher_id, voucher_snapshot,
   discount_id, discount_snapshot, address_id, address_snapshot, 

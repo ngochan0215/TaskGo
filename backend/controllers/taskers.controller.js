@@ -2,9 +2,9 @@ import { acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService
  } from "../services/taskers.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
-import { User, Order, Notification, Customer, Tasker } from "../models/index.js";
+import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
-import { changeOrderStatus } from "../services/order.service.js";
+import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
 
 // tasker nhận task
 export const acceptTask = async (req, res) =>{
@@ -46,10 +46,16 @@ export const acceptTask = async (req, res) =>{
             "unread"
         );
 
-        res.status(200).json({ message: "Order accepted successfully" });
+        res.status(200).json({ 
+            success: true,
+            message: "Order accepted successfully" 
+        });
     }
     catch (error) {
-        res.status(500).json({ message: "Failed to accept order", error: error.message });
+        res.status(400).json({ 
+            success: false,
+            message: error.message || "Failed to accept order"
+        });
     }
 }
 
@@ -95,10 +101,16 @@ export const confirmDeparture = async (req, res) =>{
             "unread"
         );
 
-        res.status(200).json({ message: "Tasker confirm departure successfully" });
+        res.status(200).json({ 
+            success: true,
+            message: "Tasker confirm departure successfully" 
+        });
     }
     catch (error) {
-        res.status(400).json({ message: "Failed to confirm departure", error: error.message });
+        res.status(400).json({ 
+            success: false,
+            message: error.message || "Failed to confirm departure"
+        });
     }
 }
 
@@ -153,10 +165,16 @@ export const denyTask = async (req, res) =>{
             "unread"
         );
 
-        res.status(200).json({ message: "Order denied and assign task to another tasker successfully" });
+        res.status(200).json({ 
+            success: true,
+            message: "Order denied and assign task to another tasker successfully" 
+        });
     }
     catch (error) {
-        res.status(400).json({ message: "Failed to deny order", error: error.message });
+        res.status(400).json({ 
+            success: false,
+            message: error.message || "Failed to deny order"
+        });
     }
 };
 
@@ -198,10 +216,16 @@ export const confirmArriving = async (req, res) => {
             "unread"
         );
 
-        res.status(200).json({ message: "Tasker confirmed arriving" });
+        res.status(200).json({ 
+            success: true,
+            message: "Tasker confirmed arriving" 
+        });
     }
     catch (err) {
-        res.status(400).json({ message: err.message });
+        res.status(400).json({ 
+            success: false,
+            message: err.message 
+        });
     }
 };
 
@@ -245,10 +269,16 @@ export const confirmStart = async (req, res) => {
             "unread"
         );
 
-        res.status(200).json({ message: "Tasker started task successfully" });
+        res.status(200).json({ 
+            success: true,
+            message: "Tasker started task successfully" 
+        });
     } 
     catch (err) {
-        res.status(400).json({ message: "Failed to start task", error: err.message });
+        res.status(400).json({ 
+            success: false,
+            message: err.message || "Failed to start task"
+        });
     }
 };
 
@@ -299,10 +329,16 @@ export const confirmComplete = async (req, res) => {
         //     { runValidators: true }
         // );
 
-        res.status(200).json({ message: "Task completed successfully" });
+        res.status(200).json({ 
+            success: true,
+            message: "Task completed successfully" 
+        });
     }
     catch (err) {
-        res.status(400).json({ message: "Failed to complete task", error: err.message });
+        res.status(400).json({ 
+            success: false,
+            message: err.message || "Failed to complete task"
+        });
     }
 };
 
@@ -352,6 +388,90 @@ export const getAllTaskers = async (req, res) => {
   } catch (error) {
     console.error("Get all taskers error:", error);
     res.status(500).json({ success: false, message: "Server error", error });
+  }
+};
+
+// Get available orders for tasker (for tasker home page)
+export const getAvailableOrdersForTasker = async (req, res) => {
+  try {
+    const taskerUserId = req.userId;
+    const { page = 1, limit = 50 } = req.query;
+
+    const orders = await getAvailableOrdersForTaskerService({
+      taskerUserId,
+      page: Number(page),
+      limit: Number(limit),
+    });
+
+    res.status(200).json({
+      success: true,
+      orders,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: orders.length
+      }
+    });
+
+  } catch (err) {
+    console.error("Error in getAvailableOrdersForTasker:", err);
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
+  }
+};
+
+// Get order details for tasker
+export const getOrderDetailsForTasker = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const taskerUserId = req.userId;
+
+    // Get order with all populated fields
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email avatar_url')
+      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy đơn hàng."
+      });
+    }
+
+    // Verify tasker is assigned to this order
+    if (order.tasker_id && String(order.tasker_id._id || order.tasker_id) !== String(taskerUserId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không được gán cho đơn hàng này."
+      });
+    }
+
+    // Get receipt
+    const receipt = await Receipt.findOne({ order_id: orderId }).lean();
+
+    // Get order status logs for timeline
+    const statusLogs = await OrderStatusLog.find({ order_id: orderId })
+      .sort({ created_at: 1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      order,
+      receipt: receipt || null,
+      statusLogs: statusLogs || []
+    });
+
+  } catch (err) {
+    console.error("Error in getOrderDetailsForTasker:", err);
+    res.status(400).json({
+      success: false,
+      message: err.message
+    });
   }
 };
 

@@ -1,7 +1,7 @@
 // import mongoose from "mongoose";
 // import dotenv from "dotenv";
 // import connectDB from "../config/db.js";
-// import { Tasker, Customer, Order } from "../models/index.js";
+// import { Tasker, Customer, Order, Task, Service } from "../models/index.js";
 
 // dotenv.config();
 
@@ -23,16 +23,25 @@
 //     //     }
 //     //     );
 
-//     const result = await Order.updateMany(
-//         { status: { $exists: true } },
-//         {
-//             $set: { 
-//                 status: "completed"
-//             }
-//         }
-//     );
+//     const result = await Service.updateMany(
+//   {
+//     $or: [
+//       { avatar_url: { $exists: false } },
+//       { avatar_url: null },
+//       { avatar_url: "" }
+//     ]
+//   },
+//   {
+//     $set: {
+//       avatar_url: "hello world"
+//     }
+//   }
+// );
 
-//     console.log(`Migration done. Updated ${result.modifiedCount} taskers`);
+// console.log("Updated documents:", result.modifiedCount);
+
+
+//     console.log(`Migration done. Updated ${result.modifiedCount} services`);
 //   } catch (err) {
 //     console.error("Migration failed:", err);
 //   } finally {

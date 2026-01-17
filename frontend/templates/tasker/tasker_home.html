@@ -169,85 +169,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" id="job-list">
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group">
-                        <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors">Dọn dẹp nhà cửa</h2>
-                                    <span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 1.2km</span>
-                                </div>
-                                <span style="color: #3730A3;" class="text-xl font-black">120k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">schedule</span>
-                                    <span class="font-medium">14:00 - 16:00, Hôm nay</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">location_on</span>
-                                    <span class="line-clamp-1">Landmark 81, Bình Thạnh</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button style="background-color: #3730A3;" class="w-full mt-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity ml-1">
-                            Nhận việc ngay
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group">
-                        <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors">Đi chợ hộ (Co.op)</h2>
-                                    <span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 0.5km</span>
-                                </div>
-                                <span style="color: #3730A3;" class="text-xl font-black">55k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-red-500">timer</span>
-                                    <span class="font-bold text-red-500">Ngay bây giờ (45 phút)</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">shopping_cart</span>
-                                    <span class="line-clamp-1">Mua 5kg gạo, 1 vỉ trứng...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button style="color: #3730A3; border-color: #3730A3;" class="w-full mt-5 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors ml-1">
-                            Xem chi tiết
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between h-full relative opacity-60 grayscale cursor-not-allowed">
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-300"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-gray-700 font-bold text-lg">Vệ sinh máy lạnh</h2>
-                                    <span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 3.0km</span>
-                                </div>
-                                <span class="text-gray-400 text-xl font-black">300k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-500 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px]">schedule</span>
-                                    <span>09:00, Sáng mai</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px]">location_on</span>
-                                    <span>Thảo Điền, Quận 2</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="w-full mt-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl ml-1 pointer-events-none">
-                            Đã có người nhận
-                        </button>
-                    </div>
-
+                    <!-- Orders will be rendered here by JavaScript -->
                 </div>
             </div>
         </div>
@@ -508,6 +430,203 @@
     }
 
     loadTaskerHome();
+
+    // Load available orders
+    async function loadAvailableOrders() {
+        try {
+            const res = await fetch("http://localhost:3000/api/tasker/orders/available", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const data = await res.json();
+            if (!data.success) {
+                console.error("Failed to load orders:", data.message);
+                return;
+            }
+
+            renderOrders(data.orders || []);
+
+        } catch (err) {
+            console.error("Error loading orders:", err);
+        }
+    }
+
+    function formatCurrency(amount) {
+        return Number(amount || 0).toLocaleString("vi-VN") + "đ";
+    }
+
+    function formatDateTime(dateString) {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = date - now;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 0) {
+            return "Đã qua";
+        } else if (diffMins < 60) {
+            return `Ngay bây giờ (${diffMins} phút)`;
+        } else {
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            return `${hours}h${mins > 0 ? mins + 'p' : ''} nữa`;
+        }
+    }
+
+    function formatScheduledTime(dateString, type) {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        
+        if (type === "immediate") {
+            return formatDateTime(dateString);
+        } else {
+            const timeStr = date.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+            const dateStr = date.toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit"
+            });
+            return `${timeStr}, ${dateStr}`;
+        }
+    }
+
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            "pending": "bg-blue-100 text-blue-700",
+            "assigned": "bg-yellow-100 text-yellow-700",
+            "accepted": "bg-green-100 text-green-700",
+            "departed": "bg-purple-100 text-purple-700",
+            "arrived": "bg-indigo-100 text-indigo-700",
+            "in_progress": "bg-orange-100 text-orange-700"
+        };
+        return statusMap[status] || "bg-gray-100 text-gray-700";
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            "pending": "Chờ nhận",
+            "assigned": "Đã được gán",
+            "accepted": "Đã nhận đơn",
+            "departed": "Đang di chuyển",
+            "arrived": "Đã đến nơi",
+            "in_progress": "Đang làm việc"
+        };
+        return statusMap[status] || status;
+    }
+
+    function renderOrders(orders) {
+        const jobList = document.getElementById("job-list");
+        if (!jobList) return;
+
+        if (orders.length === 0) {
+            jobList.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">work_off</span>
+                    <p class="text-gray-500 font-medium">Hiện tại không có đơn hàng nào</p>
+                </div>
+            `;
+            return;
+        }
+
+        jobList.innerHTML = orders.map(order => {
+            const isPending = order.status === "pending" && !order.tasker_id;
+            const isAssigned = order.status === "assigned" && order.tasker_id;
+            const isAccepted = ["accepted", "departed", "arrived", "in_progress"].includes(order.status);
+            const isTaken = !isPending && !isAssigned && !isAccepted;
+
+            const serviceName = order.task_snapshot?.name || order.task_id?.task_name || "Dịch vụ";
+            const price = formatCurrency(order.final_amount || order.base_amount);
+            const address = order.address_snapshot?.full_address || order.address_id?.full_address || "—";
+            const timeDisplay = formatScheduledTime(order.scheduled_at, order.type);
+            const isImmediate = order.type === "immediate";
+
+            return `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group ${isTaken ? 'opacity-60 grayscale cursor-not-allowed' : ''}">
+                    <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2 ${isTaken ? 'bg-gray-300' : ''}"></div>
+                    <div class="pl-3">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors ${isTaken ? 'text-gray-700' : ''}">${serviceName}</h2>
+                                ${isPending ? 
+                                    `<span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Mới</span>` :
+                                    `<span class="${getStatusBadgeClass(order.status)} text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">${getStatusText(order.status)}</span>`
+                                }
+                            </div>
+                            <span style="color: #3730A3;" class="text-xl font-black ${isTaken ? 'text-gray-400' : ''}">${price}</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3 ${isTaken ? 'text-gray-500' : ''}">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] ${isImmediate ? 'text-red-500' : 'text-gray-400'}">${isImmediate ? 'timer' : 'schedule'}</span>
+                                <span class="font-medium ${isImmediate ? 'font-bold text-red-500' : ''}">${timeDisplay}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] text-gray-400">location_on</span>
+                                <span class="line-clamp-1">${address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${isPending ? 
+                        `<button onclick="acceptOrder('${order._id}')" style="background-color: #3730A3;" class="w-full mt-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity ml-1">
+                            Nhận việc ngay
+                        </button>` :
+                        isAssigned || isAccepted ?
+                        `<button onclick="viewOrderDetails('${order._id}')" style="color: #3730A3; border-color: #3730A3;" class="w-full mt-5 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors ml-1">
+                            Xem chi tiết
+                        </button>` :
+                        `<button class="w-full mt-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl ml-1 pointer-events-none">
+                            Đã có người nhận
+                        </button>`
+                    }
+                </div>
+            `;
+        }).join("");
+    }
+
+    async function acceptOrder(orderId) {
+        if (!confirm("Bạn có chắc chắn muốn nhận đơn hàng này?")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/tasker/accept/${orderId}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert("Nhận đơn hàng thành công!");
+                loadAvailableOrders();
+            } else {
+                alert(data.message || "Nhận đơn hàng thất bại");
+            }
+        } catch (err) {
+            console.error("Error accepting order:", err);
+            alert("Có lỗi xảy ra khi nhận đơn hàng");
+        }
+    }
+
+    function viewOrderDetails(orderId) {
+        localStorage.setItem("currentOrderId", orderId);
+        window.location.href = `./tasker_order_progress.html?orderId=${orderId}`;
+    }
+
+    // Load orders when page loads
+    loadAvailableOrders();
 
 </script>
 </body>

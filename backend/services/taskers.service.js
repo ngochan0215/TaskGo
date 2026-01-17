@@ -437,8 +437,8 @@ export const confirmArrivingService = async (taskerUserId, orderId) => {
         if (order.tasker_id.toString() !== taskerUserId.toString())
             throw new Error("You are not assigned to this order");
 
-        if (order.status !== "accepted")
-            throw new Error("Order must be accepted before arriving");
+        if (order.status !== "departed")
+            throw new Error("Order must be departed before arriving");
 
         const orderLog = await changeOrderStatus({
             orderId,

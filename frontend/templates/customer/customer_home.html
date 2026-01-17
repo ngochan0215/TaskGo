@@ -113,7 +113,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Điểm tích lũy</p>
-                    <p id="customer-points" class="text-lg font-bold text-dark-900">1250</p>
+                    <p id="customer-points" class="text-lg font-bold text-dark-900">--</p>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
@@ -122,7 +122,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Đơn thành công</p>
-                    <p id="customer-completed-orders" class="text-lg font-bold text-dark-900">18</p>
+                    <p id="customer-completed-orders" class="text-lg font-bold text-dark-900">--</p>
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
@@ -131,7 +131,7 @@
                 </div>
                 <div>
                     <p class="text-[11px] text-gray-500 leading-none">Đơn đã huỷ</p>
-                    <p id="customer-cancelled-orders" class="text-lg font-bold text-dark-900">2</p>
+                    <p id="customer-cancelled-orders" class="text-lg font-bold text-dark-900">--</p>
                 </div>
             </div>
         </div>
@@ -167,7 +167,7 @@
 
     <div class="text-center pb-10">
         <p class="text-gray-500 text-sm">Chưa thấy dịch vụ bạn cần?</p>
-        <a href="service_listpage.html" class="text-primary-500 font-semibold">Xem danh sách toàn bộ dịch vụ</a>
+        <a href="service_listpage.html" class="text-primary-500 font-semibold">Xem danh sách toàn bộ dịch vụ →</a>
     </div>
 </main>
 
@@ -277,6 +277,18 @@
         window.location.href = "../auth/login-signup.html";
     }
 
+    const TASK_DETAIL_MAP = {
+      cleaning_washing_machine: "./detail_pages/cleaning_washing_machine.html",
+      cleaning_house: "./detail_pages/cleaning_house.html",
+      cleaning_air_conditioner: "./detail_pages/cleaning_air_conditioner.html",
+      caring_elderly: "./detail_pages/takecare_of_elder.html",
+      caring_thesick: "./detail_pages/takecare_of_sickpeople.html",
+      caring_children: "./detail_pages/babysitting.html",
+      shopping: "./detail_pages/market.html",
+      cooking: "./detail_pages/cooking.html",
+      active: "#"
+    };
+
     // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
     const searchContainer = document.getElementById("search-container");
     const inputDiv = document.createElement("div");
@@ -285,28 +297,128 @@
                    class="w-full bg-white shadow-md px-4 py-3 rounded-full border focus:outline-none">`;
     searchContainer.appendChild(inputDiv);
 
-    const services = [
-        {name: "Dọn dẹp nhà cửa", img: "/public/images/dondepnhacua.jpeg"},
-        {name: "Sơn lại nhà cửa", img: "/public/images/sonlainhacua.jpeg"},
-        {name: "Vệ sinh thảm và sofa", img: "/public/images/vesinhthamvasofa.jpeg"},
-        {name: "Phân loại đồ đạc", img: "/public/images/phanloaidodac.jpg"},
-    ];
+    async function loadFavoriteTasks() {
+        try {
+            const res = await fetch("http://localhost:3000/api/task/favorite/by-user", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-    const serviceList = document.getElementById("service-list");
-    services.forEach(s => {
-        const div = document.createElement("div");
-        div.className = "service-item relative";
-        div.dataset.name = s.name;
-        div.dataset.img = s.img;
-        div.innerHTML = `
-            <img src="${s.img}" class="rounded-xl w-full h-48 object-cover">
-            <button class="heart-btn absolute top-2 right-2">
-                <span class="material-symbols-outlined text-white text-3xl heart-icon">favorite</span>
-            </button>
-            <p class="mt-1 text-sm font-medium">${s.name}</p>
-        `;
-        serviceList.appendChild(div);
-    });
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const json = await res.json();
+            const container = document.getElementById("favorite-services");
+            
+            if (!json.success || !json.data || json.data.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-2 text-center py-8 text-gray-400 text-sm">
+                        <span class="material-symbols-outlined text-4xl mb-2 block">favorite_border</span>
+                        <p>Bạn chưa có dịch vụ yêu thích</p>
+                        <p class="text-xs mt-1">Đặt dịch vụ để xem ở đây</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = "";
+            json.data.forEach(task => {
+                const detailPage = TASK_DETAIL_MAP[task.task_type];
+                const div = document.createElement("div");
+                div.className = "bg-white rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow";
+                div.onclick = () => {
+                    window.location.href = `${detailPage}?id=${task.task_id}&price=${task.pricing}`;
+                };
+                
+                const avatarImg = task.avatar_url 
+                    ? `<img src="${task.avatar_url}" class="w-full h-full object-cover rounded-lg">`
+                    : `<span class="material-symbols-outlined text-4xl text-primary-500">design_services</span>`;
+                
+                const price = task.pricing 
+                    ? `<p class="text-xs font-semibold text-primary-500 mt-1">${Number(task.pricing).toLocaleString("vi-VN")}đ/${task.unit === "hour" ? "giờ" : "gói"}</p>`
+                    : "";
+                
+                div.innerHTML = `
+                    <div class="w-full h-32 bg-primary-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
+                        ${avatarImg}
+                    </div>
+                    <p class="text-sm font-medium text-dark-900 line-clamp-2">${task.task_name || "Dịch vụ"}</p>
+                    ${price}
+                    <p class="text-xs text-gray-500 mt-1">Đã đặt ${task.total_orders} lần</p>
+                `;
+                container.appendChild(div);
+            });
+        } catch (err) {
+            console.error("Load favorite tasks error:", err);
+            const container = document.getElementById("favorite-services");
+            container.innerHTML = `
+                <div class="col-span-2 text-center py-8 text-gray-400 text-sm">
+                    <p>Không thể tải dịch vụ yêu thích</p>
+                </div>
+            `;
+        }
+    }
+
+    async function loadPopularTasks() {
+        try {
+            const res = await fetch("http://localhost:3000/api/task/top-popular/by-orders");
+
+            const json = await res.json();
+            const serviceList = document.getElementById("service-list");
+            
+            if (!json.success || !json.data || json.data.length === 0) {
+                serviceList.innerHTML = `
+                    <div class="col-span-full text-center py-8 text-gray-400 text-sm">
+                        <p>Không có dịch vụ phổ biến</p>
+                    </div>
+                `;
+                return;
+            }
+
+            serviceList.innerHTML = "";
+            json.data.forEach(task => {
+                const detailPage = TASK_DETAIL_MAP[task.task_type];
+                const div = document.createElement("div");
+                div.className = "service-item relative cursor-pointer hover:opacity-90 transition-opacity";
+                div.onclick = () => {
+                    window.location.href = `${detailPage}?id=${task.task_id}&price=${task.pricing}`;
+                };
+                
+                const avatarImg = task.avatar_url 
+                    ? `<img src="${task.avatar_url}" class="w-full h-full object-cover rounded-xl">`
+                    : `<span class="material-symbols-outlined text-5xl text-primary-500">design_services</span>`;
+                
+                const price = task.pricing 
+                    ? `<p class="text-xs text-primary-500 font-semibold mt-1">${Number(task.pricing).toLocaleString("vi-VN")}đ/${task.unit === "hour" ? "giờ" : "gói"}</p>`
+                    : "";
+                
+                div.innerHTML = `
+                    <div class="w-full h-48 bg-primary-100 rounded-xl flex items-center justify-center relative overflow-hidden">
+                        ${avatarImg}
+                        <div class="absolute top-2 right-2 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            ${task.total_orders} đơn
+                        </div>
+                    </div>
+                    <p class="mt-1 text-sm font-medium text-dark-900">${task.task_name || "Dịch vụ"}</p>
+                    ${price}
+                `;
+                serviceList.appendChild(div);
+            });
+        } catch (err) {
+            console.error("Load popular tasks error:", err);
+            const serviceList = document.getElementById("service-list");
+            serviceList.innerHTML = `
+                <div class="col-span-full text-center py-8 text-gray-400 text-sm">
+                    <p>Không thể tải dịch vụ phổ biến</p>
+                </div>
+            `;
+        }
+    }
 
     const bannerContainer = document.getElementById("banner-container");
     bannerContainer.innerHTML = `
@@ -387,7 +499,7 @@
             console.log("statistics data: ", statsJson.data);
 
             document.getElementById("customer-points").textContent =
-                pointsJson.points.toLocaleString("vi-VN");
+                pointsJson.data?.points ?? 0;
 
             document.getElementById("customer-completed-orders").textContent =
                 completed_orders;
@@ -498,6 +610,8 @@
 
     loadCustomerStats();
     loadFavoriteTaskers();
+    loadFavoriteTasks();
+    loadPopularTasks();
 </script>
 
 </body>
