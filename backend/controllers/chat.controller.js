@@ -43,7 +43,7 @@ export const getMessagesByOrder = async (req, res) => {
 
     // Execute query
     let messages = await Message.find(query)
-      .sort({ _id: -1 }) // Sort descendingly
+      .sort({ _id: -1 }) 
       .limit(num_of_msg_per_load)
       .lean();
 
@@ -112,20 +112,20 @@ export const getMessagesByOrder = async (req, res) => {
 // Route: GET /api/chats
 export const getAllChats = async (req, res) => {
   try {
-    const userId = req.userId; // From verifyToken middleware
+    const userId = req.userId;
 
     if (!userId) {
       return res.status(401).json({ ok: false, error: "Unauthorized" });
     }
 
-    // 1. Find chats where user is a participant
+    // Find chats where user is a participant
     const chats = await Chat.find({
       "participants.user_id": userId,
-      status: { $ne: "deleted" } // Optional: Hide deleted chats
+      status: { $ne: "deleted" } 
     })
     .populate({
       path: "participants.user_id",
-      select: "full_name avatar_url", // Only get fields needed for display
+      select: "full_name avatar_url", 
       model: "User"
     })
     .populate({
@@ -135,27 +135,23 @@ export const getAllChats = async (req, res) => {
     })
     .populate({
         path: "order_id",
-        select: "status", // Helpful to gray out completed orders
+        select: "status task_snapshot", // For greying out completed order
         model: "Order"
     })
-    .sort({ updated_at: -1 }) // Newest active chats first
+    .sort({ updated_at: -1 }) // Newest active chats first (descendingly)
     .lean();
 
-    // 2. Transform data for Frontend
-    // The frontend shouldn't have to figure out who "participant[0]" is. 
-    // We categorize into "me" and "partner".
+    // Transform data for Frontend
     const formattedChats = chats.map(chat => {
-      
       const me = chat.participants.find(p => String(p.user_id._id) === userId);
       const partner = chat.participants.find(p => String(p.user_id._id) !== userId);
 
       // Handle edge case where partner user might be deleted
       const partnerInfo = partner ? partner.user_id : { full_name: "Người dùng ẩn", avatar_url: null };
 
-      // Check if the last message was seen by me
+      // Check if the last message was seen by the caller
       let isSeen = true;
       if (chat.last_message) {
-        // If I am not the sender AND the last message ID is not what I last saw
         const isMyMessage = String(chat.last_message.sender_id) === userId;
         const lastSeenId = me.last_seen_message_id ? String(me.last_seen_message_id) : null;
         
@@ -168,6 +164,7 @@ export const getAllChats = async (req, res) => {
         chat_id: chat._id,
         order_id: chat.order_id._id,
         order_status: chat.order_id.status,
+        order_name: chat.order_id.task_snapshot.name,
         
         partner: {
           id: partnerInfo._id,
@@ -179,7 +176,7 @@ export const getAllChats = async (req, res) => {
         last_message: chat.last_message ? {
           content: chat.last_message.message_type === 'text' 
             ? chat.last_message.content 
-            : `[${chat.last_message.message_type}]`, // e.g. "[image]"
+            : `[${chat.last_message.message_type}]`, 
           created_at: chat.last_message.createdAt,
           is_sender: String(chat.last_message.sender_id) === userId
         } : null,
