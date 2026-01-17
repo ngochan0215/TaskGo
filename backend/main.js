@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
 import { voucherStatusCron, orderStatusCron } from "./utils/cronJobStatus.js";
+import '../backend/jobs/transactionStatusJob.js'; 
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
