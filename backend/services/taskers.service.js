@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { getRouteSummary } from "./location.service.js";
-import { User, Tasker, Customer, Address, Order, Task, Service, TaskerStatusLog } from "../models/index.js";
+import { User, Tasker, Customer, Receipt, Order, Task, Service, TaskerStatusLog } from "../models/index.js";
 import { changeOrderStatus } from "./order.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
 import { getOnlineTaskerUserIds } from "../sockets/presence.js";
@@ -44,6 +44,8 @@ export async function findEligibleTaskers(order) {
         status: { $ne: "resign" },
         skills: task_id
     }).lean();
+
+    console.log("ONLINE TASKERS: ", taskers);
 
     if (!taskers.length) return [];
     // Lọc theo khoảng cách 
@@ -378,7 +380,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             const taskerLog = await changeTaskerStatus({
                 newTaskerId,
                 toStatus: "busy",
-                actorType: "tasker",
+                actorType: "system",
                 actorId: null
             });
         }
@@ -533,29 +535,106 @@ export const confirmCompleteService = async (taskerUserId, orderId) => {
 };
 
 // change order status and log it
-export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
+// export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
+//   try {
+//     const tasker = await Tasker.findById(taskerId).session(session);
+//     if (!tasker) {
+//       throw new Error("Không tìm thấy tasker.");
+//     } 
+
+//     const now = new Date();
+//     const fromStatus = tasker.working_status;
+
+//     // Nếu đang chuyển sang trạng thái mới (không phải trạng thái hiện tại)
+//     if (fromStatus !== toStatus) {
+//       // Tìm log entry cuối cùng của tasker này chưa có end_time (đang active)
+//       const activeLog = await TaskerStatusLog.findOne({
+//         tasker_id: taskerId,
+//         end_time: null
+//       }).sort({ start_time: -1 }).session(session);
+
+//       // Nếu có log entry đang active, set end_time cho nó
+//       if (activeLog) {
+//         activeLog.end_time = now;
+//         await activeLog.save({ session });
+//       }
+
+//       // Tạo log entry mới với start_time
+//       await TaskerStatusLog.create({
+//         tasker_id: taskerId,
+//         from_status: fromStatus,
+//         to_status: toStatus,
+//         actor_type: actorType,
+//         actor_id: actorId,
+//         reason: reason || "",
+//         start_time: now,
+//         end_time: null
+//       }, { session });
+
+//       // update tasker
+//       tasker.working_status = toStatus;
+//       await tasker.save({ session });
+
+//       return tasker;
+//     } else {
+//       // Nếu trạng thái không thay đổi, chỉ trả về tasker
+//       return tasker;
+//     }
+//   } catch (error) {
+//     throw new Error(error.message);
+//   }   
+// };
+
+export async function changeTaskerStatus({
+  taskerId,
+  toStatus,
+  actorType,
+  actorId,
+  reason = null,
+  session
+}) {
   try {
-    const tasker = await Tasker.findById(taskerId).session(session);
-    if (!tasker) {
-      throw new Error("Không tìm thấy tasker.");
-    } 
+    let taskerQuery = Tasker.findById(taskerId);
+    if (session) taskerQuery = taskerQuery.session(session);
 
-    // log trạng thái
-    await TaskerStatusLog.create({
-      tasker_id: taskerId,
-      from_status: tasker.working_status,
-      to_status: toStatus,
-      actor_type: actorType,
-      actor_id: actorId,
-      reason
-    });
+    const tasker = await taskerQuery;
+    if (!tasker) throw new Error("Không tìm thấy tasker.");
 
-    // update tasker
-    tasker.working_status = toStatus;
-    await tasker.save();
+    const now = new Date();
+    const fromStatus = tasker.working_status;
+
+    if (fromStatus !== toStatus) {
+      let logQuery = TaskerStatusLog.findOne({
+        tasker_id: taskerId,
+        end_time: null
+      }).sort({ start_time: -1 });
+
+      if (session) logQuery = logQuery.session(session);
+
+      const activeLog = await logQuery;
+
+      if (activeLog) {
+        activeLog.end_time = now;
+        await activeLog.save(session ? { session } : {});
+      }
+
+      await TaskerStatusLog.create([{
+        tasker_id: taskerId,
+        from_status: fromStatus,
+        to_status: toStatus,
+        actor_type: actorType,
+        actor_id: actorId,
+        reason: reason || "",
+        start_time: now,
+        end_time: null
+      }], session ? { session } : {});
+
+      tasker.working_status = toStatus;
+      await tasker.save(session ? { session } : {});
+    }
 
     return tasker;
   } catch (error) {
-    throw new Error(error.message);
-  }   
-};
+    throw error;
+  }
+}

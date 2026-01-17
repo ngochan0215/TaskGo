@@ -1,68 +1,54 @@
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
-const taskerUserId = localStorage.getItem("user_id");
+const customerUserId = localStorage.getItem("user_id");
 
 if (!token) {
   alert("Vui lòng đăng nhập");
   location.href = "../auth/login-signup.html";
 }
 
-if (role !== "tasker") {
-  alert("Bạn không phải là Tasker. Vui lòng đăng nhập lại.");
+if (role !== "customer") {
+  alert("Bạn không phải là Customer. Vui lòng đăng nhập lại.");
   location.href = "../auth/login-signup.html";
 }
 
-// Get order ID from URL or localStorage
+// Get order ID from URL
 const urlParams = new URLSearchParams(window.location.search);
 let orderId = urlParams.get("orderId") || localStorage.getItem("currentOrderId");
-// If still no orderId, try to get from pathname (e.g., /tasker/order/12345)
-if (!orderId) {
-  const pathMatch = window.location.pathname.match(/order[\/\-_]?(\w+)/i);
-  if (pathMatch) {
-    orderId = pathMatch[1];
-  }
-}
 
 if (!orderId) {
   alert("Không tìm thấy đơn hàng");
-  location.href = "./tasker_home.html";
+  location.href = "./customer_activity.html";
 }
 
 // Store orderId for reference
 localStorage.setItem("currentOrderId", orderId);
 
 let currentOrder = null;
-let currentState = -1; // -1 = not loaded, 0 = assigned, 1 = accepted, 2 = departed, 3 = arrived, 4 = in_progress, 5 = completed
 let currentReview = null;
 let selectedRating = 0;
-let hoverRating = 0;
+let canCancel = false;
+let penaltyAmount = 0;
 
-const btnText = document.getElementById('btn-text');
+// DOM Elements
+const statusBadge = document.getElementById('statusBadge');
 const mainBtn = document.getElementById('main-action-btn');
-const btnIcon = document.getElementById('btn-icon');
 const cancelBtn = document.getElementById('cancel-btn');
 const reviewReminderSection = document.getElementById('reviewReminderSection');
 const reviewDisplaySection = document.getElementById('reviewDisplaySection');
 const reviewModal = document.getElementById('reviewModal');
+const taskerInfoCard = document.getElementById('taskerInfoCard');
 
-// Status to state mapping
-const statusToState = {
-  "assigned": 0,
-  "accepted": 1,
-  "departed": 2,
-  "arrived": 3,
-  "in_progress": 4,
-  "completed": 5
-};
-
-// State to step mapping
-const stateToStep = {
-  0: "step-0", // Accept step (new) - for assigned status
-  1: "step-1", // Depart step - for accepted status
-  2: "step-1", // Already departed - for departed status
-  3: "step-2", // Arrive step - for arrived status
-  4: "step-3", // Start step - for in_progress status
-  5: "step-4"  // Complete step - for completed status
+// Status to step mapping for customer timeline
+const statusToStep = {
+  "pending": "step-pending",
+  "assigned": "step-assigned",
+  "accepted": "step-accepted",
+  "departed": "step-departed",
+  "arrived": "step-arrived",
+  "in_progress": "step-in-progress",
+  "completed": "step-completed",
+  "cancelled": null
 };
 
 // Format currency
@@ -73,7 +59,7 @@ function formatCurrency(v) {
 // Format currency with VND
 const formatCurrencyVND = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
-// Service renderers (from ordering_success.js)
+// Service renderers (same as tasker version)
 const serviceRenderers = {
   COOKING: (p) => `
     <p>👥 Nấu cho: ${p.people} người</p>
@@ -248,7 +234,7 @@ function formatTime(dateString) {
 async function fetchOrderDetails() {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/tasker/order/${orderId}`,
+      `http://localhost:3000/api/order/${orderId}/details`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -346,12 +332,9 @@ function renderPaymentDetails(order, receipt) {
     ewallet: "Ví TaskGo"
   };
 
-  console.log("receipt: ", receipt);
   const paymentMethod = receipt?.payment_method 
     ? paymentMap[receipt.payment_method] || receipt.payment_method
     : "Chưa thanh toán";
-
-  console.log(paymentMethod);
 
   const receiptCreateDate = receipt?.created_at 
     ? formatDate(receipt.created_at)
@@ -403,44 +386,57 @@ function renderPaymentDetails(order, receipt) {
   `;
 }
 
-// Update order information in UI
-function updateOrderInfo(order, receipt) {
-  // Update customer info
-  if (order.customer_id) {
-    console.log("customer_id: ", order.customer_id);
-    const customerName = order.customer_id.full_name || "Khách hàng";
-    const customerPhone = order.customer_id.phone_number || "";
-    const customerAvatar = order.customer_id.avatar_url;
-
-    const maskedPhone = customerPhone ? customerPhone.slice(0, 4) + " *** " + customerPhone.slice(-3) : "";
-
-    const customerNameEl = document.getElementById('customerName');
-    if (customerNameEl) {
-      customerNameEl.textContent = customerName;
+// Update tasker information in UI
+function updateTaskerInfo(order) {
+  if (!order.tasker_id) {
+    if (taskerInfoCard) {
+      taskerInfoCard.classList.add("hidden");
     }
-
-    const customerPhoneEl = document.getElementById('customerPhone');
-    if (customerPhoneEl) {
-      customerPhoneEl.textContent = maskedPhone;
-    }
-
-    // Update avatar
-    const avatarImg = document.getElementById('customerAvatar');
-    if (avatarImg) {
-      avatarImg.src = customerAvatar;
-      //avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(customerName)}&background=A5B4FC&color=3730A3`;
-    }
-
-    // Update phone links
-    const phoneLink = document.getElementById('phoneLink');
-    if (phoneLink && customerPhone) {
-      phoneLink.href = `tel:${customerPhone}`;
-    }
-    const headerPhoneLink = document.getElementById('headerPhoneLink');
-    if (headerPhoneLink && customerPhone) {
-      headerPhoneLink.href = `tel:${customerPhone}`;
-    }
+    return;
   }
+
+  if (taskerInfoCard) {
+    taskerInfoCard.classList.remove("hidden");
+  }
+
+  const tasker = order.tasker_id;
+  const taskerName = tasker.full_name || "Tasker";
+  const taskerPhone = tasker.phone_number || "";
+  const taskerAvatar = tasker.avatar_url;
+
+  const maskedPhone = taskerPhone ? taskerPhone.slice(0, 4) + " *** " + taskerPhone.slice(-3) : "";
+
+  const taskerNameEl = document.getElementById('taskerName');
+  if (taskerNameEl) {
+    taskerNameEl.textContent = taskerName;
+  }
+
+  const taskerPhoneEl = document.getElementById('taskerPhone');
+  if (taskerPhoneEl) {
+    taskerPhoneEl.textContent = maskedPhone;
+  }
+
+  // Update avatar
+  const avatarImg = document.getElementById('taskerAvatar');
+  if (avatarImg) {
+    avatarImg.src = taskerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(taskerName)}&background=A5B4FC&color=3730A3`;
+  }
+
+  // Update phone links
+  const phoneLink = document.getElementById('phoneLink');
+  if (phoneLink && taskerPhone) {
+    phoneLink.href = `tel:${taskerPhone}`;
+  }
+  const headerPhoneLink = document.getElementById('headerPhoneLink');
+  if (headerPhoneLink && taskerPhone) {
+    headerPhoneLink.href = `tel:${taskerPhone}`;
+  }
+}
+
+// Update order information in UI
+function updateOrderInfo(order, receipt, review) {
+  // Update tasker info
+  updateTaskerInfo(order);
 
   // Render service details
   renderServiceDetails(order);
@@ -462,6 +458,41 @@ function updateOrderInfo(order, receipt) {
       noteSection.classList.add('hidden');
     }
   }
+
+  // Update review section
+  const reviewSection = document.getElementById('reviewSection');
+  if (reviewSection) {
+    if (review) {
+      reviewSection.classList.remove('hidden');
+      reviewSection.innerHTML = `
+        <h3 class="font-bold text-dark-900 text-lg flex items-center mb-3">
+          <span class="material-symbols-outlined text-primary-500 mr-2">star</span>
+          Đánh giá của bạn
+        </h3>
+        <div class="bg-white border border-primary-300 rounded-2xl p-4">
+          <div class="flex items-center gap-2 mb-2">
+            ${Array.from({ length: 5 }, (_, i) => `
+              <span class="text-xl ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>
+            `).join("")}
+          </div>
+          ${review.comment ? `<p class="text-sm text-gray-700 mt-2">${escapeHtml(review.comment)}</p>` : ""}
+        </div>
+      `;
+    } else if (order.status === "completed") {
+      reviewSection.classList.remove('hidden');
+      reviewSection.innerHTML = `
+        <h3 class="font-bold text-dark-900 text-lg flex items-center mb-3">
+          <span class="material-symbols-outlined text-primary-500 mr-2">star</span>
+          Đánh giá
+        </h3>
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-center">
+          <p class="text-sm text-gray-600">Bạn chưa đánh giá tasker này</p>
+        </div>
+      `;
+    } else {
+      reviewSection.classList.add('hidden');
+    }
+  }
 }
 
 // Update timeline based on status logs
@@ -471,15 +502,26 @@ function updateTimeline(statusLogs) {
     step.classList.remove('step-active', 'step-completed');
   });
 
+  // Set pending step time from order creation
+  if (currentOrder && currentOrder.created_at) {
+    const pendingTimeEl = document.getElementById("time-step-pending");
+    if (pendingTimeEl) {
+      pendingTimeEl.textContent = formatTime(currentOrder.created_at);
+    }
+  }
+
   // Find status transitions
   const statusMap = {
-    "accepted": { step: "step-0", time: "time-step-0" },
-    "departed": { step: "step-1", time: "time-step-1" },
-    "arrived": { step: "step-2", time: "time-step-2" },
-    "in_progress": { step: "step-3", time: "time-step-3" },
-    "completed": { step: "step-4", time: "time-step-4" }
+    "pending": { step: "step-pending", time: "time-step-pending" },
+    "assigned": { step: "step-assigned", time: "time-step-assigned" },
+    "accepted": { step: "step-accepted", time: "time-step-accepted" },
+    "departed": { step: "step-departed", time: "time-step-departed" },
+    "arrived": { step: "step-arrived", time: "time-step-arrived" },
+    "in_progress": { step: "step-in-progress", time: "time-step-in-progress" },
+    "completed": { step: "step-completed", time: "time-step-completed" }
   };
 
+  // Mark completed steps from status logs
   statusLogs.forEach(log => {
     const config = statusMap[log.to_status];
     if (config) {
@@ -488,10 +530,7 @@ function updateTimeline(statusLogs) {
       
       if (stepEl) {
         stepEl.classList.add('step-completed');
-        // Show accept step if it was accepted
-        if (log.to_status === "accepted") {
-          stepEl.classList.remove('hidden');
-        }
+        stepEl.classList.remove('hidden');
       }
       if (timeEl) {
         timeEl.textContent = formatTime(log.created_at);
@@ -500,16 +539,29 @@ function updateTimeline(statusLogs) {
   });
 
   // Mark current step as active
-  if (currentState >= 0 && currentState <= 4) {
-    const currentStepId = stateToStep[currentState];
+  if (currentOrder) {
+    const status = currentOrder.status;
+    
+    // Mark pending as completed if order has moved past pending
+    if (status !== "pending") {
+      const pendingStep = document.getElementById("step-pending");
+      if (pendingStep) {
+        pendingStep.classList.add('step-completed');
+      }
+    }
+    
+    const currentStepId = statusToStep[status];
     if (currentStepId) {
       const currentStepEl = document.getElementById(currentStepId);
       if (currentStepEl) {
         currentStepEl.classList.add('step-active');
-        // Show accept step if assigned
-        if (currentState === 0) {
-          currentStepEl.classList.remove('hidden');
-        }
+        currentStepEl.classList.remove('hidden');
+      }
+    } else if (status === "pending") {
+      // Show pending step as active if order is still pending
+      const pendingStep = document.getElementById("step-pending");
+      if (pendingStep) {
+        pendingStep.classList.add('step-active');
       }
     }
   }
@@ -520,83 +572,51 @@ function updateUI() {
   if (!currentOrder) return;
 
   const status = currentOrder.status;
-  currentState = statusToState[status] ?? -1;
 
   // Update status badge
-  const statusBadge = document.getElementById('statusBadge');
   if (statusBadge) {
     const statusText = {
-      "assigned": "Đã được gán",
-      "accepted": "Đã nhận đơn",
+      "pending": "Chờ xử lý",
+      "assigned": "Đã gán tasker",
+      "accepted": "Tasker đã nhận",
       "departed": "Đang di chuyển",
       "arrived": "Đã đến nơi",
       "in_progress": "Đang làm việc",
-      "completed": "Hoàn thành"
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
     };
     statusBadge.textContent = statusText[status] || status;
-    statusBadge.className = status === "completed" 
-      ? "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
-      : status === "assigned"
-      ? "px-2.5 py-1 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
-      : "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide";
+    
+    const badgeClasses = {
+      "pending": "px-2.5 py-1 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "assigned": "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "accepted": "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "departed": "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "arrived": "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "in_progress": "px-2.5 py-1 bg-indigo-100 text-indigo-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "completed": "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide",
+      "cancelled": "px-2.5 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
+    };
+    statusBadge.className = badgeClasses[status] || badgeClasses.pending;
   }
 
-  // Configure button based on state
-  let buttonConfig = null;
-
-  if (status === "assigned") {
-    // Show accept button
-    buttonConfig = {
-      btnText: "Nhận đơn hàng",
-      icon: "check_circle",
-      color: "#10B981",
-      action: "accept"
-    };
-    cancelBtn.style.display = "block";
-    cancelBtn.textContent = "Từ chối đơn hàng";
-    // Show accept step in timeline
-    const acceptStep = document.getElementById("step-0");
-    if (acceptStep) {
-      acceptStep.classList.remove('hidden');
-    }
-  } else if (status === "accepted") {
-    buttonConfig = {
-      btnText: "Xác nhận khởi hành",
-      icon: "near_me",
-      color: "#3730A3",
-      action: "depart"
-    };
-    cancelBtn.style.display = "block";
-    cancelBtn.textContent = "Hủy nhận đơn này";
-  } else if (status === "departed") {
-    buttonConfig = {
-      btnText: "Xác nhận đã đến nơi",
-      icon: "location_on",
-      color: "#F59E0B",
-      action: "arrive"
-    };
-    cancelBtn.style.display = "none";
-  } else if (status === "arrived") {
-    buttonConfig = {
-      btnText: "Bắt đầu làm việc",
-      icon: "play_circle",
-      color: "#10B981",
-      action: "start"
-    };
-    cancelBtn.style.display = "none";
-  } else if (status === "in_progress") {
-    buttonConfig = {
-      btnText: "Hoàn thành & Thu tiền",
-      icon: "check_circle",
-      color: "#3730A3",
-      action: "complete"
-    };
-    cancelBtn.style.display = "none";
-  } else if (status === "completed") {
-    mainBtn.style.display = "none";
-    cancelBtn.style.display = "none";
+  // Configure buttons based on state
+  if (status === "completed") {
+    if (mainBtn) mainBtn.style.display = "none";
+    if (cancelBtn) cancelBtn.style.display = "none";
     // Check review status when order is completed
     checkReview();
+    return;
+  } else if (status === "cancelled") {
+    if (mainBtn) mainBtn.style.display = "none";
+    if (cancelBtn) cancelBtn.style.display = "none";
+    // Hide review sections if order is cancelled
+    if (reviewReminderSection) {
+      reviewReminderSection.classList.add("hidden");
+    }
+    if (reviewDisplaySection) {
+      reviewDisplaySection.classList.add("hidden");
+    }
     return;
   } else {
     // Hide review sections if order is not completed
@@ -608,151 +628,27 @@ function updateUI() {
     }
   }
 
-  if (buttonConfig) {
-    btnText.innerText = buttonConfig.btnText;
-    btnIcon.innerText = buttonConfig.icon;
-    mainBtn.style.backgroundColor = buttonConfig.color;
-    mainBtn.dataset.action = buttonConfig.action;
-    mainBtn.disabled = false;
-    mainBtn.style.opacity = "1";
-    mainBtn.classList.add('btn-pulse');
+  // Show cancel button if can cancel
+  if (cancelBtn) {
+    if (canCancel) {
+      cancelBtn.style.display = "block";
+      cancelBtn.textContent = penaltyAmount > 0 
+        ? `Huỷ đơn (Phí phạt: ${formatCurrency(penaltyAmount)})`
+        : "Huỷ đơn";
+    } else {
+      cancelBtn.style.display = "none";
+    }
+  }
+
+  // Hide main action button for customer (they don't have actions like tasker)
+  if (mainBtn) {
+    mainBtn.style.display = "none";
   }
 }
 
-// Call API for tasker actions
-async function callTaskerAction(action) {
-  const actionMap = {
-    "accept": { method: "PUT", endpoint: `/accept/${orderId}` },
-    "deny": { method: "PUT", endpoint: `/deny/${orderId}`, body: { reason: "Tasker từ chối đơn hàng" } },
-    "depart": { method: "PUT", endpoint: `/confirm/depart/${orderId}` },
-    "arrive": { method: "PUT", endpoint: `/confirm/arrive/${orderId}` },
-    "start": { method: "PUT", endpoint: `/confirm/start/${orderId}` },
-    "complete": { method: "PUT", endpoint: `/confirm/complete/${orderId}` }
-  };
-
-  const config = actionMap[action];
-  if (!config) {
-    console.error("Unknown action:", action);
-    return false;
-  }
-
-  try {
-    const options = {
-      method: config.method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      }
-    };
-
-    if (config.body) {
-      options.body = JSON.stringify(config.body);
-    }
-
-    const res = await fetch(
-      `http://localhost:3000/api/tasker${config.endpoint}`,
-      options
-    );
-
-    if (res.status === 401) {
-      localStorage.removeItem("token");
-      alert("Phiên đăng nhập hết hạn");
-      location.href = "../auth/login-signup.html";
-      return false;
-    }
-
-    const result = await res.json();
-
-    if (res.ok && result.success) {
-      return true;
-    } else {
-      alert(result.message || result.error || "Có lỗi xảy ra");
-      return false;
-    }
-  } catch (error) {
-    console.error("Error calling tasker action:", error);
-    alert("Không thể kết nối đến server");
-    return false;
-  }
-}
-
-// Handle main action button click
-mainBtn.addEventListener('click', async () => {
-  const action = mainBtn.dataset.action;
-  if (!action) return;
-
-  const originalText = btnText.innerText;
-  btnText.innerText = "Đang xử lý...";
-  mainBtn.disabled = true;
-  mainBtn.classList.remove('btn-pulse');
-  mainBtn.style.opacity = "0.7";
-
-  const success = await callTaskerAction(action);
-
-  if (success) {
-    // Reload order details
-    const details = await fetchOrderDetails();
-    if (details) {
-      currentOrder = details.order;
-      updateOrderInfo(currentOrder, details.receipt);
-      updateTimeline(details.statusLogs || []);
-      updateUI();
-      // Check review status after reload (especially if order was just completed)
-      await checkReview();
-    }
-  } else {
-    // Restore button state
-    btnText.innerText = originalText;
-    mainBtn.disabled = false;
-    mainBtn.style.opacity = "1";
-    mainBtn.classList.add('btn-pulse');
-  }
-});
-
-// Handle cancel/deny button click
-cancelBtn.addEventListener('click', async () => {
-  if (currentOrder?.status === "assigned") {
-    // Deny action
-    if (!confirm("Bạn có chắc chắn muốn từ chối đơn hàng này?")) {
-      return;
-    }
-
-    cancelBtn.disabled = true;
-    cancelBtn.textContent = "Đang xử lý...";
-
-    const success = await callTaskerAction("deny");
-
-    if (success) {
-      alert("Đã từ chối đơn hàng. Hệ thống đang tìm tasker khác.");
-      window.location.href = "./tasker_home.html";
-    } else {
-      cancelBtn.disabled = false;
-      cancelBtn.textContent = "Từ chối đơn hàng";
-    }
-  } else if (currentOrder?.status === "accepted") {
-    // Cancel action (similar to deny but might have different logic)
-    if (!confirm("Bạn có chắc chắn muốn hủy nhận đơn hàng này?")) {
-      return;
-    }
-
-    cancelBtn.disabled = true;
-    cancelBtn.textContent = "Đang xử lý...";
-
-    const success = await callTaskerAction("deny");
-
-    if (success) {
-      alert("Đã hủy nhận đơn hàng.");
-      window.location.href = "./tasker_home.html";
-    } else {
-      cancelBtn.disabled = false;
-      cancelBtn.textContent = "Hủy nhận đơn này";
-    }
-  }
-});
-
-// logic phần đánh giá
-
+// Check if customer has reviewed tasker
 async function checkReview() {
+  // Only check if order is completed
   if (!currentOrder || currentOrder.status !== "completed") {
     if (reviewReminderSection) {
       reviewReminderSection.classList.add("hidden");
@@ -841,8 +737,12 @@ function openReviewModal() {
     return;
   }
   
+  if (!currentOrder.tasker_id) {
+    alert("Đơn hàng chưa có tasker");
+    return;
+  }
+  
   selectedRating = 0;
-  hoverRating = 0;
   updateRatingStars(0);
   document.getElementById("reviewComment").value = "";
   
@@ -856,42 +756,15 @@ function closeReviewModal() {
     reviewModal.classList.add("hidden");
   }
   selectedRating = 0;
-  hoverRating = 0;
 }
 
-// function updateRatingStars(rating) {
-//   const stars = document.querySelectorAll(".rating-star");
-//   const ratingText = document.getElementById("ratingText");
-  
-//   stars.forEach((star, index) => {
-//     const starRating = index + 1;
-//     if (starRating <= rating) {
-//       star.classList.remove("text-gray-300");
-//       star.classList.add("text-yellow-400");
-//     } else {
-//       star.classList.remove("text-yellow-400");
-//       star.classList.add("text-gray-300");
-//     }
-//   });
-  
-//   if (ratingText) {
-//     const texts = {
-//       0: "Chọn số sao đánh giá",
-//       1: "Rất không hài lòng",
-//       2: "Không hài lòng",
-//       3: "Bình thường",
-//       4: "Hài lòng",
-//       5: "Rất hài lòng"
-//     };
-//     ratingText.textContent = texts[rating] || texts[0];
-//   }
-// }
 function updateRatingStars(rating) {
   const stars = document.querySelectorAll(".rating-star");
   const ratingText = document.getElementById("ratingText");
-
+  
   stars.forEach((star, index) => {
-    if (index < rating) {
+    const starRating = index + 1;
+    if (starRating <= rating) {
       star.classList.remove("text-gray-300");
       star.classList.add("text-yellow-400");
     } else {
@@ -899,7 +772,7 @@ function updateRatingStars(rating) {
       star.classList.add("text-gray-300");
     }
   });
-
+  
   if (ratingText) {
     const texts = {
       0: "Chọn số sao đánh giá",
@@ -919,15 +792,15 @@ async function submitReview() {
     return;
   }
 
-  if (!currentOrder || !currentOrder.customer_id) {
-    alert("Không tìm thấy thông tin khách hàng");
+  if (!currentOrder || !currentOrder.tasker_id) {
+    alert("Không tìm thấy thông tin tasker");
     return;
   }
 
   const comment = document.getElementById("reviewComment").value.trim();
-  const customerId = typeof currentOrder.customer_id === "object" 
-    ? currentOrder.customer_id._id || currentOrder.customer_id
-    : currentOrder.customer_id;
+  const taskerId = typeof currentOrder.tasker_id === "object" 
+    ? currentOrder.tasker_id._id || currentOrder.tasker_id
+    : currentOrder.tasker_id;
 
   const submitBtn = document.getElementById("submitReviewBtn");
   const originalText = submitBtn.textContent;
@@ -945,8 +818,8 @@ async function submitReview() {
         },
         body: JSON.stringify({
           order_id: orderId,
-          reviewee_id: customerId,
-          reviewee_role: "customer",
+          reviewee_id: taskerId,
+          reviewee_role: "tasker",
           rating: selectedRating,
           comment: comment || ""
         })
@@ -967,6 +840,12 @@ async function submitReview() {
       closeReviewModal();
       // Reload review status
       await checkReview();
+      // Reload order details to update review section
+      const details = await fetchOrderDetails();
+      if (details) {
+        currentOrder = details.order;
+        updateOrderInfo(currentOrder, details.receipt, details.review);
+      }
     } else {
       alert(data.message || "Gửi đánh giá thất bại");
     }
@@ -986,23 +865,63 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Initialize page
-async function init() {
-  const details = await fetchOrderDetails();
-  
-  if (!details) {
-    alert("Không thể tải thông tin đơn hàng");
-    window.location.href = "./tasker_home.html";
+// Cancel order
+async function cancelOrder() {
+  if (!canCancel) {
+    alert("Không thể hủy đơn hàng này");
     return;
   }
 
-  currentOrder = details.order;
-  updateOrderInfo(currentOrder, details.receipt);
-  updateTimeline(details.statusLogs || []);
-  updateUI();
-  
-  // Check review status
-  await checkReview();
+  const penaltyMsg = penaltyAmount > 0 
+    ? `\n\nLưu ý: Bạn sẽ bị phạt ${formatCurrency(penaltyAmount)} khi hủy đơn này.`
+    : "";
+
+  if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng này?${penaltyMsg}`)) {
+    return;
+  }
+
+  const reason = prompt("Vui lòng nhập lý do hủy đơn (tùy chọn):") || "Khách hàng hủy đơn";
+
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/order/cancel/${orderId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ reason })
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      location.href = "../auth/login-signup.html";
+      return;
+    }
+
+    const result = await res.json();
+
+    if (res.ok && result.success) {
+      alert("Đã hủy đơn hàng thành công");
+      // Reload order details
+      const details = await fetchOrderDetails();
+      if (details) {
+        currentOrder = details.order;
+        updateOrderInfo(currentOrder, details.receipt, details.review);
+        canCancel = details.canCancel;
+        penaltyAmount = details.penaltyAmount || 0;
+        updateUI();
+      }
+    } else {
+      alert(result.message || "Hủy đơn hàng thất bại");
+    }
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    alert("Có lỗi xảy ra khi hủy đơn hàng");
+  }
 }
 
 // Open chat function
@@ -1011,42 +930,42 @@ function openChat() {
         alert("Không tìm thấy đơn hàng");
         return;
     }
-    window.location.href = `./tasker_chat.html?orderId=${orderId}`;
+    window.location.href = `../chat.html?orderId=${orderId}`;
 }
 
 // Setup review modal event listeners
 function setupReviewModal() {
+  // Rating stars click handlers
   const stars = document.querySelectorAll(".rating-star");
-
-  stars.forEach((star, index) => {
-    const ratingValue = index + 1;
-
-    // Hover: tô vàng từ 1 → ratingValue
-    star.addEventListener("mouseenter", () => {
-      hoverRating = ratingValue;
-      updateRatingStars(hoverRating);
-    });
-
-    // Click: cố định rating
+  stars.forEach(star => {
     star.addEventListener("click", () => {
-      selectedRating = ratingValue;
+      selectedRating = parseInt(star.getAttribute("data-rating"));
       updateRatingStars(selectedRating);
     });
+    
+    star.addEventListener("mouseenter", () => {
+      const hoverRating = parseInt(star.getAttribute("data-rating"));
+      updateRatingStars(hoverRating);
+    });
   });
-
-  // Khi rời khỏi vùng sao → quay về rating đã chọn
+  
+  // Reset stars on mouse leave
   const ratingContainer = document.getElementById("ratingStars");
   if (ratingContainer) {
     ratingContainer.addEventListener("mouseleave", () => {
-      hoverRating = 0;
       updateRatingStars(selectedRating);
     });
   }
-
-  // Nút mở modal
+  
+  // Open review button
   const openReviewBtn = document.getElementById("openReviewBtn");
   if (openReviewBtn) {
     openReviewBtn.addEventListener("click", openReviewModal);
+  }
+
+  // Cancel button
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", cancelOrder);
   }
 }
 
@@ -1055,6 +974,30 @@ window.openChat = openChat;
 window.openReviewModal = openReviewModal;
 window.closeReviewModal = closeReviewModal;
 window.submitReview = submitReview;
+
+// Initialize page
+async function init() {
+  const details = await fetchOrderDetails();
+  
+  if (!details) {
+    alert("Không thể tải thông tin đơn hàng");
+    window.location.href = "./customer_activity.html";
+    return;
+  }
+
+  currentOrder = details.order;
+  canCancel = details.canCancel || false;
+  penaltyAmount = details.penaltyAmount || 0;
+  
+  const statusLogs = details.statusLogs || [];
+  
+  updateOrderInfo(currentOrder, details.receipt, details.review);
+  updateTimeline(statusLogs);
+  updateUI();
+  
+  // Check review status
+  await checkReview();
+}
 
 // Run initialization
 init();

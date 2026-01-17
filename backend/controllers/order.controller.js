@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review } from "../models/index.js";
+import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review, Account, OrderStatusLog } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -10,8 +10,10 @@ import {
   verifyCustomerOrderStats,
   getOrderTrendsService,
   assignTaskerService,
-  canCancelOrderByCustomer
+  canCancelOrderByCustomer,
+  changeOrderStatus,
 } from "../services/order.service.js";
+import { pushNotification } from "../services/notification.service.js";
 
 import { getSocketInstance } from "../sockets/instance.js";
 
@@ -97,6 +99,11 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       customerId: customerId
     });
 
+    // Get order status logs for timeline
+    const statusLogs = await OrderStatusLog.find({ order_id: orderId })
+      .sort({ created_at: 1 })
+      .lean();
+
     res.status(200).json({
       success: true,
       order,
@@ -104,7 +111,8 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       review: review || null,
       canCancel: cancelCheck.canCancel,
       cancelReason: cancelCheck.reason || null,
-      penaltyAmount: cancelCheck.penaltyAmount || 0
+      penaltyAmount: cancelCheck.penaltyAmount || 0,
+      statusLogs: statusLogs || []
     });
 
   } catch (err) {
@@ -159,6 +167,7 @@ export const getAllOrdersByCustomerId = async (req, res) => {
   }
 };
 
+// khachs hangf taoj ddonw 
 export const createOrder = async (req, res) => {
   console.log("req.body in createOrder", req.body);
   try {
@@ -171,6 +180,34 @@ export const createOrder = async (req, res) => {
 
     const order = result.order;
     console.log("RESULT ORDER: ", order);
+
+    const admin = await Account.find({ role: "admin" }).select("user_id");
+    // gửi thông báo cho admin
+    await Promise.all(
+      admin.map(ad =>
+          pushNotification(
+              ad.user_id,
+              "Có đơn hàng mới!",
+              `Khách hàng có ID: ${req.userId} vừa đặt đơn hàng mới. Vui lòng kiểm tra nếu 
+                quá lâu không tìm thấy tasker phù hợp.`,
+              "order",
+              "Order",
+              order._id,
+              "unread"
+          )
+      )
+    );
+
+    // const orderId = order._id;
+    // // đổi trạng thái và log
+    // await changeOrderStatus({
+    //   orderId,
+    //   toStatus: "cancelled",
+    //   actorType: "customer",
+    //   actorId: customerId,
+    //   reason: reason,
+    //   session
+    // });
 
     return res.status(201).json({
       success: true,
@@ -197,13 +234,51 @@ export const cancelOrderByCustomer = async (req, res) => {
       reason: req.body.reason,
     });
 
-    const io = getSocketInstance();
+    if (order.tasker_id) {
+      await pushNotification(
+        order.tasker_id,                 
+        "Đơn hàng đã bị hủy",
+        `Bạn có một đơn hàng có ID: ${order._id} của khách hàng ${order.customer_id} đã bị khách hàng hủy.`,
+        "order",                              
+        "Order",                              
+        order._id,                         
+        "unread"                              
+      );
+    }
 
-    // notify all sockets in order room
-    io.to(`order:${orderId}`).emit("order-cancelled", {
-      order_id: orderId,
-      reason: req.body.reason,
-    });
+    // gửi thông báo cho khách
+    await pushNotification(
+      order.customer_id,                 
+      "Đơn hàng đã bị hủy",
+      `Bạn đã hủy đơn hàng có ID: ${order._id}. Hãy chú ý đến điểm uy tín của mình nhé.`,
+      "order",                              
+      "Order",                              
+      order._id,                         
+      "unread"                              
+    );
+
+    const admin = await Account.find({ role: "admin" }).select("user_id");
+    // gửi thông báo cho admin
+    await Promise.all(
+      admin.map(ad =>
+        pushNotification(
+          admin.user_id,
+          "Một đơn hàng đã bị hủy!",
+          `Khách hàng có ID: ${req.userId} đã hủy đơn hàng của bản thân.`,
+          "order",
+          "Order",
+          order._id,
+          "unread"
+        )
+      )
+    );
+
+    // const io = getSocketInstance();
+    // // notify all sockets in order room
+    // io.to(`order:${orderId}`).emit("order-cancelled", {
+    //   order_id: orderId,
+    //   reason: req.body.reason,
+    // });
 
     return res.status(200).json({ success: true, order });
     
@@ -212,7 +287,7 @@ export const cancelOrderByCustomer = async (req, res) => {
   }
 };
 
-// trả về số đơn đã hoàn thành và hủy
+// trả về số đơn đã hoàn thành và đã hủy
 export const getCustomerOrderStats = async (req, res) => {
   try {
     const customerUserId = req.userId;
@@ -254,7 +329,6 @@ export const findTaskerForOrder = async (req, res) => {
     const { orderId } = req.params;
     const customerId = req.userId;
 
-    // Get order as Mongoose document (not lean) because assignTaskerService needs to call save()
     const order = await Order.findById(orderId)
       .populate('customer_id', 'full_name phone_number email')
       .populate('tasker_id', 'full_name phone_number email')
@@ -291,14 +365,6 @@ export const findTaskerForOrder = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Không thể tìm tasker cho đơn hàng ở trạng thái "${order.status}".`
-      });
-    }
-
-    // Only find tasker for immediate orders
-    if (order.type !== "immediate") {
-      return res.status(400).json({
-        success: false,
-        message: "Chỉ có thể tìm tasker cho đơn hàng đặt liền."
       });
     }
 

@@ -48,7 +48,7 @@
           Trang chủ
         </a>
 
-        <a class="sidebar-link" href="#">
+        <a class="sidebar-link" href="./admin_managecustomers.html">
           <span class="material-symbols-outlined">person</span>
           Quản lý Customer
         </a>
@@ -119,7 +119,7 @@
             Trang chủ
           </a>
 
-          <a class="sidebar-link" href="#">
+          <a class="sidebar-link" href="./admin_managecustomers.html">
             <span class="material-symbols-outlined">person</span>
             Quản lý Customer
           </a>
@@ -196,84 +196,190 @@
 
         <div class="content-wrap">
           <div class="content-card">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="page-title">Quản lý voucher</div>
-                        </div>
-                        <button class="flex items-center justify-center space-x-2 add-btn">
-                            <span class="material-symbols-outlined">add_circle</span>
-                            <span>Tạo voucher mới</span>
-                        </button>
-                    </div>
-
-                    <!-- Table Content -->
-                    <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b border-gray-100">
-                                <tr>
-                                    <th class="p-4 font-semibold text-slate-700">Mã voucher</th>
-                                    <th class="p-4 font-semibold text-slate-700">Mô tả</th>
-                                    <th class="p-4 font-semibold text-slate-700">Giảm giá</th>
-                                    <th class="p-4 font-semibold text-slate-700">Áp dụng cho</th>
-                                    <th class="p-4 font-semibold text-slate-700">Thời hạn</th>
-                                    <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="data-table-body">
-                                <!-- Data will be injected here via JS -->
-                                <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
-                                    <td class="p-4 font-medium text-slate-800">TET2026</td>
-                                    <td class="p-4 text-slate-600 text-sm truncate max-w-[200px]">Giảm giá cực sốc cho
-                                        dịch vụ dọn dẹp nhà cửa...</td>
-                                    <td class="p-4"><span
-                                            class="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">20%</span>
-                                    </td>
-                                    <td class="p-4 text-sm text-slate-600">Dịch vụ (SERVICE)</td>
-                                    <td class="p-4 text-sm text-slate-500">
-                                        <div>Bắt đầu: 10/10/2025</div>
-                                        <div>Kết thúc: 20/05/2026</div>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <div class="flex justify-center space-x-2">
-                                            <button title="Xem chi tiết"
-                                                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">visibility</span>
-                                            </button>
-                                            <button title="Sửa"
-                                                class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">edit</span>
-                                            </button>
-                                            <button title="Xóa"
-                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">delete</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="page-title">Quản lý voucher</div>
                 </div>
+                <button id="btnAddVoucher" class="flex items-center justify-center space-x-2 add-btn" onclick="openVoucherModal('add')">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    <span>Tạo voucher mới</span>
+                </button>
+            </div>
+
+            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 border-b border-gray-100">
+                        <tr>
+                            <th class="p-4 font-semibold text-slate-700">Mã voucher</th>
+                            <th class="p-4 font-semibold text-slate-700">Mô tả</th>
+                            <th class="p-4 font-semibold text-slate-700">Giảm giá</th>
+                            <th class="p-4 font-semibold text-slate-700">Áp dụng cho</th>
+                            <th class="p-4 font-semibold text-slate-700">Thời hạn</th>
+                            <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-table-body">
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500">Đang tải...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <script>
-      const sidebarMobile = document.getElementById("sidebarMobile");
-      const backdrop = document.getElementById("backdrop");
+    <!-- Voucher Modal -->
+    <div id="modalVoucher" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalVoucher')"></div>
+      <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg border border-gray-100 max-h-[90vh] overflow-y-auto">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-gray-400">local_activity</span>
+              <div class="font-bold text-gray-800" id="voucherModalTitle">Thêm voucher</div>
+            </div>
+            <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalVoucher')">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
 
-      function openSidebar() {
-        sidebarMobile.classList.remove("closed");
-        backdrop.classList.add("show");
-      }
+          <div class="p-5 space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Mã voucher *</label>
+                <input id="voucherCode" type="text" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Ví dụ: TET2026" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Tên voucher *</label>
+                <input id="voucherName" type="text" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Ví dụ: Giảm giá Tết 2026" />
+              </div>
+            </div>
 
-      function closeSidebar() {
-        sidebarMobile.classList.add("closed");
-        backdrop.classList.remove("show");
-      }
-    </script>
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase">Mô tả *</label>
+              <textarea id="voucherDescription" rows="3" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Mô tả voucher..."></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Ngày bắt đầu *</label>
+                <input id="voucherBeginDate" type="datetime-local" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Ngày kết thúc *</label>
+                <input id="voucherEndDate" type="datetime-local" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" />
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4">
+              <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Thông tin giảm giá *</label>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="text-xs font-bold text-gray-500 uppercase">Loại giảm giá</label>
+                  <select id="discountType" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                    <option value="PERCENT">Phần trăm (%)</option>
+                    <option value="FIXED">Số tiền cố định</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-gray-500 uppercase">Giá trị</label>
+                  <input id="discountValue" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Ví dụ: 20" />
+                </div>
+                <div id="maxDiscountContainer">
+                  <label class="text-xs font-bold text-gray-500 uppercase">Giảm tối đa (VNĐ)</label>
+                  <input id="maxDiscount" type="number" min="0" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Chỉ áp dụng cho %" />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Tổng số lượng *</label>
+                <input id="totalQuantity" type="number" min="1" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Ví dụ: 100" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Giới hạn mỗi người *</label>
+                <input id="perUserLimit" type="number" min="1" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="Ví dụ: 1" />
+              </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4">
+              <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Điều kiện áp dụng</label>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs font-bold text-gray-500 uppercase">Loại điều kiện</label>
+                  <select id="ruleType" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                    <option value="GENERAL">Chung</option>
+                    <option value="FIRST_ORDER">Chỉ đơn hàng đầu tiên</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-bold text-gray-500 uppercase">Giá trị đơn hàng tối thiểu (VNĐ)</label>
+                  <input id="minOrderValue" type="number" min="0" class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" placeholder="0 = không giới hạn" />
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Áp dụng cho dịch vụ</label>
+              <div class="mt-1 border border-gray-200 rounded-lg p-3 max-h-60 overflow-y-auto bg-gray-50" id="applicableModelContainer">
+                <div id="applicableModel" class="text-sm text-gray-500 text-center py-4">Đang tải danh sách dịch vụ...</div>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Chọn dịch vụ/task cụ thể. Không chọn = áp dụng cho tất cả.</p>
+            </div>
+          </div>
+
+          <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+            <button class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition" type="button" onclick="closeModal('modalVoucher')">
+              Hủy
+            </button>
+            <button id="btnSaveVoucher" class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition" type="button" onclick="saveVoucher()">
+              Lưu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalConfirm')"></div>
+      <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100">
+          <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="font-bold text-gray-800">Xác nhận</div>
+            <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalConfirm')">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div class="p-5">
+            <div id="confirmText" class="text-sm text-gray-700">Bạn chắc chắn muốn xóa?</div>
+          </div>
+          <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+            <button class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition" type="button" onclick="closeModal('modalConfirm')">
+              Hủy
+            </button>
+            <button class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition" type="button" onclick="confirmDeleteVoucher()">
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+      <div class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">info</span>
+        <span id="toastText">Thông báo</span>
+      </div>
+    </div>
+
+    <script src="../js/admin_managevouchers.js"></script>
   <!-- Code injected by live-server -->
-<script>
+<!-- <script>
 	// <![CDATA[  <-- For SVG support
 	if ('WebSocket' in window) {
 		(function () {
@@ -309,6 +415,6 @@
 		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
 	}
 	// ]]>
-</script>
+</script> -->
 </body>
 </html>

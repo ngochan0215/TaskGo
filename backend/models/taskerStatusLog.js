@@ -26,7 +26,22 @@ const taskerStatusLogSchema = new mongoose.Schema(
       required: true
     },
 
-    reason: { type: String  }
+    start_time: {
+      type: Date,
+      required: true,
+    },
+
+    end_time: {
+      type: Date,
+      default: null,
+    },
+
+    note: {
+      type: String,
+      default: "",
+    },
+
+    reason: { type: String, default: "" }
   },
   {
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" }

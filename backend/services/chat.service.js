@@ -8,7 +8,7 @@ export async function createNewChatForOrder(order_id) {
     throw new Error("invalid_order_id");
   const order = await Order.findById(order_id).exec();
   if (!order) throw new Error("order_not_found");
-  if (order.status !== "accepted" && order.status !== "in_progress")
+  if (order.status === "pending" || order.status === "assigned" || order.status === "completed" || order.status === "cancelled")
     throw new Error("invalid_order_status");
 
   const customer = await Account.findOne({ user_id: order.customer_id }).exec();
@@ -50,7 +50,7 @@ export async function fetchChat(orderId, userId, checkActive = false) {
     try {
       chat = await createNewChatForOrder(orderId);
     } catch (err) {
-      // If creation fails (e.g. Order is 'pending' or 'cancelled'), 
+      // If creation fails (e.g. Order is 'pending', 'cancelled' or hasn't been 'accepted' by any tasker), 
       // we map it back to "chat_not_found" so the Controller returns 404 
       // instead of a 500 Server Error.
       if (err.message === "invalid_order_status" || err.message === "order_not_found") {
