@@ -5,6 +5,7 @@ export function getOnlineTaskerUserIds(io) {
   const room = io.sockets.adapter.rooms.get("taskers:online");
   if (!room) return [];
 
+  console.log("ROOM: ", room);
   const ids = [];
   for (const socketId of room) {
     const socket = io.sockets.sockets.get(socketId);

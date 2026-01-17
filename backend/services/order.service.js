@@ -501,9 +501,10 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
         $inc: { used_quantity: -1 }
       }, { session });
 
-      order.voucher_id = null;
-      order.voucher_snapshot = null;
-      order.final_amount += order.voucher_snapshot.discount_amount;
+      // console.log("order: ", order.final_amount);
+      // order.final_amount += order.voucher_snapshot.discount_amount;
+      // order.voucher_id = null;
+      // order.voucher_snapshot = null;
     }
 
     await order.save({ session });
@@ -523,6 +524,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     }
 
     await session.commitTransaction();
+
+    return { order, penaltyAmount };
 
   } catch (error) {
     await session.abortTransaction();

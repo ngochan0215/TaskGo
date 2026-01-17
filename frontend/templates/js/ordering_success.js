@@ -1,4 +1,5 @@
-let bookingDraft = null;
+let currentOrder = null;
+let currentReceipt = null;
 
 const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
@@ -131,35 +132,71 @@ const serviceRenderers = {
     `<p class="text-gray-400">Không có chi tiết dịch vụ</p>`
 };
 
-function loadBookingDraft() {
-  const raw = localStorage.getItem("bookingDraft");
-  if (raw) {
-    bookingDraft = JSON.parse(raw);
-    console.log("BOOKING DRAFT: ", bookingDraft);
-    return;
+// Load order details from API
+async function loadOrderDetails() {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    console.error("No token found");
+    return false;
   }
-  
-  // Try to load from orderCreated as fallback (when bookingDraft was cleared after order creation)
-  const orderRaw = localStorage.getItem("orderCreated");
-  if (orderRaw) {
-    const order = JSON.parse(orderRaw);
-    console.log("ORDER CREATED: ", order);
-    // Convert order to bookingDraft format
-    bookingDraft = {
-      task_snapshot: order.task_snapshot,
-      task_payload: order.task_payload,
-      address_snapshot: order.address_snapshot,
-      base_amount: order.base_amount,
-      final_amount: order.final_amount,
-      note: order.note,
-      scheduled_at: order.scheduled_at,
-      type: order.type,
-      voucher_snapshot: order.voucher_snapshot
-    };
-    return;
+
+  // Get order ID from URL parameter
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get("orderId");
+  console.log("order_id: ", orderId);
+
+  if (!orderId) {
+    console.error("No orderId found in URL parameters");
+    // Fallback: try to get from localStorage (for backward compatibility)
+    const orderRaw = localStorage.getItem("orderCreated");
+    if (orderRaw) {
+      try {
+        const orderStored = JSON.parse(orderRaw);
+        if (orderStored._id) {
+          // Redirect to include orderId in URL
+          window.location.href = `./ordering_success.html?orderId=${orderStored._id}`;
+          return false;
+        }
+      } catch (e) {
+        console.error("Error parsing orderCreated from localStorage:", e);
+      }
+    }
+    return false;
   }
-  
-  console.warn("No bookingDraft or orderCreated found in localStorage");
+
+  try {
+    // Fetch order details from API
+    const res = await fetch(
+      `http://localhost:3000/api/order/${orderId}/details`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      location.href = "../auth/login-signup.html";
+      return false;
+    }
+
+    const result = await res.json();
+    if (result.success) {
+      currentOrder = result.order;
+      currentReceipt = result.receipt;
+      console.log("ORDER LOADED: ", currentOrder);
+      console.log("RECEIPT LOADED: ", currentReceipt);
+      return true;
+    }
+
+    console.error("Failed to load order:", result.message);
+    return false;
+  } catch (error) {
+    console.error("Error loading order details:", error);
+    return false;
+  }
 }
 
 function formatDate(dateString) {
@@ -183,20 +220,20 @@ function formatTime(dateString) {
 
 function renderServiceDetails() {
   const el = document.getElementById("serviceDetails");
-  if (!el || !bookingDraft) return;
+  if (!el || !currentOrder) return;
 
-  const serviceCode = bookingDraft.task_snapshot?.code || "DEFAULT";
+  const serviceCode = currentOrder.task_snapshot?.code || "DEFAULT";
   const renderer = serviceRenderers[serviceCode] || serviceRenderers.DEFAULT;
-  const payload = bookingDraft.task_payload || {};
+  const payload = currentOrder.task_payload || {};
 
-  const scheduledInfo = bookingDraft.scheduled_at && bookingDraft.type === "scheduled"
+  const scheduledInfo = currentOrder.scheduled_at && currentOrder.type === "scheduled"
     ? `<div class="bg-blue-50 p-3 rounded-lg mt-3 border border-blue-200">
         <p class="text-sm font-semibold text-blue-700 flex items-center">
           <span class="material-symbols-outlined text-sm mr-1">schedule</span>
           Đã lên lịch
         </p>
         <p class="text-sm text-blue-600 mt-1">
-          ${formatDate(bookingDraft.scheduled_at)} lúc ${formatTime(bookingDraft.scheduled_at)}
+          ${formatDate(currentOrder.scheduled_at)} lúc ${formatTime(currentOrder.scheduled_at)}
         </p>
       </div>`
     : "";
@@ -204,17 +241,17 @@ function renderServiceDetails() {
   el.innerHTML = `
     <div class="space-y-2">
       <h4 class="font-bold text-dark-900 text-lg mb-2">
-        ${bookingDraft.task_snapshot?.name || "Dịch vụ"}
+        ${currentOrder.task_snapshot?.name || "Dịch vụ"}
       </h4>
       <div class="text-base text-dark-500 space-y-1">
         ${renderer(payload)}
       </div>
       ${scheduledInfo}
       ${
-        bookingDraft.note
+        currentOrder.note
           ? `<div class="bg-gray-50 p-3 rounded-lg mt-3">
               <p class="text-sm"><strong class="text-primary-500">📝 Ghi chú:</strong></p>
-              <p class="text-sm text-gray-700 mt-1">${bookingDraft.note}</p>
+              <p class="text-sm text-gray-700 mt-1">${currentOrder.note}</p>
             </div>`
           : ""
       }
@@ -224,9 +261,9 @@ function renderServiceDetails() {
 
 function renderAddressDetails() {
   const el = document.getElementById("addressDetails");
-  if (!el || !bookingDraft) return;
+  if (!el || !currentOrder) return;
 
-  const address = bookingDraft.address_snapshot;
+  const address = currentOrder.address_snapshot;
   if (!address || !address.full_address) {
     el.innerHTML = `<p class="text-gray-500">Không có thông tin địa chỉ</p>`;
     return;
@@ -244,29 +281,51 @@ function renderAddressDetails() {
 
 function renderPaymentDetails() {
   const el = document.getElementById("paymentDetails");
-  if (!el || !bookingDraft) return;
+  if (!el || !currentOrder) return;
 
-  const now = new Date();
-  const paymentDate = formatDate(now.toISOString());
-  const paymentTime = formatTime(now.toISOString());
+  // Use receipt payment date/time if available, otherwise use current time
+  let paymentDate, paymentTime;
+  if (currentReceipt && currentReceipt.created_at) {
+    paymentDate = formatDate(currentReceipt.created_at);
+    paymentTime = formatTime(currentReceipt.created_at);
+  } else {
+    const now = new Date();
+    paymentDate = formatDate(now.toISOString());
+    paymentTime = formatTime(now.toISOString());
+  }
+
+  const paymentMethodMap = {
+    cash: "Tiền mặt",
+    credit_card: "Thẻ tín dụng",
+    bank_transfer: "Chuyển khoản",
+    ewallet: "Ví TaskGo"
+  };
+
+  const paymentMethod = currentReceipt?.payment_method 
+    ? paymentMethodMap[currentReceipt.payment_method] || currentReceipt.payment_method
+    : "Chưa thanh toán";
 
   el.innerHTML = `
     <div class="space-y-3">
       <div class="flex justify-between items-center">
         <span class="text-gray-600">Tổng tiền dịch vụ</span>
-        <span class="font-semibold text-dark-900">${formatCurrency(bookingDraft.base_amount || bookingDraft.final_amount)}</span>
+        <span class="font-semibold text-dark-900">${formatCurrency(currentOrder.base_amount || currentOrder.final_amount)}</span>
       </div>
       ${
-        bookingDraft.voucher_snapshot
+        currentOrder.voucher_snapshot
           ? `<div class="flex justify-between items-center">
               <span class="text-gray-600">Mã giảm giá</span>
-              <span class="font-semibold text-green-600">-${formatCurrency(bookingDraft.voucher_snapshot.discount_amount || 0)}</span>
+              <span class="font-semibold text-green-600">-${formatCurrency(currentOrder.voucher_snapshot.discount_amount || 0)}</span>
             </div>`
           : ""
       }
       <div class="border-t border-gray-300 pt-3 flex justify-between items-center">
         <span class="font-bold text-dark-900 text-lg">Tổng tiền</span>
-        <span class="font-bold text-primary-500 text-xl">${formatCurrency(bookingDraft.final_amount)}</span>
+        <span class="font-bold text-primary-500 text-xl">${formatCurrency(currentOrder.final_amount)}</span>
+      </div>
+      <div class="flex justify-between items-center text-sm text-gray-600 pt-2">
+        <span>Phương thức thanh toán</span>
+        <span>${paymentMethod}</span>
       </div>
       <div class="flex justify-between items-center text-sm text-gray-600 pt-2">
         <span>Ngày thanh toán</span>
@@ -354,10 +413,8 @@ async function findTaskerForOrder(orderId) {
       console.log("Tasker found:", result.assignedTasker);
       renderTaskerSearchStatus("assigned", result.assignedTasker);
       
-      // Update order in localStorage if needed
-      if (result.order) {
-        localStorage.setItem("orderCreated", JSON.stringify(result.order));
-      }
+      // Reload order details to get updated order with tasker
+      await loadOrderDetails();
     } else {
       console.warn("Could not find tasker:", result.message);
       renderTaskerSearchStatus("error");
@@ -378,11 +435,11 @@ function renderError() {
   });
 }
 
-function initOrderingSuccess() {
-  loadBookingDraft();
+async function initOrderingSuccess() {
+  const loaded = await loadOrderDetails();
   
-  if (!bookingDraft) {
-    console.error("Failed to load booking draft");
+  if (!loaded || !currentOrder) {
+    console.error("Failed to load order details");
     renderError();
     return;
   }
@@ -391,28 +448,16 @@ function initOrderingSuccess() {
   renderAddressDetails();
   renderPaymentDetails();
   
-  // Check if we have an order ID and try to find tasker
-  const orderRaw = localStorage.getItem("orderCreated");
-  if (orderRaw) {
-    try {
-      const order = JSON.parse(orderRaw);
-      if (order._id && order.type === "immediate" && order.status === "pending") {
-        // Show searching status first
-        renderTaskerSearchStatus("searching");
-        // Then try to find tasker
-        findTaskerForOrder(order._id);
-      } else if (order.tasker_id || order.status !== "pending") {
-        // Already has tasker or not pending
-        renderTaskerSearchStatus("assigned", order.tasker_id);
-      } else {
-        renderTaskerSearchStatus("searching");
-      }
-    } catch (err) {
-      console.error("Error parsing order:", err);
-      renderTaskerSearchStatus("searching");
-    }
+  // Check if we have an order and try to find tasker
+  if (currentOrder._id && currentOrder.type === "immediate" && currentOrder.status === "pending") {
+    // Show searching status first
+    renderTaskerSearchStatus("searching");
+    // Then try to find tasker
+    findTaskerForOrder(currentOrder._id);
+  } else if (currentOrder.tasker_id || currentOrder.status !== "pending") {
+    // Already has tasker or not pending
+    renderTaskerSearchStatus("assigned", currentOrder.tasker_id);
   } else {
-    // No order found, just show searching status
     renderTaskerSearchStatus("searching");
   }
 }

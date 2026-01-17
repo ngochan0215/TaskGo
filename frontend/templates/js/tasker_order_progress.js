@@ -52,7 +52,8 @@ const statusToState = {
   "departed": 2,
   "arrived": 3,
   "in_progress": 4,
-  "completed": 5
+  "completed": 5,
+  "cancelled": -2
 };
 
 // State to step mapping
@@ -464,6 +465,21 @@ function updateOrderInfo(order, receipt) {
   }
 }
 
+function disableAllActions() {
+  // disable main button
+  if (mainBtn) {
+    mainBtn.disabled = true;
+    mainBtn.style.opacity = "0.5";
+    mainBtn.classList.remove("btn-pulse");
+  }
+
+  // disable cancel button
+  if (cancelBtn) {
+    cancelBtn.disabled = true;
+    cancelBtn.style.opacity = "0.5";
+  }
+}
+
 // Update timeline based on status logs
 function updateTimeline(statusLogs) {
   // Reset all steps
@@ -521,6 +537,29 @@ function updateUI() {
 
   const status = currentOrder.status;
   currentState = statusToState[status] ?? -1;
+
+  if (status === "cancelled") {
+    // Badge
+    const statusBadge = document.getElementById("statusBadge");
+    if (statusBadge) {
+      statusBadge.textContent = "Đã hủy";
+      statusBadge.className =
+        "px-2.5 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-full uppercase tracking-wide";
+    }
+
+    // Hide all action buttons
+    mainBtn.style.display = "none";
+    cancelBtn.style.display = "none";
+
+    // Disable all interactions just in case
+    disableAllActions();
+
+    // Hide review sections
+    reviewReminderSection?.classList.add("hidden");
+    reviewDisplaySection?.classList.add("hidden");
+
+    return;
+  }
 
   // Update status badge
   const statusBadge = document.getElementById('statusBadge');

@@ -228,7 +228,7 @@ export const cancelOrderByCustomer = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    const order = await cancelOrderByCustomerService({
+    const { order } = await cancelOrderByCustomerService({
       orderId,
       customerId: req.userId,
       reason: req.body.reason,
@@ -262,7 +262,7 @@ export const cancelOrderByCustomer = async (req, res) => {
     await Promise.all(
       admin.map(ad =>
         pushNotification(
-          admin.user_id,
+          ad.user_id,
           "Một đơn hàng đã bị hủy!",
           `Khách hàng có ID: ${req.userId} đã hủy đơn hàng của bản thân.`,
           "order",

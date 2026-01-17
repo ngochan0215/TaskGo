@@ -38,9 +38,9 @@ document.getElementById("submitBtn").addEventListener("click", submitOrder);
 function loadBookingDraft() {
     const raw = localStorage.getItem("bookingDraft");
     if (!raw) {
-        alert("Không tìm thấy thông tin đặt dịch vụ");
-        location.href = "/";
-        return;
+      alert("Không tìm thấy thông tin đặt dịch vụ");
+      location.href = "/";
+      return;
     }
     bookingDraft = JSON.parse(raw);
     console.log("BOOKING DRAFT IN PAYMENT CONFIRMATION: ", bookingDraft);
@@ -594,14 +594,14 @@ async function submitOrder() {
     const receipt = await createOrderReceipt();
 
     if (payment_method === "cash") {
-        // dọn draft sau khi tạo đơn thành công với tiền mặt
-        // bookingDraft = null;
-        // voucherDraft = null;
-        // localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-        // localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+      // Clear all drafts after order creation to avoid conflicts
+      bookingDraft = null;
+      voucherDraft = null;
+      localStorage.removeItem("bookingDraft");
+      localStorage.removeItem("voucherDraft");
 
-        console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS: ", bookingDraft);
-        location.href = "./ordering_success.html";
+      // Pass orderId as URL parameter
+      location.href = `./ordering_success.html?orderId=${order_id}`;
     }
     else if (payment_method === "bank_transfer") {
         const paymentLink = await createPaymentLink(order_id, receipt?.data?._id);
@@ -618,14 +618,13 @@ async function submitOrder() {
           orderCode: paymentLink.orderCode
         }));
 
-        // dọn draft sau khi đã lưu paymentPending
-        // bookingDraft = null;
-        // voucherDraft = null;
-        // localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-        // localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
+        // Clear all drafts after order creation to avoid conflicts
+        bookingDraft = null;
+        voucherDraft = null;
+        localStorage.removeItem("bookingDraft");
+        localStorage.removeItem("voucherDraft");
 
         // Redirect sang PayOS
-        console.log("BOOKING DRAFT BEFORE GOIN TO ORDERIN_SUCCESS (bank): ", bookingDraft);
         window.location.href = paymentLink.checkoutUrl;
     }
 }

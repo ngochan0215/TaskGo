@@ -29,6 +29,8 @@ let currentReview = null;
 let selectedRating = 0;
 let canCancel = false;
 let penaltyAmount = 0;
+let isTaskerFavorite = false;
+let currentTaskerId = null;
 
 // DOM Elements
 const statusBadge = document.getElementById('statusBadge');
@@ -403,6 +405,9 @@ function updateTaskerInfo(order) {
   const taskerName = tasker.full_name || "Tasker";
   const taskerPhone = tasker.phone_number || "";
   const taskerAvatar = tasker.avatar_url;
+  
+  // Store tasker ID for favorite functionality
+  currentTaskerId = typeof tasker._id === "object" ? tasker._id.toString() : tasker._id;
 
   const maskedPhone = taskerPhone ? taskerPhone.slice(0, 4) + " *** " + taskerPhone.slice(-3) : "";
 
@@ -430,6 +435,11 @@ function updateTaskerInfo(order) {
   const headerPhoneLink = document.getElementById('headerPhoneLink');
   if (headerPhoneLink && taskerPhone) {
     headerPhoneLink.href = `tel:${taskerPhone}`;
+  }
+  
+  // Check if tasker is already favorited
+  if (currentTaskerId) {
+    checkFavoriteStatus();
   }
 }
 
@@ -969,11 +979,170 @@ function setupReviewModal() {
   }
 }
 
+// Check if tasker is favorited
+async function checkFavoriteStatus() {
+  if (!currentTaskerId) return;
+  
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    // Check if tasker exists in favorites list
+    const res = await fetch(
+      `http://localhost:3000/api/user/favorites/taskers`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      return;
+    }
+
+    if (res.ok) {
+      const result = await res.json();
+      // Check if current tasker is in the favorites list
+      isTaskerFavorite = result.data && result.data.some(
+        fav => fav.user && fav.user._id === currentTaskerId
+      ) || false;
+      updateFavoriteButton();
+    }
+  } catch (error) {
+    console.error("Error checking favorite status:", error);
+  }
+}
+
+// Update favorite button UI
+function updateFavoriteButton() {
+  const favoriteBtn = document.getElementById('favoriteBtn');
+  const favoriteIcon = document.getElementById('favoriteIcon');
+  const favoriteText = document.getElementById('favoriteText');
+  
+  if (!favoriteBtn || !favoriteIcon || !favoriteText) return;
+
+  if (isTaskerFavorite) {
+    favoriteBtn.classList.remove('bg-pink-50', 'text-pink-700', 'border-pink-200');
+    favoriteBtn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+    favoriteIcon.textContent = 'favorite';
+    favoriteIcon.classList.add('text-red-600');
+    favoriteText.textContent = 'Đã yêu thích';
+  } else {
+    favoriteBtn.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+    favoriteBtn.classList.add('bg-pink-50', 'text-pink-700', 'border-pink-200');
+    favoriteIcon.textContent = 'favorite_border';
+    favoriteIcon.classList.remove('text-red-600');
+    favoriteText.textContent = 'Yêu thích';
+  }
+}
+
+// Toggle favorite tasker
+async function toggleFavorite() {
+  if (!currentTaskerId) {
+    alert("Không tìm thấy thông tin tasker");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Vui lòng đăng nhập");
+    return;
+  }
+
+  // If already favorited, ask to remove
+  if (isTaskerFavorite) {
+    if (!confirm("Bạn có muốn xóa tasker này khỏi danh sách yêu thích?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/user/favorites/taskers/${currentTaskerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        alert("Phiên đăng nhập hết hạn");
+        location.href = "../auth/login-signup.html";
+        return;
+      }
+
+      const result = await res.json();
+
+      if (res.ok) {
+        isTaskerFavorite = false;
+        updateFavoriteButton();
+        alert(result.message || "Đã xóa khỏi danh sách yêu thích");
+      } else {
+        alert(result.message || "Xóa khỏi danh sách yêu thích thất bại");
+      }
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      alert("Có lỗi xảy ra khi xóa khỏi danh sách yêu thích");
+    }
+  } else {
+    // Ask for confirmation before adding
+    if (!confirm("Bạn có muốn thêm tasker này vào danh sách yêu thích?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/user/favorites/taskers/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            tasker_id: currentTaskerId
+          })
+        }
+      );
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        alert("Phiên đăng nhập hết hạn");
+        location.href = "../auth/login-signup.html";
+        return;
+      }
+
+      const result = await res.json();
+
+      if (res.ok || res.status === 201) {
+        isTaskerFavorite = true;
+        updateFavoriteButton();
+        alert(result.message || "Đã thêm vào danh sách yêu thích");
+      } else if (res.status === 409) {
+        // Already favorited
+        isTaskerFavorite = true;
+        updateFavoriteButton();
+        alert(result.message || "Tasker này đã có trong danh sách yêu thích");
+      } else {
+        alert(result.message || "Thêm vào danh sách yêu thích thất bại");
+      }
+    } catch (error) {
+      console.error("Error adding favorite:", error);
+      alert("Có lỗi xảy ra khi thêm vào danh sách yêu thích");
+    }
+  }
+}
+
 // Expose to window for onclick handlers
 window.openChat = openChat;
 window.openReviewModal = openReviewModal;
 window.closeReviewModal = closeReviewModal;
 window.submitReview = submitReview;
+window.toggleFavorite = toggleFavorite;
 
 // Initialize page
 async function init() {

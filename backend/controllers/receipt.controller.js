@@ -204,6 +204,7 @@ export const updateReceiptStatus = async (req, res) => {
 };
 
 export async function markReceiptPaidService({ receiptId, transactionId = null, session }) {
+  console.log("receiptId: ", receiptId);
   if (!mongoose.Types.ObjectId.isValid(receiptId)) {
     throw new Error("ID hóa đơn không hợp lệ");
   }

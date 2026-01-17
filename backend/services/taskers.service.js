@@ -483,56 +483,56 @@ export const confirmStartService = async (taskerUserId, orderId) => {
     }
 };
 
-export const confirmCompleteService = async (taskerUserId, orderId) => {
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) 
-            throw new Error("Order not found");
+// export const confirmCompleteService = async (taskerUserId, orderId) => {
+//     try {
+//         const order = await Order.findById(orderId);
+//         if (!order) 
+//             throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerUserId.toString())
-            throw new Error("You are not assigned to this order");
+//         if (order.tasker_id.toString() !== taskerUserId.toString())
+//             throw new Error("You are not assigned to this order");
 
-        const tasker = await Tasker.findOne({ user_id: taskerUserId })
-        if (!tasker) {
-            throw new Error("Tasker not found")
-        }
-        const taskerId = tasker._id;
+//         const tasker = await Tasker.findOne({ user_id: taskerUserId })
+//         if (!tasker) {
+//             throw new Error("Tasker not found")
+//         }
+//         const taskerId = tasker._id;
 
-        if (order.status !== "in_progress")
-            throw new Error("Order's status must be in progress to be completed.");
+//         if (order.status !== "in_progress")
+//             throw new Error("Order's status must be in progress to be completed.");
 
-        const orderLog = await changeOrderStatus({
-            orderId,
-            toStatus: "completed",
-            actorType: "tasker",
-            actorId: taskerUserId
-        });
+//         const orderLog = await changeOrderStatus({
+//             orderId,
+//             toStatus: "completed",
+//             actorType: "tasker",
+//             actorId: taskerUserId
+//         });
 
-        // log trạng thái tasker
-        const taskerLog = await changeTaskerStatus({
-            taskerId,
-            toStatus: "available",
-            actorType: "tasker",
-            actorId: null
-        });
+//         // log trạng thái tasker
+//         const taskerLog = await changeTaskerStatus({
+//             taskerId,
+//             toStatus: "available",
+//             actorType: "tasker",
+//             actorId: null
+//         });
 
-        // update tasker completed orders count
-        await Tasker.updateOne(
-            { user_id: taskerUserId },
-            {
-                $inc: { total_completed_tasks: 1 },
-                $set: { working_status: "available" }
-            },
-            { runValidators: true }
-        );
+//         // update tasker completed orders count
+//         await Tasker.updateOne(
+//             { user_id: taskerUserId },
+//             {
+//                 $inc: { total_completed_tasks: 1 },
+//                 $set: { working_status: "available" }
+//             },
+//             { runValidators: true }
+//         );
 
-        if (order.customer_id) 
-            rankingCache.delete(String(order.customer_id));
+//         if (order.customer_id) 
+//             rankingCache.delete(String(order.customer_id));
 
-    } catch (error) {
-        throw new Error(error.message);
-    }
-};
+//     } catch (error) {
+//         throw new Error(error.message);
+//     }
+// };
 
 // change order status and log it
 // export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
@@ -584,6 +584,68 @@ export const confirmCompleteService = async (taskerUserId, orderId) => {
 //     throw new Error(error.message);
 //   }   
 // };
+
+export const confirmCompleteService = async (
+  taskerUserId,
+  orderId,
+  session
+) => {
+  try {
+    const order = await Order.findById(orderId).session(session);
+    if (!order)
+      throw new Error("Order not found");
+
+    if (order.tasker_id.toString() !== taskerUserId.toString())
+      throw new Error("You are not assigned to this order");
+
+    const tasker = await Tasker.findOne({ user_id: taskerUserId })
+      .session(session);
+    if (!tasker)
+      throw new Error("Tasker not found");
+
+    const taskerId = tasker._id;
+
+    if (order.status !== "in_progress")
+      throw new Error("Order's status must be in progress to be completed.");
+
+    // đổi trạng thái order + log
+    await changeOrderStatus({
+      orderId,
+      toStatus: "completed",
+      actorType: "tasker",
+      actorId: taskerUserId,
+      session
+    });
+
+    // đổi trạng thái tasker + log
+    await changeTaskerStatus({
+      taskerId,
+      toStatus: "available",
+      actorType: "tasker",
+      actorId: null,
+      session
+    });
+
+    // update tasker stats
+    await Tasker.updateOne(
+      { user_id: taskerUserId },
+      {
+        $inc: { total_completed_tasks: 1 },
+        $set: { working_status: "available" }
+      },
+      {
+        runValidators: true,
+        session
+      }
+    );
+
+    if (order.customer_id)
+      rankingCache.delete(String(order.customer_id));
+
+  } catch (error) {
+    throw new Error(error.message);
+  }
+};
 
 export async function changeTaskerStatus({
   taskerId,
