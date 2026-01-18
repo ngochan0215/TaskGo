@@ -53,7 +53,7 @@ function initVoucherDraft() {
         voucher_code: null,
         discount_amount: 0,
         final_amount: bookingDraft.base_amount
-        };
+      };
 
     voucherDraft.base_amount = bookingDraft.base_amount;
     localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
