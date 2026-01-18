@@ -1,8 +1,7 @@
 // khai báo các biến cần thiết
-let addressMap = {};
 let bookingDraft = null;
 let voucherDraft = null;
-
+let task_code = null;
 const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
 const serviceRenderers = {
@@ -32,7 +31,7 @@ const serviceRenderers = {
       ? `<p class="mt-2">💰 Ngân sách ước tính: ${Number(p.estimated_budget).toLocaleString()}đ</p>`
       : ""
     }
-    <p><strong>Lưu ý tổng tiền cần thanh toán sẽ là tổng phí dịch vụ + số tiền ước tính</strong></p>
+    <p><strong>Lưu ý tổng tiền cần thanh toán sẽ là Tổng Phí dịch vụ + Ngân sách ước tính</strong></p>
   `,
 
   HOUSE_CLEANING: (p) => {
@@ -62,11 +61,11 @@ const serviceRenderers = {
             ? `
               <div class="mt-2">
                 <p>🧩 Dịch vụ thêm:</p>
-                <ul class="ml-4 list-disc space-y-1">
+                <ul class="ml-4 list-disc list-inside space-y-1">
                   ${extrasArr.map(e => `
-                    <span class="pl-30 text-m text-dark-300">${e.name}
-                        (+${Number(e.price).toLocaleString()}đ/giờ)
-                      </span>
+                    <li class="ml-10 pl-2 text-m text-dark-300">
+                      ${e.name} (+${Number(e.price).toLocaleString()}đ/giờ)
+                    </li>
                   `).join("")}
                 </ul>
               </div>
@@ -133,6 +132,14 @@ const serviceRenderers = {
     `<p class="text-gray-400">Không có chi tiết dịch vụ</p>`
 };
 
+const raw = localStorage.getItem("bookingDraft");
+if (!raw) {
+  alert("Không tìm thấy thông tin đặt dịch vụ");
+  location.href = "/";
+}
+bookingDraft = JSON.parse(raw);
+console.log("BOOKING DRAFT BEFORE INIT ANYTHING: ", bookingDraft);
+
 function initPaymentPage() {
   loadBookingDraft();
   initVoucherDraft();
@@ -150,33 +157,42 @@ function loadBookingDraft() {
     return;
   }
   bookingDraft = JSON.parse(raw);
+  task_code = bookingDraft.task_snapshot.code;
+  console.log("BOOKING DRAFT IN PAYMENT (loadBookingDraft): ", bookingDraft);
 }
 
-function initVoucherDraft() {
-  voucherDraft =
-    JSON.parse(localStorage.getItem("voucherDraft")) || {
-      base_amount: bookingDraft.base_amount,
-      voucher_code: null,
-      discount_amount: 0,
-      final_amount: bookingDraft.base_amount
-    };
-
-  voucherDraft.base_amount = bookingDraft.base_amount;
-  localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
-
+function initVoucherDraft() { 
+  voucherDraft = JSON.parse(localStorage.getItem("voucherDraft")) || 
+  { 
+    base_amount: bookingDraft.final_amount, 
+    voucher_code: null, 
+    discount_amount: 0, 
+    final_amount: bookingDraft.final_amount 
+  }; 
+  voucherDraft.base_amount = bookingDraft.base_amount; 
+  localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft)); 
+  console.log("VOUCHER DRAFT IN PAYMENT (initVoucherDraft): ", voucherDraft); 
+  
   bookingDraft.final_amount = voucherDraft.discount_amount? 
-    voucherDraft.final_amount : bookingDraft.final_amount;
-  localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+    voucherDraft.final_amount : bookingDraft.final_amount; 
+  localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft)); 
+  console.log("BOOKING DRAFT IN PAYMENT (initVoucherDraft): ", bookingDraft); 
 }
 
 function renderAmounts() {
   document.getElementById("baseAmount").innerText =
-    formatCurrency(bookingDraft.final_amount);
+    formatCurrency(bookingDraft.base_amount);
 
   document.getElementById("voucherAmount").innerText =
     voucherDraft.discount_amount
       ? `-${formatCurrency(voucherDraft.discount_amount)}`
       : "0 VND";
+
+  if (task_code === "GROCERY") {
+    document.getElementById("extraFee").innerText = formatCurrency(bookingDraft.task_payload.estimated_budget);
+  } else {
+    document.getElementById("extraFee").innerText = "0 VND";
+  }
 
   document.getElementById("finalAmount").innerText =
     formatCurrency(bookingDraft.final_amount);
@@ -188,7 +204,7 @@ function renderAmounts() {
 function renderServiceSummary() {
   const el = document.getElementById("serviceSummary");
 
-  console.log("BOOKING DRAFT IN PAYMENT: ", bookingDraft);
+  console.log("BOOKING DRAFT IN PAYMENT (renderServiceSummary): ", bookingDraft);
   const serviceCode = bookingDraft.task_snapshot?.code || "DEFAULT";
 
   const renderer = serviceRenderers[serviceCode] || serviceRenderers.DEFAULT;

@@ -134,6 +134,22 @@
     </script>
     
     <script>
+        let token = localStorage.getItem("token");
+        if (!token) {
+            alert("Vui lòng đăng nhập");
+            location.href = "../../auth/login-signup.html";
+        } 
+        console.log("TOKEN: ", token);
+
+        
+        const bookingDraftRaw = localStorage.getItem("bookingDraft");
+        if (!bookingDraftRaw) {
+            alert("Không tìm thấy thông tin đặt dịch vụ.");
+            window.location.href = "/";
+        }
+        let bookingDraft = JSON.parse(bookingDraftRaw);
+        console.log("BOOKING DRAFT IN SCHEDULED (first): ", bookingDraft);
+
         const workdateInput = document.getElementById("workdate");
         const previewBox = document.getElementById("selectedDatePreview");
         const previewText = document.getElementById("selectedDateText");
@@ -149,7 +165,7 @@
 
             const date = new Date(workdateInput.value);
             bookingDraft.scheduled_at = date.toISOString();
-
+            
             previewText.innerText =
                 `Đã chọn: ${date.toLocaleDateString("vi-VN")} lúc ${date.toLocaleTimeString("vi-VN", {
                 hour: "2-digit",
@@ -158,6 +174,7 @@
 
             previewBox.classList.remove("hidden");
             localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+            console.log("SCHEDULED DATE (handleSelectDate): ", bookingDraft.scheduled_at);
         }
 
         function setToday() {
@@ -175,13 +192,6 @@
             localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
         }
 
-        const bookingDraftRaw = localStorage.getItem("bookingDraft");
-        if (!bookingDraftRaw) {
-            alert("Không tìm thấy thông tin đặt dịch vụ.");
-            window.location.href = "/";
-        }
-        const bookingDraft = JSON.parse(bookingDraftRaw);
-
         const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
 
         // Render tiền + thời gian
@@ -194,7 +204,7 @@
         if (hours > 0) timeText += `${hours}h`;
         if (minutes > 0) timeText += `${minutes}p`;
 
-        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText? timeText : "h"}`;
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText? timeText : "h"}`;
 
         // lưu note
         function handleGoPayment() {
@@ -205,6 +215,7 @@
 
             const note = document.querySelector("textarea").value.trim();
             bookingDraft.note = note;
+            bookingDraft.type = "scheduled";
 
             localStorage.setItem(
                 "bookingDraft",

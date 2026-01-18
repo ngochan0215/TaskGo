@@ -1,4 +1,4 @@
-const token = localStorage.getItem("token");
+let token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
 const customerUserId = localStorage.getItem("user_id");
 
@@ -29,6 +29,8 @@ let currentReview = null;
 let selectedRating = 0;
 let canCancel = false;
 let penaltyAmount = 0;
+let isTaskerFavorite = false;
+let currentTaskerId = null;
 
 // DOM Elements
 const statusBadge = document.getElementById('statusBadge');
@@ -253,6 +255,7 @@ async function fetchOrderDetails() {
     if (result.success) {
       return result;
     }
+    console.log("ORDER DETAIL (customer_order_progress): ", result);
     return null;
   } catch (error) {
     console.error("Error fetching order details:", error);
@@ -403,6 +406,9 @@ function updateTaskerInfo(order) {
   const taskerName = tasker.full_name || "Tasker";
   const taskerPhone = tasker.phone_number || "";
   const taskerAvatar = tasker.avatar_url;
+  
+  // Store tasker ID for favorite functionality
+  currentTaskerId = typeof tasker._id === "object" ? tasker._id.toString() : tasker._id;
 
   const maskedPhone = taskerPhone ? taskerPhone.slice(0, 4) + " *** " + taskerPhone.slice(-3) : "";
 
@@ -431,12 +437,81 @@ function updateTaskerInfo(order) {
   if (headerPhoneLink && taskerPhone) {
     headerPhoneLink.href = `tel:${taskerPhone}`;
   }
+  
+  // Check if tasker is already favorited
+  if (currentTaskerId) {
+    checkFavoriteStatus();
+  }
+}
+
+// Render rating stars
+function renderRatingStars(containerId, rating) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  let starsHTML = "";
+  
+  // Full stars
+  for (let i = 0; i < fullStars; i++) {
+    starsHTML += '<span class="material-symbols-outlined text-xs">star</span>';
+  }
+  
+  // Half star
+  if (hasHalfStar && fullStars < 5) {
+    starsHTML += '<span class="material-symbols-outlined text-xs">star_half</span>';
+  }
+  
+  // Empty stars
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  for (let i = 0; i < emptyStars; i++) {
+    starsHTML += '<span class="material-symbols-outlined text-xs text-gray-300">star</span>';
+  }
+  
+  container.innerHTML = starsHTML;
+}
+
+// Update tasker reviews and reputation display
+function updateTaskerStats(taskerReviews, tasker) {
+  if (!taskerReviews || !tasker) return;
+
+  const rating = taskerReviews.average_rating || 0;
+  const reviewCount = taskerReviews.review_count || 0;
+  const reputation = tasker.reputation_score || 0;
+
+  // Update stars
+  renderRatingStars('taskerStars', rating);
+
+  // Update rating value
+  const ratingEl = document.getElementById('taskerRating');
+  if (ratingEl) {
+    ratingEl.textContent = rating > 0 ? rating.toFixed(1) : "—";
+  }
+
+  // Update review count
+  const reviewCountEl = document.getElementById('taskerReviewCount');
+  if (reviewCountEl) {
+    reviewCountEl.textContent = `(${reviewCount})`;
+  }
+
+  // Update reputation
+  const reputationEl = document.getElementById('taskerReputation');
+  if (reputationEl) {
+    reputationEl.textContent = `Điểm: ${reputation}`;
+  }
 }
 
 // Update order information in UI
-function updateOrderInfo(order, receipt, review) {
+function updateOrderInfo(order, receipt, review, taskerReviews) {
   // Update tasker info
   updateTaskerInfo(order);
+  
+  // Update tasker stats if available
+  if (order.tasker_id && taskerReviews) {
+    updateTaskerStats(taskerReviews, order.tasker_id);
+  }
 
   // Render service details
   renderServiceDetails(order);
@@ -969,11 +1044,307 @@ function setupReviewModal() {
   }
 }
 
+// Check if tasker is favorited
+async function checkFavoriteStatus() {
+  if (!currentTaskerId) return;
+  
+  const token = localStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    // Check if tasker exists in favorites list
+    const res = await fetch(
+      `http://localhost:3000/api/user/favorites/taskers`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      return;
+    }
+
+    if (res.ok) {
+      const result = await res.json();
+      // Check if current tasker is in the favorites list
+      isTaskerFavorite = result.data && result.data.some(
+        fav => fav.user && fav.user._id === currentTaskerId
+      ) || false;
+      updateFavoriteButton();
+    }
+  } catch (error) {
+    console.error("Error checking favorite status:", error);
+  }
+}
+
+// Update favorite button UI
+function updateFavoriteButton() {
+  const favoriteBtn = document.getElementById('favoriteBtn');
+  const favoriteIcon = document.getElementById('favoriteIcon');
+  const favoriteText = document.getElementById('favoriteText');
+  
+  if (!favoriteBtn || !favoriteIcon || !favoriteText) return;
+
+  if (isTaskerFavorite) {
+    favoriteBtn.classList.remove('bg-pink-50', 'text-pink-700', 'border-pink-200');
+    favoriteBtn.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+    favoriteIcon.textContent = 'favorite';
+    favoriteIcon.classList.add('text-red-600');
+    favoriteText.textContent = 'Đã yêu thích';
+  } else {
+    favoriteBtn.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+    favoriteBtn.classList.add('bg-pink-50', 'text-pink-700', 'border-pink-200');
+    favoriteIcon.textContent = 'favorite_border';
+    favoriteIcon.classList.remove('text-red-600');
+    favoriteText.textContent = 'Yêu thích';
+  }
+}
+
+// Toggle favorite tasker
+async function toggleFavorite() {
+  if (!currentTaskerId) {
+    alert("Không tìm thấy thông tin tasker");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    alert("Vui lòng đăng nhập");
+    return;
+  }
+
+  // If already favorited, ask to remove
+  if (isTaskerFavorite) {
+    if (!confirm("Bạn có muốn xóa tasker này khỏi danh sách yêu thích?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/user/favorites/taskers/${currentTaskerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        alert("Phiên đăng nhập hết hạn");
+        location.href = "../auth/login-signup.html";
+        return;
+      }
+
+      const result = await res.json();
+
+      if (res.ok) {
+        isTaskerFavorite = false;
+        updateFavoriteButton();
+        alert(result.message || "Đã xóa khỏi danh sách yêu thích");
+      } else {
+        alert(result.message || "Xóa khỏi danh sách yêu thích thất bại");
+      }
+    } catch (error) {
+      console.error("Error removing favorite:", error);
+      alert("Có lỗi xảy ra khi xóa khỏi danh sách yêu thích");
+    }
+  } else {
+    // Ask for confirmation before adding
+    if (!confirm("Bạn có muốn thêm tasker này vào danh sách yêu thích?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/user/favorites/taskers/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            tasker_id: currentTaskerId
+          })
+        }
+      );
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        alert("Phiên đăng nhập hết hạn");
+        location.href = "../auth/login-signup.html";
+        return;
+      }
+
+      const result = await res.json();
+
+      if (res.ok || res.status === 201) {
+        isTaskerFavorite = true;
+        updateFavoriteButton();
+        alert(result.message || "Đã thêm vào danh sách yêu thích");
+      } else if (res.status === 409) {
+        // Already favorited
+        isTaskerFavorite = true;
+        updateFavoriteButton();
+        alert(result.message || "Tasker này đã có trong danh sách yêu thích");
+      } else {
+        alert(result.message || "Thêm vào danh sách yêu thích thất bại");
+      }
+    } catch (error) {
+      console.error("Error adding favorite:", error);
+      alert("Có lỗi xảy ra khi thêm vào danh sách yêu thích");
+    }
+  }
+}
+
+// Fetch tasker full profile for modal
+async function fetchTaskerProfile(taskerUserId) {
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/user/show-public/profile`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ user_id: taskerUserId })
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      location.href = "../auth/login-signup.html";
+      return null;
+    }
+
+    const result = await res.json();
+    if (res.ok) {
+      return result;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching tasker profile:", error);
+    return null;
+  }
+}
+
+// Load tasker skills for modal
+async function loadTaskerSkillsForModal(skillIds) {
+  const skillsContainer = document.getElementById("modal-tasker-skills");
+  
+  if (!skillIds || skillIds.length === 0) {
+    skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
+    return;
+  }
+
+  skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Đang tải...</span>';
+
+  try {
+    const res = await fetch("http://localhost:3000/api/task/all", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      location.href = "../auth/login-signup.html";
+      return;
+    }
+
+    const json = await res.json();
+    
+    if (!json.success || !json.tasks) {
+      skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
+      return;
+    }
+
+    const taskMap = new Map();
+    json.tasks.forEach(task => {
+      taskMap.set(task._id, task.task_name);
+    });
+
+    const skillNames = skillIds
+      .map(id => {
+        const taskId = typeof id === "object" ? id.toString() : id;
+        return taskMap.get(taskId);
+      })
+      .filter(Boolean);
+
+    if (skillNames.length === 0) {
+      skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
+    } else {
+      skillsContainer.innerHTML = skillNames.map(name => 
+        `<span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full border border-primary-200">${name}</span>`
+      ).join("");
+    }
+  } catch (err) {
+    console.error("Load tasker skills error:", err);
+    skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
+  }
+}
+
+// Open tasker modal
+async function openTaskerModal() {
+  if (!currentOrder || !currentOrder.tasker_id) {
+    alert("Không tìm thấy thông tin tasker");
+    return;
+  }
+
+  const taskerUserId = currentOrder.tasker_id;
+  const taskerReviews = currentTaskerReviews || { review_count: 0, average_rating: 0 };
+
+  const taskerProfile = await fetchTaskerProfile(taskerUserId);
+  console.log("TASKER PROFILE (openTaskerModal): ", taskerProfile);
+
+  const user = taskerProfile.user;
+  const tasker = taskerProfile.tasker;
+
+  document.getElementById("modal-tasker-avatar").src = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(tasker.full_name)}&background=A5B4FC&color=3730A3`;
+  document.getElementById("modal-tasker-name").textContent = user.full_name || "Tasker";
+  
+  const rating = taskerReviews.average_rating || 0;
+  renderRatingStars('modal-tasker-stars', rating);
+  document.getElementById("modal-tasker-rating").textContent = rating > 0 ? rating.toFixed(1) : "0.0";
+  document.getElementById("modal-tasker-reviews").textContent = `(${taskerReviews.review_count || 0} đánh giá)`;
+  
+  document.getElementById("modal-tasker-reputation").textContent = user.reputation_score || 0;
+  document.getElementById("modal-tasker-jobs").textContent = `${tasker.total_completed_orders || 0} việc`;
+  document.getElementById("modal-tasker-location").textContent = tasker.working_area.full_address || "Chưa có địa chỉ cụ thể";
+  document.getElementById("modal-tasker-bio").textContent = tasker.introduction;
+  
+  if (tasker && tasker.skills) {
+    await loadTaskerSkillsForModal(tasker.skills);
+  } else {
+    document.getElementById("modal-tasker-skills").innerHTML = '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
+  }
+
+  document.getElementById("taskerModal").classList.remove("hidden");
+}
+
+function closeTaskerModal() {
+  document.getElementById("taskerModal").classList.add("hidden");
+}
+
+// Store tasker reviews
+let currentTaskerReviews = null;
+
 // Expose to window for onclick handlers
 window.openChat = openChat;
 window.openReviewModal = openReviewModal;
 window.closeReviewModal = closeReviewModal;
 window.submitReview = submitReview;
+window.toggleFavorite = toggleFavorite;
+window.openTaskerModal = openTaskerModal;
+window.closeTaskerModal = closeTaskerModal;
 
 // Initialize page
 async function init() {
@@ -985,13 +1356,15 @@ async function init() {
     return;
   }
 
+  console.log("ORDER DETAIL (init): ", details);
   currentOrder = details.order;
   canCancel = details.canCancel || false;
   penaltyAmount = details.penaltyAmount || 0;
   
   const statusLogs = details.statusLogs || [];
+  currentTaskerReviews = details.taskerReviews || { review_count: 0, average_rating: 0 };
   
-  updateOrderInfo(currentOrder, details.receipt, details.review);
+  updateOrderInfo(currentOrder, details.receipt, details.review, currentTaskerReviews);
   updateTimeline(statusLogs);
   updateUI();
   

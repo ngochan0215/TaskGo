@@ -1,9 +1,12 @@
 import mongoose from "mongoose";
 import { getRouteSummary } from "./location.service.js";
-import { User, Tasker, Customer, Receipt, Order, Task, Service, TaskerStatusLog } from "../models/index.js";
+import { User, Tasker, Customer, PayoutTasker, Order, Task, 
+    Service, TaskerStatusLog, Transaction, OrderStatusLog 
+} from "../models/index.js";
 import { changeOrderStatus } from "./order.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
 import { getOnlineTaskerUserIds } from "../sockets/presence.js";
+import { payOut, payoutDetail } from "./payos.service.js";
 
 const DEFAULT_TASKER_BATCH_SIZE = 10;
 
@@ -11,20 +14,20 @@ const routeCache = new Map();
 const rankingCache = new Map();
 
 function getDistanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // bán kính Trái Đất (km)
+    const R = 6371; // bán kính Trái Đất (km)
 
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }
 
 export async function findEligibleTaskers(order) {
@@ -51,157 +54,157 @@ export async function findEligibleTaskers(order) {
     // Lọc theo khoảng cách 
     const matchedTaskers = taskers
         .map(tasker => {
-        if (
-            !tasker.working_area?.latitude ||
-            !tasker.working_area?.longitude
-        ) {
-            console.log("surprises");
-            return null;
-        }
+            if (
+                !tasker.working_area?.latitude ||
+                !tasker.working_area?.longitude
+            ) {
+                console.log("surprises");
+                return null;
+            }
 
-        // console.log("ORDER:", latitude, longitude);
-        // console.log("TASKER:", tasker.working_area.latitude, tasker.working_area.longitude);
+            // console.log("ORDER:", latitude, longitude);
+            // console.log("TASKER:", tasker.working_area.latitude, tasker.working_area.longitude);
 
-        const distance = getDistanceKm(
-            tasker.working_area.latitude,
-            tasker.working_area.longitude,
-            latitude,
-            longitude
-        );
+            const distance = getDistanceKm(
+                tasker.working_area.latitude,
+                tasker.working_area.longitude,
+                latitude,
+                longitude
+            );
 
-        // console.log("DISTANCE (findEligibleTaskers): ", distance);
-        // console.log("TASKER WORKING RADIUS: ", tasker.working_radius);
+            // console.log("DISTANCE (findEligibleTaskers): ", distance);
+            // console.log("TASKER WORKING RADIUS: ", tasker.working_radius);
 
-        if (distance > tasker.working_radius) return null;
+            if (distance > tasker.working_radius) return null;
 
-        return {
-            ...tasker,
-            distance_km: Number(distance.toFixed(2))
-        };
+            return {
+                ...tasker,
+                distance_km: Number(distance.toFixed(2))
+            };
         })
         .filter(Boolean);
 
     // Sort theo khoảng cách gần nhất
     matchedTaskers.sort((a, b) => a.distance_km - b.distance_km);
 
-    //console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
+    console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
     // Giới hạn số lượng tasker gửi job
     return matchedTaskers.slice(0, 10);
 }
 
 // create the unique key for each route
 function makeCacheKey(origin, destination) {
-  return `${origin}->${destination}`;
+    return `${origin}->${destination}`;
 }
 
 // summary contains moving time and distance
 async function getCachedRouteSummary(origin, destination) {
-  const key = makeCacheKey(origin, destination);
+    const key = makeCacheKey(origin, destination);
 
-  // if route is stored already, just get it
-  if (routeCache.has(key)) {
-    return routeCache.get(key);
-  }
+    // if route is stored already, just get it
+    if (routeCache.has(key)) {
+        return routeCache.get(key);
+    }
 
-  // if not, create one
-  const summary = await getRouteSummary(origin, destination);
-  routeCache.set(key, summary);
-  return summary;
+    // if not, create one
+    const summary = await getRouteSummary(origin, destination);
+    routeCache.set(key, summary);
+    return summary;
 }
 
 function getNextBatch(allRanked, offset) {
-  return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
+    return allRanked.slice(offset, offset + DEFAULT_TASKER_BATCH_SIZE);
 }
 
 export const buildTaskerRanking = async (orderId) => {
-  const serviceModel = Service;
-  const taskModel = Task;
-  const orderModel = Order;
-  const customerModel = Customer;
-  const userModel = User;
+    const serviceModel = Service;
+    const taskModel = Task;
+    const orderModel = Order;
+    const customerModel = Customer;
+    const userModel = User;
 
-  // validate
-  const order = await orderModel.findById(orderId);
-  if (!order) 
-    throw new Error("Order not found");
+    // validate
+    const order = await orderModel.findById(orderId);
+    if (!order)
+        throw new Error("Order not found");
 
-  const task = await taskModel.findById(order.task_id);
-  if (!task) 
-    throw new Error("Task not found");
+    const task = await taskModel.findById(order.task_id);
+    if (!task)
+        throw new Error("Task not found");
 
-  const service = await serviceModel.findById(task.service_id).lean();
-  if (!service) throw new Error("Service not found");
+    const service = await serviceModel.findById(task.service_id).lean();
+    if (!service) throw new Error("Service not found");
 
-  const customer = await customerModel.findOne({
-    user_id: order.customer_id,
-  });
-  if (!customer) throw new Error("Customer not found");
-  
-  // lấy địa chỉ đơn hàng
-  const orderAddress = { 
-    longitude: order.address_snapshot.longitude,
-    latitude: order.address_snapshot.latitude
-  };
-  //console.log("ORDER ADDRESS (buldTaskerRanking): ", orderAddress);
-  
-  if (!orderAddress) 
-    throw new Error("Địa chỉ đơn hàng không hợp lệ.");
+    const customer = await customerModel.findOne({
+        user_id: order.customer_id,
+    });
+    if (!customer) throw new Error("Customer not found");
 
-  // lấy danh sách tasker đã lọc
-  const eligibleTaskers = await findEligibleTaskers(order);
-  console.log("ELIGIBLE TASKERS (buildTaskerRanking): ", eligibleTaskers);
-  if (!eligibleTaskers.length) return [];
+    // lấy địa chỉ đơn hàng
+    const orderAddress = {
+        longitude: order.address_snapshot.longitude,
+        latitude: order.address_snapshot.latitude
+    };
+    //console.log("ORDER ADDRESS (buldTaskerRanking): ", orderAddress);
 
-  const origin = `${orderAddress.latitude},${orderAddress.longitude}`;
+    if (!orderAddress)
+        throw new Error("Địa chỉ đơn hàng không hợp lệ.");
 
-  // lấy reputation score của tasker
-  const userIds = eligibleTaskers.map(t => t.user_id);
+    // lấy danh sách tasker đã lọc
+    const eligibleTaskers = await findEligibleTaskers(order);
+    console.log("ELIGIBLE TASKERS (buildTaskerRanking): ", eligibleTaskers);
+    if (!eligibleTaskers.length) return [];
 
-  const reputations = await User.find({ _id: { $in: userIds } })
-    .select("_id reputation_score")
-    .lean();
+    const origin = `${orderAddress.latitude},${orderAddress.longitude}`;
 
-  const reputationMap = new Map(
-    reputations.map(u => [String(u._id), u.reputation_score ?? 0])
-  );
+    // lấy reputation score của tasker
+    const userIds = eligibleTaskers.map(t => t.user_id);
 
-  // tính khoảng cách và thời gian
-   const ranked = (
-    await Promise.all(
-      eligibleTaskers.map(async (tasker) => {
-        const { latitude, longitude } = tasker.working_area || {};
-        if (!latitude || !longitude) return null;
+    const reputations = await User.find({ _id: { $in: userIds } })
+        .select("_id reputation_score")
+        .lean();
 
-        const destination = `${latitude},${longitude}`;
-        //console.log("TASKER WORKING AREA (buildTaskerRanking): ", destination);
+    const reputationMap = new Map(
+        reputations.map(u => [String(u._id), u.reputation_score ?? 0])
+    );
 
-        const { distance, duration } = await getCachedRouteSummary(
-          origin,
-          destination
-        );
+    // tính khoảng cách và thời gian
+    const ranked = (
+        await Promise.all(
+            eligibleTaskers.map(async (tasker) => {
+                const { latitude, longitude } = tasker.working_area || {};
+                if (!latitude || !longitude) return null;
 
-        if (!Number.isFinite(distance) || !Number.isFinite(duration)) return null;
+                const destination = `${latitude},${longitude}`;
+                //console.log("TASKER WORKING AREA (buildTaskerRanking): ", destination);
 
-        return {
-          tasker_id: tasker._id,
-          user_id: tasker.user_id,
-          distance,           // mét
-          duration,           // giây
-          reputation: reputationMap.get(String(tasker.user_id)) ?? 0,
-        };
-      })
-    )
-  ).filter(Boolean);
+                const { distance, duration } = await getCachedRouteSummary(
+                    origin,
+                    destination
+                );
 
-  ranked.sort(
-    (a, b) =>
-      a.distance - b.distance ||
-      a.duration - b.duration ||
-      b.reputation - a.reputation
-  );
+                if (!Number.isFinite(distance) || !Number.isFinite(duration)) return null;
 
-  console.log("RANKED TASKERS (buildTaskerRanking):", ranked);
-  return ranked;
+                return {
+                    tasker_id: tasker._id,
+                    user_id: tasker.user_id,
+                    distance,           // mét
+                    duration,           // giây
+                    reputation: reputationMap.get(String(tasker.user_id)) ?? 0,
+                };
+            })
+        )
+    ).filter(Boolean);
+
+    ranked.sort(
+        (a, b) =>
+            a.distance - b.distance ||
+            a.duration - b.duration ||
+            b.reputation - a.reputation
+    );
+
+    console.log("RANKED TASKERS (buildTaskerRanking):", ranked);
+    return ranked;
 };
 
 // get the best suitable tasker list for this one customer
@@ -249,7 +252,7 @@ export const suggestTasker = async (orderId, { excludedTaskerIds = [] } = {}) =>
 };
 
 // tasker confirms different stages of the order
-export const acceptTaskRequest = async (taskerUserId, orderId) =>{
+export const acceptTaskRequest = async (taskerUserId, orderId) => {
     try {
         const tasker = await Tasker.findOne({ user_id: taskerUserId });
         if (!tasker) {
@@ -267,7 +270,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) =>{
 
         if (!order.tasker_id) {
             order.tasker_id = taskerUserId;
-        } 
+        }
         else if (order.tasker_id.toString() !== taskerUserId.toString()) {
             throw new Error("You are not assigned to this order");
         }
@@ -287,19 +290,11 @@ export const acceptTaskRequest = async (taskerUserId, orderId) =>{
             taskerId,
             toStatus: "busy",
             actorType: "tasker",
-            actorId: null
+            actorId: orderId,
+            note: "Tasker chấp nhận đơn hàng, actor_id chính là ID của đơn hàng"
         });
 
         console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
-
-        // // update tasker working status
-        // await Tasker.updateOne({
-        //     user_id: taskerUserId
-        // },{
-        //     working_status: "busy" 
-        // },{
-        //     runValidators: true
-        // })
 
         rankingCache.delete(String(order.user_id));
     } catch (error) {
@@ -307,7 +302,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) =>{
     }
 };
 
-export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
+export const denyTaskRequest = async (taskerUserId, orderId, reason) => {
     try {
         const tasker = await Tasker.findOne({ user_id: taskerUserId })
         if (!tasker) {
@@ -341,7 +336,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             toStatus: "cancelled",
             actorType: "tasker",
             actorId: taskerUserId,
-            reason: reason || "Tasker denied the task"
+            reason: reason || "Tasker từ chối task"
         });
 
         // log tasker status
@@ -350,7 +345,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             toStatus: "available",
             actorType: "tasker",
             actorId: null,
-            reason: reason || "Tasker denied the task"
+            reason: reason || "Tasker từ chối task"
         });
 
         const orderLogg = await changeOrderStatus({
@@ -372,8 +367,8 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
             const orderLog = await changeOrderStatus({
                 orderId,
                 toStatus: "assigned",
-                actorType: "system",
-                actorId: null,
+                actorType: "tasker",
+                actorId: suggestion.user_id,
             });
 
             const newTaskerId = suggestion.tasker_id;
@@ -381,13 +376,14 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
                 newTaskerId,
                 toStatus: "busy",
                 actorType: "system",
-                actorId: null
+                actorId: orderId,
+                note: "actor_id chính là ID của đơn hàng được gán"
             });
         }
-        
-        if (order.customer_id) 
+
+        if (order.customer_id)
             rankingCache.delete(String(order.customer_id));
-        
+
         return suggestion;
 
     } catch (error) {
@@ -395,7 +391,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) =>{
     }
 };
 
-export const confirmDepartureService = async (taskerUserId, orderId) =>{
+export const confirmDepartureService = async (taskerUserId, orderId) => {
     try {
         console.log(taskerUserId, orderId);
 
@@ -433,7 +429,7 @@ export const confirmDepartureService = async (taskerUserId, orderId) =>{
 export const confirmArrivingService = async (taskerUserId, orderId) => {
     try {
         const order = await Order.findById(orderId);
-        if (!order) 
+        if (!order)
             throw new Error("Order not found");
 
         if (order.tasker_id.toString() !== taskerUserId.toString())
@@ -457,7 +453,7 @@ export const confirmArrivingService = async (taskerUserId, orderId) => {
 export const confirmStartService = async (taskerUserId, orderId) => {
     try {
         const order = await Order.findById(orderId);
-        if (!order) 
+        if (!order)
             throw new Error("Order not found");
 
         const tasker = await Tasker.findOne({ user_id: taskerUserId })
@@ -483,107 +479,75 @@ export const confirmStartService = async (taskerUserId, orderId) => {
     }
 };
 
-export const confirmCompleteService = async (taskerUserId, orderId) => {
-    try {
-        const order = await Order.findById(orderId);
-        if (!order) 
-            throw new Error("Order not found");
+export const confirmCompleteService = async (
+  taskerUserId,
+  orderId,
+  session
+) => {
+  try {
+    const order = await Order.findById(orderId).session(session);
+    if (!order)
+      throw new Error("Order not found");
 
-        if (order.tasker_id.toString() !== taskerUserId.toString())
-            throw new Error("You are not assigned to this order");
+    if (order.tasker_id.toString() !== taskerUserId.toString())
+      throw new Error("You are not assigned to this order");
 
-        const tasker = await Tasker.findOne({ user_id: taskerUserId })
-        if (!tasker) {
-            throw new Error("Tasker not found")
-        }
-        const taskerId = tasker._id;
+    const tasker = await Tasker.findOne({ user_id: taskerUserId })
+      .session(session);
+    if (!tasker)
+      throw new Error("Tasker not found");
 
-        if (order.status !== "in_progress")
-            throw new Error("Order's status must be in progress to be completed.");
+    const taskerId = tasker._id;
 
-        const orderLog = await changeOrderStatus({
-            orderId,
-            toStatus: "completed",
-            actorType: "tasker",
-            actorId: taskerUserId
-        });
+    // if (order.status !== "in_progress")
+    //   throw new Error("Order's status must be in progress to be completed.");
 
-        // log trạng thái tasker
-        const taskerLog = await changeTaskerStatus({
-            taskerId,
-            toStatus: "available",
-            actorType: "tasker",
-            actorId: null
-        });
+    // đổi trạng thái order + log
+    await changeOrderStatus({
+      orderId,
+      toStatus: "completed",
+      actorType: "tasker",
+      actorId: taskerUserId,
+      session
+    });
 
-        // update tasker completed orders count
-        await Tasker.updateOne(
-            { user_id: taskerUserId },
-            {
-                $inc: { total_completed_tasks: 1 },
-                $set: { working_status: "available" }
-            },
-            { runValidators: true }
-        );
+    // đổi trạng thái tasker + log
+    await changeTaskerStatus({
+      taskerId,
+      toStatus: "available",
+      actorType: "tasker",
+      actorId: null,
+      note: "Tasker đánh dấu hoàn thành đơn hàng",
+      session
+    });
 
-        if (order.customer_id) 
-            rankingCache.delete(String(order.customer_id));
+    // update tasker stats
+    await Tasker.updateOne(
+      { user_id: taskerUserId },
+      {
+        $inc: { total_completed_tasks: 1 },
+        $set: { working_status: "available" }
+      },
+      {
+        runValidators: true,
+        session
+      }
+    );
 
-    } catch (error) {
-        throw new Error(error.message);
-    }
+    if (order.customer_id)
+      rankingCache.delete(String(order.customer_id));
+
+    // await PayoutTasker.create({
+    //     order_id: order._id,
+    //     tasker_id: taskerId,
+    //     amount: order.base_amount * 0.7 + order.tip_amount,
+    //     status: "pending"
+    // });
+
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
-
-// change order status and log it
-// export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
-//   try {
-//     const tasker = await Tasker.findById(taskerId).session(session);
-//     if (!tasker) {
-//       throw new Error("Không tìm thấy tasker.");
-//     } 
-
-//     const now = new Date();
-//     const fromStatus = tasker.working_status;
-
-//     // Nếu đang chuyển sang trạng thái mới (không phải trạng thái hiện tại)
-//     if (fromStatus !== toStatus) {
-//       // Tìm log entry cuối cùng của tasker này chưa có end_time (đang active)
-//       const activeLog = await TaskerStatusLog.findOne({
-//         tasker_id: taskerId,
-//         end_time: null
-//       }).sort({ start_time: -1 }).session(session);
-
-//       // Nếu có log entry đang active, set end_time cho nó
-//       if (activeLog) {
-//         activeLog.end_time = now;
-//         await activeLog.save({ session });
-//       }
-
-//       // Tạo log entry mới với start_time
-//       await TaskerStatusLog.create({
-//         tasker_id: taskerId,
-//         from_status: fromStatus,
-//         to_status: toStatus,
-//         actor_type: actorType,
-//         actor_id: actorId,
-//         reason: reason || "",
-//         start_time: now,
-//         end_time: null
-//       }, { session });
-
-//       // update tasker
-//       tasker.working_status = toStatus;
-//       await tasker.save({ session });
-
-//       return tasker;
-//     } else {
-//       // Nếu trạng thái không thay đổi, chỉ trả về tasker
-//       return tasker;
-//     }
-//   } catch (error) {
-//     throw new Error(error.message);
-//   }   
-// };
 
 export async function changeTaskerStatus({
   taskerId,
@@ -591,6 +555,7 @@ export async function changeTaskerStatus({
   actorType,
   actorId,
   reason = null,
+  note = null,
   session
 }) {
   try {
@@ -625,6 +590,7 @@ export async function changeTaskerStatus({
         actor_type: actorType,
         actor_id: actorId,
         reason: reason || "",
+        note: note || "",
         start_time: now,
         end_time: null
       }], session ? { session } : {});
@@ -638,3 +604,214 @@ export async function changeTaskerStatus({
     throw error;
   }
 }
+
+// tỉ lệ nhận đơn của tasker
+export async function getTaskerAcceptanceRate(taskerId) {
+  const stats = await OrderStatusLog.aggregate([
+    {
+      $match: {
+        actor_type: "tasker",
+        actor_id: new mongoose.Types.ObjectId(taskerId),
+        from_status: "assigned"
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        accepted: {
+          $sum: { $cond: [{ $eq: ["$to_status", "accepted"] }, 1, 0] }
+        },
+        rejected: {
+          $sum: { $cond: [{ $eq: ["$to_status", "rejected"] }, 1, 0] }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        accepted: 1,
+        rejected: 1,
+        totalAssigned: { $add: ["$accepted", "$rejected"] },
+        acceptanceRate: {
+          $cond: [
+            { $eq: [{ $add: ["$accepted", "$rejected"] }, 0] },
+            0,
+            {
+              $divide: [
+                "$accepted",
+                { $add: ["$accepted", "$rejected"] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]);
+
+  return stats[0] || {
+    accepted: 0,
+    rejected: 0,
+    totalAssigned: 0,
+    acceptanceRate: 0
+  };
+}
+
+// nhân viên nhận lương
+export async function cashOutForTasker(userId) {
+    try {
+        const tasker = await Tasker.findOne({ user_id: userId });
+        if (!tasker) {
+            throw new Error("Tasker not found");
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        const taskerId = tasker._id;
+        const payoutBill = await PayoutTasker.find({
+            status: "pending",
+            tasker_id: taskerId
+        });
+        if (!payoutBill.length) {
+            throw new Error("Không có bill chờ thanh toán");
+        }
+        const amount = payoutBill.reduce((sum, bill) => sum + bill.amount, 0);
+        if (amount <= 0) {
+            throw new Error("Số tiền payout không hợp lệ");
+        }
+        console.log("Thực hiện thanh toán cho tasker:", user.full_name, "số tiền:", amount);
+        const payoutPayload = {
+            amount: amount,
+            description: `TaskGo thanh toán lương`,
+            toBin: tasker.BIN,
+            toAccountNumber: tasker.account_number
+        };
+
+        const orderCode = await payOut(payoutPayload, userId);
+        const orderCodeFromResult = orderCode.split('_')[1];
+        const start = Date.now();
+        let state = 'PROCESSING';
+
+        let lastError = null;
+        while (Date.now() - start < 30000 && state === 'PROCESSING') {
+            let result;
+
+            try {
+                result = await payoutDetail(orderCode);
+                console.log('Payout detail:', result);
+            } catch (err) {
+                lastError = err;
+                await sleep(5000);
+                continue;
+            }
+
+            const payoutState =result?._data?.[0]?.transactions?.[0]?.state;
+            console.log('Payout state:', payoutState);
+            if (!payoutState) {
+                lastError = new Error('Không lấy được trạng thái payout');
+                await sleep(5000);
+                continue;
+            }
+
+            if (payoutState === 'SUCCEEDED' || payoutState === 'COMPLETED') {
+                await Transaction.updateOne(
+                    { order_code: orderCodeFromResult, user_id: userId },
+                    { status: 'completed' }
+                );
+
+                await PayoutTasker.updateMany(
+                    { tasker_id: taskerId, status: 'pending' },
+                    { status: 'completed', processed_at: new Date() }
+                );
+
+                state = 'SUCCEEDED';
+                return true; 
+            }
+
+            if (payoutState === 'FAILED') {
+                await Transaction.updateOne(
+                    { order_code: orderCodeFromResult, user_id: userId },
+                    { status: 'failed' }
+                );
+                state = 'FAILED';
+                throw new Error('Payout failed');
+            }
+
+            await sleep(5000);
+        }
+
+        if (state === 'PROCESSING') {
+            await Transaction.updateOne({
+                order_code: orderCodeFromResult,
+                user_id: userId
+            }, {
+                status: 'failed'
+            })
+            throw new Error('Payout processing timeout');
+        }
+        if (lastError) {
+            throw lastError;
+        }
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+const sleep = ms => new Promise(res => setTimeout(res, ms));
+export const getCashoutInfo = async (userId, timespan = 'day') => {
+    try {
+        const tasker = await Tasker.findOne({ user_id: userId });
+        if (!tasker) {
+            throw new Error('Tasker not found');
+        }
+        const taskerId = tasker._id;
+
+        let startDate;
+        const now = new Date();
+        if (timespan === 'day') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        }
+        else if (timespan === 'week') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+        }
+        else if (timespan === 'month') {
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+        }
+        else if (timespan === 'all') {
+            const bills = await PayoutTasker.find({
+                tasker_id: taskerId
+            });
+            return bills.reduce((sum, bill) => sum + bill.amount, 0);
+        }
+        else {
+            throw new Error('Invalid timespan');
+        }
+        const bills = await PayoutTasker.find({
+            tasker_id: taskerId,
+            created_at: { $gte: startDate }
+        });
+        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+export const availableCashout = async (userId) => {
+    try {
+        const tasker = await Tasker.findOne({ user_id: userId });
+        if (!tasker) {
+            throw new Error('Tasker not found');
+        }
+        const taskerId = tasker._id;
+        
+        const bills = await PayoutTasker.find({
+            tasker_id: taskerId,
+            status: 'pending'
+        });
+        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
+};
+   

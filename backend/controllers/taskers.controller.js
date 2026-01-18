@@ -1,14 +1,18 @@
-import { acceptTaskRequest, confirmDepartureService, denyTaskRequest,
-    confirmArrivingService, confirmStartService, confirmCompleteService
- } from "../services/taskers.service.js";
+import {
+    acceptTaskRequest, confirmDepartureService, denyTaskRequest,
+    confirmArrivingService, confirmStartService, confirmCompleteService,
+    cashOutForTasker, getCashoutInfo, availableCashout,
+    getTaskerAcceptanceRate
+} from "../services/taskers.service.js";
+import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
-import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog } from "../models/index.js";
+import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
 
 // tasker nhận task
-export const acceptTask = async (req, res) =>{
+export const acceptTask = async (req, res) => {
     const { orderId } = req.params;
     try {
         await acceptTaskRequest(req.userId, orderId);
@@ -61,14 +65,14 @@ export const acceptTask = async (req, res) =>{
 }
 
 // tasker xác nhận khởi hành đến địa điểm của khách hàng
-export const confirmDeparture = async (req, res) =>{
-    const {  orderId } = req.params;
+export const confirmDeparture = async (req, res) => {
+    const { orderId } = req.params;
     try {
         await confirmDepartureService(req.userId, orderId);
 
         const order = await Order.findById(orderId);
         if (!order) {
-            return res.status(404).json({ message: "Không tìm thấy đơn hàng."});
+            return res.status(404).json({ message: "Không tìm thấy đơn hàng." });
         }
 
         const customerUserId = order.customer_id.toString();
@@ -116,7 +120,7 @@ export const confirmDeparture = async (req, res) =>{
 }
 
 // tasker từ chối task
-export const denyTask = async (req, res) =>{
+export const denyTask = async (req, res) => {
     const { orderId } = req.params;
     const { reason } = req.body;
     try {
@@ -283,49 +287,75 @@ export const confirmStart = async (req, res) => {
     }
 };
 
-// tasker xác nhận hoàn thành công việc
 export const confirmComplete = async (req, res) => {
   const { orderId } = req.params;
+  const session = await mongoose.startSession();
+
+  session.startTransaction();
 
   try {
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).session(session);
     if (!order) throw new Error("Order not found.");
 
     if (order.status === "completed") {
+      await session.abortTransaction();
       return res.status(400).json({
         success: false,
         message: "Đơn hàng đã được hoàn thành trước đó."
       });
     }
 
-    await confirmCompleteService(req.userId, orderId);
+    await confirmCompleteService(req.userId, orderId, session);
 
     const customerUserId = order.customer_id.toString();
 
-    const tasker = await User.findById(req.userId).select("full_name");
+    const tasker = await User.findById(req.userId).select("full_name").session(session);
     const taskerName = tasker?.full_name || "Anonymous";
 
-    const receipt = await Receipt.findOne({ order_id: order._id });
+    const receipt = await Receipt.findOne({ order_id: order._id }).session(session);
     if (!receipt) throw new Error("Không tìm thấy hóa đơn.");
 
     if (receipt.payment_method === "cash") {
-      console.log("IM HERE IN CONFIRM COMPLETE");
-      await markReceiptPaidService(receipt._id);
-
-      // update số đơn hoàn thành của khách hàng và điểm danh tiếng
-      await Customer.updateOne(
-        { user_id: customerUserId },
-        { $inc: { total_completed_orders: 1 } }
-      );
-
-      const reputationDelta = Math.floor(receipt.total_amount * 0.1);
-      if (reputationDelta === 0) reputationDelta = 10;
-      await User.updateOne(
-        { _id: customerUserId },
-        { $inc: { reputation_score: reputationDelta } }
-      );
-
+      // tiền mặt thì phải update thời điểm thanh toán thủ công
+      console.log("before marking paid receipt!!!");
+      console.log("receipt_id: ", receipt._id);
+      console.log("transaction_id in receipt: ", receipt.transaction_id);
+      
+      await markReceiptPaidService({
+        receiptId: receipt._id,
+        transactionId: receipt.transaction_id,
+        session
+      });
     }
+
+    // update số đơn hoàn thành của khách hàng
+    await Customer.updateOne(
+      { user_id: customerUserId },
+      { $inc: { total_completed_orders: 1 } },
+      { session }
+    );
+
+    let reputationDelta = Math.floor(receipt.total_amount * 0.1);
+    if (reputationDelta === 0) reputationDelta = 10;
+    console.log("reputation delta: ", reputationDelta);
+    
+    // update điểm danh tiếng của khách
+    await User.updateOne(
+      { _id: customerUserId },
+      { $inc: { reputation_score: reputationDelta } },
+      { session }
+    );
+    console.log("DONE UPDATING REPUTATION SCORE FOR CUSTOMER");
+
+    // update điểm danh tiếng của tasker
+    await User.updateOne(
+      { _id: req.userId },
+      { $inc: { reputation_score: reputationDelta } },
+      { session }
+    );
+    
+    console.log("DONE UPDATING REPUTATION SCORE FOR TASKER");
+    await session.commitTransaction();
 
     await pushNotification(
       req.userId,
@@ -362,64 +392,64 @@ export const confirmComplete = async (req, res) => {
       )
     );
 
-    console.log("DONE CONFIRM COMPLETE");
-
     res.status(200).json({
       success: true,
       message: "Đơn hàng hoàn thành."
     });
 
   } catch (err) {
+    await session.abortTransaction();
     res.status(400).json({
       success: false,
       message: err.message || "Failed to complete task"
     });
+  } finally {
+    session.endSession();
   }
 };
 
-
 // Lấy danh sách tất cả tasker với phân trang, lọc và sắp xếp
 export const getAllTaskers = async (req, res) => {
-  try {
-    const { 
-      status,            
-      working_status,   
-      sort_by = "created_at", 
-      sort_dir = "asc", 
-      page = 1,
-      limit = 10
-    } = req.query;
+    try {
+        const {
+            status,
+            working_status,
+            sort_by = "created_at",
+            sort_dir = "asc",
+            page = 1,
+            limit = 10
+        } = req.query;
 
-    const filter = {};
+        const filter = {};
 
-    if (status) filter.status = status;
-    if (working_status) filter.working_status = working_status;
+        if (status) filter.status = status;
+        if (working_status) filter.working_status = working_status;
 
-    const taskers = await Tasker.find(filter)
-      .populate({
-        path: "user_id",
-        select: "full_name phone_number identification avatar_url"
-      })
-      .populate({
-        path: "user_id",
-        populate: {
-          path: "account_id",
-          select: "email status is_verified"
-        }
-      })
-      .sort({ [sort_by]: sort_dir === "desc" ? -1 : 1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+        const taskers = await Tasker.find(filter)
+            .populate({
+                path: "user_id",
+                select: "full_name phone_number identification avatar_url"
+            })
+            .populate({
+                path: "user_id",
+                populate: {
+                    path: "account_id",
+                    select: "email status is_verified"
+                }
+            })
+            .sort({ [sort_by]: sort_dir === "desc" ? -1 : 1 })
+            .skip((page - 1) * limit)
+            .limit(parseInt(limit));
 
-    const total = await Tasker.countDocuments(filter);
+        const total = await Tasker.countDocuments(filter);
 
-    res.status(200).json({
-      success: true,
-      page: Number(page),
-      limit: Number(limit),
-      total,
-      data: taskers
-    });
+        res.status(200).json({
+            success: true,
+            page: Number(page),
+            limit: Number(limit),
+            total,
+            data: taskers
+        });
 
   } catch (error) {
     console.error("Get all taskers error:", error);
@@ -466,8 +496,8 @@ export const getOrderDetailsForTasker = async (req, res) => {
 
     // Get order with all populated fields
     const order = await Order.findById(orderId)
-      .populate('customer_id', 'full_name phone_number email avatar_url')
-      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('customer_id', 'full_name phone_number email avatar_url reputation_score')
+      .populate('tasker_id', 'full_name phone_number email avatar_url reputation_score')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
       .lean();
@@ -513,16 +543,16 @@ export const getOrderDetailsForTasker = async (req, res) => {
 
 // tasker nhấn nút sẵn sàng làm việc/nghỉ làm việc
 export const updateWorkingStatus = async (req, res) => {
-  try {
-    const userId = req.userId;
-    const { working_status } = req.body;
+    try {
+        const userId = req.userId;
+        const { working_status } = req.body;
 
-    if (!["available", "offline"].includes(working_status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Trạng thái làm việc không hợp lệ, chỉ được cập nhật sang Không hoạt động hoặc Đang rảnh."
-      });
-    }
+        if (!["available", "offline"].includes(working_status)) {
+            return res.status(400).json({
+                success: false,
+                message: "Trạng thái làm việc không hợp lệ, chỉ được cập nhật sang Không hoạt động hoặc Đang rảnh."
+            });
+        }
 
     const tasker = await Tasker.findOne({ user_id: userId });
     if (!tasker) {
@@ -549,19 +579,83 @@ export const updateWorkingStatus = async (req, res) => {
       actorId: null
     });
 
-    tasker.working_status = working_status;
-    await tasker.save();
+        tasker.working_status = working_status;
+        await tasker.save();
 
-    return res.json({
+        return res.json({
+            success: true,
+            working_status: tasker.working_status
+        });
+
+    } catch (err) {
+        console.error("UPDATE WORKING STATUS ERROR:", err);
+        res.status(500).json({
+            success: false,
+            message: "Lỗi hệ thống"
+        });
+    }
+};
+
+export const getTaskerAcceptanceStats = async (req, res) => {
+  try {
+    const tasker = await Tasker.findOne({ user_id: req.userId });
+    if (!tasker) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tasker"
+      });
+    }
+
+    const acceptanceStats = await getTaskerAcceptanceRate(req.userId);
+
+    return res.status(200).json({
       success: true,
-      working_status: tasker.working_status
+      acceptance_rate: acceptanceStats.acceptanceRate,
+      stats: acceptanceStats
     });
 
-  } catch (err) {
-    console.error("UPDATE WORKING STATUS ERROR:", err);
-    res.status(500).json({
+  } catch (error) {
+    console.error("GET TASKER STATS ERROR:", error);
+    return res.status(500).json({
       success: false,
-      message: "Lỗi hệ thống"
+      message: "Lỗi server"
     });
   }
+};
+
+// tasker rút lương
+export const cashOut = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const result = await cashOutForTasker(userId);
+        if (result === true) {
+            res.status(200).json({ success: true, message: "Yêu cầu rút tiền thành công." });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: "Yêu cầu rút tiền thất bại.", error: error.message });
+    }
+};
+
+export const amountCashout = async (req, res) => {
+    try {
+        const userId = req.userId;
+        const timespan = req.query.timespan;
+        const result = await getCashoutInfo(userId, timespan);
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: "Lấy thông tin rút tiền thất bại.", error: error.message });
+    }
+}
+
+export const availableCashoutAmount = async (req, res) => {
+    try{
+        const userId = req.userId;
+        const result = await availableCashout(userId);
+        res.status(200).json({ success: true, data: result });
+    }
+    catch (error) {
+        res.status(500).json({ success: false, message: "Lấy số tiền có thể rút thất bại.", error: error.message });
+    }
 };

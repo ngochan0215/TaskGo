@@ -136,7 +136,7 @@
                             </tr>
                             </thead>
                             <tbody class="text-sm" id="invoiceTableBody">
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -208,11 +208,15 @@
                 </button>
 
                 <div class="flex gap-2">
-                    <button id="btnRefund" onclick="openConfirmModal(currentInvId, 'refund')" class="px-4 py-2 border border-purple-200 text-purple-700 hover:bg-purple-50 rounded-lg font-bold text-sm transition hidden flex items-center gap-1">
+                    <button id="btnMarkPaid" class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg font-bold text-sm transition hidden flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span> Xác nhận thanh toán
+                    </button>
+
+                    <button id="btnRefund" class="px-4 py-2 border border-purple-200 text-purple-700 hover:bg-purple-50 rounded-lg font-bold text-sm transition hidden flex items-center gap-1">
                         <span class="material-symbols-outlined text-[18px]">undo</span> Hoàn tiền
                     </button>
 
-                    <button id="btnVoid" onclick="openConfirmModal(currentInvId, 'void')" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold text-sm transition hidden flex items-center gap-1">
+                    <button id="btnVoid" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg font-bold text-sm transition hidden flex items-center gap-1">
                         <span class="material-symbols-outlined text-[18px]">block</span> Hủy hóa đơn
                     </button>
                 </div>
@@ -242,204 +246,30 @@
     </div>
 </div>
 
+<script src="../js/config.js"></script>
+<script src="../js/admin_manageinvoices.js"></script>
+
 <script>
-    let mockInvoices = [
-        { id: "1", code: "INV-00123", orderRef: "#ORD-8821", customer: "Nguyễn Văn A", amount: 120000, method: "Tiền mặt", status: "paid", date: "20/05/2025 14:00" },
-        { id: "2", code: "INV-00124", orderRef: "#ORD-8822", customer: "Lê Thị C", amount: 300000, method: "Momo", status: "unpaid", date: "21/05/2025 09:15" },
-        { id: "3", code: "INV-00125", orderRef: "#ORD-8823", customer: "Hoàng Văn E", amount: 55000, method: "ZaloPay", status: "paid", date: "21/05/2025 10:30" },
-        { id: "4", code: "INV-00126", orderRef: "#ORD-8824", customer: "Phan Thị F", amount: 250000, method: "Chuyển khoản", status: "refunded", date: "19/05/2025 16:45" },
-        { id: "5", code: "INV-00127", orderRef: "#ORD-8825", customer: "Trần Văn G", amount: 500000, method: "Thẻ tín dụng", status: "failed", date: "22/05/2025 11:20" },
-    ];
-
-    let filteredInvoices = [...mockInvoices];
-    let currentPage = 1;
-    const itemsPerPage = 8;
-    let currentFilter = 'all';
-    let currentInvId = null;
-
-    document.addEventListener('DOMContentLoaded', () => {
-        renderTable();
-        renderPagination();
-    });
-
     const sidebarMobile = document.getElementById("sidebarMobile");
     const backdrop = document.getElementById("backdrop");
-    function openSidebar() { sidebarMobile.classList.remove("closed"); backdrop.style.display = "block"; }
-    function closeSidebar() { sidebarMobile.classList.add("closed"); backdrop.style.display = "none"; }
-    function logout() { window.location.href = "../auth/login-signup.html"; }
 
-    function setFilter(status, btn) {
-        document.querySelectorAll('.filter-btn').forEach(b => {
-            b.classList.remove('active');
-            b.classList.add('text-slate-500');
-        });
-        btn.classList.add('active');
-        btn.classList.remove('text-slate-500');
-        currentFilter = status;
-        applyFilter();
+    function openSidebar() {
+        sidebarMobile.classList.remove("closed");
+        backdrop.style.display = "block";
     }
 
-    function handleSearch(e) { applyFilter(); }
-
-    function applyFilter() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        filteredInvoices = mockInvoices.filter(inv => {
-            const matchStatus = currentFilter === 'all' || inv.status === currentFilter;
-            const matchSearch = inv.code.toLowerCase().includes(term) || inv.customer.toLowerCase().includes(term);
-            return matchStatus && matchSearch;
-        });
-        currentPage = 1;
-        renderTable();
-        renderPagination();
+    function closeSidebar() {
+        sidebarMobile.classList.add("closed");
+        backdrop.style.display = "none";
     }
 
-    function renderTable() {
-        const tbody = document.getElementById('invoiceTableBody');
-        tbody.innerHTML = '';
-
-        if (filteredInvoices.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">Không tìm thấy hóa đơn nào.</td></tr>`;
-            return;
+    function logout() {
+        if(confirm('Bạn có chắc muốn đăng xuất?')) {
+            localStorage.removeItem('token');
+            window.location.href = "../auth/login-signup.html";
         }
-
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = start + itemsPerPage;
-        const pageData = filteredInvoices.slice(start, end);
-
-        pageData.forEach((item, index) => {
-            const badge = getStatusBadge(item.status);
-            const methodIcon = getMethodIcon(item.method);
-
-            const tr = document.createElement('tr');
-            tr.className = "border-b border-gray-50 hover:bg-slate-50 transition-colors group";
-            tr.innerHTML = `
-                <td class="p-4 text-slate-400 font-medium">${start + index + 1}</td>
-                <td class="p-4">
-                    <div class="font-bold text-slate-700 hover:text-indigo-600 cursor-pointer font-mono" onclick="openDetailModal('${item.id}')">${item.code}</div>
-                    <div class="text-xs text-slate-400">${item.orderRef}</div>
-                </td>
-                <td class="p-4 font-medium text-slate-700">${item.customer}</td>
-                <td class="p-4 text-slate-500 text-xs">${item.date}</td>
-                <td class="p-4 text-slate-600 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[16px] text-slate-400">${methodIcon}</span> ${item.method}
-                </td>
-                <td class="p-4 text-right font-bold text-slate-800">${formatCurrency(item.amount)}</td>
-                <td class="p-4 text-center"><span class="px-2 py-1 rounded text-[11px] font-bold uppercase ${badge.class}">${badge.text}</span></td>
-                <td class="p-4 text-center">
-                    <div class="flex justify-center gap-2">
-                        <button onclick="openDetailModal('${item.id}')" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Xem chi tiết"><span class="material-symbols-outlined text-[20px]">visibility</span></button>
-
-                        ${item.status === 'paid' ? `
-                            <button onclick="openConfirmModal('${item.id}', 'refund')" class="p-1.5 text-purple-600 hover:bg-purple-50 rounded-lg transition" title="Hoàn tiền (Khiếu nại)"><span class="material-symbols-outlined text-[20px]">undo</span></button>
-                        ` : ''}
-
-                        ${(item.status === 'unpaid' || item.status === 'failed') ? `
-                            <button onclick="openConfirmModal('${item.id}', 'void')" class="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition" title="Hủy bỏ hóa đơn"><span class="material-symbols-outlined text-[20px]">block</span></button>
-                        ` : ''}
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function formatCurrency(amount) { return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount); }
-    function getStatusBadge(status) {
-        const map = {
-            'paid': { text: 'Đã thanh toán', class: 'badge-paid' },
-            'unpaid': { text: 'Chờ thanh toán', class: 'badge-unpaid' },
-            'refunded': { text: 'Đã hoàn tiền', class: 'badge-refunded' },
-            'failed': { text: 'Thất bại/Hủy', class: 'badge-failed' }
-        };
-        return map[status] || { text: status, class: 'bg-gray-100' };
-    }
-    function getMethodIcon(method) {
-        if(method.includes("Tiền mặt")) return "attach_money";
-        if(method.includes("Momo") || method.includes("Zalo")) return "smartphone";
-        if(method.includes("Thẻ") || method.includes("Khoản")) return "credit_card";
-        return "payments";
-    }
-    function renderPagination() { document.getElementById('paginationInfo').innerText = `Hiển thị ${filteredInvoices.length} hóa đơn`; }
-
-    function openDetailModal(id) {
-        currentInvId = id;
-        const item = mockInvoices.find(i => i.id === id);
-        if(!item) return;
-
-        document.getElementById('modalInvoiceCode').innerText = item.code;
-        document.getElementById('modalRefOrder').innerText = item.orderRef;
-        document.getElementById('modalCustomer').innerText = item.customer;
-        document.getElementById('modalDate').innerText = item.date;
-        document.getElementById('modalMethod').innerText = item.method;
-        document.getElementById('modalAmountBig').innerText = formatCurrency(item.amount);
-        document.getElementById('modalSubtotal').innerText = formatCurrency(item.amount);
-        document.getElementById('modalFinalTotal').innerText = formatCurrency(item.amount);
-
-        const badge = getStatusBadge(item.status);
-        const statusEl = document.getElementById('modalStatusText');
-        statusEl.innerText = badge.text;
-        statusEl.className = `mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${badge.class}`;
-
-        document.getElementById('btnRefund').classList.add('hidden');
-        document.getElementById('btnVoid').classList.add('hidden');
-
-        if(item.status === 'paid') {
-            document.getElementById('btnRefund').classList.remove('hidden');
-        } else if (item.status === 'unpaid' || item.status === 'failed') {
-            document.getElementById('btnVoid').classList.remove('hidden');
-        }
-
-        document.getElementById('detailModal').classList.remove('hidden');
-    }
-    function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
-
-    function openConfirmModal(id, type) {
-        currentInvId = id;
-        const container = document.getElementById('confirmIconContainer');
-        const icon = document.getElementById('confirmIcon');
-        const btn = document.getElementById('confirmBtnAction');
-        const desc = document.getElementById('confirmDesc');
-
-        document.getElementById('actionInvId').value = id;
-        document.getElementById('actionType').value = type;
-
-        if (type === 'refund') {
-            document.getElementById('confirmTitle').innerText = "Xác nhận hoàn tiền?";
-            desc.innerText = "Tiền sẽ được hoàn lại ví/tài khoản khách. Thao tác này dành cho xử lý khiếu nại.";
-            container.className = "w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-3";
-            icon.className = "material-symbols-outlined text-purple-600 text-2xl";
-            icon.innerText = "undo";
-            btn.className = "py-2.5 rounded-lg bg-purple-600 text-white font-semibold shadow-lg hover:bg-purple-700 transition";
-            btn.innerText = "Xác nhận Hoàn tiền";
-        } else if (type === 'void') {
-            document.getElementById('confirmTitle').innerText = "Hủy bỏ hóa đơn?";
-            desc.innerText = "Hóa đơn sẽ chuyển sang trạng thái Hủy/Thất bại. Dùng cho đơn lỗi/spam.";
-            container.className = "w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-3";
-            icon.className = "material-symbols-outlined text-red-600 text-2xl";
-            icon.innerText = "block";
-            btn.className = "py-2.5 rounded-lg bg-red-600 text-white font-semibold shadow-lg hover:bg-red-700 transition";
-            btn.innerText = "Xác nhận Hủy";
-        }
-
-        document.getElementById('confirmModal').classList.remove('hidden');
-    }
-
-    function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
-
-    function executeAction() {
-        const id = document.getElementById('actionInvId').value;
-        const type = document.getElementById('actionType').value;
-        const index = mockInvoices.findIndex(i => i.id === id);
-
-        if(index !== -1) {
-            if(type === 'refund') mockInvoices[index].status = 'refunded';
-            if(type === 'void') mockInvoices[index].status = 'failed';
-        }
-
-        applyFilter();
-        closeConfirmModal();
-        closeDetailModal();
     }
 </script>
+
 </body>
 </html>

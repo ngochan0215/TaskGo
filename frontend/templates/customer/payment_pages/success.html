@@ -280,7 +280,7 @@
 
         function startRedirectCountdown() {
             const REDIRECT_AFTER = 10;
-            const REDIRECT_URL = './ordering_success.html';
+            const REDIRECT_URL = `./ordering_success.html?orderId=${orderId}`;
 
             let remaining = REDIRECT_AFTER;
             const countdownEl = document.getElementById('countdown');

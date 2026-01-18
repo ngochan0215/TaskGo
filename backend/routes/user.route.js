@@ -3,7 +3,7 @@ import { verifyToken } from "../middleware/verifyToken.js";
 import { getUserProfile, changePassword, sendEmail, 
     verifyEmail, updateAvatar, addFavoriteTasker, removeFavoriteTasker, 
     getMyFavoriteTaskers, addAddress, getMyAddresses, deleteAddress, setDefaultAddress,
-    getUserPoints,
+    getUserPoints, getAUserProfile,
     updateTaskerProfile, updateCustomerProfile, 
 } from "../controllers/user.controller.js";
 import uploadAvatar from "../middleware/uploadAvatar.js";
@@ -15,6 +15,7 @@ const router = express.Router();
 router.get("/reputation-score", verifyToken, getUserPoints);
 
 router.get("/profile", verifyToken, getUserProfile);
+router.post("/show-public/profile", verifyToken, getAUserProfile);
 
 router.put("/profile/update", verifyToken, updateCustomerProfile);
 router.put("/profile/update/tasker", verifyToken, updateTaskerProfile);

@@ -82,6 +82,35 @@ async function getTaskById(taskId) {
   return data.task;
 }
 
+// Render rating stars based on average_rating
+function renderRatingStars(rating) {
+    const starsContainer = document.getElementById("stars-container");
+    if (!starsContainer) return;
+
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    let starsHTML = "";
+    
+    // Full stars
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<span class="material-symbols-outlined text-xl">star</span>';
+    }
+    
+    // Half star
+    if (hasHalfStar && fullStars < 5) {
+        starsHTML += '<span class="material-symbols-outlined text-xl">star_half</span>';
+    }
+    
+    // Empty stars
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    for (let i = 0; i < emptyStars; i++) {
+        starsHTML += '<span class="material-symbols-outlined text-xl text-gray-300">star</span>';
+    }
+    
+    starsContainer.innerHTML = starsHTML;
+}
+
 async function renderSkills(skillIds = []) {
   const skillsContainer = document.getElementById("skills");
   skillsContainer.innerHTML = "";
@@ -232,11 +261,12 @@ async function loadUserProfile() {
     const user = data.user;
     const { working_area, working_radius, working_year, hourly_rate, 
       introduction, skills, BIN, account_number } = data.tasker;
+    const reviews = data.reviews || { review_count: 0, average_rating: 0 };
 
     console.log("PROFILE DATA: ", data);
     console.log("working area: ", working_area);
 
-    // chỉ xử lý customer
+    // chỉ xử lý tasker
     if (role !== "tasker") {
         alert("Bạn không phải là tasker! Vui lòng đăng nhập để truy cập.");
         window.location.href = "../auth/login-signup.html";
@@ -262,6 +292,12 @@ async function loadUserProfile() {
 
     // avatar
     document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Charlie";
+
+    // Display reviews and reputation
+    renderRatingStars(reviews.average_rating || 0);
+    document.getElementById("rating-value").textContent = reviews.average_rating ? reviews.average_rating.toFixed(1) : "0.0";
+    document.getElementById("review-count").textContent = `(${reviews.review_count || 0} đánh giá)`;
+    document.getElementById("reputation-score").textContent = user.reputation_score || 0;
 
     addressState.latitude = working_area.latitude;
     addressState.longitude = working_area.longitude;

@@ -18,11 +18,13 @@ const taskerStatusLogSchema = new mongoose.Schema(
 
     from_status: {
       type: String,
+      enum: ["pending", "available", "busy", "offline", "paused", "inactive"],
       required: true
     },
 
     to_status: {
       type: String,
+      enum: ["pending", "available", "busy", "offline", "paused", "inactive"],
       required: true
     },
 

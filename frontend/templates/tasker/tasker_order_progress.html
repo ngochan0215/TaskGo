@@ -64,7 +64,7 @@
             <!-- Customer Info Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5">
+                    <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5 cursor-pointer hover:opacity-80 transition" onclick="openCustomerModal()">
                         <img id="customerAvatar" src="https://ui-avatars.com/api/?name=Chi+Lan&background=A5B4FC&color=3730A3" class="w-full h-full object-cover rounded-full">
                     </div>
                     <div class="flex-1">
@@ -73,6 +73,15 @@
                             <div>
                                 <p id="customerName" class="font-bold text-lg text-gray-800 leading-tight">Chị Lan</p>
                                 <p id="customerPhone" class="text-xs text-gray-500 font-medium">0909 *** 123</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div id="customerStars" class="flex text-yellow-500 text-xs">
+                                        <!-- Stars will be rendered dynamically -->
+                                    </div>
+                                    <span id="customerRating" class="text-xs font-semibold text-gray-700">—</span>
+                                    <span id="customerReviewCount" class="text-xs text-gray-500">(—)</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span id="customerReputation" class="text-xs text-primary-600 font-medium">Điểm: —</span>
+                                </div>
                             </div>
 
                             <div class="flex items-center gap-2">
@@ -257,6 +266,57 @@
         &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
     </div>
 </footer>
+
+<!-- Customer Info Modal -->
+<div id="customerModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" onclick="closeCustomerModal()"></div>
+    <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100">
+            <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gray-400">person</span>
+                    <div class="font-bold text-gray-800">Thông tin Khách hàng</div>
+                </div>
+                <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeCustomerModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-5">
+                <div class="flex flex-col items-center mb-4">
+                    <img id="modal-customer-avatar" src="" alt="Avatar" class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500">
+                    <h3 id="modal-customer-name" class="text-xl font-bold text-dark-900"></h3>
+                    <div class="flex items-center text-yellow-500 text-sm font-medium mt-1">
+                        <div id="modal-customer-stars" class="flex text-yellow-500 text-sm">
+                            <!-- Stars will be rendered dynamically -->
+                        </div>
+                        <span id="modal-customer-rating" class="ml-1"></span>
+                        <span class="text-gray-400 ml-1" id="modal-customer-reviews"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Điểm uy tín:</span>
+                        <span id="modal-customer-reputation" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Số đơn đã hoàn thành:</span>
+                        <span id="modal-customer-completed" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Số đơn đã hủy:</span>
+                        <span id="modal-customer-cancelled" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Hạng khách hàng:</span>
+                        <span id="modal-customer-type" class="font-medium text-dark-900">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- form đánh giá -->
 <div id="reviewModal" class="fixed inset-0 z-50 hidden">

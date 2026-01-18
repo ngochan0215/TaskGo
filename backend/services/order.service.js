@@ -263,20 +263,24 @@ export async function assignTaskerService(order) {
   order.tasker_id = suggestion.user_id;
   await order.save();
 
+  // gán cho tasker nên để actor là tasker
   await changeOrderStatus({
     orderId: order._id,
     toStatus: "assigned",
-    actorType: "system",
-    actorId: null,
+    actorType: "tasker",
+    actorId: order.tasker_id,
   });
 
+  //console.log("WHAT???");
   await changeTaskerStatus({
     taskerId: suggestion.tasker_id,
     toStatus: "busy",
     actorType: "system",
-    actorId: null,
+    actorId: order._id,
+    note: "actorId là ID của đơn hàng được gán"
   });
 
+  console.log("HERE???");
   // thông báo cho khách
   await pushNotification(
     order.customer_id,
@@ -448,7 +452,7 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
 
     const cancelCountToday = await OrderStatusLog.countDocuments({
       actor_type: "customer",
-      actor_id: customerId,
+      actor_id: customerId,   // customerId ở đây là user_id của customer
       to_status: "cancelled",
       created_at: { $gte: startOfDay }
     }).session(session);
@@ -478,6 +482,7 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
         actorType: "customer",
         actorId: customerId,
         reason: reason,
+        note: "actor_id là user_id của khách hàng hủy đơn",
         session
       });
 
@@ -501,9 +506,10 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
         $inc: { used_quantity: -1 }
       }, { session });
 
-      order.voucher_id = null;
-      order.voucher_snapshot = null;
-      order.final_amount += order.voucher_snapshot.discount_amount;
+      // console.log("order: ", order.final_amount);
+      // order.final_amount += order.voucher_snapshot.discount_amount;
+      // order.voucher_id = null;
+      // order.voucher_snapshot = null;
     }
 
     await order.save({ session });
@@ -523,6 +529,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     }
 
     await session.commitTransaction();
+
+    return { order, penaltyAmount };
 
   } catch (error) {
     await session.abortTransaction();
