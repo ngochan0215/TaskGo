@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Receipt, Order } from "../models/index.js";
+import { Receipt, Order, User } from "../models/index.js";
 
 export const createReceipt = async (req, res) => {
   const session = await mongoose.startSession();
@@ -10,12 +10,14 @@ export const createReceipt = async (req, res) => {
 
     if (!order_id) {
       return res.status(400).json({
+        success: false,
         message: "order_id là bắt buộc."
       });
     }
 
     if (!["cash", "credit_card", "bank_transfer", "ewallet"].includes(payment_method)) {
       return res.status(400).json({
+        success: false,
         message: "Phương thức thanh toán không hợp lệ."
       });
     }
@@ -23,6 +25,7 @@ export const createReceipt = async (req, res) => {
     const order = await Order.findById(order_id).session(session);
     if (!order) {
       return res.status(404).json({
+        success: false,
         message: "Không tìm thấy đơn hàng."
       });
     }
@@ -34,8 +37,9 @@ export const createReceipt = async (req, res) => {
     //   });
     // }
 
-    if (order.type === "scheduled" && payment_method !== "bank") {
+    if (order.type === "scheduled" && payment_method !== "bank_transfer") {
       return res.status(400).json({
+        success: false,
         message: "Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản để đảm bảo sự uy tín."
       });
     }
@@ -52,6 +56,7 @@ export const createReceipt = async (req, res) => {
     if (existingReceipt) {
       await session.commitTransaction();
       return res.status(200).json({
+        success: true,
         message: "Hóa đơn đã tồn tại",
         data: {
           receipt: existingReceipt,
@@ -76,6 +81,7 @@ export const createReceipt = async (req, res) => {
     await session.commitTransaction();
 
     return res.status(201).json({
+      success: true,
       message: "Tạo hóa đơn thành công",
       data: {
         receipt: receipt[0],
@@ -86,6 +92,7 @@ export const createReceipt = async (req, res) => {
   } catch (err) {
     await session.abortTransaction();
     return res.status(500).json({
+      success: false,
       message: err.message || "Lỗi tạo hóa đơn"
     });
   } finally {
@@ -221,15 +228,11 @@ export async function markReceiptPaidService({ receiptId, transactionId = null, 
     throw new Error("Hóa đơn đã được thanh toán trước đó");
   }
 
-  console.log("HELLO ANYONE SEE ME.");
   receipt.status = "success";
   receipt.paid_at = new Date();
   receipt.transaction_id = transactionId;
 
   await receipt.save(session ? { session } : {});
-
-  console.log("DONE UPDATING RECEIPT");
-
   return receipt;
 }
 
@@ -261,7 +264,24 @@ export const markReceiptPaid = async (req, res) => {
 
     receipt.status = "success";
     receipt.paid_at = new Date();
-    receipt.transaction_id = transaction_id || null;
+    receipt.transaction_id = transaction_id ? transaction_id : null;
+
+    //const order = await Order.findById(receipt.order_id).select("tasker_id customer_id");
+    //let reputationDelta = Math.floor(receipt.total_amount * 0.1);
+    // if (reputationDelta === 0) reputationDelta = 10;
+    // console.log("reputation delta: ", reputationDelta);
+    // // update điểm danh tiếng của khách
+    // await User.updateOne(
+    //   { _id: order.customer_id },
+    //   { $inc: { reputation_score: reputationDelta } },
+    // );
+    // console.log("DONE UPDATING REPUTATION SCORE FOR CUSTOMER");
+    // // update điểm danh tiếng của tasker
+    // await User.updateOne(
+    //   { _id: order.tasker_id },
+    //   { $inc: { reputation_score: reputationDelta } },
+    // );
+    // console.log("DONE UPDATING REPUTATION SCORE FOR TASKER");
 
     await receipt.save();
 

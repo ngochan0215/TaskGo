@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review, Account, OrderStatusLog } from "../models/index.js";
+import { Voucher, VoucherUsage, Order, Customer, User, Receipt, Review, Account, OrderStatusLog, Tasker } from "../models/index.js";
 import {
   cancelOrderByCustomerService,
   getAllOrdersService,
@@ -58,8 +58,8 @@ export const getOrderDetailsForCustomer = async (req, res) => {
 
     // Get order with all populated fields
     const order = await Order.findById(orderId)
-      .populate('customer_id', 'full_name phone_number email')
-      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('customer_id', 'full_name phone_number email avatar_url reputation_score')
+      .populate('tasker_id', 'full_name phone_number email avatar_url reputation_score')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
       .lean();
@@ -104,6 +104,35 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       .sort({ created_at: 1 })
       .lean();
 
+    // Get tasker reviews statistics if tasker exists
+    let taskerReviews = { review_count: 0, average_rating: 0 };
+    if (order.tasker_id) {
+      const taskerUserId = typeof order.tasker_id === "object" ? order.tasker_id._id : order.tasker_id;
+      const taskerReviewStats = await Review.aggregate([
+        {
+          $match: {
+            reviewee_id: new mongoose.Types.ObjectId(taskerUserId),
+            reviewee_role: "tasker",
+            status: "visible"
+          }
+        },
+        {
+          $group: {
+            _id: "$reviewee_id",
+            review_count: { $sum: 1 },
+            average_rating: { $avg: "$rating" }
+          }
+        }
+      ]);
+
+      if (taskerReviewStats.length) {
+        taskerReviews = {
+          review_count: taskerReviewStats[0].review_count,
+          average_rating: Number(taskerReviewStats[0].average_rating.toFixed(1))
+        };
+      }
+    }
+
     res.status(200).json({
       success: true,
       order,
@@ -112,7 +141,8 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       canCancel: cancelCheck.canCancel,
       cancelReason: cancelCheck.reason || null,
       penaltyAmount: cancelCheck.penaltyAmount || 0,
-      statusLogs: statusLogs || []
+      statusLogs: statusLogs || [],
+      taskerReviews: taskerReviews
     });
 
   } catch (err) {
@@ -167,7 +197,6 @@ export const getAllOrdersByCustomerId = async (req, res) => {
   }
 };
 
-// khachs hangf taoj ddonw 
 export const createOrder = async (req, res) => {
   console.log("req.body in createOrder", req.body);
   try {
@@ -185,29 +214,18 @@ export const createOrder = async (req, res) => {
     // gửi thông báo cho admin
     await Promise.all(
       admin.map(ad =>
-          pushNotification(
-              ad.user_id,
-              "Có đơn hàng mới!",
-              `Khách hàng có ID: ${req.userId} vừa đặt đơn hàng mới. Vui lòng kiểm tra nếu 
-                quá lâu không tìm thấy tasker phù hợp.`,
-              "order",
-              "Order",
-              order._id,
-              "unread"
-          )
+        pushNotification(
+          ad.user_id,
+          "Có đơn hàng mới!",
+          `Khách hàng có ID: ${req.userId} vừa đặt đơn hàng mới. Vui lòng kiểm tra nếu 
+            quá lâu không tìm thấy tasker phù hợp.`,
+          "order",
+          "Order",
+          order._id,
+          "unread"
+        )
       )
     );
-
-    // const orderId = order._id;
-    // // đổi trạng thái và log
-    // await changeOrderStatus({
-    //   orderId,
-    //   toStatus: "cancelled",
-    //   actorType: "customer",
-    //   actorId: customerId,
-    //   reason: reason,
-    //   session
-    // });
 
     return res.status(201).json({
       success: true,
@@ -329,6 +347,7 @@ export const findTaskerForOrder = async (req, res) => {
     const { orderId } = req.params;
     const customerId = req.userId;
 
+    console.log("IM CALLED");
     const order = await Order.findById(orderId)
       .populate('customer_id', 'full_name phone_number email')
       .populate('tasker_id', 'full_name phone_number email')
@@ -371,6 +390,7 @@ export const findTaskerForOrder = async (req, res) => {
     // Find and assign tasker
     const { suggestion, suggestTaskers } = await assignTaskerService(order);
 
+    console.log("IM ALWAYS HERE");
     // Refresh order to get updated data
     await order.populate('tasker_id', 'full_name phone_number email');
     const updatedOrder = await getOrderByIdService(orderId);

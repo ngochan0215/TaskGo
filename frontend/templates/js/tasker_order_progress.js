@@ -12,10 +12,8 @@ if (role !== "tasker") {
   location.href = "../auth/login-signup.html";
 }
 
-// Get order ID from URL or localStorage
 const urlParams = new URLSearchParams(window.location.search);
 let orderId = urlParams.get("orderId") || localStorage.getItem("currentOrderId");
-// If still no orderId, try to get from pathname (e.g., /tasker/order/12345)
 if (!orderId) {
   const pathMatch = window.location.pathname.match(/order[\/\-_]?(\w+)/i);
   if (pathMatch) {
@@ -28,11 +26,11 @@ if (!orderId) {
   location.href = "./tasker_home.html";
 }
 
-// Store orderId for reference
 localStorage.setItem("currentOrderId", orderId);
 
 let currentOrder = null;
-let currentState = -1; // -1 = not loaded, 0 = assigned, 1 = accepted, 2 = departed, 3 = arrived, 4 = in_progress, 5 = completed
+// 0 = assigned, 1 = accepted, 2 = departed, 3 = arrived, 4 = in_progress, 5 = completed
+let currentState = -1; 
 let currentReview = null;
 let selectedRating = 0;
 let hoverRating = 0;
@@ -45,7 +43,6 @@ const reviewReminderSection = document.getElementById('reviewReminderSection');
 const reviewDisplaySection = document.getElementById('reviewDisplaySection');
 const reviewModal = document.getElementById('reviewModal');
 
-// Status to state mapping
 const statusToState = {
   "assigned": 0,
   "accepted": 1,
@@ -56,7 +53,6 @@ const statusToState = {
   "cancelled": -2
 };
 
-// State to step mapping
 const stateToStep = {
   0: "step-0", // Accept step (new) - for assigned status
   1: "step-1", // Depart step - for accepted status
@@ -66,15 +62,8 @@ const stateToStep = {
   5: "step-4"  // Complete step - for completed status
 };
 
-// Format currency
-function formatCurrency(v) {
-  return Number(v || 0).toLocaleString("vi-VN") + "đ";
-}
-
-// Format currency with VND
 const formatCurrencyVND = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
-// Service renderers (from ordering_success.js)
 const serviceRenderers = {
   COOKING: (p) => `
     <p>👥 Nấu cho: ${p.people} người</p>
@@ -405,10 +394,12 @@ function renderPaymentDetails(order, receipt) {
 }
 
 // Update order information in UI
-function updateOrderInfo(order, receipt) {
+function updateOrderInfo(order, receipt, customerReviews) {
+
   // Update customer info
   if (order.customer_id) {
     console.log("customer_id: ", order.customer_id);
+
     const customerName = order.customer_id.full_name || "Khách hàng";
     const customerPhone = order.customer_id.phone_number || "";
     const customerAvatar = order.customer_id.avatar_url;
@@ -425,14 +416,12 @@ function updateOrderInfo(order, receipt) {
       customerPhoneEl.textContent = maskedPhone;
     }
 
-    // Update avatar
     const avatarImg = document.getElementById('customerAvatar');
     if (avatarImg) {
-      avatarImg.src = customerAvatar;
-      //avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(customerName)}&background=A5B4FC&color=3730A3`;
+      avatarImg.src = customerAvatar ? customerAvatar :
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(customerName)}&background=A5B4FC&color=3730A3`;
     }
 
-    // Update phone links
     const phoneLink = document.getElementById('phoneLink');
     if (phoneLink && customerPhone) {
       phoneLink.href = `tel:${customerPhone}`;
@@ -441,6 +430,33 @@ function updateOrderInfo(order, receipt) {
     if (headerPhoneLink && customerPhone) {
       headerPhoneLink.href = `tel:${customerPhone}`;
     }
+  }
+
+  if (!customerReviews) return;
+  console.log("CUSTOMER REVIEWS: ", customerReviews);
+  const rating = customerReviews.average_rating || 0;
+  const reviewCount = customerReviews.review_count || 0;
+  const reputation = order.customer_id.reputation_score || 0;
+
+  // Update stars
+  renderRatingStars('customerStars', rating);
+
+  // Update rating value
+  const ratingEl = document.getElementById('customerRating');
+  if (ratingEl) {
+    ratingEl.textContent = rating > 0 ? rating.toFixed(1) : "—";
+  }
+
+  // Update review count
+  const reviewCountEl = document.getElementById('customerReviewCount');
+  if (reviewCountEl) {
+    reviewCountEl.textContent = `(${reviewCount})`;
+  }
+
+  // Update reputation
+  const reputationEl = document.getElementById('customerReputation');
+  if (reputationEl) {
+    reputationEl.textContent = `Điểm: ${reputation}`;
   }
 
   // Render service details
@@ -464,6 +480,40 @@ function updateOrderInfo(order, receipt) {
     }
   }
 }
+
+// Render rating stars
+function renderRatingStars(containerId, rating) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+  
+  let starsHTML = "";
+  
+  // Full stars
+  for (let i = 0; i < fullStars; i++) {
+    starsHTML += '<span class="material-symbols-outlined text-xs">star</span>';
+  }
+  
+  // Half star
+  if (hasHalfStar && fullStars < 5) {
+    starsHTML += '<span class="material-symbols-outlined text-xs">star_half</span>';
+  }
+  
+  // Empty stars
+  const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+  for (let i = 0; i < emptyStars; i++) {
+    starsHTML += '<span class="material-symbols-outlined text-xs text-gray-300">star</span>';
+  }
+  
+  container.innerHTML = starsHTML;
+}
+
+// // Update customer reviews and reputation display
+// function updateCustomerStats(customerReviews, customer) {
+  
+// }
 
 function disableAllActions() {
   // disable main button
@@ -1025,7 +1075,6 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Initialize page
 async function init() {
   const details = await fetchOrderDetails();
   
@@ -1036,15 +1085,103 @@ async function init() {
   }
 
   currentOrder = details.order;
-  updateOrderInfo(currentOrder, details.receipt);
+  currentCustomerReviews = details.customerReviews || { review_count: 0, average_rating: 0 };
+  updateOrderInfo(currentOrder, details.receipt, currentCustomerReviews);
   updateTimeline(details.statusLogs || []);
   updateUI();
   
-  // Check review status
   await checkReview();
 }
 
-// Open chat function
+async function fetchCustomerProfile(customerUserId) {
+  try {
+    const res = await fetch(
+      `http://localhost:3000/api/user/show-public/profile`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ user_id: customerUserId })
+      }
+    );
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      location.href = "../auth/login-signup.html";
+      return null;
+    }
+
+    const result = await res.json();
+    if (res.ok) {
+      return result;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error fetching customer profile:", error);
+    return null;
+  }
+}
+
+function mapCustomerType(type) {
+  switch (type) {
+    case "new":
+      return "Khách hàng mới";
+    case "loyal":
+      return "Thành viên thân thiết";
+    case "vip":
+      return "Khách hàng VIP";
+    default:
+      return "Khách hàng";
+  }
+}
+
+async function openCustomerModal() {
+  if (!currentOrder || !currentOrder.customer_id) {
+    alert("Không tìm thấy thông tin khách hàng");
+    return;
+  }
+
+  const customerUserId = currentOrder.customer_id;
+  const customerReviews = currentCustomerReviews || { review_count: 0, average_rating: 0 };
+
+  const customerProfile = await fetchCustomerProfile(customerUserId);
+  console.log("TASKER PROFILE (openTaskerModal): ", customerProfile);
+
+  const user = customerProfile.user;
+  const customer = customerProfile.customer;
+
+  document.getElementById("modal-customer-avatar").src = user.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.full_name)}&background=A5B4FC&color=3730A3`;
+  document.getElementById("modal-customer-name").textContent = user.full_name || "Khách hàng";
+  
+  const rating = customerReviews.average_rating || 0;
+  renderRatingStars('modal-customer-stars', rating);
+  document.getElementById("modal-customer-rating").textContent = rating > 0 ? rating.toFixed(1) : "0.0";
+  document.getElementById("modal-customer-reviews").textContent = `(${customerReviews.review_count || 0} đánh giá)`;
+  
+  document.getElementById("modal-customer-reputation").textContent = user.reputation_score || 0;
+  
+  if (customer) {
+    document.getElementById("modal-customer-completed").textContent = `${customer.total_completed_orders || 0} đơn`;
+    document.getElementById("modal-customer-cancelled").textContent = `${customer.cancellation_count || 0} đơn`;
+  } else {
+    document.getElementById("modal-customer-completed").textContent = "—";
+    document.getElementById("modal-customer-cancelled").textContent = "—";
+  }
+  
+  document.getElementById("modal-customer-type").textContent = mapCustomerType(customer.type) || "Khách hàng";
+
+  document.getElementById("customerModal").classList.remove("hidden");
+}
+
+function closeCustomerModal() {
+  document.getElementById("customerModal").classList.add("hidden");
+}
+
+let currentCustomerReviews = null;
+
 function openChat() {
     if (!orderId) {
         alert("Không tìm thấy đơn hàng");
@@ -1094,6 +1231,8 @@ window.openChat = openChat;
 window.openReviewModal = openReviewModal;
 window.closeReviewModal = closeReviewModal;
 window.submitReview = submitReview;
+window.openCustomerModal = openCustomerModal;
+window.closeCustomerModal = closeCustomerModal;
 
 // Run initialization
 init();

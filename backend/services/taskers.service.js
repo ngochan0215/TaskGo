@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import { getRouteSummary } from "./location.service.js";
-import { User, Tasker, Customer, PayoutTasker, Order, Task, Service, TaskerStatusLog, Transaction } from "../models/index.js";
+import { User, Tasker, Customer, PayoutTasker, Order, Task, 
+    Service, TaskerStatusLog, Transaction, OrderStatusLog 
+} from "../models/index.js";
 import { changeOrderStatus } from "./order.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
 import { getOnlineTaskerUserIds } from "../sockets/presence.js";
@@ -85,7 +87,7 @@ export async function findEligibleTaskers(order) {
     // Sort theo khoảng cách gần nhất
     matchedTaskers.sort((a, b) => a.distance_km - b.distance_km);
 
-    //console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
+    console.log("ELIGIBLE TASKERS (findEligibleTaskers): ", matchedTaskers);
     // Giới hạn số lượng tasker gửi job
     return matchedTaskers.slice(0, 10);
 }
@@ -288,19 +290,11 @@ export const acceptTaskRequest = async (taskerUserId, orderId) => {
             taskerId,
             toStatus: "busy",
             actorType: "tasker",
-            actorId: null
+            actorId: orderId,
+            note: "Tasker chấp nhận đơn hàng, actor_id chính là ID của đơn hàng"
         });
 
         console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
-
-        // // update tasker working status
-        // await Tasker.updateOne({
-        //     user_id: taskerUserId
-        // },{
-        //     working_status: "busy" 
-        // },{
-        //     runValidators: true
-        // })
 
         rankingCache.delete(String(order.user_id));
     } catch (error) {
@@ -342,7 +336,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) => {
             toStatus: "cancelled",
             actorType: "tasker",
             actorId: taskerUserId,
-            reason: reason || "Tasker denied the task"
+            reason: reason || "Tasker từ chối task"
         });
 
         // log tasker status
@@ -351,7 +345,7 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) => {
             toStatus: "available",
             actorType: "tasker",
             actorId: null,
-            reason: reason || "Tasker denied the task"
+            reason: reason || "Tasker từ chối task"
         });
 
         const orderLogg = await changeOrderStatus({
@@ -373,8 +367,8 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) => {
             const orderLog = await changeOrderStatus({
                 orderId,
                 toStatus: "assigned",
-                actorType: "system",
-                actorId: null,
+                actorType: "tasker",
+                actorId: suggestion.user_id,
             });
 
             const newTaskerId = suggestion.tasker_id;
@@ -382,7 +376,8 @@ export const denyTaskRequest = async (taskerUserId, orderId, reason) => {
                 newTaskerId,
                 toStatus: "busy",
                 actorType: "system",
-                actorId: null
+                actorId: orderId,
+                note: "actor_id chính là ID của đơn hàng được gán"
             });
         }
 
@@ -484,108 +479,6 @@ export const confirmStartService = async (taskerUserId, orderId) => {
     }
 };
 
-// export const confirmCompleteService = async (taskerUserId, orderId) => {
-//     try {
-//         const order = await Order.findById(orderId);
-//         if (!order) 
-//             throw new Error("Order not found");
-
-//         if (order.tasker_id.toString() !== taskerUserId.toString())
-//             throw new Error("You are not assigned to this order");
-
-//         const tasker = await Tasker.findOne({ user_id: taskerUserId })
-//         if (!tasker) {
-//             throw new Error("Tasker not found")
-//         }
-//         const taskerId = tasker._id;
-
-//         if (order.status !== "in_progress")
-//             throw new Error("Order's status must be in progress to be completed.");
-
-//         const orderLog = await changeOrderStatus({
-//             orderId,
-//             toStatus: "completed",
-//             actorType: "tasker",
-//             actorId: taskerUserId
-//         });
-
-//         // log trạng thái tasker
-//         const taskerLog = await changeTaskerStatus({
-//             taskerId,
-//             toStatus: "available",
-//             actorType: "tasker",
-//             actorId: null
-//         });
-
-//         // update tasker completed orders count
-//         await Tasker.updateOne(
-//             { user_id: taskerUserId },
-//             {
-//                 $inc: { total_completed_tasks: 1 },
-//                 $set: { working_status: "available" }
-//             },
-//             { runValidators: true }
-//         );
-
-//         if (order.customer_id)
-//             rankingCache.delete(String(order.customer_id));
-
-//     } catch (error) {
-//         throw new Error(error.message);
-//     }
-// };
-
-// change order status and log it
-// export async function changeTaskerStatus({ taskerId, toStatus, actorType, actorId , reason = null, session }) {
-//   try {
-//     const tasker = await Tasker.findById(taskerId).session(session);
-//     if (!tasker) {
-//       throw new Error("Không tìm thấy tasker.");
-//     } 
-
-//     const now = new Date();
-//     const fromStatus = tasker.working_status;
-
-//     // Nếu đang chuyển sang trạng thái mới (không phải trạng thái hiện tại)
-//     if (fromStatus !== toStatus) {
-//       // Tìm log entry cuối cùng của tasker này chưa có end_time (đang active)
-//       const activeLog = await TaskerStatusLog.findOne({
-//         tasker_id: taskerId,
-//         end_time: null
-//       }).sort({ start_time: -1 }).session(session);
-
-//       // Nếu có log entry đang active, set end_time cho nó
-//       if (activeLog) {
-//         activeLog.end_time = now;
-//         await activeLog.save({ session });
-//       }
-
-//       // Tạo log entry mới với start_time
-//       await TaskerStatusLog.create({
-//         tasker_id: taskerId,
-//         from_status: fromStatus,
-//         to_status: toStatus,
-//         actor_type: actorType,
-//         actor_id: actorId,
-//         reason: reason || "",
-//         start_time: now,
-//         end_time: null
-//       }, { session });
-
-//       // update tasker
-//       tasker.working_status = toStatus;
-//       await tasker.save({ session });
-
-//       return tasker;
-//     } else {
-//       // Nếu trạng thái không thay đổi, chỉ trả về tasker
-//       return tasker;
-//     }
-//   } catch (error) {
-//     throw new Error(error.message);
-//   }   
-// };
-
 export const confirmCompleteService = async (
   taskerUserId,
   orderId,
@@ -606,8 +499,8 @@ export const confirmCompleteService = async (
 
     const taskerId = tasker._id;
 
-    if (order.status !== "in_progress")
-      throw new Error("Order's status must be in progress to be completed.");
+    // if (order.status !== "in_progress")
+    //   throw new Error("Order's status must be in progress to be completed.");
 
     // đổi trạng thái order + log
     await changeOrderStatus({
@@ -624,6 +517,7 @@ export const confirmCompleteService = async (
       toStatus: "available",
       actorType: "tasker",
       actorId: null,
+      note: "Tasker đánh dấu hoàn thành đơn hàng",
       session
     });
 
@@ -643,12 +537,12 @@ export const confirmCompleteService = async (
     if (order.customer_id)
       rankingCache.delete(String(order.customer_id));
 
-    await PayoutTasker.create({
-        order_id: order._id,
-        tasker_id: taskerId,
-        amount: order.base_amount * 0.7 + order.tip_amount,
-        status: "pending"
-    });
+    // await PayoutTasker.create({
+    //     order_id: order._id,
+    //     tasker_id: taskerId,
+    //     amount: order.base_amount * 0.7 + order.tip_amount,
+    //     status: "pending"
+    // });
 
   } catch (error) {
     throw new Error(error.message);
@@ -661,6 +555,7 @@ export async function changeTaskerStatus({
   actorType,
   actorId,
   reason = null,
+  note = null,
   session
 }) {
   try {
@@ -673,46 +568,95 @@ export async function changeTaskerStatus({
     const now = new Date();
     const fromStatus = tasker.working_status;
 
-    // Nếu đang chuyển sang trạng thái mới (không phải trạng thái hiện tại)
     if (fromStatus !== toStatus) {
-      // Tìm log entry cuối cùng của tasker này chưa có end_time (đang active)
-      const activeLog = await TaskerStatusLog.findOne({
+      let logQuery = TaskerStatusLog.findOne({
         tasker_id: taskerId,
         end_time: null
-      }).sort({ start_time: -1 }).session(session);
+      }).sort({ start_time: -1 });
 
-      // Nếu có log entry đang active, set end_time cho nó
+      if (session) logQuery = logQuery.session(session);
+
+      const activeLog = await logQuery;
+
       if (activeLog) {
         activeLog.end_time = now;
-        await activeLog.save({ session });
+        await activeLog.save(session ? { session } : {});
       }
 
-      // Tạo log entry mới với start_time
-      await TaskerStatusLog.create({
+      await TaskerStatusLog.create([{
         tasker_id: taskerId,
         from_status: fromStatus,
         to_status: toStatus,
         actor_type: actorType,
         actor_id: actorId,
         reason: reason || "",
+        note: note || "",
         start_time: now,
         end_time: null
-      }, { session });
+      }], session ? { session } : {});
 
-      // update tasker
       tasker.working_status = toStatus;
-      await tasker.save({ session });
-
-      return tasker;
-    } else {
-      // Nếu trạng thái không thay đổi, chỉ trả về tasker
-      return tasker;
+      await tasker.save(session ? { session } : {});
     }
-  } catch (error) {
-    throw new Error(error.message);
-  }   
-};
 
+    return tasker;
+  } catch (error) {
+    throw error;
+  }
+}
+
+// tỉ lệ nhận đơn của tasker
+export async function getTaskerAcceptanceRate(taskerId) {
+  const stats = await OrderStatusLog.aggregate([
+    {
+      $match: {
+        actor_type: "tasker",
+        actor_id: new mongoose.Types.ObjectId(taskerId),
+        from_status: "assigned"
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        accepted: {
+          $sum: { $cond: [{ $eq: ["$to_status", "accepted"] }, 1, 0] }
+        },
+        rejected: {
+          $sum: { $cond: [{ $eq: ["$to_status", "rejected"] }, 1, 0] }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        accepted: 1,
+        rejected: 1,
+        totalAssigned: { $add: ["$accepted", "$rejected"] },
+        acceptanceRate: {
+          $cond: [
+            { $eq: [{ $add: ["$accepted", "$rejected"] }, 0] },
+            0,
+            {
+              $divide: [
+                "$accepted",
+                { $add: ["$accepted", "$rejected"] }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]);
+
+  return stats[0] || {
+    accepted: 0,
+    rejected: 0,
+    totalAssigned: 0,
+    acceptanceRate: 0
+  };
+}
+
+// nhân viên nhận lương
 export async function cashOutForTasker(userId) {
     try {
         const tasker = await Tasker.findOne({ user_id: userId });

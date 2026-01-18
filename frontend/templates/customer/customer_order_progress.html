@@ -64,7 +64,7 @@
             <!-- Tasker Info Card (if assigned) -->
             <div id="taskerInfoCard" class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hidden">
                 <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5">
+                    <div class="w-12 h-12 rounded-full bg-indigo-50 flex-shrink-0 border border-indigo-100 p-0.5 cursor-pointer hover:opacity-80 transition" onclick="openTaskerModal()">
                         <img id="taskerAvatar" src="https://ui-avatars.com/api/?name=Tasker&background=A5B4FC&color=3730A3" class="w-full h-full object-cover rounded-full">
                     </div>
                     <div class="flex-1">
@@ -73,6 +73,15 @@
                             <div>
                                 <p id="taskerName" class="font-bold text-lg text-gray-800 leading-tight">Đang tìm tasker...</p>
                                 <p id="taskerPhone" class="text-xs text-gray-500 font-medium">—</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <div id="taskerStars" class="flex text-yellow-500 text-xs">
+                                        <!-- Stars will be rendered dynamically -->
+                                    </div>
+                                    <span id="taskerRating" class="text-xs font-semibold text-gray-700">—</span>
+                                    <span id="taskerReviewCount" class="text-xs text-gray-500">(—)</span>
+                                    <span class="text-xs text-gray-400">•</span>
+                                    <span id="taskerReputation" class="text-xs text-primary-600 font-medium">Điểm: —</span>
+                                </div>
                             </div>
 
                             <div class="flex items-center gap-2">
@@ -297,6 +306,62 @@
         &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
     </div>
 </footer>
+
+<!-- Tasker Info Modal -->
+<div id="taskerModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" onclick="closeTaskerModal()"></div>
+    <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div class="mt-20 w-full max-w-sm bg-white rounded-xl shadow-lg border border-gray-100">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gray-400">person</span>
+                    <div class="font-bold text-gray-800">Thông tin Tasker</div>
+                </div>
+                <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeTaskerModal()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="p-4 max-h-[80vh] overflow-y-auto">
+                <div class="flex flex-col items-center mb-4">
+                    <img id="modal-tasker-avatar" src="" alt="Avatar" class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500">
+                    <h3 id="modal-tasker-name" class="text-xl font-bold text-dark-900"></h3>
+                    <div class="flex items-center text-yellow-500 text-sm font-medium mt-1">
+                        <div id="modal-tasker-stars" class="flex text-yellow-500 text-sm">
+                        </div>
+                        <span id="modal-tasker-rating" class="ml-1"></span>
+                        <span class="text-gray-400 ml-1" id="modal-tasker-reviews"></span>
+                    </div>
+                </div>
+
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Điểm uy tín:</span>
+                        <span id="modal-tasker-reputation" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div class="border-b border-gray-100 pb-2">
+                        <span class="text-gray-500 block mb-2">Chuyên môn:</span>
+                        <div id="modal-tasker-skills" class="flex flex-wrap gap-2">
+                            <span class="text-xs text-gray-400">Đang tải...</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Số việc đã làm:</span>
+                        <span id="modal-tasker-jobs" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div class="flex justify-between border-b border-gray-100 pb-2">
+                        <span class="text-gray-500">Khu vực:</span>
+                        <span id="modal-tasker-location" class="font-medium text-dark-900">—</span>
+                    </div>
+                    <div>
+                        <span class="text-gray-500 block mb-1">Giới thiệu:</span>
+                        <p id="modal-tasker-bio" class="text-gray-700 italic bg-gray-50 p-2 rounded">—</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Review Modal -->
 <div id="reviewModal" class="fixed inset-0 z-50 hidden">

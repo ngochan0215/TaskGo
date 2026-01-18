@@ -53,7 +53,7 @@ function initVoucherDraft() {
         voucher_code: null,
         discount_amount: 0,
         final_amount: bookingDraft.base_amount
-        };
+      };
 
     voucherDraft.base_amount = bookingDraft.base_amount;
     localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
@@ -538,6 +538,7 @@ async function createPaymentLink(orderId, receiptId) {
 async function createOrderReceipt() {
     const payload = { order_id, payment_method };
     console.log("PAYLOAD FOR RECEIPT: ", payload);
+
     const res = await fetch("http://localhost:3000/api/order/receipt/add", {
         method: "POST",
         headers: {
@@ -548,9 +549,13 @@ async function createOrderReceipt() {
     });
 
     const result = await res.json();
-    if (!res.ok) {
+
+    // Accept either {success:true} or legacy responses with {data:...}
+    const ok = res.ok && (result?.success === true || result?.data);
+
+    if (!ok) {
         alert(result.message || "Tạo hóa đơn cho đơn hàng thất bại!");
-        return;
+        return null;
     }
 
     console.log("RECEIPT CREATED:", result.data);
@@ -567,6 +572,73 @@ async function submitOrder() {
     if (!bookingDraft.address_id) {
         alert("Vui lòng chọn địa chỉ làm việc");
         return;
+    }
+
+    // Prevent creating scheduled order with invalid payment method
+    if (bookingDraft.type === "scheduled" && payment_method !== "bank_transfer") {
+        alert("Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản ngân hàng. Vui lòng chọn 'Chuyển khoản ngân hàng (Mã QR)'.");
+        return;
+    }
+
+    // If an order was already created in this flow, reuse it to avoid double voucher usage
+    try {
+        const existingOrder = JSON.parse(localStorage.getItem("orderCreated") || "null");
+        const existingOrderId = existingOrder?._id;
+        const existingTaskId = existingOrder?.task_id?._id || existingOrder?.task_id;
+        const draftTaskId = bookingDraft?.task_id?._id || bookingDraft?.task_id;
+
+        if (
+            existingOrderId &&
+            existingOrder?.status === "pending" &&
+            existingOrder?.type === bookingDraft?.type &&
+            existingTaskId &&
+            draftTaskId &&
+            String(existingTaskId) === String(draftTaskId)
+        ) {
+            order_id = existingOrderId;
+            newOrder = existingOrder;
+
+            const receiptExisting = await createOrderReceipt();
+            const receiptIdExisting =
+                receiptExisting?.data?._id ||
+                receiptExisting?.data?.receipt?._id ||
+                receiptExisting?.data?.receipt?.id;
+
+            if (!receiptExisting || !receiptIdExisting) return;
+
+            if (payment_method === "cash") {
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.removeItem("bookingDraft");
+                localStorage.removeItem("voucherDraft");
+                location.href = `./ordering_success.html?orderId=${order_id}`;
+                return;
+            }
+
+            if (payment_method === "bank_transfer") {
+                const paymentLink = await createPaymentLink(order_id, receiptIdExisting);
+                if (!paymentLink || !paymentLink.checkoutUrl) {
+                    alert("Không tạo được link thanh toán");
+                    return;
+                }
+
+                localStorage.setItem("paymentPending", JSON.stringify({
+                    order_id,
+                    paymentId: paymentLink.id,
+                    orderCode: paymentLink.orderCode
+                }));
+
+                bookingDraft = null;
+                voucherDraft = null;
+                localStorage.removeItem("bookingDraft");
+                localStorage.removeItem("voucherDraft");
+
+                window.location.href = paymentLink.checkoutUrl;
+                return;
+            }
+        }
+    } catch (e) {
+        console.warn("Cannot reuse existing orderCreated:", e);
     }
 
     const res = await fetch("http://localhost:3000/api/order/create", {
@@ -593,6 +665,16 @@ async function submitOrder() {
     // tạo hóa đơn
     const receipt = await createOrderReceipt();
 
+    // If receipt creation failed, DO NOT redirect/clear drafts.
+    const receiptId =
+        receipt?.data?._id ||
+        receipt?.data?.receipt?._id ||
+        receipt?.data?.receipt?.id;
+
+    if (!receipt || !receiptId) {
+        return;
+    }
+
     if (payment_method === "cash") {
       // Clear all drafts after order creation to avoid conflicts
       bookingDraft = null;
@@ -604,7 +686,7 @@ async function submitOrder() {
       location.href = `./ordering_success.html?orderId=${order_id}`;
     }
     else if (payment_method === "bank_transfer") {
-        const paymentLink = await createPaymentLink(order_id, receipt?.data?._id);
+        const paymentLink = await createPaymentLink(order_id, receiptId);
 
         if (!paymentLink || !paymentLink.checkoutUrl) {
             alert("Không tạo được link thanh toán");

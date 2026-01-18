@@ -9,7 +9,25 @@ const state = {
     typingTimeout: null,
     nextCursor: null, 
     isLoadingHistory: false,
-    partnerAvatar: null
+    partnerAvatar: null,
+    partnerName: null,
+    callState: 'idle', // idle, calling, connected
+    incomingCallOrderId: null,
+    peerConnection: null,
+    localStream: null,
+    remoteStream: null,
+    isMuted: false,
+    isCameraOff: false,
+    callTimer: null,
+    callSeconds: 0
+};
+
+// WebRTC Configuration
+const rtcConfig = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' }
+    ]
 };
 
 // DOM Elements
@@ -23,11 +41,52 @@ const els = {
     headerAvatar: document.getElementById('chat-header-avatar'),
     typingIndicator: document.getElementById('chat-typing-indicator'),
     conversationsList: document.getElementById('conversations-list'),
-    // Call UI
+    
+    // Call UI - Outgoing/Active
     btnCall: document.getElementById('btn-call'),
     btnEndCall: document.getElementById('btn-end-call'),
-    callOverlay: document.getElementById('call-overlay')
+    callOverlay: document.getElementById('call-overlay'),
+    videoContainer: document.getElementById('video-container'),
+    callingUI: document.getElementById('calling-ui'),
+    localVideo: document.getElementById('local-video'),
+    remoteVideo: document.getElementById('remote-video'),
+    callPartnerAvatar: document.getElementById('call-partner-avatar'),
+    callPartnerName: document.getElementById('call-partner-name'),
+    callStatusLabel: document.getElementById('call-status-label'),
+    callTimer: document.getElementById('call-timer'),
+    btnToggleMic: document.getElementById('btn-toggle-mic'),
+    btnToggleCamera: document.getElementById('btn-toggle-camera'),
+
+    // Call UI - Incoming
+    incomingCallOverlay: document.getElementById('incoming-call-overlay'),
+    incomingCallAvatar: document.getElementById('incoming-call-avatar'),
+    incomingCallName: document.getElementById('incoming-call-name'),
+    btnAcceptCall: document.getElementById('btn-accept-call'),
+    btnRejectCall: document.getElementById('btn-reject-call')
 };
+
+const sounds = {
+    ringtone: new Audio("../public/sounds/ringtone.mp3"), 
+    end: new Audio("../public/sounds/end_call.mp3"),  
+};
+
+// Configure loops
+sounds.ringtone.loop = true;
+
+function playSound(type) {
+    stopSounds();
+
+    const audio = sounds[type];
+    if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(e => console.warn("Audio autoplay blocked:", e));
+    }
+}
+
+function stopSounds() {
+    sounds.ringtone.pause();
+    sounds.ringtone.currentTime = 0;
+}
 
 // SOCKET INITIALIZATION
 let socket;
@@ -70,6 +129,70 @@ function initSocket() {
 
     socket.on('stop-typing', () => {
         els.typingIndicator.classList.add('hidden');
+    });
+
+    // Call's socket events
+    
+    socket.on('call:incoming', (payload) => {
+        state.incomingCallOrderId = payload.order_id;
+
+        if (payload.caller_name) {
+            state.partnerName = payload.caller_name;
+        }
+        if (payload.caller_avatar) {
+            state.partnerAvatar = payload.caller_avatar;
+        }
+
+        showIncomingCall();
+    });
+
+    socket.on('call:accepted', async (payload) => {
+        console.log('Call accepted:', payload);
+        stopSounds();
+        state.callState = 'connected';
+        updateCallUI();
+        // We are the caller, create and send offer
+        await createAndSendOffer();
+    });
+
+    socket.on('call:rejected', (payload) => {
+        console.log('Call rejected:', payload);
+        endCall(false);
+        alert('Cuộc gọi đã bị từ chối');
+    });
+
+    socket.on('call:ended', (payload) => {
+        console.log('Call ended:', payload);
+        if (payload.reason === 'disconnected') {
+            alert('Cuộc gọi kết thúc do đối phương thoát khỏi nền tảng.');
+        }
+        endCall(false);
+    });
+
+    socket.on('call:timeout', (payload) => {
+        console.log('Call timeout:', payload);
+        endCall(false);
+        if (state.callState === 'calling') {
+            alert('Không có phản hồi');
+        }
+    });
+
+    // WebRTC: Received offer
+    socket.on('call:offer', async (payload) => {
+        console.log('Received offer:', payload);
+        await handleOffer(payload.offer);
+    });
+
+    // WebRTC: Received answer
+    socket.on('call:answer', async (payload) => {
+        console.log('Received answer:', payload);
+        await handleAnswer(payload.answer);
+    });
+
+    // WebRTC: Received ICE candidate
+    socket.on('call:ice-candidate', async (payload) => {
+        console.log('Received ICE candidate');
+        await handleIceCandidate(payload.candidate);
     });
 }
 
@@ -157,7 +280,7 @@ async function loadChatHistory(cursor = null) {
             // Clear everything except the loader
             els.loadingHistory.classList.add('hidden');
             
-            // Remove old messages (keeping the loader div intact)
+            // Remove old messages
             while (els.msgContainer.lastChild && els.msgContainer.lastChild.id !== 'loading-history') {
                 els.msgContainer.removeChild(els.msgContainer.lastChild);
             }
@@ -169,6 +292,7 @@ async function loadChatHistory(cursor = null) {
                 const orderInfo = res.order;
 
                 state.partnerAvatar = avatar_url;
+                state.partnerName = full_name;
 
                 // Update Name
                 els.headerName.innerText = full_name;
@@ -210,7 +334,7 @@ async function loadChatHistory(cursor = null) {
             messages.forEach(msg => appendMessageToUI(msg));
             scrollToBottom();
         } else {
-            // === PAGINATION LOAD (PREPEND) ===
+            // PAGINATION LOAD (PREPEND)
             els.loadingHistory.classList.add('hidden');
             
             if (messages.length > 0) {
@@ -249,12 +373,10 @@ async function loadChatHistory(cursor = null) {
     }
 }
 
-// Send Message
 function sendMessage() {
     const content = els.input.value.trim();
     if (!content) return;
 
-    // Emit to Socket
     socket.emit('send-message', {
         target_order_id: state.currentOrderId,
         content: content
@@ -278,7 +400,6 @@ function appendMessageToUI(msg) {
 
 function prependMessagesToUI(messages) {
     // Backend returns [Oldest, ..., Newest] for the requested batch.
-    // We want them to appear at the TOP of the current list.
     // The visual order of the batch must remain Oldest -> Newest.
     
     // Create a fragment to insert strictly after the loader, but before existing messages
@@ -353,7 +474,7 @@ function createSidebarItem(chat, isActive) {
             </div>
         <div class="hidden md:flex flex-1 min-w-0 flex-col justify-center">
             <div class="flex justify-between items-center">
-                <p class="font-bold text-dark-900 text-sm truncate"> ${escapeHtml(chat.order_name || "Đơn hàng")} </p>
+                <p class="${seenClass} text-sm truncate"> ${escapeHtml(chat.order_name || "Đơn hàng")} </p>
                 <span class="text-[10px] text-gray-400 font-medium">${timeString}</span>
             </div>
             <p class="text-xs ${msgClass} truncate">${escapeHtml(previewText)}</p>
@@ -363,6 +484,11 @@ function createSidebarItem(chat, isActive) {
     // Click event to switch chat
     div.addEventListener('click', () => {
         if (state.currentOrderId !== chat.order_id) {
+            // End call if active when switching chats
+            if (state.callState !== 'idle') {
+                endCall(true);
+            }
+
             // Update URL without reloading
             const newUrl = new URL(window.location);
             newUrl.searchParams.set('orderId', chat.order_id);
@@ -374,9 +500,9 @@ function createSidebarItem(chat, isActive) {
             state.isLoadingHistory = false;
             
             // Reload UI
-            loadSidebarConversations(); // Re-render sidebar to update active state
-            loadChatHistory(null); // Load new messages
-            joinChatRoom(chat.order_id); // Join new socket room
+            loadSidebarConversations(); 
+            loadChatHistory(null); 
+            joinChatRoom(chat.order_id);
         }
     });
 
@@ -384,6 +510,13 @@ function createSidebarItem(chat, isActive) {
 }
 
 function setupEventListeners() {
+    // End call when leaving page or refreshing
+    window.addEventListener('beforeunload', () => {
+        if (state.callState !== 'idle') {
+            endCall(true);
+        }
+    });
+
     // Send Button
     els.btnSend.addEventListener('click', sendMessage);
 
@@ -403,9 +536,23 @@ function setupEventListeners() {
     });
 
     // Call UI Logic
-    if(els.btnCall && els.callOverlay && els.btnEndCall) {
-        els.btnCall.addEventListener('click', () => els.callOverlay.classList.remove('hidden'));
-        els.btnEndCall.addEventListener('click', () => els.callOverlay.classList.add('hidden'));
+    if (els.btnCall) {
+        els.btnCall.addEventListener('click', initiateCall);
+    }
+    if (els.btnEndCall) {
+        els.btnEndCall.addEventListener('click', () => endCall(true));
+    }
+    if (els.btnAcceptCall) {
+        els.btnAcceptCall.addEventListener('click', acceptCall);
+    }
+    if (els.btnRejectCall) {
+        els.btnRejectCall.addEventListener('click', rejectCall);
+    }
+    if (els.btnToggleMic) {
+        els.btnToggleMic.addEventListener('click', toggleMic);
+    }
+    if (els.btnToggleCamera) {
+        els.btnToggleCamera.addEventListener('click', toggleCamera);
     }
 
     els.msgContainer.addEventListener('scroll', () => {
@@ -443,11 +590,359 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-// Update back button to include orderId
 function updateBackButton() {
     const backButton = document.getElementById('backButton');
     if (backButton && state.currentOrderId) {
         backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
+    }
+}
+
+// VIDEO CALL FUNCTIONS
+
+async function initiateCall() {
+    if (!state.currentOrderId) {
+        alert('Vui lòng chọn một cuộc trò chuyện trước');
+        return;
+    }
+
+    try {
+        // Request media permissions first
+        state.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: {
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                facingMode: "user",
+            }
+        });
+
+        // Show local video preview
+        els.localVideo.srcObject = state.localStream;
+
+        state.callState = 'calling';
+
+        playSound('ringtone');
+
+        updateCallUI();
+        showCallOverlay();
+
+        // Emit call initiation
+        socket.emit('call:initiate', { order_id: state.currentOrderId }, (ack) => {
+            if (!ack.ok) {
+                console.error('Failed to initiate call:', ack.error);
+                endCall(false);
+                alert('Không thể bắt đầu cuộc gọi: ' + ack.error);
+            }
+        });
+    } catch (err) {
+        console.error('Failed to get media devices:', err);
+        alert('Không thể truy cập camera/microphone. Vui lòng cấp quyền.');
+    }
+}
+
+function showCallOverlay() {
+    // Update partner info on call overlay
+    if (state.partnerAvatar) {
+        els.callPartnerAvatar.src = state.partnerAvatar;
+    }
+    if (state.partnerName) {
+        els.callPartnerName.innerText = state.partnerName;
+    }
+    els.callOverlay.classList.remove('hidden');
+}
+
+function showIncomingCall() {
+    // Update incoming call UI with partner info
+    playSound('ringtone');
+
+    if (state.partnerAvatar) {
+        els.incomingCallAvatar.src = state.partnerAvatar;
+    }
+    if (state.partnerName) {
+        els.incomingCallName.innerText = state.partnerName;
+    }
+    els.incomingCallOverlay.classList.remove('hidden');
+}
+
+async function acceptCall() {
+    try {
+        stopSounds();
+
+        // Get media stream
+        state.localStream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+            video: {
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                facingMode: "user"
+            }
+        });
+        els.localVideo.srcObject = state.localStream;
+
+        // Hide incoming call overlay, show main call overlay
+        els.incomingCallOverlay.classList.add('hidden');
+        state.callState = 'connected';
+        state.currentOrderId = state.incomingCallOrderId;
+        updateCallUI();
+        showCallOverlay();
+
+        // Accept the call via socket
+        socket.emit('call:accept', { order_id: state.incomingCallOrderId }, (ack) => {
+            if (!ack.ok) {
+                console.error('Failed to accept call:', ack.error);
+                endCall(false);
+            }
+        });
+    } catch (err) {
+        console.error('Failed to get media devices:', err);
+        alert('Không thể truy cập camera/microphone');
+        rejectCall();
+    }
+}
+
+function rejectCall() {
+    stopSounds();
+    sounds.end.play().catch(e => {});
+    socket.emit('call:reject', { order_id: state.incomingCallOrderId });
+    els.incomingCallOverlay.classList.add('hidden');
+    state.incomingCallOrderId = null;
+}
+
+function endCall(emitToServer = true) {
+    // Emit end call to server
+    stopSounds();
+    if (state.callState !== 'idle') {
+        sounds.end.play().catch(e => {});
+    }
+    if (emitToServer && state.currentOrderId) {
+        socket.emit('call:end', { order_id: state.currentOrderId });
+    }
+
+    // Stop local stream
+    if (state.localStream) {
+        state.localStream.getTracks().forEach(track => track.stop());
+        state.localStream = null;
+    }
+
+    // Close peer connection
+    if (state.peerConnection) {
+        state.peerConnection.close();
+        state.peerConnection = null;
+    }
+
+    // Reset video elements
+    els.localVideo.srcObject = null;
+    els.remoteVideo.srcObject = null;
+
+    // Reset call state
+    state.callState = 'idle';
+    state.remoteStream = null;
+    state.isMuted = false;
+    state.isCameraOff = false;
+
+    if (state.callTimer) {
+        clearInterval(state.callTimer);
+        state.callTimer = null;
+    }
+    state.callSeconds = 0;
+
+    els.callOverlay.classList.add('hidden');
+    els.incomingCallOverlay.classList.add('hidden');
+    els.videoContainer.classList.add('hidden');
+    els.callingUI.classList.remove('hidden');
+    els.callTimer.classList.add('hidden');
+
+    updateToggleButtons();
+}
+
+function updateCallUI() {
+    switch (state.callState) {
+        case 'calling':
+            els.callStatusLabel.innerText = 'Đang gọi...';
+            els.callingUI.classList.remove('hidden');
+            els.videoContainer.classList.add('hidden');
+            els.callTimer.classList.add('hidden');
+            break;
+        case 'connected':
+            els.callStatusLabel.innerText = 'Đã kết nối';
+            break;
+    }
+}
+
+function startCallTimer() {
+    state.callSeconds = 0;
+    els.callTimer.classList.remove('hidden');
+    updateCallTimerDisplay();
+    
+    state.callTimer = setInterval(() => {
+        state.callSeconds++;
+        updateCallTimerDisplay();
+    }, 1000);
+}
+
+function updateCallTimerDisplay() {
+    const mins = Math.floor(state.callSeconds / 60).toString().padStart(2, '0');
+    const secs = (state.callSeconds % 60).toString().padStart(2, '0');
+    els.callTimer.innerText = `${mins}:${secs}`;
+}
+
+function toggleMic() {
+    if (state.localStream) {
+        const audioTrack = state.localStream.getAudioTracks()[0];
+        if (audioTrack) {
+            state.isMuted = !state.isMuted;
+            audioTrack.enabled = !state.isMuted;
+            updateToggleButtons();
+        }
+    }
+}
+
+function toggleCamera() {
+    if (state.localStream) {
+        const videoTrack = state.localStream.getVideoTracks()[0];
+        if (videoTrack) {
+            state.isCameraOff = !state.isCameraOff;
+            videoTrack.enabled = !state.isCameraOff;
+            updateToggleButtons();
+        }
+    }
+}
+
+function updateToggleButtons() {
+    // Update mic button
+    const micIcon = els.btnToggleMic.querySelector('.material-symbols-outlined');
+    if (state.isMuted) {
+        micIcon.innerText = 'mic_off';
+        els.btnToggleMic.classList.add('bg-red-500/50');
+        els.btnToggleMic.classList.remove('bg-white/10');
+    } else {
+        micIcon.innerText = 'mic';
+        els.btnToggleMic.classList.remove('bg-red-500/50');
+        els.btnToggleMic.classList.add('bg-white/10');
+    }
+
+    // Update camera button
+    const camIcon = els.btnToggleCamera.querySelector('.material-symbols-outlined');
+    if (state.isCameraOff) {
+        camIcon.innerText = 'videocam_off';
+        els.btnToggleCamera.classList.add('bg-red-500/50');
+        els.btnToggleCamera.classList.remove('bg-white/10');
+    } else {
+        camIcon.innerText = 'videocam';
+        els.btnToggleCamera.classList.remove('bg-red-500/50');
+        els.btnToggleCamera.classList.add('bg-white/10');
+    }
+}
+
+// WebRTC FUNCTIONS 
+
+function createPeerConnection() {
+    state.peerConnection = new RTCPeerConnection(rtcConfig);
+
+    // Add local tracks to connection
+    if (state.localStream) {
+        state.localStream.getTracks().forEach(track => {
+            state.peerConnection.addTrack(track, state.localStream);
+        });
+    }
+
+    // Handle incoming tracks (remote video/audio)
+    state.peerConnection.ontrack = (event) => {
+        console.log('Received remote track:', event.track.kind);
+        if (event.streams && event.streams[0]) {
+            els.remoteVideo.srcObject = event.streams[0];
+            state.remoteStream = event.streams[0];
+            
+            // Show video container, hide calling UI
+            els.videoContainer.classList.remove('hidden');
+            els.callingUI.classList.add('hidden');
+            startCallTimer();
+        }
+    };
+
+    // Handle ICE candidates
+    state.peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('call:ice-candidate', {
+                order_id: state.currentOrderId,
+                candidate: event.candidate
+            });
+        }
+    };
+
+    // Handle connection state changes
+    state.peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state:', state.peerConnection.connectionState);
+        if (state.peerConnection.connectionState === 'disconnected' || 
+            state.peerConnection.connectionState === 'failed') {
+            endCall(true);
+        }
+    };
+
+    return state.peerConnection;
+}
+
+async function createAndSendOffer() {
+    try {
+        createPeerConnection();
+        
+        const offer = await state.peerConnection.createOffer();
+        await state.peerConnection.setLocalDescription(offer);
+
+        socket.emit('call:offer', {
+            order_id: state.currentOrderId,
+            offer: offer
+        }, (ack) => {
+            if (!ack.ok) {
+                console.error('Failed to send offer:', ack.error);
+            }
+        });
+    } catch (err) {
+        console.error('Error creating offer:', err);
+        endCall(true);
+    }
+}
+
+async function handleOffer(offer) {
+    try {
+        createPeerConnection();
+
+        await state.peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+        
+        const answer = await state.peerConnection.createAnswer();
+        await state.peerConnection.setLocalDescription(answer);
+
+        socket.emit('call:answer', {
+            order_id: state.currentOrderId,
+            answer: answer
+        }, (ack) => {
+            if (!ack.ok) {
+                console.error('Failed to send answer:', ack.error);
+            }
+        });
+    } catch (err) {
+        console.error('Error handling offer:', err);
+        endCall(true);
+    }
+}
+
+async function handleAnswer(answer) {
+    try {
+        if (state.peerConnection) {
+            await state.peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+        }
+    } catch (err) {
+        console.error('Error handling answer:', err);
+    }
+}
+
+async function handleIceCandidate(candidate) {
+    try {
+        if (state.peerConnection && candidate) {
+            await state.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+    } catch (err) {
+        console.error('Error adding ICE candidate:', err);
     }
 }
 

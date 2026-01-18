@@ -63,6 +63,35 @@ function mapCustomerType(type) {
     }
 }
 
+// Render rating stars based on average_rating
+function renderRatingStars(rating) {
+    const starsContainer = document.getElementById("stars-container");
+    if (!starsContainer) return;
+
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+    
+    let starsHTML = "";
+    
+    // Full stars
+    for (let i = 0; i < fullStars; i++) {
+        starsHTML += '<span class="material-symbols-outlined text-xl">star</span>';
+    }
+    
+    // Half star
+    if (hasHalfStar && fullStars < 5) {
+        starsHTML += '<span class="material-symbols-outlined text-xl">star_half</span>';
+    }
+    
+    // Empty stars
+    const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+    for (let i = 0; i < emptyStars; i++) {
+        starsHTML += '<span class="material-symbols-outlined text-xl text-gray-300">star</span>';
+    }
+    
+    starsContainer.innerHTML = starsHTML;
+}
+
 async function loadUserAddresses() {
     try {
         const res = await fetch("http://localhost:3000/api/user/addresses/my", {
@@ -541,6 +570,7 @@ async function loadUserProfile() {
         const { role, email } = data.account;
         const user = data.user;
         const { BIN, account_number, type } = data.customer;
+        const reviews = data.reviews || { review_count: 0, average_rating: 0 };
 
         // chỉ xử lý customer
         if (role !== "customer") return;
@@ -557,6 +587,12 @@ async function loadUserProfile() {
 
         // avatar
         document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
+
+        // Display reviews and reputation
+        renderRatingStars(reviews.average_rating || 0);
+        document.getElementById("rating-value").textContent = reviews.average_rating ? reviews.average_rating.toFixed(1) : "0.0";
+        document.getElementById("review-count").textContent = `(${reviews.review_count || 0} đánh giá)`;
+        document.getElementById("reputation-score").textContent = user.reputation_score || 0;
 
         await loadUserAddresses();
 

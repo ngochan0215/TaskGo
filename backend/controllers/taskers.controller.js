@@ -1,12 +1,12 @@
 import {
     acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService,
-    cashOutForTasker,
-    getCashoutInfo,
-    availableCashout
+    cashOutForTasker, getCashoutInfo, availableCashout,
+    getTaskerAcceptanceRate
 } from "../services/taskers.service.js";
+import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
-import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account } from "../models/index.js";
+import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
@@ -287,100 +287,6 @@ export const confirmStart = async (req, res) => {
     }
 };
 
-// tasker xác nhận hoàn thành công việc
-// export const confirmComplete = async (req, res) => {
-//   const { orderId } = req.params;
-
-//   try {
-//     const order = await Order.findById(orderId);
-//     if (!order) throw new Error("Order not found.");
-
-//     if (order.status === "completed") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Đơn hàng đã được hoàn thành trước đó."
-//       });
-//     }
-
-//     await confirmCompleteService(req.userId, orderId);
-
-//     const customerUserId = order.customer_id.toString();
-
-//     const tasker = await User.findById(req.userId).select("full_name");
-//     const taskerName = tasker?.full_name || "Anonymous";
-
-//     const receipt = await Receipt.findOne({ order_id: order._id });
-//     if (!receipt) throw new Error("Không tìm thấy hóa đơn.");
-
-//     if (receipt.payment_method === "cash") {
-//       console.log("IM HERE IN CONFIRM COMPLETE");
-//       await markReceiptPaidService(receipt._id);
-
-//       // update số đơn hoàn thành của khách hàng và điểm danh tiếng
-//       await Customer.updateOne(
-//         { user_id: customerUserId },
-//         { $inc: { total_completed_orders: 1 } }
-//       );
-
-//       const reputationDelta = Math.floor(receipt.total_amount * 0.1);
-//       if (reputationDelta === 0) reputationDelta = 10;
-//       await User.updateOne(
-//         { _id: customerUserId },
-//         { $inc: { reputation_score: reputationDelta } }
-//       );
-
-//     }
-
-//     await pushNotification(
-//       req.userId,
-//       "Bạn đã xác nhận hoàn thành đơn hàng!",
-//       `Bạn đã xác nhận hoàn thành đơn hàng ${orderId}.`,
-//       "order",
-//       "Order",
-//       orderId,
-//       "unread"
-//     );
-
-//     await pushNotification(
-//       customerUserId,
-//       "Dịch vụ đã hoàn thành",
-//       `Tasker ${taskerName} đã xác nhận hoàn tất đơn hàng của bạn.`,
-//       "order",
-//       "Order",
-//       orderId,
-//       "unread"
-//     );
-
-//     const admins = await Account.find({ role: "admin" }).select("user_id");
-//     await Promise.all(
-//       admins.map(ad =>
-//         pushNotification(
-//           ad.user_id,
-//           "Đơn hàng đã hoàn thành!",
-//           `Đơn hàng ${orderId} đã được xác nhận hoàn thành.`,
-//           "order",
-//           "Order",
-//           orderId,
-//           "unread"
-//         )
-//       )
-//     );
-
-//     console.log("DONE CONFIRM COMPLETE");
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Đơn hàng hoàn thành."
-//     });
-
-//   } catch (err) {
-//     res.status(400).json({
-//       success: false,
-//       message: err.message || "Failed to complete task"
-//     });
-//   }
-// };
-
 export const confirmComplete = async (req, res) => {
   const { orderId } = req.params;
   const session = await mongoose.startSession();
@@ -410,26 +316,45 @@ export const confirmComplete = async (req, res) => {
     if (!receipt) throw new Error("Không tìm thấy hóa đơn.");
 
     if (receipt.payment_method === "cash") {
-      await markReceiptPaidService(receipt._id, session);
-
-      // update số đơn hoàn thành của khách hàng
-      await Customer.updateOne(
-        { user_id: customerUserId },
-        { $inc: { total_completed_orders: 1 } },
-        { session }
-      );
-
-      let reputationDelta = Math.floor(receipt.total_amount * 0.1);
-      if (reputationDelta === 0) reputationDelta = 10;
-
-      // update điểm danh tiếng của khách
-      await User.updateOne(
-        { _id: customerUserId },
-        { $inc: { reputation_score: reputationDelta } },
-        { session }
-      );
+      // tiền mặt thì phải update thời điểm thanh toán thủ công
+      console.log("before marking paid receipt!!!");
+      console.log("receipt_id: ", receipt._id);
+      console.log("transaction_id in receipt: ", receipt.transaction_id);
+      
+      await markReceiptPaidService({
+        receiptId: receipt._id,
+        transactionId: receipt.transaction_id,
+        session
+      });
     }
 
+    // update số đơn hoàn thành của khách hàng
+    await Customer.updateOne(
+      { user_id: customerUserId },
+      { $inc: { total_completed_orders: 1 } },
+      { session }
+    );
+
+    let reputationDelta = Math.floor(receipt.total_amount * 0.1);
+    if (reputationDelta === 0) reputationDelta = 10;
+    console.log("reputation delta: ", reputationDelta);
+    
+    // update điểm danh tiếng của khách
+    await User.updateOne(
+      { _id: customerUserId },
+      { $inc: { reputation_score: reputationDelta } },
+      { session }
+    );
+    console.log("DONE UPDATING REPUTATION SCORE FOR CUSTOMER");
+
+    // update điểm danh tiếng của tasker
+    await User.updateOne(
+      { _id: req.userId },
+      { $inc: { reputation_score: reputationDelta } },
+      { session }
+    );
+    
+    console.log("DONE UPDATING REPUTATION SCORE FOR TASKER");
     await session.commitTransaction();
 
     await pushNotification(
@@ -571,8 +496,8 @@ export const getOrderDetailsForTasker = async (req, res) => {
 
     // Get order with all populated fields
     const order = await Order.findById(orderId)
-      .populate('customer_id', 'full_name phone_number email avatar_url')
-      .populate('tasker_id', 'full_name phone_number email avatar_url')
+      .populate('customer_id', 'full_name phone_number email avatar_url reputation_score')
+      .populate('tasker_id', 'full_name phone_number email avatar_url reputation_score')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
       .lean();
@@ -671,6 +596,34 @@ export const updateWorkingStatus = async (req, res) => {
     }
 };
 
+export const getTaskerAcceptanceStats = async (req, res) => {
+  try {
+    const tasker = await Tasker.findOne({ user_id: req.userId });
+    if (!tasker) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy tasker"
+      });
+    }
+
+    const acceptanceStats = await getTaskerAcceptanceRate(req.userId);
+
+    return res.status(200).json({
+      success: true,
+      acceptance_rate: acceptanceStats.acceptanceRate,
+      stats: acceptanceStats
+    });
+
+  } catch (error) {
+    console.error("GET TASKER STATS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server"
+    });
+  }
+};
+
+// tasker rút lương
 export const cashOut = async (req, res) => {
     try {
         const userId = req.userId;
