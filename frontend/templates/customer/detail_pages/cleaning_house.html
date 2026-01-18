@@ -256,10 +256,10 @@
 
       <div class="flex space-x-4">
         <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
-          Đặt ngay</a>
+          Đặt ngay
         </button>
-        <button class="action-btn action-btn-hover">
-          <a href="../scheduled.html">Đặt lịch trước</a>
+        <button onclick="handleScheduledBooking()" class="action-btn action-btn-hover">
+          Đặt lịch trước
         </button>
 
       </div>
@@ -297,6 +297,13 @@
   </script>
   
   <script>
+    let token = localStorage.getItem("token");
+    if (!token) {
+      alert("Vui lòng đăng nhập");
+      location.href = "../../auth/login-signup.html";
+    } 
+    console.log("TOKEN: ", token);
+
     const urlParams = new URLSearchParams(window.location.search);
     const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
     const task_id = urlParams.get("id");
@@ -311,13 +318,6 @@
 
     async function getTaskDetail() {
       try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Vui lòng đăng nhập");
-          location.href = "../../auth/login-signup.html";
-          return;
-        }
-
         const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
         {
           headers: {
@@ -328,10 +328,10 @@
         console.log("TOKEN: ", token);
 
         if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../../auth/login-signup.html";
-            return;
+          localStorage.removeItem("token");
+          alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+          window.location.href = "../../auth/login-signup.html";
+          return;
         }
 
         const data = await res.json();
@@ -468,7 +468,7 @@
       bookingDraft = {
         task_id,
         type: "immediate",
-        base_amount: final_amount,
+        base_amount: baseTimePrice,
         final_amount: final_amount,
 
         task_snapshot: {
@@ -483,7 +483,7 @@
           total_time: displayTime * 60,
           extras: extras,
           final_amount: final_amount,
-          house_type: selectHouseType,
+          house_type: selectedHouseType,
         },
 
         note: ""
@@ -501,6 +501,67 @@
       localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
       console.log("BOOKING DRAFT: ", bookingDraft);
       window.location.href = "../book_now.html";
+    }
+
+    document.addEventListener("DOMContentLoaded", restoreDraft);
+
+    function handleScheduledBooking() {
+      if (!selectedTime) {
+        alert("Vui lòng chọn thời gian dọn dẹp!");
+        return;
+      }
+      saveDraft();
+      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      console.log("BOOKING DRAFT: ", bookingDraft);
+      window.location.href = "../scheduled.html";
+    }
+
+
+    function restoreDraft() {
+      const draftRaw = localStorage.getItem("bookingDraft");
+      if (!draftRaw) return;
+
+      const draft = JSON.parse(draftRaw);
+
+      // restore time
+      selectedTime = draft.task_payload.base_time / 60;
+      displayTime = draft.task_payload.total_time / 60;
+      final_amount = draft.final_amount;
+
+      // restore extras
+      extras = draft.task_payload.extras || {};
+
+      // restore house type
+      selectededHouseType = draft.task_payload.house_type;
+
+      // time card
+      document.querySelectorAll(".time-card").forEach(card => {
+        const hours = parseInt(card.innerText.match(/\d+/)[0]);
+        if (hours === selectedTime) {
+          baseTimePrice = parseInt(
+            card.querySelector(".font-bold").innerText.replace(/\D/g, "")
+          );
+          card.classList.add("ring-2", "ring-primary-500", "bg-primary-50");
+        }
+      });
+
+      // extras checkbox
+      document.querySelectorAll(".extra-card input").forEach(input => {
+        if (extras[input.dataset.key]) {
+          input.checked = true;
+          input.closest(".extra-card")
+            .classList.add("ring-2", "ring-primary-500");
+        }
+      });
+
+      // house type
+      document.querySelectorAll(".house-card").forEach(card => {
+        if (card.onclick?.toString().includes(selectedHouseType)) {
+          card.classList.add("active", "ring-2", "ring-primary-500");
+        }
+      });
+
+      recalcTotal();
     }
 
   </script>

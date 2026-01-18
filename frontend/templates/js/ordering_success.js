@@ -1,5 +1,8 @@
 let currentOrder = null;
 let currentReceipt = null;
+let orderPollingInterval = null;
+let redirectCountdown = null;
+let isRedirecting = false;
 
 const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
 
@@ -339,11 +342,28 @@ function renderPaymentDetails() {
   `;
 }
 
-function renderTaskerSearchStatus(status = "searching", assignedTasker = null) {
+function renderTaskerSearchStatus(status = "searching", assignedTasker = null, showRedirectMessage = false, countdown = 10) {
   const el = document.getElementById("taskerSearchStatus");
   if (!el) return;
 
-  if (status === "assigned" && assignedTasker) {
+  if (status === "accepted" && showRedirectMessage) {
+    el.innerHTML = `
+      <div class="flex items-center space-x-4 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+        <div class="flex-shrink-0">
+          <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center">
+            <span class="material-symbols-outlined text-white text-3xl">check_circle</span>
+          </div>
+        </div>
+        <div class="flex-1">
+          <h3 class="font-bold text-dark-900 text-lg mb-1">Tasker đã nhận đơn!</h3>
+          <p class="text-sm text-gray-600 mb-2">Tasker đã xác nhận nhận đơn hàng của bạn.</p>
+          <p class="text-sm font-semibold text-blue-700" id="redirectCountdown">
+            Tự động chuyển đến trang chi tiết đơn hàng sau <span id="countdownNumber">${countdown}</span> giây...
+          </p>
+        </div>
+      </div>
+    `;
+  } else if (status === "assigned" && assignedTasker) {
     el.innerHTML = `
       <div class="flex items-center space-x-4 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-xl border border-green-200">
         <div class="flex-shrink-0">
@@ -415,6 +435,9 @@ async function findTaskerForOrder(orderId) {
       
       // Reload order details to get updated order with tasker
       await loadOrderDetails();
+      
+      // Start polling for order status changes (to detect when tasker accepts)
+      startOrderStatusPolling();
     } else {
       console.warn("Could not find tasker:", result.message);
       renderTaskerSearchStatus("error");
@@ -422,6 +445,69 @@ async function findTaskerForOrder(orderId) {
   } catch (error) {
     console.error("Error finding tasker:", error);
     renderTaskerSearchStatus("error");
+  }
+}
+
+// Poll order status to detect when tasker accepts
+function startOrderStatusPolling() {
+  // Clear any existing polling
+  if (orderPollingInterval) {
+    clearInterval(orderPollingInterval);
+  }
+
+  // Poll every 3 seconds
+  orderPollingInterval = setInterval(async () => {
+    if (isRedirecting) {
+      clearInterval(orderPollingInterval);
+      return;
+    }
+
+    const loaded = await loadOrderDetails();
+    if (loaded && currentOrder) {
+      // Check if order status changed to "accepted"
+      if (currentOrder.status === "accepted" && currentOrder.tasker_id) {
+        // Tasker has accepted! Stop polling and start redirect countdown
+        clearInterval(orderPollingInterval);
+        startRedirectCountdown();
+      }
+    }
+  }, 3000);
+}
+
+// Start countdown and redirect
+function startRedirectCountdown() {
+  if (isRedirecting) return;
+  isRedirecting = true;
+
+  let countdown = 10;
+  const orderId = currentOrder._id;
+
+  // Show redirect message
+  renderTaskerSearchStatus("accepted", null, true, countdown);
+
+  // Update countdown every second
+  redirectCountdown = setInterval(() => {
+    countdown--;
+    const countdownEl = document.getElementById("countdownNumber");
+    if (countdownEl) {
+      countdownEl.textContent = countdown;
+    }
+
+    if (countdown <= 0) {
+      clearInterval(redirectCountdown);
+      // Redirect to customer order progress page
+      window.location.href = `../customer_order_progress.html?orderId=${orderId}`;
+    }
+  }, 1000);
+}
+
+// Cleanup on page unload
+function cleanup() {
+  if (orderPollingInterval) {
+    clearInterval(orderPollingInterval);
+  }
+  if (redirectCountdown) {
+    clearInterval(redirectCountdown);
   }
 }
 
@@ -448,18 +534,32 @@ async function initOrderingSuccess() {
   renderAddressDetails();
   renderPaymentDetails();
   
+  // Check if order is already accepted
+  if (currentOrder.status === "accepted" && currentOrder.tasker_id) {
+    // Tasker already accepted, start redirect immediately
+    startRedirectCountdown();
+    return;
+  }
+  
   // Check if we have an order and try to find tasker
   if (currentOrder._id && currentOrder.type === "immediate" && currentOrder.status === "pending") {
     // Show searching status first
     renderTaskerSearchStatus("searching");
     // Then try to find tasker
     findTaskerForOrder(currentOrder._id);
-  } else if (currentOrder.tasker_id || currentOrder.status !== "pending") {
-    // Already has tasker or not pending
+  } else if (currentOrder.tasker_id && currentOrder.status === "assigned") {
+    // Tasker assigned but not yet accepted, start polling
+    renderTaskerSearchStatus("assigned", currentOrder.tasker_id);
+    startOrderStatusPolling();
+  } else if (currentOrder.status !== "pending") {
+    // Order is in other status (departed, arrived, etc.), no need to poll
     renderTaskerSearchStatus("assigned", currentOrder.tasker_id);
   } else {
     renderTaskerSearchStatus("searching");
   }
 }
+
+// Cleanup on page unload
+window.addEventListener("beforeunload", cleanup);
 
 document.addEventListener("DOMContentLoaded", initOrderingSuccess);

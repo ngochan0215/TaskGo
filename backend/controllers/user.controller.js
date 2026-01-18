@@ -1,11 +1,13 @@
-import { User, Account, Tasker, Customer, FavoriteTasker, Address } from "../models/index.js";
+import { User, Account, Tasker, Customer, FavoriteTasker, Address, Review } from "../models/index.js";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";
 
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.userId).select("-created_at -updated_at -__v");
+    const user = await User.findById(req.userId)
+      .select("-created_at -updated_at -__v");
+
     if (!user) {
       return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
     }
@@ -15,44 +17,237 @@ export const getUserProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
     }
 
-    if (account.role == "customer") {
-      const customer = await Customer.findOne({ user_id: user._id }).select("-__v -created_at -updated_at -user_id");
+    // customer
+    if (account.role === "customer") {
+      const customer = await Customer.findOne({ user_id: user._id })
+        .select("-__v -created_at -updated_at -user_id");
+
       if (!customer) {
         return res.status(400).json({ success: false, message: "Không tìm thấy khách hàng!" });
       }
 
+      const reviewStats = await Review.aggregate([
+        {
+          $match: {
+            reviewee_id: user._id,
+            reviewee_role: "customer",
+            status: "visible"
+          }
+        },
+        {
+          $group: {
+            _id: "$reviewee_id",
+            review_count: { $sum: 1 },
+            average_rating: { $avg: "$rating" }
+          }
+        }
+      ]);
+
+      const reviewInfo = reviewStats.length
+        ? {
+            review_count: reviewStats[0].review_count,
+            average_rating: Number(reviewStats[0].average_rating.toFixed(1))
+          }
+        : {
+            review_count: 0,
+            average_rating: 0
+          };
+
       return res.status(200).json({
         success: true,
         user,
-        account : {
+        account: {
           role: account.role,
-          email: account.email,
+          email: account.email
         },
-        customer
+        customer,
+        reviews: reviewInfo
       });
+    }
 
-    } else if (account.role == "tasker") {
-      const tasker = await Tasker.findOne({ user_id: user._id }).select("-__v -created_at -updated_at -user_id");
+    // tasker
+    if (account.role === "tasker") {
+      const tasker = await Tasker.findOne({ user_id: user._id })
+        .select("-__v -created_at -updated_at -user_id");
+
       if (!tasker) {
         return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
       }
 
+      const reviewStats = await Review.aggregate([
+        {
+          $match: {
+            reviewee_id: user._id,
+            reviewee_role: "customer",
+            status: "visible"
+          }
+        },
+        {
+          $group: {
+            _id: "$reviewee_id",
+            review_count: { $sum: 1 },
+            average_rating: { $avg: "$rating" }
+          }
+        }
+      ]);
+
+      const reviewInfo = reviewStats.length
+        ? {
+            review_count: reviewStats[0].review_count,
+            average_rating: Number(reviewStats[0].average_rating.toFixed(1))
+          }
+        : {
+            review_count: 0,
+            average_rating: 0
+          };
+
       return res.status(200).json({
         success: true,
         user,
-        account : {
+        account: {
           role: account.role,
-          email: account.email,
+          email: account.email
         },
-        tasker
+        tasker,
+        reviews: reviewInfo
       });
     }
 
-    return res.status(400).json({ success: false, message: `Bạn là ${account.role}, không hợp lệ!`});
+    return res.status(400).json({
+      success: false,
+      message: `Bạn là ${account.role}, không hợp lệ!`
+    });
 
   } catch (error) {
-    console.error("LỖI LẤY PROFFILE USER:", error);
-    res.status(500).json({ success: false, message: "LỖI SERVER: " + error.message });
+    console.error("LỖI LẤY PROFILE USER:", error);
+    return res.status(500).json({
+      success: false,
+      message: "LỖI SERVER: " + error.message
+    });
+  }
+};
+
+export const getAUserProfile = async (req, res) => {
+  try {
+    const { user_id } = req.body;
+
+    const user = await User.findById(user_id).select("-created_at -updated_at -__v");
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
+    }
+
+    const account = await Account.findById(user.account_id);
+    if (!account) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
+    }
+
+    // customer
+    if (account.role === "customer") {
+      const customer = await Customer.findOne({ user_id: user._id })
+        .select("-__v -created_at -updated_at -user_id");
+
+      if (!customer) {
+        return res.status(400).json({ success: false, message: "Không tìm thấy khách hàng!" });
+      }
+
+      const reviewStats = await Review.aggregate([
+        {
+          $match: {
+            reviewee_id: user._id,
+            reviewee_role: "customer",
+            status: "visible"
+          }
+        },
+        {
+          $group: {
+            _id: "$reviewee_id",
+            review_count: { $sum: 1 },
+            average_rating: { $avg: "$rating" }
+          }
+        }
+      ]);
+
+      const reviewInfo = reviewStats.length
+        ? {
+            review_count: reviewStats[0].review_count,
+            average_rating: Number(reviewStats[0].average_rating.toFixed(1))
+          }
+        : {
+            review_count: 0,
+            average_rating: 0
+          };
+
+      return res.status(200).json({
+        success: true,
+        user,
+        account: {
+          role: account.role,
+          email: account.email
+        },
+        customer,
+        reviews: reviewInfo
+      });
+    }
+
+    // tasker
+    if (account.role === "tasker") {
+      const tasker = await Tasker.findOne({ user_id: user._id })
+        .select("-__v -created_at -updated_at -user_id");
+
+      if (!tasker) {
+        return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
+      }
+
+      const reviewStats = await Review.aggregate([
+        {
+          $match: {
+            reviewee_id: user._id,
+            reviewee_role: "customer",
+            status: "visible"
+          }
+        },
+        {
+          $group: {
+            _id: "$reviewee_id",
+            review_count: { $sum: 1 },
+            average_rating: { $avg: "$rating" }
+          }
+        }
+      ]);
+
+      const reviewInfo = reviewStats.length
+        ? {
+            review_count: reviewStats[0].review_count,
+            average_rating: Number(reviewStats[0].average_rating.toFixed(1))
+          }
+        : {
+            review_count: 0,
+            average_rating: 0
+          };
+
+      return res.status(200).json({
+        success: true,
+        user,
+        account: {
+          role: account.role,
+          email: account.email
+        },
+        tasker,
+        reviews: reviewInfo
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      message: `Bạn là ${account.role}, không hợp lệ!`
+    });
+
+  } catch (error) {
+    console.error("LỖI LẤY PROFILE USER:", error);
+    return res.status(500).json({
+      success: false,
+      message: "LỖI SERVER: " + error.message
+    });
   }
 };
 
@@ -440,7 +635,7 @@ export const getMyFavoriteTaskers = async (req, res) => {
   try {
     const userId = req.userId;
 
-    // 1. Lấy danh sách favorite tasker (tasker_id = User của tasker)
+    // Lấy danh sách favorite tasker (tasker_id = User của tasker)
     const favorites = await FavoriteTasker.find({ user_id: userId })
       .select("-__v -created_at -updated_at")
       .populate({
@@ -456,27 +651,62 @@ export const getMyFavoriteTaskers = async (req, res) => {
       });
     }
 
-    // 2. Lấy danh sách user_id của tasker
+    // Lấy danh sách user_id của tasker
     const taskerUserIds = favorites
       .filter(f => f.tasker_id)
       .map(f => f.tasker_id._id);
 
-    // 3. Query bảng Tasker
+    // Query bảng Tasker
     const taskers = await Tasker.find({
       user_id: { $in: taskerUserIds }
     }).select("-__v -created_at -updated_at");
 
-    // 4. Merge Tasker + User + Favorite metadata
-    const result = favorites.map(fav => {
-      const taskerProfile = taskers.find(
-        t => t.user_id.toString() === fav.tasker_id._id.toString()
-      );
+    // Aggregate reviews cho các tasker
+    const reviewsStats = await Review.aggregate([
+      {
+        $match: {
+          reviewee_id: { $in: taskerUserIds },
+          reviewee_role: "tasker",
+          status: "visible"
+        }
+      },
+      {
+        $group: {
+          _id: "$reviewee_id",
+          review_count: { $sum: 1 },
+          average_rating: { $avg: "$rating" }
+        }
+      }
+    ]);
+
+    const reviewMap = new Map(
+      reviewsStats.map(r => [
+        r._id.toString(),
+        {
+          review_count: r.review_count,
+          average_rating: Number(r.average_rating.toFixed(1))
+        }
+      ])
+    );
+
+    // Merge Tasker + User + Favorite metadata
+    const result = favorites.map(fav => 
+    { 
+      const taskerUserId = fav.tasker_id._id.toString();
+
+      const taskerProfile = taskers.find(t => t.user_id.toString() === taskerUserId);
+
+      const reviewStat = reviewMap.get(taskerUserId) || {
+        review_count: 0,
+        average_rating: 0
+      };
 
       return {
         favorite_id: fav._id,
         favorited_at: fav.created_at,
-        user: fav.tasker_id,      // bảng User
-        tasker: taskerProfile     // bảng Tasker
+        user: fav.tasker_id,      
+        tasker: taskerProfile,     
+        reviews: reviewStat
       };
     });
 
@@ -685,7 +915,6 @@ export const setDefaultAddress = async (req, res) => {
 
 
 // TODO: viết hàm trả về các dịch vụ thường được khách hàng đặt
-
 export const getUserPoints = async (req, res) => {
   try {
     const userId = req.userId;

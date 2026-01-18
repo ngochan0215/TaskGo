@@ -186,8 +186,14 @@
 
         <div class="space-y-3 text-sm">
             <div class="flex justify-between border-b border-gray-100 pb-2">
-                <span class="text-gray-500">Chuyên môn:</span>
-                <span id="modal-tasker-skill" class="font-medium text-dark-900"></span>
+                <span class="text-gray-500">Điểm uy tín:</span>
+                <span id="modal-tasker-reputation" class="font-medium text-dark-900">—</span>
+            </div>
+            <div class="border-b border-gray-100 pb-2">
+                <span class="text-gray-500 block mb-2">Chuyên môn:</span>
+                <div id="modal-tasker-skills" class="flex flex-wrap gap-2">
+                    <span class="text-xs text-gray-400">Đang tải...</span>
+                </div>
             </div>
             <div class="flex justify-between border-b border-gray-100 pb-2">
                 <span class="text-gray-500">Số việc đã làm:</span>
@@ -201,11 +207,6 @@
                 <span class="text-gray-500 block mb-1">Giới thiệu:</span>
                 <p id="modal-tasker-bio" class="text-gray-700 italic bg-gray-50 p-2 rounded"></p>
             </div>
-        </div>
-
-        <div class="mt-6 flex gap-3">
-            <button class="flex-1 py-2 rounded-lg border border-primary-500 text-primary-500 font-medium hover:bg-primary-50">Nhắn tin</button>
-            <button class="flex-1 py-2 rounded-lg bg-primary-500 text-white font-medium hover:bg-primary-600 shadow-md">Đặt lịch ngay</button>
         </div>
     </div>
 </div>
@@ -289,7 +290,6 @@
       active: "#"
     };
 
-    // --- Code Search, Services, Banner, Favorite Services giữ nguyên ---
     const searchContainer = document.getElementById("search-container");
     const inputDiv = document.createElement("div");
     inputDiv.className = "mb-4";
@@ -433,34 +433,6 @@
         </div>
     `;
 
-    // const favoriteContainer = document.getElementById("favorite-services");
-    // document.addEventListener("click", e => {
-    //     const btn = e.target.closest(".heart-btn");
-    //     if (!btn) return;
-
-    //     const heart = btn.querySelector(".heart-icon");
-    //     const item = btn.closest(".service-item");
-    //     const name = item.dataset.name;
-    //     const img = item.dataset.img;
-
-    //     const existingFav = Array.from(favoriteContainer.children)
-    //         .find(c => c.querySelector("p").innerText === name);
-
-    //     if (!existingFav) {
-    //         heart.style.color = "red";
-    //         const favItem = document.createElement("div");
-    //         favItem.className = "service-item";
-    //         favItem.innerHTML = `
-    //             <img src="${img}" class="rounded-xl w-full h-48 object-cover">
-    //             <p class="mt-1 text-sm font-medium">${name}</p>
-    //         `;
-    //         favoriteContainer.appendChild(favItem);
-    //     } else {
-    //         heart.style.color = "white";
-    //         favoriteContainer.removeChild(existingFav);
-    //     }
-    // });
-
     async function loadCustomerStats() {
         try {
             const statsRes= await fetch("http://localhost:3000/api/order/statistics/completed-cancelled", 
@@ -491,15 +463,15 @@
             console.log("statistics json: ", statsJson);
             console.log("points json: ", pointsJson);
 
-            // if (!statsJson.success || !pointsJson.success) {
-            //     throw new Error("Không lấy được dữ liệu khách hàng");
-            // }
+            if (!statsJson.success || !pointsJson.success) {
+                throw new Error("Không lấy được dữ liệu khách hàng");
+            }
 
             const { completed_orders, cancelled_orders } = statsJson.data;
             console.log("statistics data: ", statsJson.data);
 
             document.getElementById("customer-points").textContent =
-                pointsJson.data?.points ?? 0;
+                pointsJson.points ?? 0;
 
             document.getElementById("customer-completed-orders").textContent =
                 completed_orders?? 0;
@@ -536,6 +508,7 @@
             json.data.forEach(item => {
                 const tasker = item.tasker;
                 const user = item.user;
+                const reviews = item.reviews;
                 const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
 
                 const card = document.createElement("div");
@@ -543,11 +516,12 @@
                 card.onclick = () => openTaskerModal({
                     name: user.full_name,
                     avatar,
-                    rating: tasker.reputation_score || 0,
-                    reviews: tasker.reviews_count || 0,
-                    skill: tasker.skill || "—",
-                    jobs: tasker.total_completed_tasks || 0,
-                    location: tasker.location || "—",
+                    rating: reviews.average_rating || 0,
+                    reviews: reviews.review_count || 0,
+                    skills: tasker.skills || [], // skills is an array of task_id
+                    reputation_score: user.reputation_score || 0,
+                    jobs: tasker.total_completed_orders || 0,
+                    location: tasker.working_area?.full_address || "—",
                     bio: tasker.introduction || ""
                 });
 
@@ -560,7 +534,7 @@
                     </p>
                     <div class="flex items-center text-[10px] text-gray-500">
                     <span class="material-symbols-outlined text-[10px] text-yellow-500 mr-0.5">star</span>
-                    ${user.reputation_score || 0}
+                    ${reviews.average_rating || 0}
                     </div>
                 `;
 
@@ -576,17 +550,82 @@
     const closeModalBtn = document.querySelector(".close-modal");
 
     // Hàm mở modal và điền dữ liệu
-    function openTaskerModal(tasker) {
+    async function openTaskerModal(tasker) {
         document.getElementById("modal-tasker-avatar").src = tasker.avatar;
         document.getElementById("modal-tasker-name").textContent = tasker.name;
         document.getElementById("modal-tasker-rating").textContent = tasker.rating;
         document.getElementById("modal-tasker-reviews").textContent = `(${tasker.reviews} đánh giá)`;
-        document.getElementById("modal-tasker-skill").textContent = tasker.skill;
+        document.getElementById("modal-tasker-reputation").textContent = tasker.reputation_score || 0;
         document.getElementById("modal-tasker-jobs").textContent = `${tasker.jobs} việc`;
         document.getElementById("modal-tasker-location").textContent = tasker.location;
         document.getElementById("modal-tasker-bio").textContent = tasker.bio;
 
+        // Load and display skills (task names)
+        await loadTaskerSkills(tasker.skills || []);
+
         modal.classList.add("show");
+    }
+
+    // Load task names from task_id array
+    async function loadTaskerSkills(skillIds) {
+        const skillsContainer = document.getElementById("modal-tasker-skills");
+        
+        if (!skillIds || skillIds.length === 0) {
+            skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
+            return;
+        }
+
+        // Show loading state
+        skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Đang tải...</span>';
+
+        try {
+            // Fetch all tasks to get names
+            const res = await fetch("http://localhost:3000/api/task/all", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const json = await res.json();
+            
+            if (!json.success || !json.tasks) {
+                skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
+                return;
+            }
+
+            // Create a map of task_id to task_name
+            const taskMap = new Map();
+            json.tasks.forEach(task => {
+                taskMap.set(task._id, task.task_name);
+            });
+
+            // Filter skills that exist in the task list and get their names
+            const skillNames = skillIds
+                .map(id => {
+                    const taskId = typeof id === "object" ? id.toString() : id;
+                    return taskMap.get(taskId);
+                })
+                .filter(Boolean); // Remove undefined values
+
+            // Display skills as badges
+            if (skillNames.length === 0) {
+                skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
+            } else {
+                skillsContainer.innerHTML = skillNames.map(name => 
+                    `<span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full border border-primary-200">${name}</span>`
+                ).join("");
+            }
+        } catch (err) {
+            console.error("Load tasker skills error:", err);
+            skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
+        }
     }
 
     closeModalBtn.onclick = function() {
