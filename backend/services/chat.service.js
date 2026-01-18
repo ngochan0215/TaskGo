@@ -53,6 +53,7 @@ export async function fetchChat(orderId, userId, checkActive = false) {
       // If creation fails (e.g. Order is 'pending', 'cancelled' or hasn't been 'accepted' by any tasker), 
       // we map it back to "chat_not_found" so the Controller returns 404 
       // instead of a 500 Server Error.
+      console.log(err.message);
       if (err.message === "invalid_order_status" || err.message === "order_not_found") {
          throw new Error("chat_not_found");
       }
