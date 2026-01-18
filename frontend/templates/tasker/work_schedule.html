@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGo - Tasker Home</title>
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        /* Animation cho Toggle */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3730A3;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #3730A3;
+        }
+
+
+        .timeline-container {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+        }
+
+        .hour-column {
+            min-width: 80px;
+            border-right: 1px solid #f1f5f9;
+            text-align: center;
+            color: #94a3b8;
+            padding: 10px 0;
+            font-weight: 700;
+        }
+
+        .day-row {
+            height: 80px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .day-label {
+            width: 120px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-right: 2px solid #e2e8f0;
+            position: sticky;
+            left: 0;
+            z-index: 30;
+        }
+
+        .corner-label {
+            width: 120px;
+            background: #f8fafc;
+            position: sticky;
+            left: 0;
+            z-index: 40;
+            border-right: 2px solid #e2e8f0;
+        }
+
+        .schedule-grid {
+            position: relative;
+            flex-grow: 1;
+            background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px);
+            background-size: 80px 100%;
+        }
+
+        .task-block {
+            position: absolute;
+            height: 60px;
+            top: 10px;
+            border-radius: 8px;
+            padding: 8px;
+            font-weight: 700;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .task-ongoing {
+            background-color: #dcfce7;
+            border-left: 4px solid #22c55e;
+            color: #166534;
+        }
+
+        .task-ongoing:hover {
+            cursor: pointer;
+        }
+
+        .task-upcoming {
+            background-color: #e0e7ff;
+            border-left: 4px solid #6366f1;
+            color: #3730a3;
+        }
+
+        /* Filter Styles */
+        .filter-btn {
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .filter-btn.active {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .overflow-x-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .hidden-task {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        /* Nav Buttons Styles */
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: #f8fafc;
+            color: #1e293b;
+            border-color: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body style="background-color: #E0E7FF;" class="text-[#111827] min-h-screen flex flex-col">
+
+    <nav class="sticky top-0 z-[100] bg-white shadow-sm">
+        <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
+            <div class="flex items-center gap-3">
+                <div
+                    class="logo-icon flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm">
+                    <img src="../../public/images/taskgo-logo.png" onerror="this.src='/public/images/taskgo-logo.png'"
+                        alt="TaskGo icon" class="object-contain">
+                </div>
+                <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Lịch làm việc</h1>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="notification-btn"
+                    class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
+                    <span class="material-symbols-outlined text-[#111827]">notifications</span>
+                    <span
+                        class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>
+                </button>
+                <button id="menu-btn"
+                    class="p-2 focus:outline-none flex items-center bg-white/20 rounded-lg hover:bg-white/40 transition text-[#111827]">
+                    <span id="menu-icon" class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="menu-overlay"
+            class="menu-hamburger absolute top-full left-0 w-full bg-white shadow-xl transition-all duration-300 -translate-y-[150%] z-40 border-t border-gray-100 opacity-0 pointer-events-none">
+            <nav class="flex flex-col p-6 space-y-6 text-[#111827] font-bold max-w-7xl mx-auto">
+                <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
+                    <div
+                        class="w-12 h-12 rounded-full bg-[#E0E7FF] text-[#3730A3] flex items-center justify-center border border-[#A5B4FC]">
+                        <span class="material-symbols-outlined text-2xl">person</span>
+                    </div>
+                    <div>
+                        <p class="text-lg">Nguyễn Văn A</p>
+                        <p class="text-xs font-medium text-gray-500">ID: #TK8821</p>
+                    </div>
+                </div>
+                <a href="./tasker_home.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Trang chủ</a>
+                <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
+                <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch sử nhận việc</a>
+                <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
+                <a href="./work_schedule.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch làm việc</a>
+                <a href="#" id="logout-btn"
+                    class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
+                    <span class="material-symbols-outlined">logout</span> Đăng xuất
+                </a>
+            </nav>
+        </div>
+    </nav>
+
+
+    <main class="flex-grow p-4 md:p-8">
+        <div class="p-4 md:p-8 max-w-7xl mx-auto">
+            <!-- Header -->
+            <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+                <div class="flex items-center gap-5">
+                    <div>
+                        <h1 class="text-2xl font-black tracking-tight text-slate-800">Lịch làm việc</h1>
+                        <p id="week-range-text" class="text-indigo-600 font-bold text-sm tracking-wide">19/01 - 25/01</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Navigation Buttons (Lùi/Tiến tuần) -->
+                    <div class="flex items-center bg-white p-1 rounded-2xl shadow-sm border border-slate-200 mr-2">
+                        <button class="nav-btn" title="Tuần trước">
+                            <span class="material-symbols-outlined text-xl">chevron_left</span>
+                        </button>
+                        <button class="px-4 text-xs font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest">Hôm nay
+                        </button>
+                        <button class="nav-btn" title="Tuần tới">
+                            <span class="material-symbols-outlined text-xl">chevron_right</span>
+                        </button>
+                    </div>
+
+                    <!-- Filter Bar -->
+                    <div class="flex items-center bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+                        <button onclick="filterTasks('all')" id="btn-all"
+                            class="filter-btn active px-4 py-2 text-xs font-black rounded-xl">TẤT CẢ</button>
+                        <button onclick="filterTasks('ongoing')" id="btn-ongoing"
+                            class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> ĐANG LÀM
+                        </button>
+                        <button onclick="filterTasks('upcoming')" id="btn-upcoming"
+                            class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
+                            <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> SẮP TỚI
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule Board -->
+            <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <div class="min-w-[2040px]">
+
+                        <!-- Giờ (Header) -->
+                        <div class="flex bg-slate-50 border-b border-slate-200">
+                            <div
+                                class="corner-label shrink-0 flex items-center justify-center font-black text-slate-700 text-sm text-slate-400 uppercase tracking-tighter border-r border-slate-200">
+                                THỨ / GIỜ</div>
+                            <div class="flex flex-grow text-sm" id="hour-labels"></div>
+                        </div>
+
+                        <!-- Danh sách các ngày -->
+                        <div id="days-container">
+                            <!-- Thứ 2 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">19/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ HAI</span>
+                                    <div
+                                        class="mt-1 px-2 py-0.5 bg-indigo-50 text-xs font-bold rounded-full text-indigo-500">
+                                        HÔM NAY</div>
+                                </div>
+                                <div class="schedule-grid">
+                                    <div class="task-block task-ongoing" data-status="ongoing"
+                                        data-service=" Dọn dẹp nhà cửa" data-time="08:00 - 11:00"
+                                        data-address="Chung cư Vinhomes Central Park, Bình Thạnh"
+                                        data-customer="Nguyễn Văn A" onclick="showTaskDetail(this)"
+                                        style="left: 640px; width: 240px;">
+                                        <p class="truncate uppercase text-sm">Dọn dẹp nhà #9901</p>
+                                        <p class="opacity-75 text-xs">08:00 - 11:00</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thứ 3 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">20/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ BA</span>
+                                </div>
+                                <div class="schedule-grid bg-indigo-50/10"></div>
+                            </div>
+
+                            <!-- Thứ 4 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">21/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ TƯ</span>
+                                </div>
+                                <div class="schedule-grid">
+                                    <div class="task-block task-upcoming" data-status="upcoming"
+                                        style="left: 1120px; width: 320px;">
+                                        <p class="truncate uppercase text-sm">Nấu ăn gia đình #9955</p>
+                                        <p class="opacity-75 text-xs">14:00 - 18:00</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thứ 5 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">22/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ NĂM</span>
+                                </div>
+                                <div class="schedule-grid">
+                                    <div class="task-block task-upcoming" data-status="upcoming"
+                                        style="left: 640px; width: 160px;">
+                                        <p class="truncate uppercase text-sm">Vệ sinh máy lạnh #3425</p>
+                                        <p class="opacity-75 text-xs">08:00 - 10:00</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thứ 6 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">23/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ SÁU</span>
+                                </div>
+                                <div class="schedule-grid"></div>
+                            </div>
+
+                            <!-- Thứ 7 -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">24/01</span>
+                                    <span class="text-sm font-black text-slate-700">THỨ BẢY</span>
+                                </div>
+                                <div class="schedule-grid bg-amber-50/10"></div>
+                            </div>
+
+                            <!-- Chủ Nhật -->
+                            <div class="day-row">
+                                <div class="day-label">
+                                    <span class="text-xs font-black text-slate-400">25/01</span>
+                                    <span class="text-sm font-black text-slate-700 text-red-600">CHỦ NHẬT</span>
+                                </div>
+                                <div class="schedule-grid bg-red-50/10"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="taskModal"
+            class="fixed inset-0 z-[100] hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <div
+                class="bg-white rounded-[28px] w-full max-w-sm overflow-hidden shadow-2xl transform transition-all border border-slate-100">
+                <!-- Modal Header -->
+                <div id="modalHeader" class="px-6 py-4 flex justify-between items-center border-b border-slate-50">
+                    <h3 class="font-black text-slate-800 text-lg">Chi tiết công việc</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-6 space-y-5">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-indigo-600">
+                            <span class="material-symbols-outlined">home_repair_service</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Dịch vụ</p>
+                            <p id="modalService" class="font-bold text-slate-800">---</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-indigo-600">
+                            <span class="material-symbols-outlined">schedule</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Thời gian</p>
+                            <p id="modalTime" class="font-bold text-slate-800">---</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-indigo-600">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Địa chỉ</p>
+                            <p id="modalAddress" class="font-bold text-slate-800 leading-relaxed">---</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 text-indigo-600">
+                            <span class="material-symbols-outlined">person</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Khách hàng</p>
+                            <p id="modalCustomer" class="font-bold text-slate-800">---</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="bg-slate-50 px-6 py-4 flex justify-end gap-3">
+                    <button onclick="closeModal()"
+                        class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-100 transition-all">ĐÓNG</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto text-center text-sm text-gray-500">
+            &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // Tạo header 24 giờ
+        const hourHeader = document.getElementById('hour-labels');
+        for (let i = 0; i < 24; i++) {
+            const h = i < 10 ? '0' + i : i;
+            const hourDiv = document.createElement('div');
+            hourDiv.className = 'hour-column';
+            hourDiv.innerText = h + ':00';
+            hourHeader.appendChild(hourDiv);
+        }
+        // Hàm lọc lịch trình
+        function filterTasks(status) {
+            const tasks = document.querySelectorAll('.task-block');
+            const btns = document.querySelectorAll('.filter-btn');
+
+            // Cập nhật trạng thái nút
+            btns.forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + status).classList.add('active');
+
+            // Lọc các khối task
+            tasks.forEach(task => {
+                const taskStatus = task.getAttribute('data-status');
+                if (status === 'all' || taskStatus === status) {
+                    task.classList.remove('hidden-task');
+                } else {
+                    task.classList.add('hidden-task');
+                }
+            });
+        }
+
+        // Pop-up logic
+        const modal = document.getElementById('taskModal');
+
+        function showTaskDetail(el) {
+            const service = el.getAttribute('data-service');
+            const time = el.getAttribute('data-time');
+            const address = el.getAttribute('data-address');
+            const customer = el.getAttribute('data-customer');
+            const status = el.getAttribute('data-status');
+
+            document.getElementById('modalService').innerText = service;
+            document.getElementById('modalTime').innerText = time;
+            document.getElementById('modalAddress').innerText = address;
+            document.getElementById('modalCustomer').innerText = customer;
+
+            // Hiển thị modal
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            modal.classList.remove('opacity-100');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        // Đóng modal khi click ra ngoài
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        window.onload = () => {
+            const scrollContainer = document.querySelector('.overflow-x-auto');
+            // Cuộn mặc định đến mốc 8h sáng để người dùng dễ quan sát khung giờ chính
+            scrollContainer.scrollLeft = 580;
+        }
+    </script>
+
+    <script type="module">
+        import { initSocket } from "../js/socket.js";
+
+        initSocket();
+    </script>
+
+    <script>
+        // validate authorization
+        let token = localStorage.getItem("token");
+        if (!token) {
+            alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
+
+        const role = localStorage.getItem("system_role");
+        const _id = localStorage.getItem("user_id");
+        console.log("USER: ", role + " " + _id);
+        console.log("TOKEN: ", token);
+
+        if (role !== "tasker") {
+            alert("Bạn không phải Tasker. Không có quyền truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
+
+        const menuBtn = document.getElementById('menu-btn');
+        const menuOverlay = document.getElementById('menu-overlay');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                const isOpened = menuOverlay.classList.contains('translate-y-0');
+                if (isOpened) {
+                    menuOverlay.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                    menuOverlay.classList.add('-translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+                } else {
+                    menuOverlay.classList.remove('-translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+                    menuOverlay.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                }
+            });
+        }
+
+        // logic đăng xuất
+        const logoutBtn = document.getElementById("logout-btn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", async (e) => {
+                e.preventDefault();
+
+                try {
+                    const res = await fetch("http://localhost:3000/api/auth/logout", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user_id");
+                        localStorage.removeItem("system_role");
+
+                        alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                        window.location.href = "../auth/login-signup.html";
+                    } else {
+                        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+                    }
+                } catch (err) {
+                    console.error("LOGOUT ERROR:", err);
+                    alert("Có lỗi xảy ra khi đăng xuất.");
+                }
+            });
+        }
+
+        // logic show thông báo
+        const notificationBtn = document.getElementById("notification-btn");
+        if (notificationBtn) {
+            notificationBtn.addEventListener("click", async (e) => {
+                window.location.href = "../notification.html";
+            });
+        }
+
+
+        function formatDateTime(dateString) {
+            if (!dateString) return "—";
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = date - now;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 0) {
+                return "Đã qua";
+            } else if (diffMins < 60) {
+                return `Ngay bây giờ (${diffMins} phút)`;
+            } else {
+                const hours = Math.floor(diffMins / 60);
+                const mins = diffMins % 60;
+                return `${hours}h${mins > 0 ? mins + 'p' : ''} nữa`;
+            }
+        }
+
+        function formatScheduledTime(dateString, type) {
+            if (!dateString) return "—";
+            const date = new Date(dateString);
+
+            if (type === "immediate") {
+                return formatDateTime(dateString);
+            } else {
+                const timeStr = date.toLocaleTimeString("vi-VN", {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+                const dateStr = date.toLocaleDateString("vi-VN", {
+                    day: "2-digit",
+                    month: "2-digit"
+                });
+                return `${timeStr}, ${dateStr}`;
+            }
+        }
+
+        function getStatusBadgeClass(status) {
+            const statusMap = {
+                "pending": "bg-blue-100 text-blue-700",
+                "assigned": "bg-yellow-100 text-yellow-700",
+                "accepted": "bg-green-100 text-green-700",
+                "departed": "bg-purple-100 text-purple-700",
+                "arrived": "bg-indigo-100 text-indigo-700",
+                "in_progress": "bg-orange-100 text-orange-700"
+            };
+            return statusMap[status] || "bg-gray-100 text-gray-700";
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                "pending": "Chờ nhận",
+                "assigned": "Đã được gán",
+                "accepted": "Đã nhận đơn",
+                "departed": "Đang di chuyển",
+                "arrived": "Đã đến nơi",
+                "in_progress": "Đang làm việc"
+            };
+            return statusMap[status] || status;
+        }
+
+        function renderOrders(orders) {
+            const jobList = document.getElementById("job-list");
+            if (!jobList) return;
+
+            if (orders.length === 0) {
+                jobList.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">work_off</span>
+                    <p class="text-gray-500 font-medium">Hiện tại không có đơn hàng nào</p>
+                </div>
+            `;
+                return;
+            }
+
+            jobList.innerHTML = orders.map(order => {
+                const isPending = order.status === "pending" && !order.tasker_id;
+                const isAssigned = order.status === "assigned" && order.tasker_id;
+                const isAccepted = ["accepted", "departed", "arrived", "in_progress"].includes(order.status);
+                const isTaken = !isPending && !isAssigned && !isAccepted;
+
+                const serviceName = order.task_snapshot?.name || order.task_id?.task_name || "Dịch vụ";
+                const price = formatCurrency(order.final_amount || order.base_amount);
+                const address = order.address_snapshot?.full_address || order.address_id?.full_address || "—";
+                const timeDisplay = formatScheduledTime(order.scheduled_at, order.type);
+                const isImmediate = order.type === "immediate";
+
+                return `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group ${isTaken ? 'opacity-60 grayscale cursor-not-allowed' : ''}">
+                    <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2 ${isTaken ? 'bg-gray-300' : ''}"></div>
+                    <div class="pl-3">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors ${isTaken ? 'text-gray-700' : ''}">${serviceName}</h2>
+                                ${isPending ?
+                        `<span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Mới</span>` :
+                        `<span class="${getStatusBadgeClass(order.status)} text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">${getStatusText(order.status)}</span>`
+                    }
+                            </div>
+                            <span style="color: #3730A3;" class="text-xl font-black ${isTaken ? 'text-gray-400' : ''}">${price}</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3 ${isTaken ? 'text-gray-500' : ''}">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] ${isImmediate ? 'text-red-500' : 'text-gray-400'}">${isImmediate ? 'timer' : 'schedule'}</span>
+                                <span class="font-medium ${isImmediate ? 'font-bold text-red-500' : ''}">${timeDisplay}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] text-gray-400">location_on</span>
+                                <span class="line-clamp-1">${address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${isPending ?
+                        `<button onclick="acceptOrder('${order._id}')" style="background-color: #3730A3;" class="w-full mt-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity ml-1">
+                            Nhận việc ngay
+                        </button>` :
+                        isAssigned || isAccepted ?
+                            `<button onclick="viewOrderDetails('${order._id}')" style="color: #3730A3; border-color: #3730A3;" class="w-full mt-5 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors ml-1">
+                            Xem chi tiết
+                        </button>` :
+                            `<button class="w-full mt-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl ml-1 pointer-events-none">
+                            Đã có người nhận
+                        </button>`
+                    }
+                </div>
+            `;
+            }).join("");
+        }
+
+        function viewOrderDetails(orderId) {
+            localStorage.setItem("currentOrderId", orderId);
+            window.location.href = `./tasker_order_progress.html?orderId=${orderId}`;
+        }
+
+    </script>
+    <script>
+        // Cashout UI logic: load amounts, handle cashout
+        function formatCurrency(amount) {
+            try {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
+            } catch (e) {
+                return amount;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = `px-4 py-2 rounded shadow ${type === 'success' ? 'bg-green-500 text-white' : type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'}`;
+            el.textContent = message;
+            toast.appendChild(el);
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCashoutInfo();
+            const btn = document.getElementById('cashoutBtn');
+            if (btn) btn.addEventListener('click', performCashout);
+        });
+    </script>
+</body>
+
+</html>
