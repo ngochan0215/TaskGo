@@ -16,15 +16,23 @@ export const getUserProfile = async (req, res) => {
     }
 
     if (account.role == "customer") {
-      const customer = await Customer.findOne({ user_id: user._id });
+      const customer = await Customer.findOne({ user_id: user._id }).select("-__v -created_at -updated_at -user_id");
       if (!customer) {
         return res.status(400).json({ success: false, message: "Không tìm thấy khách hàng!" });
       }
 
-      return res.status(200).json({ success: true, user, role: account.role, email: account.email, type: customer.type });
+      return res.status(200).json({
+        success: true,
+        user,
+        account : {
+          role: account.role,
+          email: account.email,
+        },
+        customer
+      });
 
     } else if (account.role == "tasker") {
-      const tasker = await Tasker.findOne({ user_id: user._id });
+      const tasker = await Tasker.findOne({ user_id: user._id }).select("-__v -created_at -updated_at -user_id");
       if (!tasker) {
         return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
       }
@@ -32,12 +40,11 @@ export const getUserProfile = async (req, res) => {
       return res.status(200).json({
         success: true,
         user,
-        role: account.role,
-        email: account.email,
-        working_year: tasker.working_year,
-        hourly_rate: tasker.hourly_rate,
-        introduction: tasker.introduction,
-        working_area: tasker.working_area,
+        account : {
+          role: account.role,
+          email: account.email,
+        },
+        tasker
       });
     }
 
@@ -45,15 +52,18 @@ export const getUserProfile = async (req, res) => {
 
   } catch (error) {
     console.error("LỖI LẤY PROFFILE USER:", error);
-    res.status(500).json({ success: false, message: "LỖI SERVER: ", error: error.message });
+    res.status(500).json({ success: false, message: "LỖI SERVER: " + error.message });
   }
 };
 
-export const updateUserProfile = async (req, res) => {
+export const updateCustomerProfile = async (req, res) => {
   try {
+    const { full_name, phone_number, identification,
+      BIN, account_number } = req.body;
+
     const user = await User.findById(req.userId);
     if (!user) {
-      return res.status(400).json({ success: false, message: "Không tìm thấy người dùng!" });
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản người dùng!" });
     }
 
     const account = await Account.findById(user.account_id);
@@ -61,7 +71,10 @@ export const updateUserProfile = async (req, res) => {
       return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
     }
 
-    const { full_name, phone_number, identification } = req.body;
+    const customer = await Customer.findOne({ user_id: user._id });
+    if (!customer) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản khách hàng!" });
+    }
 
     if (phone_number) {
       const phoneExists = await User.findOne({ phone_number, _id: { $ne: user._id } });
@@ -88,25 +101,140 @@ export const updateUserProfile = async (req, res) => {
     if (identification) user.identification = identification;
     await user.save();
 
-    if (account.role == "tasker") {
-      const tasker = await Tasker.findOne({ user_id: user._id });
-      if (!tasker) {
-        return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
+    if (BIN) {
+      const [binInCustomer, binInTasker] = await Promise.all([
+        Customer.findOne({ BIN, _id: { $ne: customer._id } }),
+        Tasker.findOne({ BIN }) // tasker khác customer, không cần $ne
+      ]);
+
+      if (binInCustomer || binInTasker) {
+        return res.status(400).json({
+          success: false,
+          message: "Số thẻ ngân hàng đã được sử dụng."
+        });
       }
 
-      const { introduction, working_area } = req.body;
-
-      if (introduction) tasker.introduction = introduction;
-      if (working_area) tasker.working_area = working_area;
-      
-      await tasker.save();
+      customer.BIN = BIN;
     }
 
-    return res.status(200).json({ success: true, message: "Profile updated successfully" });
+    if (account_number) {
+      const [accountInTasker, accountInCustomer] = await Promise.all([
+        Tasker.findOne({ account_number }),
+        Customer.findOne({ account_number, _id: { $ne: customer._id } })
+      ]);
+
+      if (accountInCustomer || accountInTasker) {
+        return res.status(400).json({
+          success: false,
+          message: "Số tài khoản ngân hàng đã được sử dụng."
+        });
+      }
+
+      customer.account_number = account_number;
+    }
+
+    await customer.save();
+
+    return res.status(200).json({ success: true, message: "Cập nhật thông tin cá nhân thành công." });
 
   } catch (error) {
     console.error("Update user profile error:", error);
     res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+  }
+};
+
+export const updateTaskerProfile = async (req, res) => {
+  try {
+    const { full_name, phone_number, identification,
+      introduction, working_area, working_radius, BIN, account_number, skills
+     } = req.body;
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản người dùng của tasker!" });
+    }
+
+    const account = await Account.findById(user.account_id);
+    if (!account) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy tài khoản!" });
+    }
+
+    const tasker = await Tasker.findOne({ user_id: user._id });
+    if (!tasker) {
+      return res.status(400).json({ success: false, message: "Không tìm thấy tasker!" });
+    }
+
+    if (phone_number) {
+      const phoneExists = await User.findOne({ phone_number, _id: { $ne: user._id } });
+      if (phoneExists) {
+        return res.status(400).json({
+          success: false,
+          message: "Số điện thoại đã được sử dụng."
+        });
+      }
+
+      user.phone_number = phone_number;
+    }
+
+    if (identification) {
+      const idExists = await User.findOne({ identification, _id: { $ne: user._id } });
+      if (idExists) {
+        return res.status(400).json({
+          success: false,
+          message: "CCCD đã được sử dụng."
+        });
+      }
+
+      user.identification = identification;
+    }
+
+    if (full_name) user.full_name = full_name;
+    await user.save();
+
+    if (introduction) tasker.introduction = introduction;
+    if (working_area) tasker.working_area = working_area;
+    if (working_radius) tasker.working_radius = working_radius;
+    if (skills) tasker.skills = skills;
+
+    if (BIN) {
+      const [binInTasker, binInCustomer] = await Promise.all([
+        Tasker.findOne({ BIN, _id: { $ne: tasker._id } }),
+        Customer.findOne({ BIN })
+      ]);
+
+      if (binInCustomer || binInTasker) {
+        return res.status(400).json({
+          success: false,
+          message: "Số thẻ ngân hàng đã được sử dụng."
+        });
+      }
+
+      tasker.BIN = BIN;
+    }
+
+    if (account_number) {
+      const [accountInTasker, accountInCustomer] = await Promise.all([
+        Tasker.findOne({ account_number, _id: { $ne: tasker._id } }),
+        Customer.findOne({ account_number })
+      ]);
+
+      if (accountInCustomer || accountInTasker) {
+        return res.status(400).json({
+          success: false,
+          message: "Số tài khoản ngân hàng đã được sử dụng."
+        });
+      }
+
+      tasker.account_number = account_number;
+    }
+    
+    await tasker.save();
+
+    return res.status(200).json({ success: true, message: "Cập nhật thông tin cá nhân thành công!" });
+
+  } catch (error) {
+    console.error("Update user profile error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" + error.message });
   }
 };
 
@@ -383,12 +511,13 @@ const MAX_ADDRESS_PER_USER = 5;
 
 export const addAddress = async (req, res) => {
   try {
-    const userId = req.userId;
 
-    const { label, longtitude, latitude, full_address,
+    const { user_id, label, longitude, latitude, full_address,
       street, ward, district, city, note, is_default } = req.body;
 
-    if ( longtitude === undefined || latitude === undefined || !full_address ||
+    const userId = req.userId? req.userId : user_id;
+
+    if ( longitude === undefined || latitude === undefined || !full_address ||
       !street || !ward || !district || !city
     ) {
       return res.status(400).json({
@@ -396,7 +525,7 @@ export const addAddress = async (req, res) => {
       });
     }
 
-    if ( typeof longtitude !== "number" || typeof latitude !== "number" ) {
+    if ( typeof longitude !== "number" || typeof latitude !== "number" ) {
       return res.status(400).json({
         message: "Tọa độ không hợp lệ"
       });
@@ -422,7 +551,7 @@ export const addAddress = async (req, res) => {
     const address = await Address.create({
       user_id: userId,
       label,
-      longtitude,
+      longitude,
       latitude,
       full_address,
       street,
@@ -454,7 +583,7 @@ export const getMyAddresses = async (req, res) => {
     const addresses = await Address.find({ user_id: userId })
       .sort({ is_default: -1, created_at: -1 });
 
-    return res.json({
+    return res.status(200).json({
       total: addresses.length,
       data: addresses
     });
@@ -462,8 +591,7 @@ export const getMyAddresses = async (req, res) => {
   } catch (error) {
     console.error(error);
     return res.status(500).json({
-      message: "Lỗi server",
-      error: error.message
+      message: "Lỗi server" + error.message
     });
   }
 };

@@ -1,5 +1,4 @@
 // khai báo các biến cần thiết
-let addressMap = {};
 let bookingDraft = null;
 let voucherDraft = null;
 
@@ -133,6 +132,14 @@ const serviceRenderers = {
     `<p class="text-gray-400">Không có chi tiết dịch vụ</p>`
 };
 
+const raw = localStorage.getItem("bookingDraft");
+if (!raw) {
+  alert("Không tìm thấy thông tin đặt dịch vụ");
+  location.href = "/";
+}
+bookingDraft = JSON.parse(raw);
+console.log("BOOKING DRAFT BEFORE INIT ANYTHING: ", bookingDraft);
+
 function initPaymentPage() {
   loadBookingDraft();
   initVoucherDraft();
@@ -150,27 +157,30 @@ function loadBookingDraft() {
     return;
   }
   bookingDraft = JSON.parse(raw);
+  console.log("BOOKING DRAFT IN PAYMENT (loadBookingDraft): ", bookingDraft);
 }
 
-function initVoucherDraft() {
-  voucherDraft =
-    JSON.parse(localStorage.getItem("voucherDraft")) || {
-      base_amount: bookingDraft.base_amount,
-      voucher_code: null,
-      discount_amount: 0,
-      final_amount: bookingDraft.base_amount
-    };
-
-  voucherDraft.base_amount = bookingDraft.base_amount;
-  localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft));
-
-  bookingDraft.final_amount = voucherDraft.final_amount;
-  localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+function initVoucherDraft() { 
+  voucherDraft = JSON.parse(localStorage.getItem("voucherDraft")) || 
+  { 
+    base_amount: bookingDraft.base_amount, 
+    voucher_code: null, 
+    discount_amount: 0, 
+    final_amount: bookingDraft.base_amount 
+  }; 
+  voucherDraft.base_amount = bookingDraft.base_amount; 
+  localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft)); 
+  console.log("VOUCHER DRAFT IN PAYMENT (initVoucherDraft): ", voucherDraft); 
+  
+  bookingDraft.final_amount = voucherDraft.discount_amount? 
+    voucherDraft.final_amount : bookingDraft.final_amount; 
+  localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft)); 
+  console.log("BOOKING DRAFT IN PAYMENT (initVoucherDraft): ", bookingDraft); 
 }
 
 function renderAmounts() {
   document.getElementById("baseAmount").innerText =
-    formatCurrency(bookingDraft.base_amount);
+    formatCurrency(bookingDraft.final_amount);
 
   document.getElementById("voucherAmount").innerText =
     voucherDraft.discount_amount
@@ -178,16 +188,16 @@ function renderAmounts() {
       : "0 VND";
 
   document.getElementById("finalAmount").innerText =
-    formatCurrency(voucherDraft.final_amount);
+    formatCurrency(bookingDraft.final_amount);
 
   document.getElementById("finalAmountt").innerText =
-    formatCurrency(voucherDraft.final_amount);
+    formatCurrency(bookingDraft.final_amount);
 }
 
 function renderServiceSummary() {
   const el = document.getElementById("serviceSummary");
 
-  console.log("BOOKING DRAFT IN PAYMENT: ", bookingDraft);
+  console.log("BOOKING DRAFT IN PAYMENT (renderServiceSummary): ", bookingDraft);
   const serviceCode = bookingDraft.task_snapshot?.code || "DEFAULT";
 
   const renderer = serviceRenderers[serviceCode] || serviceRenderers.DEFAULT;

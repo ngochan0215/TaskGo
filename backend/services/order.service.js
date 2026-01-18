@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 import { Task, Order, OrderStatusLog, Address, 
-  Voucher, Receipt, VoucherUsage, Customer, 
- } from "../models/index.js";
-import { validateAndGetDiscountSnapshot } from "./discount.js";
-import { checkAndGetVoucherSnapshot } from "./voucher.js";
+  Voucher, Receipt, VoucherUsage, Customer, Tasker,
+} from "../models/index.js";
+import { suggestTasker, changeTaskerStatus } from "./taskers.service.js";
+import { pushNotification } from "./notification.service.js";
 
 // Get all orders with optional filters + pagination
 export async function getAllOrdersService({
@@ -22,6 +22,10 @@ export async function getAllOrdersService({
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -50,7 +54,14 @@ export async function deleteOrderByIdService(orderId) {
 // Get order by id
 export async function getOrderByIdService(orderId) {
   try {
-    const order = await Order.findById(orderId).select("-__v -created_at -updated_at").lean();
+    const order = await Order.findById(orderId)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .select("-__v -created_at -updated_at")
+      .lean();
+      
     if (!order) 
       throw new Error("Order not found");
 
@@ -61,25 +72,76 @@ export async function getOrderByIdService(orderId) {
   }
 }
 
-// Get all orders of a customer, with pagination + filter by status
+// Get all orders of a customer, with pagination + filter by status or category
 export async function getAllOrdersByCustomerIdService({
   customerId,
   status,
+  category, // "upcoming" or "history"
   page = 1,
   limit = 50,
 }) {
   try {
     const q = {};
-    if (customerId) q.customer = customerId;
-    if (status) q.status = status;
+    if (customerId) q.customer_id = customerId;
+    
+    // Filter by category (upcoming vs history)
+    if (category === "upcoming") {
+      // Upcoming: all statuses except completed and cancelled
+      q.status = { $nin: ["completed", "cancelled"] };
+    } else if (category === "history") {
+      // History: only completed and cancelled
+      q.status = { $in: ["completed", "cancelled"] };
+    } else if (status) {
+      // If specific status is provided, use it
+      q.status = status;
+    }
 
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
-      .populate("task_id")
+      .populate("task_id", "task_name unit base_price")
+      .populate("tasker_id", "full_name phone_number email")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(Number(limit));
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
+// Get available orders for tasker (pending orders + orders assigned to this tasker)
+export async function getAvailableOrdersForTaskerService({
+  taskerUserId,
+  page = 1,
+  limit = 50,
+}) {
+  try {
+    const q = {
+      status: { $nin: ["completed", "cancelled"] },
+      $or: [
+        { status: "pending", tasker_id: null },
+        { status: "assigned", tasker_id: taskerUserId },
+        { 
+          status: { $in: ["accepted", "departed", "arrived", "in_progress"] },
+          tasker_id: taskerUserId
+        }
+      ]
+    };
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate('customer_id', 'full_name phone_number email')
+      .populate('tasker_id', 'full_name phone_number email')
+      .populate('task_id', 'task_name unit base_price')
+      .populate('address_id')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
 
     return orders;
   } catch (err) {
@@ -103,9 +165,6 @@ export async function createOrderService({
       if (!["immediate", "scheduled"].includes(type)) {
         throw new Error("Chỉ chọn giữa đặt liền hoặc đặt lịch trước.");
       }
-
-      // if (quantity <= 0) 
-      //   throw new Error("Số giờ đặt phải lớn hơn 0.");
 
       let scheduleDate;
       if (type === "scheduled") {
@@ -178,35 +237,152 @@ export async function createOrderService({
         await voucher.save({ session });
       }
 
-      // TODO: thêm logic đặt liền
-      if (type === "immediate") {
-      //   const suggestion = await suggestTasker(order[0]._id, {});
-      //   if (!suggestion) 
-      //     throw new Error("No available tasker at the moment");
-      // order[0].tasker_id = suggestion.taskerId;
-      // await order[0].save({ session });
-
-        // await changeOrderStatus({
-        //   orderId: order[0]._id,
-        //   toStatus: "assigned",
-        //   actorType: "system",
-        //   actorId: null,
-        //   session
-        // });
-
-        // await session.commitTransaction();
-        // return { order: order[0], assignedTasker: suggestion }      
-      }
-
-      // nếu đặt lịch trước thì chưa gán tasker liền
       await session.commitTransaction();
-      return { order: order[0], assignedTasker: null };
+      return { order: order[0] };
 
     } catch (err) {
       await session.abortTransaction();
       session.endSession();
       throw new Error(err.message);
     }
+}
+
+// assign taskers for an order
+export async function assignTaskerService(order) {
+  console.log("ORDER (assignTaskerService): ", order);
+
+  const { suggestTaskers, suggestion } = await suggestTasker(order._id);
+
+  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+
+  if (!suggestion || !suggestTaskers) {
+    throw new Error("Không tìm thấy tasker phù hợp.");
+  }
+
+  order.tasker_id = suggestion.user_id;
+  await order.save();
+
+  await changeOrderStatus({
+    orderId: order._id,
+    toStatus: "assigned",
+    actorType: "system",
+    actorId: null,
+  });
+
+  await changeTaskerStatus({
+    taskerId: suggestion.tasker_id,
+    toStatus: "busy",
+    actorType: "system",
+    actorId: null,
+  });
+
+  // thông báo cho khách
+  await pushNotification(
+    order.customer_id,
+    "Tạo đơn hàng thành công",
+    "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  // thông báo cho tasker được gán
+  await pushNotification(
+    suggestion.user_id,                 // userId (tasker user)
+    "Có đơn hàng mới",
+    `Bạn có một đơn hàng có ID: ${order._id} phù hợp, vui lòng phản hồi sớm trong vòng 2 phút.`,
+    "order",                              // type
+    "Order",                              // kind
+    order._id,                         // refId
+    "unread"                              // status
+  );
+
+  return { suggestion, suggestTaskers };
+}
+
+// Check if order can be cancelled by customer
+export async function canCancelOrderByCustomer({ orderId, customerId }) {
+  try {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      return { canCancel: false, reason: "Không tìm thấy đơn hàng." };
+    }
+
+    if (customerId && String(order.customer_id) !== String(customerId)) {
+      return { canCancel: false, reason: "Người dùng không có quyền hủy đơn này." };
+    }
+
+    const validStatus = ["pending", "assigned", "accepted"];
+    if (!validStatus.includes(order.status)) {
+      return { 
+        canCancel: false, 
+        reason: "Đơn hàng chỉ có thể hủy khi ở trạng thái: chờ xác nhận, đã gán tasker, hoặc tasker đã nhận." 
+      };
+    }
+
+    const now = new Date();
+
+    // For scheduled orders
+    if (order.type === "scheduled") {
+      const scheduledAt = new Date(order.scheduled_at);
+      const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+      // Can't cancel if less than 1 hour before scheduled time
+      if (diffHours <= 1) {
+        return { 
+          canCancel: false, 
+          reason: "Không được phép hủy 1 tiếng trước giờ hẹn lịch làm." 
+        };
+      }
+
+      // Penalty if less than 5 hours
+      const penaltyAmount = diffHours < 5 ? order.final_amount * 0.3 : 0;
+      return { canCancel: true, penaltyAmount };
+    }
+
+    // For immediate orders - check if tasker has accepted
+    if (order.status === "accepted") {
+      const acceptedLog = await OrderStatusLog.findOne({
+        order_id: orderId,
+        to_status: "accepted"
+      }).sort({ created_at: -1 });
+
+      if (acceptedLog) {
+        const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+        // Can't cancel if more than 15 minutes after tasker accepted
+        if (diffMinutes > 15) {
+          return { 
+            canCancel: false, 
+            reason: "Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn." 
+          };
+        }
+      }
+    }
+
+    // Check daily cancellation limit
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const cancelCountToday = await OrderStatusLog.countDocuments({
+      actor_type: "customer",
+      actor_id: customerId,
+      to_status: "cancelled",
+      created_at: { $gte: startOfDay }
+    });
+
+    if (cancelCountToday >= 5) {
+      return { 
+        canCancel: false, 
+        reason: "Đã hết số lần được phép hủy trong ngày (5 lần)." 
+      };
+    }
+
+    return { canCancel: true, penaltyAmount: 0 };
+  } catch (err) {
+    return { canCancel: false, reason: err.message };
+  }
 }
 
 // customer cancels order
@@ -224,13 +400,15 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       throw new Error("Người dùng không có quyền hủy đơn này.");
     }
 
-    const validStatus = ["accepted", "pending", "assigned"];
-    if (!validStatus.includes(order.status))
-      throw new Error("Đơn hàng chỉ có thể hủy trước khi tasker được chỉ định bắt đầu di chuyển.");
+    const validStatus = ["pending", "assigned", "accepted"];
+    if (!validStatus.includes(order.status)) {
+      throw new Error("Đơn hàng chỉ có thể hủy khi ở trạng thái: chờ xác nhận, đã gán tasker, hoặc tasker đã nhận.");
+    }
 
-    // nếu là đơn đặt trước
+    const now = new Date();
     let penaltyAmount = 0;
 
+    // For scheduled orders
     if (order.type === "scheduled") {
       const scheduledAt = new Date(order.scheduled_at);
       const diffHours = (scheduledAt.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -242,28 +420,27 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
 
       // dưới 5 tiếng thì phạt 30% tổng bill
       if (diffHours < 5) {
-        penaltyAmount = order.total_amount * 0.3;
+        penaltyAmount = order.final_amount * 0.3;
       }
     }
 
-    // nếu là đơn đặt liền
-    // lấy thời điểm tasker accept
-    const acceptedLog = await OrderStatusLog.findOne({
-      order_id: orderId,
-      to_status: "accepted"
-    })
-      .sort({ created_at: -1 })
-      .session(session);
+    // For immediate orders - check if tasker has accepted
+    if (order.status === "accepted") {
+      const acceptedLog = await OrderStatusLog.findOne({
+        order_id: orderId,
+        to_status: "accepted"
+      })
+        .sort({ created_at: -1 })
+        .session(session);
 
-    if (!acceptedLog)
-      throw new Error("Accepted timestamp not found");
-
-    const now = new Date();
-    const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
-
-    // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
-    if (diffMinutes > 15)
-      throw new Error("Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn.");
+      if (acceptedLog) {
+        const diffMinutes = (now.getTime() - acceptedLog.created_at.getTime()) / (1000 * 60);
+        // quá 15 phút từ lúc tasker nhận đơn thì không cho huỷ nữa
+        if (diffMinutes > 15) {
+          throw new Error("Không cho phép hủy khi quá 15 phút kể từ lúc tasker nhận đơn.");
+        }
+      }
+    }
 
     // kiểm tra số lần huỷ trong ngày
     const startOfDay = new Date();
@@ -276,8 +453,9 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       created_at: { $gte: startOfDay }
     }).session(session);
 
-    if (cancelCountToday >= 5)
+    if (cancelCountToday >= 5) {
       throw new Error("Đã hết số lần được phép hủy trong ngày (5 lần).");
+    }
 
     // đổi trạng thái và log
     await changeOrderStatus({
@@ -285,30 +463,59 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       toStatus: "cancelled",
       actorType: "customer",
       actorId: customerId,
-      reason,
+      reason: reason,
       session
     });
+
+    // log trạng thái mới của tasker được gán nếu có
+    if (order.tasker_id) {
+      const tasker = await Tasker.findOne({ user_id: order.tasker_id }).session(session);
+      const taskerId = tasker._id;
+  
+      await changeTaskerStatus({
+        taskerId,
+        toStatus: "available",
+        actorType: "customer",
+        actorId: customerId,
+        reason: reason,
+        session
+      });
+
+    }
 
     // update số lần hủy của khách hàng
     await Customer.findOneAndUpdate(
       { user_id: customerId },
-      { $inc: { cancellation_count: 1 } }
+      { $inc: { cancellation_count: 1 } },
+      { session }
     );
 
-    // cập nhật sử dụng voucher
-    await VoucherUsage.deleteOne({
-      voucher_id: order.voucher_id,
-      order_id: order._id
-    });
+    if (order.voucher_id) {
+      // cập nhật sử dụng voucher (quay lại ban đầu)
+      await VoucherUsage.deleteOne({
+        voucher_id: order.voucher_id,
+        order_id: order._id
+      }, { session });
 
-    await Voucher.findByIdAndUpdate(order.voucher_id, {
-      $inc: { used_quantity: -1 }
-    });
+      await Voucher.findByIdAndUpdate(order.voucher_id, {
+        $inc: { used_quantity: -1 }
+      }, { session });
 
-    order.voucher_id = null;
-    order.discount_amount = 0;
-    order.final_amount = order.total_amount;
-    await order.save();
+      // console.log("order: ", order.final_amount);
+      // order.final_amount += order.voucher_snapshot.discount_amount;
+      // order.voucher_id = null;
+      // order.voucher_snapshot = null;
+    }
+
+    await order.save({ session });
+
+    // update trạng thái hóa đơn
+    const receipt = await Receipt.findOne({ order_id: order._id }).session(session);
+    if (receipt) {
+      receipt.status = "cancelled";
+      receipt.cancelled_at = new Date();
+      await receipt.save({ session });
+    }
 
     // TODO: Xử lý phí phạt
     if (penaltyAmount > 0) {
@@ -317,6 +524,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
     }
 
     await session.commitTransaction();
+
+    return { order, penaltyAmount };
 
   } catch (error) {
     await session.abortTransaction();
@@ -356,70 +565,6 @@ export async function changeOrderStatus({ orderId, toStatus, actorType, actorId 
     throw new Error(error.message);
   }   
 };
-
-//---- RECEIPT ----//
-export async function createReceiptService({ order_id, payment_method }) {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    if (!order_id)
-      throw new Error("order_id là bắt buộc.");
-
-    if (!["cash", "credit_card", "bank_transfer", "ewallet"].includes(payment_method)) {
-      throw new Error("Phương thức thanh toán không hợp lệ.");
-    }
-
-    const order = await Order.findById(order_id).session(session);
-    if (!order)
-      throw new Error("Không tìm thấy đơn hàng.");
-
-    const allowedStatuses = ["pending", "awaiting_payment"];
-    if (!allowedStatuses.includes(order.status)) {
-      throw new Error(
-        `Không thể tạo hóa đơn khi đơn hàng đang ở trạng thái: ${order.status}`
-      );
-    }
-
-    if (order.type === "scheduled" && payment_method !== "bank") {
-      throw new Error("Đơn đặt lịch chỉ được thanh toán bằng chuyển khoản");
-    }
-
-    let deposit_paid_amount = 0;
-    if (order.type === "scheduled") {
-      deposit_paid_amount = Math.round(order.base_amount * 0.3);
-    }
-
-    const existingReceipt = await Receipt.findOne({ order_id: order._id }).session(session);
-
-    if (existingReceipt) {
-      await session.commitTransaction();
-      return { receipt: existingReceipt, order };
-    }
-
-    const receipt = await Receipt.create(
-      [
-        {
-          order_id: order._id,
-          total_amount: order.base_amount,
-          deposit_paid_amount,
-          payment_method,
-          status: "pending"
-        }
-      ],
-      { session }
-    );
-
-    await session.commitTransaction();
-    return { receipt: receipt[0], order };
-
-  } catch (err) {
-    await session.abortTransaction();
-    throw err;
-  } finally {
-    session.endSession();
-  }
-}
 
 export async function verifyCustomerOrderStats(customerUserId) {
 
@@ -470,4 +615,58 @@ export async function verifyCustomerOrderStats(customerUserId) {
     cancelled_orders: cancelledCount,
     verified: true,
   };
+}
+
+// Get order trends for the last 7 days (for admin)
+export async function getOrderTrendsService() {
+  try {
+    const trends = [];
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    // Loop through last 7 days
+    for (let i = 6; i >= 0; i--) {
+      const endDate = new Date(today);
+      endDate.setDate(today.getDate() - i);
+      endDate.setHours(23, 59, 59, 999);
+
+      const startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+
+      // Count orders by status for this day
+      const [totalCount, completedCount, inProgressCount, cancelledCount] = await Promise.all([
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate }
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: "completed"
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: { $in: ["pending", "assigned", "accepted", "departed", "arrived", "in_progress"] }
+        }),
+        Order.countDocuments({
+          created_at: { $gte: startDate, $lte: endDate },
+          status: "cancelled"
+        })
+      ]);
+
+      trends.push({
+        date: startDate.toISOString().split('T')[0],
+        dayOfWeek: startDate.toLocaleDateString('en-US', { weekday: 'short' }),
+        total: totalCount,
+        completed: completedCount,
+        in_progress: inProgressCount,
+        cancelled: cancelledCount,
+        completed_percentage: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
+        in_progress_percentage: totalCount > 0 ? Math.round((inProgressCount / totalCount) * 100) : 0,
+        cancelled_percentage: totalCount > 0 ? Math.round((cancelledCount / totalCount) * 100) : 0,
+      });
+    }
+
+    return trends;
+  } catch (err) {
+    throw new Error(err.message);
+  }
 }

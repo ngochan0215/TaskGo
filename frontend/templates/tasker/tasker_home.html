@@ -40,7 +40,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
+            <button id="notification-btn" class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
                 <span class="material-symbols-outlined text-[#111827]">notifications</span>
                 <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>
             </button>
@@ -61,9 +61,10 @@
                     <p class="text-xs font-medium text-gray-500">ID: #TK8821</p>
                 </div>
             </div>
+            <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch sử nhận việc</a>
             <a href="#" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
-            <a href="#" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
+            <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
                 <span class="material-symbols-outlined">logout</span> Đăng xuất
             </a>
         </nav>
@@ -114,18 +115,23 @@
                     <div class="p-5 space-y-4">
                         <div class="text-center">
                             <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Hôm nay kiếm được</p>
-                            <p style="color: #3730A3;" class="text-3xl font-black">450.000đ</p>
+                            <p id="todayEarnings" style="color: #3730A3;" class="text-3xl font-black">—</p>
                         </div>
 
                         <div style="background-color: #EEF2FF; border-color: #C7D2FE;" class="border rounded-xl p-3 flex items-center justify-between">
                             <div>
                                 <p class="text-[9px] text-gray-500 font-bold uppercase mb-0.5">Số dư khả dụng</p>
-                                <p style="color: #3730A3;" class="text-sm font-bold">1.250.000đ</p>
+                                <p id="availableBalance" style="color: #3730A3;" class="text-sm font-bold">—</p>
                             </div>
-                            <button class="bg-white text-[#3730A3] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform">
-                                Rút ngay
+                            <button id="cashoutBtn" class="bg-white text-[#3730A3] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                <span id="cashoutBtnText">Rút ngay</span>
+                                <svg id="cashoutSpinner" xmlns="http://www.w3.org/2000/svg" class="hidden ml-2 h-4 w-4 text-[#3730A3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0" />
+                                </svg>
                             </button>
                         </div>
+
+                        <div id="toast" class="fixed top-6 right-6 hidden z-50"></div>
 
                         <div class="grid grid-cols-2 gap-3 pt-1">
                             <div class="text-center p-2 bg-gray-50 rounded-lg border border-gray-100">
@@ -168,85 +174,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" id="job-list">
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group">
-                        <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors">Dọn dẹp nhà cửa</h2>
-                                    <span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 1.2km</span>
-                                </div>
-                                <span style="color: #3730A3;" class="text-xl font-black">120k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">schedule</span>
-                                    <span class="font-medium">14:00 - 16:00, Hôm nay</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">location_on</span>
-                                    <span class="line-clamp-1">Landmark 81, Bình Thạnh</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button style="background-color: #3730A3;" class="w-full mt-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity ml-1">
-                            Nhận việc ngay
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group">
-                        <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors">Đi chợ hộ (Co.op)</h2>
-                                    <span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 0.5km</span>
-                                </div>
-                                <span style="color: #3730A3;" class="text-xl font-black">55k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-red-500">timer</span>
-                                    <span class="font-bold text-red-500">Ngay bây giờ (45 phút)</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px] text-gray-400">shopping_cart</span>
-                                    <span class="line-clamp-1">Mua 5kg gạo, 1 vỉ trứng...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button style="color: #3730A3; border-color: #3730A3;" class="w-full mt-5 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors ml-1">
-                            Xem chi tiết
-                        </button>
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col justify-between h-full relative opacity-60 grayscale cursor-not-allowed">
-                        <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-gray-300"></div>
-                        <div class="pl-3">
-                            <div class="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 class="text-gray-700 font-bold text-lg">Vệ sinh máy lạnh</h2>
-                                    <span class="bg-gray-100 text-gray-500 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Cách 3.0km</span>
-                                </div>
-                                <span class="text-gray-400 text-xl font-black">300k</span>
-                            </div>
-                            <div class="space-y-2 text-sm text-gray-500 border-t border-dashed border-gray-200 pt-3">
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px]">schedule</span>
-                                    <span>09:00, Sáng mai</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="material-symbols-outlined text-[18px]">location_on</span>
-                                    <span>Thảo Điền, Quận 2</span>
-                                </div>
-                            </div>
-                        </div>
-                        <button class="w-full mt-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl ml-1 pointer-events-none">
-                            Đã có người nhận
-                        </button>
-                    </div>
-
+                    <!-- Orders will be rendered here by JavaScript -->
                 </div>
             </div>
         </div>
@@ -259,14 +187,30 @@
     </div>
 </footer>
 
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script type="module">
+  import { initSocket } from "../js/socket.js";
+
+  initSocket();
+</script>
+
 <script>
-    let token = null;
-    token = localStorage.getItem("token");
+    // validate authorization
+    let token = localStorage.getItem("token");
     if (!token) {
-        alert("Vui lòng đăng nhập");
-        location.href = "../auth/login-signup.html";
+        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+        window.location.href = "../auth/login-signup.html";
     }
+
+    const role = localStorage.getItem("system_role");
+    const _id = localStorage.getItem("user_id");
+    console.log("USER: ", role + " " + _id);
     console.log("TOKEN: ", token);
+
+    if (role !== "tasker") {
+        alert("Bạn không phải Tasker. Không có quyền truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
     
     const menuBtn = document.getElementById('menu-btn');
     const menuOverlay = document.getElementById('menu-overlay');
@@ -299,6 +243,7 @@
         });
     }
 
+    // logic nút thay đổi trạng thái
     const statusToggle = document.getElementById('status-toggle');
     const statusDot = document.getElementById('status-dot');
     const statusText = document.getElementById('status-text');
@@ -319,6 +264,470 @@
             }
         });
     }
+
+    // logic đăng xuất
+    const logoutBtn = document.getElementById("logout-btn");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            try {
+                const res = await fetch("http://localhost:3000/api/auth/logout", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json();
+
+                if (data.success) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user_id");
+                    localStorage.removeItem("system_role");
+
+                    alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                    window.location.href = "../auth/login-signup.html";
+                } else {
+                    alert("Đăng xuất thất bại. Vui lòng thử lại.");
+                }
+            } catch (err) {
+                console.error("LOGOUT ERROR:", err);
+                alert("Có lỗi xảy ra khi đăng xuất.");
+            }
+        });
+    }
+
+    // logic show thông báo
+    const notificationBtn = document.getElementById("notification-btn");
+    if (notificationBtn){
+        notificationBtn.addEventListener("click", async (e) => {
+            window.location.href = "../notification.html";
+        });
+    }
+  
+    // logic load thông tin tổng quát
+    async function loadTaskerHome() {
+        try {
+            const res = await fetch("http://localhost:3000/api/user/profile", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (!data.success) return;
+
+            const { user, tasker, account } = data;
+
+            // menu hamburger
+            const menuName = document.querySelector('#menu-overlay p.text-lg');
+            const menuId = document.querySelector('#menu-overlay p.text-xs');
+
+            if (menuName) menuName.innerText = user.full_name;
+            if (menuId) menuId.innerText = `ID: #${user._id.slice(-6).toUpperCase()}`;
+
+            // header
+            const greeting = document.querySelector('h2');
+            if (greeting) {
+                greeting.innerText = `Chào ${user.full_name}! 👋`;
+            }
+ 
+            const avatarImgs = document.querySelectorAll('img');
+            avatarImgs.forEach(img => {
+                if (img.alt?.toLowerCase().includes('avatar')) {
+                    img.src = user.avatar_url;
+                }
+            });
+
+            // working status
+            const statusToggle = document.getElementById('status-toggle');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
+
+            if (statusToggle) {
+                statusToggle.addEventListener('change', async function () {
+                    const newStatus = this.checked ? "available" : "offline";
+
+                    try {
+                        const res = await fetch(
+                            "http://localhost:3000/api/tasker/update/working-status",
+                            {
+                                method: "PATCH",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ working_status: newStatus })
+                            }
+                        );
+
+                        const data = await res.json();
+
+                        if (!res.ok || !data.success) {
+                            throw new Error(data.message || "Cập nhật thất bại");
+                        }
+
+                        // update UI khi backend OK
+                        if (newStatus === "available") {
+                            statusDot.className = "w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse";
+                            statusText.className = "text-xs font-bold text-green-600 uppercase";
+                            statusText.innerText = "Đang trực tuyến";
+                            jobList.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+                        } else if (newStatus === "offline") {
+                            statusDot.className = "w-2.5 h-2.5 bg-gray-400 rounded-full";
+                            statusText.className = "text-xs font-bold text-gray-500 uppercase";
+                            statusText.innerText = "Tasker hiện đã offline - nghỉ làm việc";
+                            jobList.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+                        }
+
+                    } catch (err) {
+                        alert(err.message);
+                        // rollback UI
+                        this.checked = !this.checked;
+                    }
+                });
+            }
+
+            if (tasker.working_status === 'available') {
+                statusToggle.checked = true;
+                statusDot.className = "w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse";
+                statusText.innerText = "Đang trực tuyến";
+                statusText.className = "text-xs font-bold text-green-600 uppercase";
+            } else if (tasker.working_status === 'paused') {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-gray-400 rounded-full";
+                statusText.innerText = "Tạm nghỉ";
+                statusText.className = "text-xs font-bold text-gray-500 uppercase";
+            } else if (tasker.working_status === 'pending') {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-blue-500 rounded-full";
+                statusText.innerText = "Hồ sơ đang được xem xét";
+                statusText.className = "text-xs font-bold text-blue-500 uppercase";
+            } else if (tasker.working_status === 'busy'){
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-orange-500 rounded-full";
+                statusText.innerText = "Tasker hiện đang làm việc cho khách hàng";
+                statusText.className = "text-xs font-bold text-orange-500 uppercase";
+            } else {
+                statusToggle.checked = false;
+                statusDot.className = "w-2.5 h-2.5 bg-gray-700 rounded-full";
+                statusText.innerText = "Tasker hiện đã offline - nghỉ làm việc.";
+                statusText.className = "text-xs font-bold text-dark-700 uppercase";
+            }
+
+            // điểm uy tín
+            const reputationEl = document.querySelector('.text-lg.font-bold.text-gray-800');
+            if (reputationEl) {
+                reputationEl.innerHTML = `
+                    ${user.reputation_score || '--'} 
+                    <span class="text-[#FFBE18] text-sm">★</span>
+                `;
+            }
+
+            // working_area
+            console.log("WORKING AREA:", tasker.working_area.full_address);
+
+        } catch (err) {
+            console.error("LOAD TASKER HOME ERROR:", err);
+        }
+    }
+
+    loadTaskerHome();
+
+    // Load available orders
+    async function loadAvailableOrders() {
+        try {
+            const res = await fetch("http://localhost:3000/api/tasker/orders/available", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const data = await res.json();
+            if (!data.success) {
+                console.error("Failed to load orders:", data.message);
+                return;
+            }
+
+            renderOrders(data.orders || []);
+
+        } catch (err) {
+            console.error("Error loading orders:", err);
+        }
+    }
+
+    function formatCurrency(amount) {
+        return Number(amount || 0).toLocaleString("vi-VN") + "đ";
+    }
+
+    function formatDateTime(dateString) {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = date - now;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 0) {
+            return "Đã qua";
+        } else if (diffMins < 60) {
+            return `Ngay bây giờ (${diffMins} phút)`;
+        } else {
+            const hours = Math.floor(diffMins / 60);
+            const mins = diffMins % 60;
+            return `${hours}h${mins > 0 ? mins + 'p' : ''} nữa`;
+        }
+    }
+
+    function formatScheduledTime(dateString, type) {
+        if (!dateString) return "—";
+        const date = new Date(dateString);
+        
+        if (type === "immediate") {
+            return formatDateTime(dateString);
+        } else {
+            const timeStr = date.toLocaleTimeString("vi-VN", {
+                hour: "2-digit",
+                minute: "2-digit"
+            });
+            const dateStr = date.toLocaleDateString("vi-VN", {
+                day: "2-digit",
+                month: "2-digit"
+            });
+            return `${timeStr}, ${dateStr}`;
+        }
+    }
+
+    function getStatusBadgeClass(status) {
+        const statusMap = {
+            "pending": "bg-blue-100 text-blue-700",
+            "assigned": "bg-yellow-100 text-yellow-700",
+            "accepted": "bg-green-100 text-green-700",
+            "departed": "bg-purple-100 text-purple-700",
+            "arrived": "bg-indigo-100 text-indigo-700",
+            "in_progress": "bg-orange-100 text-orange-700"
+        };
+        return statusMap[status] || "bg-gray-100 text-gray-700";
+    }
+
+    function getStatusText(status) {
+        const statusMap = {
+            "pending": "Chờ nhận",
+            "assigned": "Đã được gán",
+            "accepted": "Đã nhận đơn",
+            "departed": "Đang di chuyển",
+            "arrived": "Đã đến nơi",
+            "in_progress": "Đang làm việc"
+        };
+        return statusMap[status] || status;
+    }
+
+    function renderOrders(orders) {
+        const jobList = document.getElementById("job-list");
+        if (!jobList) return;
+
+        if (orders.length === 0) {
+            jobList.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">work_off</span>
+                    <p class="text-gray-500 font-medium">Hiện tại không có đơn hàng nào</p>
+                </div>
+            `;
+            return;
+        }
+
+        jobList.innerHTML = orders.map(order => {
+            const isPending = order.status === "pending" && !order.tasker_id;
+            const isAssigned = order.status === "assigned" && order.tasker_id;
+            const isAccepted = ["accepted", "departed", "arrived", "in_progress"].includes(order.status);
+            const isTaken = !isPending && !isAssigned && !isAccepted;
+
+            const serviceName = order.task_snapshot?.name || order.task_id?.task_name || "Dịch vụ";
+            const price = formatCurrency(order.final_amount || order.base_amount);
+            const address = order.address_snapshot?.full_address || order.address_id?.full_address || "—";
+            const timeDisplay = formatScheduledTime(order.scheduled_at, order.type);
+            const isImmediate = order.type === "immediate";
+
+            return `
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full relative overflow-hidden group ${isTaken ? 'opacity-60 grayscale cursor-not-allowed' : ''}">
+                    <div style="background-color: #3730A3;" class="absolute left-0 top-0 bottom-0 w-1.5 transition-all group-hover:w-2 ${isTaken ? 'bg-gray-300' : ''}"></div>
+                    <div class="pl-3">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h2 class="text-[#111827] font-bold text-lg group-hover:text-[#3730A3] transition-colors ${isTaken ? 'text-gray-700' : ''}">${serviceName}</h2>
+                                ${isPending ? 
+                                    `<span style="background-color: #EEF2FF; color: #3730A3;" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">Mới</span>` :
+                                    `<span class="${getStatusBadgeClass(order.status)} text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide inline-block mt-1">${getStatusText(order.status)}</span>`
+                                }
+                            </div>
+                            <span style="color: #3730A3;" class="text-xl font-black ${isTaken ? 'text-gray-400' : ''}">${price}</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600 border-t border-dashed border-gray-200 pt-3 ${isTaken ? 'text-gray-500' : ''}">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] ${isImmediate ? 'text-red-500' : 'text-gray-400'}">${isImmediate ? 'timer' : 'schedule'}</span>
+                                <span class="font-medium ${isImmediate ? 'font-bold text-red-500' : ''}">${timeDisplay}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px] text-gray-400">location_on</span>
+                                <span class="line-clamp-1">${address}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${isPending ? 
+                        `<button onclick="acceptOrder('${order._id}')" style="background-color: #3730A3;" class="w-full mt-5 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity ml-1">
+                            Nhận việc ngay
+                        </button>` :
+                        isAssigned || isAccepted ?
+                        `<button onclick="viewOrderDetails('${order._id}')" style="color: #3730A3; border-color: #3730A3;" class="w-full mt-5 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors ml-1">
+                            Xem chi tiết
+                        </button>` :
+                        `<button class="w-full mt-5 py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl ml-1 pointer-events-none">
+                            Đã có người nhận
+                        </button>`
+                    }
+                </div>
+            `;
+        }).join("");
+    }
+
+    async function acceptOrder(orderId) {
+        if (!confirm("Bạn có chắc chắn muốn nhận đơn hàng này?")) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:3000/api/tasker/accept/${orderId}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert("Nhận đơn hàng thành công!");
+                loadAvailableOrders();
+            } else {
+                alert(data.message || "Nhận đơn hàng thất bại");
+            }
+        } catch (err) {
+            console.error("Error accepting order:", err);
+            alert("Có lỗi xảy ra khi nhận đơn hàng");
+        }
+    }
+
+    function viewOrderDetails(orderId) {
+        localStorage.setItem("currentOrderId", orderId);
+        window.location.href = `./tasker_order_progress.html?orderId=${orderId}`;
+    }
+
+    // Load orders when page loads
+    loadAvailableOrders();
+
+</script>
+<script>
+// Cashout UI logic: load amounts, handle cashout
+function formatCurrency(amount) {
+    try {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
+    } catch (e) {
+        return amount;
+    }
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.innerHTML = '';
+    const el = document.createElement('div');
+    el.className = `px-4 py-2 rounded shadow ${type === 'success' ? 'bg-green-500 text-white' : type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'}`;
+    el.textContent = message;
+    toast.appendChild(el);
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 4000);
+}
+
+async function loadCashoutInfo() {
+    try {
+        const [todayRes, availRes] = await Promise.all([
+            fetch('http://localhost:3000/api/tasker/cashOut', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+            fetch('http://localhost:3000/api/tasker/cashOut/available', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        ]);
+        const todayJson = await todayRes.json();
+        const availJson = await availRes.json();
+
+        const today = todayJson && todayJson.success ? todayJson.data : 0;
+        const available = availJson && availJson.success ? availJson.data : 0;
+
+        const todayEl = document.getElementById('todayEarnings');
+        const availEl = document.getElementById('availableBalance');
+        const btn = document.getElementById('cashoutBtn');
+
+        if (todayEl) todayEl.textContent = formatCurrency(today);
+        if (availEl) availEl.textContent = formatCurrency(available);
+
+        if (btn) {
+            if (!available || Number(available) <= 0) {
+                btn.disabled = true;
+            } else {
+                btn.disabled = false;
+            }
+        }
+    } catch (err) {
+        console.error('loadCashoutInfo error', err);
+        showToast('Không thể tải thông tin rút tiền', 'error');
+    }
+}
+
+async function performCashout() {
+    const btn = document.getElementById('cashoutBtn');
+    const spinner = document.getElementById('cashoutSpinner');
+    const text = document.getElementById('cashoutBtnText');
+    if (!btn) return;
+    try {
+        btn.disabled = true;
+        spinner.classList.remove('hidden');
+        text.textContent = 'Đang xử lý...';
+
+        const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        const body = await res.json();
+        if (body && body.success) {
+            showToast('Yêu cầu rút tiền thành công', 'success');
+            await loadCashoutInfo();
+        } else {
+            showToast(body && body.message ? body.message : 'Rút tiền thất bại', 'error');
+        }
+    } catch (err) {
+        console.error('performCashout error', err);
+        showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+    } finally {
+        spinner.classList.add('hidden');
+        text.textContent = 'Rút ngay';
+        const availEl = document.getElementById('availableBalance');
+        const btnNow = document.getElementById('cashoutBtn');
+        const availNum = availEl ? Number((availEl.textContent || '').replace(/\D/g, '')) : 0;
+        if (availNum <= 0) btnNow.disabled = true;
+        else btnNow.disabled = false;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadCashoutInfo();
+    const btn = document.getElementById('cashoutBtn');
+    if (btn) btn.addEventListener('click', performCashout);
+});
 </script>
 </body>
 

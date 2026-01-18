@@ -10,13 +10,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
     <style>
-        /* Nền tổng thể đậm hơn một chút để làm nổi bật các khối trắng */
         body { background-color: #F1F5F9; }
-
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #CBD5E1; border-radius: 10px; }
-
         .fade-in { animation: fadeIn 0.3s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
@@ -27,16 +24,15 @@
 
 <body class="font-montserrat h-screen flex flex-col text-slate-800">
 
-<app-header></app-header>
+<app-header active="notification"></app-header>
 
 <main class="flex-1 w-full max-w-6xl mx-auto px-4 py-6 md:py-8 flex gap-6 overflow-hidden">
-
     <aside class="w-[280px] hidden md:flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden h-full">
         <nav class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
             <button onclick="filterNotifs('all')" id="tab-all" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-green-50 text-green-700 font-bold transition-all border border-green-100 shadow-sm">
                 <span class="material-symbols-outlined">notifications_active</span>
                 <span class="text-sm">Tất cả thông báo</span>
-                <span id="badge-count" class="ml-auto bg-green-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm shadow-green-200">3</span>
+                <span id="badge-count" class="ml-auto bg-green-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-sm shadow-green-200" style="display: none;">0</span>
             </button>
 
             <button onclick="filterNotifs('order')" id="tab-order" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 font-medium hover:bg-slate-50 hover:text-slate-700 transition-all">
@@ -44,7 +40,7 @@
                 <span class="text-sm">Cập nhật đơn hàng</span>
             </button>
 
-            <button onclick="filterNotifs('promo')" id="tab-promo" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 font-medium hover:bg-slate-50 hover:text-slate-700 transition-all">
+            <button onclick="filterNotifs('discount')" id="tab-discount" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 font-medium hover:bg-slate-50 hover:text-slate-700 transition-all">
                 <span class="material-symbols-outlined">percent</span>
                 <span class="text-sm">Khuyến mãi & Ưu đãi</span>
             </button>
@@ -57,308 +53,31 @@
     </aside>
 
     <section class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden h-full relative">
-
         <div class="px-6 py-4 h-[72px] border-b border-slate-100 flex items-center justify-between bg-white shrink-0">
             <div>
                 <h1 id="page-title" class="font-bold text-xl text-slate-800">Tất cả thông báo</h1>
-                <div class="flex items-center gap-2 mt-1">
-                </div>
             </div>
 
-            <button onclick="markAllRead()" id="btn-read-all" class="group flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all shadow-sm">
+            <button onclick="markAllRead()" id="btn-read-all" class="group flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-xs font-semibold hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all shadow-sm opacity-50 cursor-not-allowed" disabled>
                 <span class="material-symbols-outlined text-[18px] group-hover:text-green-600">done_all</span>
                 Đánh dấu đã đọc
             </button>
         </div>
 
         <div id="notification-list" class="flex-1 p-5 overflow-y-auto custom-scrollbar space-y-4 bg-slate-50/50">
-        </div>
-
+            </div>
     </section>
-
 </main>
 
 <app-footer></app-footer>
 
 <div id="toast-container" class="fixed top-5 right-5 space-y-3 z-50"></div>
 
-<script>
-    let notifications = [];
-    let currentFilter = "all";
+<script src="./js/config.js"></script>
 
-    let token = localStorage.getItem("token");
-    if (!token) {
-        alert("Vui lòng đăng nhập");
-        location.href = "../auth/login-signup.html";
-    }
-    console.log("TOKEN: ", token);
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js" integrity="sha384-mZLF4UVrpi/QTWPA7BjNPEnkIfRFn4ZEO3Qt/HFklTJBj/gBOV8G3HcKn4NfQblz" crossorigin="anonymous"></script>
 
-    function mapIcon(type) {
-        if(type === "order") return "receipt_long";
-        if(type === "promo") return "local_offer";
-        return "notifications";
-    }
+<script src="./js/notification.js"></script>
 
-    function timeAgo(input) {
-        if (!input) return "";
-
-        const now = new Date();
-        const time = new Date(input);
-
-        const diffMs = now - time; // milliseconds
-        if (diffMs < 0) return "vừa xong";
-
-        const seconds = Math.floor(diffMs / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const hours   = Math.floor(minutes / 60);
-        const days    = Math.floor(hours / 24);
-        const weeks   = Math.floor(days / 7);
-        const months  = Math.floor(days / 30);
-        const years   = Math.floor(days / 365);
-
-        if (seconds < 10) return "vừa xong";
-        if (seconds < 60) return `${seconds} giây trước`;
-        if (minutes < 60) return `${minutes} phút trước`;
-        if (hours < 24)   return `${hours} giờ trước`;
-        if (days < 7)     return `${days} ngày trước`;
-        if (weeks < 5)    return `${weeks} tuần trước`;
-        if (months < 12)  return `${months} tháng trước`;
-        return `${years} năm trước`;
-    }
-
-    async function loadNotifications() {
-        const res = await fetch("http://localhost:3000/api/notification/all", {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../auth/login-signup.html";
-            return;
-        }
-
-        if (!res.ok) return alert("Không thể load thông báo.");
-
-        const data = await res.json();
-
-        notifications = data.map(n => ({
-            id: n._id,
-            type: n.type,
-            title: n.title,
-            desc: n.content,
-            time: timeAgo(n.created_at) || timeAgo(n.createdAt),
-            icon: mapIcon(n.type),
-            isRead: n.status === "read",
-            reference: n.reference
-        }));
-
-        render();
-    }
-
-    function render() {
-        const container = document.getElementById('notification-list');
-        container.innerHTML = '';
-
-        const filtered = notifications.filter(n => currentFilter === 'all' || n.type === currentFilter);
-        const unreadCount = notifications.filter(n => !n.isRead).length;
-
-        const badge = document.getElementById('badge-count');
-        const btnRead = document.getElementById('btn-read-all');
-        if(unreadCount > 0) {
-            badge.style.display = 'flex';
-            badge.innerText = unreadCount;
-            btnRead.classList.remove('opacity-50', 'cursor-not-allowed');
-            btnRead.disabled = false;
-        } else {
-            badge.style.display = 'none';
-            btnRead.classList.add('opacity-50', 'cursor-not-allowed');
-            btnRead.disabled = true;
-        }
-
-        if (filtered.length === 0) {
-            container.innerHTML = `
-                <div class="flex flex-col items-center justify-center h-[400px] text-slate-400">
-                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <span class="material-symbols-outlined text-[48px] text-slate-300">notifications_off</span>
-                    </div>
-                    <p class="font-medium text-lg text-slate-500">Hộp thư trống</p>
-                    <p class="text-sm">Bạn chưa có thông báo mới nào</p>
-                </div>`;
-            return;
-        }
-
-        filtered.forEach((item, index) => {
-            const isUnread = !item.isRead;
-            const cardClass = isUnread
-                ? 'bg-white shadow-[0_2px_8px_-2px_rgba(0,0,0,0.1)] border-l-[6px] border-green-500'
-                : 'bg-white border border-slate-100 opacity-80 hover:opacity-100 hover:shadow-sm';
-
-            const iconStyle = isUnread
-                ? 'bg-green-100 text-green-700'
-                : 'bg-slate-100 text-slate-400';
-
-            const titleStyle = isUnread ? 'text-slate-900 font-bold' : 'text-slate-600 font-semibold';
-            const timeStyle = isUnread ? 'text-green-600 font-medium' : 'text-slate-400';
-
-            const html = `
-                <div class="group relative flex gap-4 p-4 rounded-lg fade-in ${cardClass}">
-                    <div onclick="readItem('${item.id}')" class="flex-1 flex gap-4 cursor-pointer">
-                        <div class="w-12 h-12 rounded-xl ${iconStyle} flex items-center justify-center">
-                            <span class="material-symbols-outlined">${item.icon}</span>
-                        </div>
-
-                        <div class="flex-1 min-w-0">
-                            <h3 class="${titleStyle}">${item.title}</h3>
-                            <p class="text-sm text-slate-500">${item.desc}</p>
-                        </div>
-                    </div>
-
-                    <button
-                    onclick="deleteItem(event, '${item.id}')"
-                    class="absolute top-1/2 -translate-y-1/2 right-4 w-8 h-8 z-20"
-                    >
-                    <span class="material-symbols-outlined">delete</span>
-                    </button>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-        });
-    }
-
-    function filterNotifs(type) {
-        currentFilter = type;
-        ['all', 'order', 'promo', 'system'].forEach(t => {
-            const btn = document.getElementById(`tab-${t}`);
-            if(t === type) {
-                btn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-green-50 text-green-700 font-bold transition-all border border-green-100 shadow-sm";
-            } else {
-                btn.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 font-medium hover:bg-slate-50 hover:text-slate-700 transition-all";
-            }
-        });
-
-        const titles = {'all': 'Tất cả thông báo', 'order': 'Cập nhật đơn hàng', 'promo': 'Khuyến mãi & Ưu đãi', 'system': 'Tin hệ thống'};
-        document.getElementById('page-title').innerText = titles[type];
-        render();
-    }
-
-    async function readItem(id) {
-        const item = notifications.find(n => n.id === id);
-        if(!item || item.isRead) return;
-
-        const res = await fetch(`http://localhost:3000/api/notification/${id}`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            method: "PATCH"
-        });
-
-        if (!res.ok) return alert("Không thể đánh dấu đã đọc");
-
-        item.isRead = true;
-        render();
-
-        if(item.reference?.kind === "Order") {
-            window.location.href = `/orders/${item.reference.refId}`;
-        }
-    }
-
-    async function markAllRead() {
-        const res = await fetch(`http://localhost:3000/api/notification/read-all`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            method: "PATCH"
-        });
-
-        if (!res.ok) return alert("Không thể đánh dấu đã đọc tất cả.");
-
-        notifications.forEach(n => n.isRead = true);
-        render();
-    }
-
-    async function deleteItem(e, id) {
-        console.log("IM CALLED");
-        e.stopPropagation();
-        if(confirm('Bạn có chắc muốn xóa không?')) {
-            const res = await fetch(`http://localhost:3000/api/notification/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
-                method: "DELETE"
-            });
-
-            if (!res.ok) return alert("Không thể xóa thông báo.");
-
-            notifications = notifications.filter(n => n.id !== id);
-            render();
-        }
-    }
-
-    function showToast(item) {
-        const container = document.getElementById("toast-container");
-
-        const toast = document.createElement("div");
-        toast.className = `
-            bg-white border-l-4 border-green-500 shadow-lg
-            rounded-lg p-4 w-80 animate-slide-in
-        `;
-
-        toast.innerHTML = `
-            <p class="font-semibold text-slate-800">${item.title}</p>
-            <p class="text-sm text-slate-500 mt-1">${item.desc}</p>
-        `;
-
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add("opacity-0");
-            setTimeout(() => toast.remove(), 300);
-        }, 4000);
-    }
-
-    render();
-    loadNotifications();
-</script>
-<script src="http://localhost:3000/socket.io/socket.io.js"></script>
-<script>
-    const socket = io("http://localhost:3000");
-
-    const user_id = JSON.parse(localStorage.getItem("user_id"));
-    const role = JSON.parse(localStorage.getItem("system_role"));
-
-    socket.emit("join", {
-        userId: user_id,
-        role,
-    });
-
-    socket.on("notification", async () => {
-        const res = await fetch("http://localhost:3000/api/notification/all", {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
-        const [latest] = await res.json();
-
-        const item = {
-            id: latest._id,
-            type: latest.type,
-            title: latest.title,
-            desc: latest.content,
-            time: "Vừa xong",
-            icon: mapIcon(latest.type),
-            isRead: false,
-            reference: latest.reference
-        };
-
-        notifications.unshift(item);
-        render();
-
-        showToast(item);
-    });
-
-</script>
 </body>
 </html>

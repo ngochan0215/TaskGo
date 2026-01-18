@@ -7,6 +7,7 @@ const orderSchema = new mongoose.Schema(
 
     task_id: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
     task_snapshot: {
+      code: String,
       name: String,
       pricing: Number,
       unit: String
@@ -64,6 +65,7 @@ const orderSchema = new mongoose.Schema(
         "arrived", // tasker đã đến
         "in_progress", // tasker bắt đầu làm
         "completed", // tasker hoàn thành
+        "awaiting_payment",  // chờ thanh toán
         "cancelled", // hủy
       ],
       default: "pending",
@@ -76,7 +78,7 @@ const orderSchema = new mongoose.Schema(
 
 // orderSchema.index({ customer_id: 1 });
 // orderSchema.index({ tasker_id: 1 });
-// orderSchema.index({ status: 1 });
+orderSchema.index({ status: 1, task_id: 1, customer_id: 1 });
 
 const Order = mongoose.models.Order || mongoose.model("Order", orderSchema);
 export default Order;

@@ -3,14 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin - Quản lý dịch vụ</title>
+
+    <link rel="stylesheet" href="../../public/css/output.css" />
     <link
       rel="icon"
       type="image/x-icon"
       href="../../public/favicons/favicon.ico"
     />
-
-    <title>TaskGo</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -31,278 +32,97 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
+      .modal-hidden {
+        display: none;
+      }
     </style>
   </head>
 
-  <body class="m-0 bg-[#95DA97] flex justify-center py-8 font-montserrat min-h-screen">
-    <div class="w-full max-w-xs mx-auto bg-[#EAFED9] rounded-3xl shadow-xl overflow-hidden flex flex-col">
-      <!-- HEADER -->
-      <header class="bg-[#95DA97] px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center">
+  <body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+    <div
+      id="backdrop"
+      class="fixed inset-0 z-40 bg-black/40 hidden"
+      onclick="closeSidebar()"
+    ></div>
+
+    <aside
+      id="sidebarMobile"
+      class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden"
+    >
+      <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div
+          class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
+        >
+          <img
+            src="../../public/css/output.css"
+            alt="Logo"
+            class="w-full h-full object-contain p-1"
+          />
+        </div>
+        <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+      </div>
+
+      <nav class="p-3 flex-1 space-y-1">
+        <a
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
+          href="admin.html"
+        >
+          <span class="material-symbols-outlined">home</span> Trang chủ
+        </a>
+
+        <a
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
+          href="admin_manageusers.html"
+        >
+          <span class="material-symbols-outlined">group</span> Quản lý người
+          dùng
+        </a>
+
+        <a
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm bg-white/15 text-white font-semibold"
+          href="admin_manageservice.html"
+        >
+          <span class="material-symbols-outlined">design_services</span> Quản lý
+          dịch vụ
+        </a>
+
+        <a
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
+          href="admin_manageorders.html"
+        >
+          <span class="material-symbols-outlined">shopping_bag</span> Quản lý
+          đơn hàng
+        </a>
+      </nav>
+
+      <div class="p-3 border-t border-white/10">
+        <button
+          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
+          onclick="logout()"
+        >
+          <span class="material-symbols-outlined">logout</span> Đăng xuất
+        </button>
+      </div>
+    </aside>
+
+    <div class="flex min-h-screen">
+      <aside
+        class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0"
+      >
+        <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
           <div
-            class="rounded-full bg-[#FFFFFF] flex items-center justify-center overflow-hidden"
-            style="width: 48px; height: 48px">
+            class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
+          >
             <img
-              src="../../public/images/taskgo-logo.png"
+              src="/public/images/taskgo-logo.png"
               alt="TaskGo logo"
-              class="object-contain"
-              style="width: 64px; height: 64px"/>
+              class="w-9 h-9 object-contain p-1"
+            />
           </div>
           <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
         </div>
 
-        <h1 class="text-base font-bold text-[#16411F]">Admin</h1>
-
-        <div class="w-10 h-10 flex items-center justify-center">
-          <a href="#">
-            <span class="material-symbols-outlined text-[#16411F] text-3xl">
-              menu
-            </span>
-          </a>
-        </div>
-      </header>
-
-      <!-- MAIN -->
-      <main class="flex-1 pt-6 pb-6 flex flex-col gap-4">
-        <h2 class="px-6 text-lg font-bold text-[#16411F]">NGƯỜI DÙNG</h2>
-
-        <!-- SEARCH -->
-        <div class="mx-auto mt-1" style="width: 92%">
-          <div class="bg-[#FFFFFF] rounded-full h-12 px-4 flex items-center shadow-md">
-            <span class="material-symbols-outlined text-gray-400 text-[20px] mr-2">search</span>
-            <input
-              type="text"
-              placeholder="Tìm kiếm"
-              class="flex-1 bg-transparent outline-none border-0 text-sm placeholder:text-gray-400"
-              style="border: none"
-            />
-          </div>
-        </div>
-
-        <br />
-
-        <!-- TABLE TASKERS -->
-        <div class="mx-auto mt-4" style="width: 92%">
-          <div
-            class="bg-[#FFFFFF] shadow-md"
-            style="border-radius: 24px; padding-top: 4px; padding-bottom: 4px"
-          >
-            <table class="w-full text-xs text-gray-800 table-fixed">
-              <thead class="bg-[#F7F7F7] text-[11px] text-gray-500">
-                <tr>
-                  <th class="text-left font-semibold py-3 pl-4 pr-2 align-middle"
-                    style="width: 46%">Họ tên</th>
-                  <th class="text-left font-semibold py-3 pl-2 pr-2 align-middle" 
-                    style="width: 28%">Thâm niên</th>
-                  <th class="text-center font-semibold py-3 px-2 align-middle"
-                    style="width: 26%">Trạng thái</th>
-                </tr>
-              </thead>
-
-              <tbody class="bg-[#FFFFFF] text-[12px]">
-                <!-- 1 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    John Doe
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Người làm
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoạt động
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 2 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    Alice Smith
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Khách hàng
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoạt động
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 3 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    Bob Johnson
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Người làm
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #ffe2e2;
-                      "
-                      class="text-[11px] font-semibold text-[#C62828]"
-                    >
-                      Đã khóa
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 4 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    John Doe
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Người làm
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Chờ duyệt
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 5 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    Alice Smith
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Khách hàng
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoạt động
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 6 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    Michael Brown
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Người làm
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoạt động
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 7 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    Emma Wilson
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Khách hàng
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #fff6d1;
-                      "
-                      class="text-[11px] font-semibold text-[#D48806]"
-                    >
-                      Chờ duyệt
-                    </span>
-                  </td>
-                </tr>
-
-                <!-- 8 -->
-                <tr class="border-t border-gray-100">
-                  <td class="py-3 pl-4 pr-2 text-sm text-[#16411F]">
-                    David Lee
-                  </td>
-                  <td class="py-3 pl-2 pr-2 text-left text-gray-600">
-                    Người làm
-                  </td>
-                  <td class="py-3 px-2 text-center">
-                    <span
-                      style="
-                        display: inline-block;
-                        padding: 4px 12px;
-                        border-radius: 9999px;
-                        background-color: #c6f3d0;
-                      "
-                      class="text-[11px] font-semibold text-[#2E7D32]"
-                    >
-                      Hoạt động
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <br />
-
-        <!-- BUTTON -->
-        <div class="mt-6 mx-auto" style="width: 92%">
-          <button
-            class="w-full bg-[#5C956C] text-[#FFFFFF] py-3 rounded-full text-base font-semibold shadow-md hover:bg-[#3B5F43] transition-colors"
-          >
-            Thêm người dùng
-          </button>
-        </div>
-      </main>
-
-      <!-- FOOTER -->
-      <footer class="bg-[#95DA97] border-t border-[#5C956C]">
-        <nav class="flex justify-around py-2 text-[11px]">
+        <nav class="p-3 flex-1 space-y-1">
           <a
             class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
             href="admin.html"
@@ -311,26 +131,15 @@
           </a>
 
           <a
-            id="navCustomerDesktop"
+            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
+            href="admin_manageusers.html"
+          >
+            <span class="material-symbols-outlined">group</span> Quản lý người
+            dùng
+          </a>
+
+          <a
             class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm bg-white/15 text-white shadow-sm border border-white/5 font-semibold"
-            href="admin_manageusers.html#customer"
-            onclick="switchTab('customer')"
-          >
-            <span class="material-symbols-outlined">person</span> Quản lý
-            Customer
-          </a>
-
-          <a
-            id="navTaskerDesktop"
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
-            href="admin_manageusers.html#tasker"
-            onclick="switchTab('tasker')"
-          >
-            <span class="material-symbols-outlined">badge</span> Quản lý Tasker
-          </a>
-
-          <a
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
             href="admin_manageservice.html"
           >
             <span class="material-symbols-outlined">design_services</span> Quản
@@ -344,30 +153,15 @@
             <span class="material-symbols-outlined">shopping_bag</span> Quản lý
             đơn hàng
           </a>
-
-          <a
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
-            href="admin_managerevenue.html"
-          >
-            <span class="material-symbols-outlined">bar_chart</span> Quản lý
-            doanh thu
-          </a>
-
-          <a
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition"
-            href="admin_settings.html"
-          >
-            <span class="material-symbols-outlined">settings</span> Cài đặt
-          </a>
         </nav>
 
         <div class="p-3 border-t border-white/10">
-          <a
+          <button
             class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
-            href="#"
+            onclick="logout()"
           >
             <span class="material-symbols-outlined">logout</span> Đăng xuất
-          </a>
+          </button>
         </div>
       </aside>
 
@@ -385,17 +179,14 @@
             </button>
 
             <div class="flex items-center gap-2 min-w-0">
-              <span class="material-symbols-outlined">groups</span>
-              <div class="font-semibold truncate" id="pageTitle">
-                Quản lý Customer
-              </div>
+              <span class="material-symbols-outlined">design_services</span>
+              <div class="font-semibold truncate">Quản lý Dịch vụ</div>
             </div>
           </div>
 
           <div class="flex items-center gap-2">
             <button
               class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm"
-              type="button"
             >
               <span class="material-symbols-outlined">notifications</span>
               <span class="hidden sm:inline">Thông báo</span>
@@ -404,1168 +195,404 @@
         </header>
 
         <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
-          <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-            <div class="flex flex-col gap-4">
-              <div
-                class="flex flex-col md:flex-row md:items-center justify-between gap-3"
-              >
-                <div class="flex items-center gap-2">
-                  <button
-                    id="tabCustomerBtn"
-                    type="button"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-white shadow-sm"
-                    onclick="switchTab('customer')"
-                  >
-                    Khách hàng
-                  </button>
-                  <button
-                    id="tabTaskerBtn"
-                    type="button"
-                    class="px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 transition"
-                    onclick="switchTab('tasker')"
-                  >
-                    Tasker
-                  </button>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <div class="relative w-full md:w-80">
-                    <span
-                      class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"
-                      >search</span
-                    >
-                    <input
-                      id="searchInput"
-                      type="text"
-                      placeholder="Tìm theo tên / email / SĐT..."
-                      class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full bg-gray-50 focus:bg-white transition-all"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-500 text-white text-sm font-semibold hover:bg-primary-400 transition shadow-sm"
-                    onclick="openForm('add')"
-                  >
-                    <span class="material-symbols-outlined text-[20px]"
-                      >add</span
-                    >
-                    Thêm
-                  </button>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                  <p class="text-xs text-blue-600 font-bold uppercase mb-1">
-                    Tổng người dùng
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="statTotal">
-                    0
-                  </p>
-                </div>
-                <div class="p-4 rounded-lg bg-green-50 border border-green-100">
-                  <p class="text-xs text-green-600 font-bold uppercase mb-1">
-                    Customer
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="statCustomer">
-                    0
-                  </p>
-                </div>
-                <div
-                  class="p-4 rounded-lg bg-yellow-50 border border-yellow-100"
-                >
-                  <p class="text-xs text-yellow-600 font-bold uppercase mb-1">
-                    Tasker
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="statTasker">
-                    0
-                  </p>
-                </div>
-                <div class="p-4 rounded-lg bg-red-50 border border-red-100">
-                  <p class="text-xs text-red-600 font-bold uppercase mb-1">
-                    Bị khóa
-                  </p>
-                  <p class="text-2xl font-bold text-gray-800" id="statBlocked">
-                    0
-                  </p>
-                </div>
-              </div>
-
-              <div
-                class="flex flex-col lg:flex-row lg:items-center justify-between gap-3"
-              >
-                <div
-                  class="flex gap-2 overflow-x-auto pb-1 no-scrollbar"
-                  id="chipWrap"
-                >
-                  <button
-                    data-chip="all"
-                    class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition"
-                    onclick="setChip('all')"
-                  >
-                    Tất cả
-                  </button>
-
-                  <button
-                    data-chip="new"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap"
-                    onclick="setChip('new')"
-                  >
-                    Mới
-                  </button>
-
-                  <button
-                    data-chip="member"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap"
-                    onclick="setChip('member')"
-                  >
-                    Thành viên
-                  </button>
-
-                  <button
-                    data-chip="vip"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap"
-                    onclick="setChip('vip')"
-                  >
-                    VIP
-                  </button>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <select
-                    id="sortSelect"
-                    class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-primary-500"
-                  >
-                    <option value="tier">Sort: Theo loại</option>
-                    <option value="name_asc">Sort: Tên (A-Z)</option>
-                    <option value="name_desc">Sort: Tên (Z-A)</option>
-                    <option value="created_desc">Sort: Mới nhất</option>
-                    <option value="created_asc">Sort: Cũ nhất</option>
-                  </select>
-
-                  <button
-                    type="button"
-                    class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500"
-                    onclick="resetFilter()"
-                    title="Reset"
-                  >
-                    <span class="material-symbols-outlined text-lg"
-                      >restart_alt</span
-                    >
-                  </button>
-                </div>
-              </div>
-
-              <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-left border-collapse">
-                  <thead
-                    class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
-                  >
-                    <tr id="tableHeadRow"></tr>
-                  </thead>
-                  <tbody
-                    id="tableBody"
-                    class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
-                  ></tbody>
-                </table>
-              </div>
-
-              <div
-                class="flex items-center justify-between border-t border-gray-200 pt-4"
-              >
-                <p class="text-sm text-gray-500" id="rangeText">
-                  Hiển thị 0-0 trên 0
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]"
+          >
+            <div
+              class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6"
+            >
+              <div class="min-w-0">
+                <h1 class="text-xl font-bold text-gray-800">
+                  Dịch vụ & Danh mục
+                </h1>
+                <p class="text-sm text-gray-500">
+                  Quản lý danh mục dịch vụ (category) và trạng thái hoạt động.
                 </p>
-                <div class="flex gap-1">
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
-                    onclick="prevPage()"
-                    id="btnPrev"
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_left</span
-                    >
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
-                    id="pageBtn"
-                  >
-                    1
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-600 text-sm"
-                    onclick="nextPage()"
-                    id="btnNext"
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_right</span
-                    >
-                  </button>
-                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button
+                  class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-500 text-white font-semibold shadow-sm hover:bg-primary-600 transition"
+                  onclick="openCreateModal()"
+                >
+                  <span class="material-symbols-outlined">add</span>
+                  Thêm dịch vụ
+                </button>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div id="modalDetail" class="fixed inset-0 z-50 hidden">
-          <div
-            class="absolute inset-0 bg-black/40"
-            onclick="closeModal('modalDetail')"
-          ></div>
-          <div
-            class="relative w-full h-full flex items-center justify-center p-4"
-          >
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                <p class="text-xs text-blue-600 font-bold uppercase mb-1">
+                  Tổng dịch vụ
+                </p>
+                <p id="statTotal" class="text-2xl font-bold text-gray-800">0</p>
+              </div>
+              <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+                <p class="text-xs text-green-600 font-bold uppercase mb-1">
+                  Đang hoạt động
+                </p>
+                <p id="statActive" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+              <div class="p-4 rounded-lg bg-gray-50 border border-gray-200">
+                <p class="text-xs text-gray-600 font-bold uppercase mb-1">
+                  Ngưng hoạt động
+                </p>
+                <p id="statInactive" class="text-2xl font-bold text-gray-800">
+                  0
+                </p>
+              </div>
+            </div>
+
             <div
-              class="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+              class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4"
             >
-              <div
-                class="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-gray-500"
-                    >info</span
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <span
+                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"
+                    >search</span
                   >
-                  <div class="font-bold text-gray-800">Chi tiết</div>
+                  <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Tìm theo tên danh mục..."
+                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full md:w-80 bg-gray-50 focus:bg-white transition-all"
+                  />
                 </div>
-                <button
-                  class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
-                  type="button"
-                  onclick="closeModal('modalDetail')"
+
+                <select
+                  id="statusFilter"
+                  class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-primary-500"
                 >
-                  <span class="material-symbols-outlined text-gray-600"
-                    >close</span
-                  >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="launching">Launching</option>
+                </select>
+
+                <button
+                  class="px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+                  onclick="loadServices(1)"
+                >
+                  Lọc
+                </button>
+                <button
+                  class="px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+                  onclick="resetFilters()"
+                >
+                  Reset
                 </button>
               </div>
 
-              <div class="p-5">
-                <div
-                  class="grid grid-cols-1 md:grid-cols-2 gap-3"
-                  id="detailGrid"
-                ></div>
-              </div>
-
-              <div class="px-5 pb-5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-semibold"
-                  onclick="closeModal('modalDetail')"
-                >
-                  Đóng
-                </button>
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-400 transition text-sm font-semibold"
-                  onclick="editFromDetail()"
-                >
-                  Sửa
-                </button>
+              <div class="text-sm text-gray-500">
+                <span id="resultHint">Đang tải dữ liệu...</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        <div id="modalForm" class="fixed inset-0 z-50 hidden">
-          <div
-            class="absolute inset-0 bg-black/40"
-            onclick="closeModal('modalForm')"
-          ></div>
-          <div
-            class="relative w-full h-full flex items-center justify-center p-4"
-          >
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+              <table class="w-full text-left border-collapse">
+                <thead
+                  class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
+                >
+                  <tr>
+                    <th class="px-4 py-3 border-b border-gray-200">Danh mục</th>
+                    <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Trạng thái
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Số Task
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Hành động
+                    </th>
+                  </tr>
+                </thead>
+                <tbody
+                  id="servicesTbody"
+                  class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
+                ></tbody>
+              </table>
+            </div>
+
             <div
-              class="w-full max-w-2xl bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+              class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-t border-gray-200 pt-4 mt-4"
             >
-              <div
-                class="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-gray-500"
-                    >edit</span
-                  >
-                  <div class="font-bold text-gray-800" id="formTitle">Thêm</div>
-                </div>
+              <p class="text-sm text-gray-500">
+                Hiển thị <span id="pageRange" class="font-bold">0-0</span> trên
+                <span id="pageTotal" class="font-bold">0</span> dịch vụ
+              </p>
+              <div class="flex items-center gap-1">
                 <button
-                  class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
-                  type="button"
-                  onclick="closeModal('modalForm')"
+                  id="btnPrev"
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                  onclick="goPrev()"
                 >
-                  <span class="material-symbols-outlined text-gray-600"
-                    >close</span
+                  <span class="material-symbols-outlined text-sm"
+                    >chevron_left</span
                   >
                 </button>
-              </div>
-
-              <div class="p-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Họ tên</label
-                    >
-                    <input
-                      id="fName"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                      placeholder="Nhập họ tên"
-                    />
-                  </div>
-
-                  <div id="rowPhone">
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Số điện thoại</label
-                    >
-                    <input
-                      id="fPhone"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                      placeholder="09xxxxxxxx"
-                    />
-                  </div>
-
-                  <div id="rowEmail">
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Email</label
-                    >
-                    <input
-                      id="fEmail"
-                      type="email"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                      placeholder="abc@gmail.com"
-                    />
-                  </div>
-
-                  <div id="rowTier">
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Loại khách hàng</label
-                    >
-                    <select
-                      id="fTier"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                    >
-                      <option value="new">Mới</option>
-                      <option value="member">Thành viên</option>
-                      <option value="vip">VIP</option>
-                    </select>
-                  </div>
-
-                  <div id="rowSeniority" class="hidden">
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Thâm niên</label
-                    >
-                    <select
-                      id="fSeniority"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                    >
-                      <option value="0-1">0-1 năm</option>
-                      <option value="1-3">1-3 năm</option>
-                      <option value="3-5">3-5 năm</option>
-                      <option value="5+">5+ năm</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label class="text-xs font-semibold text-gray-600"
-                      >Trạng thái</label
-                    >
-                    <select
-                      id="fStatus"
-                      class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 text-sm"
-                    ></select>
-                  </div>
-                </div>
-              </div>
-
-              <div class="px-5 pb-5 flex justify-end gap-2">
+                <div id="pageButtons" class="flex gap-1"></div>
                 <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-semibold"
-                  onclick="closeModal('modalForm')"
+                  id="btnNext"
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                  onclick="goNext()"
                 >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg bg-primary-500 text-white hover:bg-primary-400 transition text-sm font-semibold"
-                  onclick="saveForm()"
-                >
-                  Lưu
+                  <span class="material-symbols-outlined text-sm"
+                    >chevron_right</span
+                  >
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
-          <div
-            class="absolute inset-0 bg-black/40"
-            onclick="closeModal('modalConfirm')"
-          ></div>
-          <div
-            class="relative w-full h-full flex items-center justify-center p-4"
-          >
-            <div
-              class="w-full max-w-md bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
-            >
-              <div
-                class="px-5 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between"
-              >
-                <div class="flex items-center gap-2">
-                  <span class="material-symbols-outlined text-red-500"
-                    >warning</span
-                  >
-                  <div class="font-bold text-gray-800">Xác nhận</div>
-                </div>
-                <button
-                  class="w-9 h-9 rounded-lg hover:bg-gray-100 flex items-center justify-center"
-                  type="button"
-                  onclick="closeModal('modalConfirm')"
-                >
-                  <span class="material-symbols-outlined text-gray-600"
-                    >close</span
-                  >
-                </button>
-              </div>
-
-              <div class="p-5 text-sm text-gray-700" id="confirmText">Xóa?</div>
-
-              <div class="px-5 pb-5 flex justify-end gap-2">
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-sm font-semibold"
-                  onclick="closeModal('modalConfirm')"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="button"
-                  class="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition text-sm font-semibold"
-                  onclick="confirmDelete()"
-                >
-                  Xóa
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="toast" class="fixed bottom-5 right-5 z-[60] hidden">
-          <div
-            class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
-          >
-            <span class="material-symbols-outlined text-[18px]">info</span>
-            <span id="toastText">Thông báo</span>
           </div>
         </div>
       </div>
     </div>
 
-    <script>
-      const $ = (id) => document.getElementById(id);
+    <div
+      id="toast"
+      class="fixed top-4 right-4 z-[100] hidden bg-gray-900 text-white px-4 py-3 rounded-lg shadow-lg text-sm max-w-[360px]"
+    >
+      <div class="flex items-start gap-2">
+        <span id="toastIcon" class="material-symbols-outlined">info</span>
+        <div class="min-w-0">
+          <div id="toastTitle" class="font-semibold">Thông báo</div>
+          <div id="toastMsg" class="opacity-90"></div>
+        </div>
+        <button class="ml-2 opacity-80 hover:opacity-100" onclick="hideToast()">
+          <span class="material-symbols-outlined text-[18px]">close</span>
+        </button>
+      </div>
+    </div>
 
-      const state = {
-        tab: "customer",
-        chip: "all",
-        search: "",
-        sort: "tier",
-        page: 1,
-        pageSize: 8,
-        mode: "add",
-        editingId: null,
-        detailId: null,
-        deleteId: null,
-        customers: [
-          {
-            id: "C-1001",
-            name: "Nguyễn Văn A",
-            email: "a.nguyen@gmail.com",
-            phone: "0901234567",
-            tier: "new",
-            status: "active",
-            createdAt: "2026-01-06",
-          },
-          {
-            id: "C-1002",
-            name: "Trần Thị B",
-            email: "b.tran@gmail.com",
-            phone: "0987778888",
-            tier: "member",
-            status: "active",
-            createdAt: "2025-12-18",
-          },
-          {
-            id: "C-1003",
-            name: "Lê Hoàng C",
-            email: "c.le@gmail.com",
-            phone: "0912223333",
-            tier: "vip",
-            status: "blocked",
-            createdAt: "2025-11-02",
-          },
-          {
-            id: "C-1004",
-            name: "Phạm Minh D",
-            email: "d.pham@gmail.com",
-            phone: "0939990000",
-            tier: "member",
-            status: "active",
-            createdAt: "2025-10-15",
-          },
-        ],
-        taskers: [
-          {
-            id: "T-2001",
-            name: "John Doe",
-            phone: "090***123",
-            seniority: "3-5",
-            status: "active",
-            createdAt: "2025-12-10",
-          },
-          {
-            id: "T-2002",
-            name: "Alice Smith",
-            phone: "098***456",
-            seniority: "1-3",
-            status: "active",
-            createdAt: "2025-11-21",
-          },
-          {
-            id: "T-2003",
-            name: "Bob Johnson",
-            phone: "091***789",
-            seniority: "0-1",
-            status: "locked",
-            createdAt: "2025-12-28",
-          },
-          {
-            id: "T-2004",
-            name: "Emma Wilson",
-            phone: "093***000",
-            seniority: "1-3",
-            status: "pending",
-            createdAt: "2026-01-02",
-          },
-          {
-            id: "T-2005",
-            name: "David Lee",
-            phone: "090***777",
-            seniority: "5+",
-            status: "active",
-            createdAt: "2025-09-14",
-          },
-        ],
-      };
-
-      const sidebarMobile = $("sidebarMobile");
-      const backdrop = $("backdrop");
-
-      function openSidebar() {
-        sidebarMobile.classList.remove("-translate-x-full");
-        backdrop.classList.remove("hidden");
-      }
-
-      function closeSidebar() {
-        sidebarMobile.classList.add("-translate-x-full");
-        backdrop.classList.add("hidden");
-      }
-
-      function toast(msg) {
-        $("toastText").textContent = msg;
-        $("toast").classList.remove("hidden");
-        clearTimeout(toast._t);
-        toast._t = setTimeout(() => $("toast").classList.add("hidden"), 1500);
-      }
-
-      function openModal(id) {
-        $(id).classList.remove("hidden");
-      }
-
-      function closeModal(id) {
-        $(id).classList.add("hidden");
-      }
-
-      function tierRank(t) {
-        if (t === "new") return 0;
-        if (t === "member") return 1;
-        return 2;
-      }
-
-      function tierLabel(t) {
-        if (t === "vip") return "VIP";
-        if (t === "member") return "Thành viên";
-        return "Mới";
-      }
-
-      function seniorityLabel(v) {
-        if (v === "0-1") return "0-1 năm";
-        if (v === "1-3") return "1-3 năm";
-        if (v === "3-5") return "3-5 năm";
-        return "5+ năm";
-      }
-
-      function statusLabelCustomer(s) {
-        return s === "active" ? "Hoạt động" : "Đã khóa";
-      }
-
-      function statusLabelTasker(s) {
-        if (s === "active") return "Hoạt động";
-        if (s === "pending") return "Chờ duyệt";
-        return "Đã khóa";
-      }
-
-      function statusPill(tab, s) {
-        if (tab === "customer") {
-          if (s === "active")
-            return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Hoạt động</span>`;
-          return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">Đã khóa</span>`;
-        }
-        if (s === "active")
-          return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Hoạt động</span>`;
-        if (s === "pending")
-          return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">Chờ duyệt</span>`;
-        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">Đã khóa</span>`;
-      }
-
-      function setActiveNav(tab) {
-        const activeCls =
-          "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm bg-white/15 text-white shadow-sm border border-white/5 font-semibold";
-        const normalCls =
-          "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition";
-
-        $("navCustomerDesktop").className =
-          tab === "customer" ? activeCls : normalCls;
-        $("navTaskerDesktop").className =
-          tab === "tasker" ? activeCls : normalCls;
-
-        $("navCustomerMobile").className =
-          tab === "customer" ? activeCls : normalCls;
-        $("navTaskerMobile").className =
-          tab === "tasker" ? activeCls : normalCls;
-
-        $("pageTitle").textContent =
-          tab === "customer" ? "Quản lý Customer" : "Quản lý Tasker";
-      }
-
-      function renderChips() {
-        const wrap = $("chipWrap");
-        if (state.tab === "customer") {
-          wrap.innerHTML = `
-            <button data-chip="all" class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition" onclick="setChip('all')">Tất cả</button>
-            <button data-chip="new" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap" onclick="setChip('new')">Mới</button>
-            <button data-chip="member" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap" onclick="setChip('member')">Thành viên</button>
-            <button data-chip="vip" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap" onclick="setChip('vip')">VIP</button>
-          `;
-        } else {
-          wrap.innerHTML = `
-            <button data-chip="all" class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition" onclick="setChip('all')">Tất cả</button>
-            <button data-chip="active" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap" onclick="setChip('active')">Hoạt động</button>
-            <button data-chip="pending" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap" onclick="setChip('pending')">Chờ duyệt</button>
-            <button data-chip="locked" class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-red-500 hover:text-red-600 transition whitespace-nowrap" onclick="setChip('locked')">Đã khóa</button>
-          `;
-        }
-      }
-
-      function renderStats() {
-        const total = state.customers.length + state.taskers.length;
-        const blocked =
-          state.customers.filter((x) => x.status === "blocked").length +
-          state.taskers.filter((x) => x.status === "locked").length;
-
-        $("statTotal").textContent = total;
-        $("statCustomer").textContent = state.customers.length;
-        $("statTasker").textContent = state.taskers.length;
-        $("statBlocked").textContent = blocked;
-      }
-
-      function filteredList() {
-        const q = (state.search || "").toLowerCase().trim();
-        const list = state.tab === "customer" ? state.customers : state.taskers;
-
-        return list.filter((x) => {
-          if (state.chip !== "all") {
-            if (state.tab === "customer" && x.tier !== state.chip) return false;
-            if (state.tab === "tasker" && x.status !== state.chip) return false;
-          }
-
-          if (!q) return true;
-
-          if (state.tab === "customer") {
-            return (x.name + " " + x.email + " " + x.phone)
-              .toLowerCase()
-              .includes(q);
-          }
-          return (x.name + " " + x.phone + " " + x.status)
-            .toLowerCase()
-            .includes(q);
-        });
-      }
-
-      function sortedList(list) {
-        const s = state.sort;
-        const copy = list.slice();
-
-        if (state.tab === "customer" && s === "tier") {
-          copy.sort(
-            (a, b) =>
-              tierRank(a.tier) - tierRank(b.tier) ||
-              a.name.localeCompare(b.name)
-          );
-          return copy;
-        }
-
-        if (s === "name_asc") copy.sort((a, b) => a.name.localeCompare(b.name));
-        if (s === "name_desc")
-          copy.sort((a, b) => b.name.localeCompare(a.name));
-        if (s === "created_desc")
-          copy.sort((a, b) =>
-            (b.createdAt || "").localeCompare(a.createdAt || "")
-          );
-        if (s === "created_asc")
-          copy.sort((a, b) =>
-            (a.createdAt || "").localeCompare(b.createdAt || "")
-          );
-
-        return copy;
-      }
-
-      function paginate(list) {
-        const total = list.length;
-        const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
-        state.page = Math.min(state.page, totalPages);
-
-        const start = (state.page - 1) * state.pageSize;
-        const end = start + state.pageSize;
-        const slice = list.slice(start, end);
-
-        $("pageBtn").textContent = state.page;
-        $("btnPrev").disabled = state.page <= 1;
-        $("btnNext").disabled = state.page >= totalPages;
-
-        const showFrom = total === 0 ? 0 : start + 1;
-        const showTo = total === 0 ? 0 : Math.min(end, total);
-        $(
-          "rangeText"
-        ).textContent = `Hiển thị ${showFrom}-${showTo} trên ${total}`;
-
-        return slice;
-      }
-
-      function renderHead() {
-        const head = $("tableHeadRow");
-        if (state.tab === "customer") {
-          head.innerHTML = `
-            <th class="px-4 py-3 border-b border-gray-200">Mã</th>
-            <th class="px-4 py-3 border-b border-gray-200">Khách hàng</th>
-            <th class="px-4 py-3 border-b border-gray-200">Liên hệ</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Loại</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
-          `;
-        } else {
-          head.innerHTML = `
-            <th class="px-4 py-3 border-b border-gray-200">Mã</th>
-            <th class="px-4 py-3 border-b border-gray-200">Tasker</th>
-            <th class="px-4 py-3 border-b border-gray-200">SĐT</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Thâm niên</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
-            <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
-          `;
-        }
-      }
-
-      function renderTable() {
-        renderHead();
-        const list = paginate(sortedList(filteredList()));
-
-        const rows = list
-          .map((x) => {
-            if (state.tab === "customer") {
-              return `
-                <tr class="hover:bg-gray-50 transition-colors">
-                  <td class="px-4 py-3 font-medium text-primary-600">${
-                    x.id
-                  }</td>
-                  <td class="px-4 py-3">
-                    <div class="font-medium">${x.name}</div>
-                    <div class="text-xs text-gray-500">Tạo: ${x.createdAt}</div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="text-sm">${x.email}</div>
-                    <div class="text-xs text-gray-500">${x.phone}</div>
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                      ${tierLabel(x.tier)}
-                    </span>
-                  </td>
-                  <td class="px-4 py-3 text-center">${statusPill(
-                    "customer",
-                    x.status
-                  )}</td>
-                  <td class="px-4 py-3 text-center">
-                    <div class="inline-flex items-center gap-2">
-                      <button class="text-gray-400 hover:text-primary-500 transition" title="Xem chi tiết" onclick="openDetail('${
-                        x.id
-                      }')">
-                        <span class="material-symbols-outlined text-[20px]">visibility</span>
-                      </button>
-                      <button class="text-gray-400 hover:text-primary-500 transition" title="Sửa" onclick="openForm('edit','${
-                        x.id
-                      }')">
-                        <span class="material-symbols-outlined text-[20px]">edit</span>
-                      </button>
-                      <button class="text-gray-400 hover:text-red-500 transition" title="Xóa" onclick="askDelete('${
-                        x.id
-                      }')">
-                        <span class="material-symbols-outlined text-[20px]">delete</span>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `;
-            }
-
-            return `
-              <tr class="hover:bg-gray-50 transition-colors">
-                <td class="px-4 py-3 font-medium text-primary-600">${x.id}</td>
-                <td class="px-4 py-3">
-                  <div class="font-medium">${x.name}</div>
-                  <div class="text-xs text-gray-500">Tạo: ${x.createdAt}</div>
-                </td>
-                <td class="px-4 py-3 text-gray-600">${x.phone}</td>
-                <td class="px-4 py-3 text-center">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
-                    ${seniorityLabel(x.seniority)}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-center">${statusPill(
-                  "tasker",
-                  x.status
-                )}</td>
-                <td class="px-4 py-3 text-center">
-                  <div class="inline-flex items-center gap-2">
-                    <button class="text-gray-400 hover:text-primary-500 transition" title="Xem chi tiết" onclick="openDetail('${
-                      x.id
-                    }')">
-                      <span class="material-symbols-outlined text-[20px]">visibility</span>
-                    </button>
-                    <button class="text-gray-400 hover:text-primary-500 transition" title="Sửa" onclick="openForm('edit','${
-                      x.id
-                    }')">
-                      <span class="material-symbols-outlined text-[20px]">edit</span>
-                    </button>
-                    <button class="text-gray-400 hover:text-red-500 transition" title="Xóa" onclick="askDelete('${
-                      x.id
-                    }')">
-                      <span class="material-symbols-outlined text-[20px]">delete</span>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            `;
-          })
-          .join("");
-
-        $("tableBody").innerHTML =
-          rows ||
-          `<tr><td class="px-4 py-10 text-center text-gray-500" colspan="6">Không có dữ liệu</td></tr>`;
-      }
-
-      function setChip(v) {
-        state.chip = v;
-        state.page = 1;
-        renderTable();
-      }
-
-      function resetFilter() {
-        state.chip = "all";
-        state.search = "";
-        state.sort = state.tab === "customer" ? "tier" : "created_desc";
-        state.page = 1;
-        $("searchInput").value = "";
-        $("sortSelect").value = state.sort;
-        renderTable();
-      }
-
-      function switchTab(tab) {
-        state.tab = tab;
-        state.chip = "all";
-        state.search = "";
-        state.page = 1;
-        $("searchInput").value = "";
-
-        $("tabCustomerBtn").className =
-          tab === "customer"
-            ? "px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-white shadow-sm"
-            : "px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 transition";
-
-        $("tabTaskerBtn").className =
-          tab === "tasker"
-            ? "px-4 py-2 rounded-lg text-sm font-semibold bg-gray-800 text-white shadow-sm"
-            : "px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-primary-500 hover:text-primary-600 transition";
-
-        renderChips();
-        setActiveNav(tab);
-
-        $("sortSelect").innerHTML =
-          tab === "customer"
-            ? `
-              <option value="tier">Sort: Theo loại</option>
-              <option value="name_asc">Sort: Tên (A-Z)</option>
-              <option value="name_desc">Sort: Tên (Z-A)</option>
-              <option value="created_desc">Sort: Mới nhất</option>
-              <option value="created_asc">Sort: Cũ nhất</option>
-            `
-            : `
-              <option value="created_desc">Sort: Mới nhất</option>
-              <option value="created_asc">Sort: Cũ nhất</option>
-              <option value="name_asc">Sort: Tên (A-Z)</option>
-              <option value="name_desc">Sort: Tên (Z-A)</option>
-            `;
-
-        state.sort = tab === "customer" ? "tier" : "created_desc";
-        $("sortSelect").value = state.sort;
-
-        renderTable();
-        closeSidebar();
-      }
-
-      function openDetail(id) {
-        state.detailId = id;
-        const list = state.tab === "customer" ? state.customers : state.taskers;
-        const u = list.find((x) => x.id === id);
-        if (!u) return;
-
-        const item = (label, value) => `
-          <div class="p-4 rounded-lg border border-gray-100 bg-gray-50">
-            <div class="text-xs font-semibold text-gray-500 mb-1">${label}</div>
-            <div class="text-sm font-bold text-gray-800">${value || "-"}</div>
+    <div id="serviceModal" class="fixed inset-0 z-[90] modal-hidden">
+      <div
+        class="absolute inset-0 bg-black/40"
+        onclick="closeServiceModal()"
+      ></div>
+      <div
+        class="relative max-w-xl mx-auto mt-16 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-gray-100"
+        >
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-gray-500">edit</span>
+            <h3 id="serviceModalTitle" class="font-bold text-gray-800">
+              Thêm dịch vụ
+            </h3>
           </div>
-        `;
+          <button
+            class="text-gray-400 hover:text-gray-700"
+            onclick="closeServiceModal()"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
 
-        if (state.tab === "customer") {
-          $("detailGrid").innerHTML = `
-            ${item("Mã", u.id)}
-            ${item("Họ tên", u.name)}
-            ${item("Email", u.email)}
-            ${item("SĐT", u.phone)}
-            ${item("Loại", tierLabel(u.tier))}
-            ${item("Trạng thái", statusLabelCustomer(u.status))}
-            ${item("Ngày tạo", u.createdAt)}
-          `;
-        } else {
-          $("detailGrid").innerHTML = `
-            ${item("Mã", u.id)}
-            ${item("Họ tên", u.name)}
-            ${item("SĐT", u.phone)}
-            ${item("Thâm niên", seniorityLabel(u.seniority))}
-            ${item("Trạng thái", statusLabelTasker(u.status))}
-            ${item("Ngày tạo", u.createdAt)}
-          `;
-        }
+        <div class="p-5 space-y-4">
+          <input type="hidden" id="serviceId" />
 
-        openModal("modalDetail");
-      }
+          <div>
+            <label class="text-sm font-semibold text-gray-700"
+              >Tên danh mục</label
+            >
+            <input
+              id="categoryNameInput"
+              type="text"
+              class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500"
+              placeholder="Ví dụ: Dọn dẹp nhà"
+            />
+          </div>
 
-      function editFromDetail() {
-        if (!state.detailId) return;
-        closeModal("modalDetail");
-        openForm("edit", state.detailId);
-      }
+          <div>
+            <label class="text-sm font-semibold text-gray-700">Mô tả</label>
+            <textarea
+              id="descriptionInput"
+              rows="4"
+              class="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500"
+              placeholder="Mô tả ngắn về danh mục dịch vụ..."
+            ></textarea>
+          </div>
 
-      function openForm(mode, id) {
-        state.mode = mode;
-        state.editingId = id || null;
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+              onclick="closeServiceModal()"
+            >
+              Hủy
+            </button>
+            <button
+              id="btnSaveService"
+              class="px-4 py-2 rounded-lg bg-primary-500 text-white font-semibold hover:bg-primary-600 transition"
+              onclick="saveService()"
+            >
+              Lưu
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        $("formTitle").textContent =
-          mode === "add"
-            ? state.tab === "customer"
-              ? "Thêm khách hàng"
-              : "Thêm tasker"
-            : state.tab === "customer"
-            ? "Sửa khách hàng"
-            : "Sửa tasker";
+    <div id="detailModal" class="fixed inset-0 z-[95] modal-hidden">
+      <div
+        class="absolute inset-0 bg-black/40"
+        onclick="closeDetailModal()"
+      ></div>
+      <div
+        class="relative max-w-3xl mx-auto mt-10 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-gray-100"
+        >
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-gray-500">info</span>
+              <h3 class="font-bold text-gray-800 truncate">Chi tiết dịch vụ</h3>
+            </div>
+            <p id="detailSubtitle" class="text-sm text-gray-500 truncate"></p>
+          </div>
+          <button
+            class="text-gray-400 hover:text-gray-700"
+            onclick="closeDetailModal()"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
 
-        $("rowEmail").classList.toggle("hidden", state.tab !== "customer");
-        $("rowTier").classList.toggle("hidden", state.tab !== "customer");
-        $("rowSeniority").classList.toggle("hidden", state.tab !== "tasker");
+        <div class="p-5">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-500 font-bold uppercase">
+                Trạng thái
+              </p>
+              <p id="detailStatus" class="text-lg font-bold text-gray-800 mt-1">
+                -
+              </p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-500 font-bold uppercase">Số task</p>
+              <p
+                id="detailTaskCount"
+                class="text-lg font-bold text-gray-800 mt-1"
+              >
+                -
+              </p>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <p class="text-xs text-gray-500 font-bold uppercase">ID</p>
+              <p
+                id="detailId"
+                class="text-sm font-semibold text-gray-800 mt-1 break-all"
+              >
+                -
+              </p>
+            </div>
+          </div>
 
-        $("fStatus").innerHTML =
-          state.tab === "customer"
-            ? `<option value="active">Hoạt động</option><option value="blocked">Đã khóa</option>`
-            : `<option value="active">Hoạt động</option><option value="pending">Chờ duyệt</option><option value="locked">Đã khóa</option>`;
+          <div class="mb-5">
+            <p class="text-sm font-semibold text-gray-700">Mô tả</p>
+            <p
+              id="detailDesc"
+              class="text-sm text-gray-600 mt-1 leading-relaxed"
+            >
+              -
+            </p>
+          </div>
 
-        $("fName").value = "";
-        $("fPhone").value = "";
-        $("fEmail").value = "";
-        $("fTier").value = "new";
-        $("fSeniority").value = "0-1";
-        $("fStatus").value = "active";
+          <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead
+                class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
+              >
+                <tr>
+                  <th class="px-4 py-3 border-b border-gray-200">Tên task</th>
+                  <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                  <th class="px-4 py-3 border-b border-gray-200 text-right">
+                    Giá
+                  </th>
+                  <th class="px-4 py-3 border-b border-gray-200 text-center">
+                    Trạng thái
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="detailTasksTbody"
+                class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
+              ></tbody>
+            </table>
+          </div>
 
-        if (mode === "edit" && id) {
-          const list =
-            state.tab === "customer" ? state.customers : state.taskers;
-          const u = list.find((x) => x.id === id);
-          if (u) {
-            $("fName").value = u.name || "";
-            $("fPhone").value = u.phone || "";
-            $("fStatus").value = u.status || "active";
+          <div class="flex items-center justify-end gap-2 pt-4">
+            <button
+              class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+              onclick="closeDetailModal()"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-            if (state.tab === "customer") {
-              $("fEmail").value = u.email || "";
-              $("fTier").value = u.tier || "new";
-            } else {
-              $("fSeniority").value = u.seniority || "0-1";
-            }
-          }
-        }
+    <div id="deleteModal" class="fixed inset-0 z-[98] modal-hidden">
+      <div
+        class="absolute inset-0 bg-black/40"
+        onclick="closeDeleteModal()"
+      ></div>
+      <div
+        class="relative max-w-lg mx-auto mt-24 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+      >
+        <div
+          class="flex items-center justify-between px-5 py-4 border-b border-gray-100"
+        >
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-500">warning</span>
+            <h3 class="font-bold text-gray-800">Xóa dịch vụ</h3>
+          </div>
+          <button
+            class="text-gray-400 hover:text-gray-700"
+            onclick="closeDeleteModal()"
+          >
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
 
-        openModal("modalForm");
-      }
+        <div class="p-5 space-y-4">
+          <input type="hidden" id="deleteServiceId" />
+          <p class="text-sm text-gray-700">
+            Bạn có chắc muốn xóa dịch vụ:
+            <span id="deleteServiceName" class="font-bold"></span> ?
+          </p>
 
-      function saveForm() {
-        const name = $("fName").value.trim();
-        const phone = $("fPhone").value.trim();
-        const status = $("fStatus").value;
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <label class="flex items-start gap-2 text-sm text-gray-700">
+              <input id="forceDelete" type="checkbox" class="mt-1" />
+              <span>Xóa luôn các task liên quan</span>
+            </label>
+          </div>
 
-        if (!name || !phone) {
-          toast("Vui lòng nhập Họ tên và SĐT");
-          return;
-        }
+          <div class="flex items-center justify-end gap-2">
+            <button
+              class="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+              onclick="closeDeleteModal()"
+            >
+              Hủy
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg bg-red-500 text-white font-semibold hover:bg-red-600 transition"
+              onclick="confirmDelete()"
+            >
+              Xóa
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        if (state.tab === "customer") {
-          const email = $("fEmail").value.trim();
-          const tier = $("fTier").value;
-          if (!email) {
-            toast("Vui lòng nhập Email");
-            return;
-          }
-
-          if (state.mode === "add") {
-            state.customers.unshift({
-              id: "C-" + Math.floor(1000 + Math.random() * 9000),
-              name,
-              email,
-              phone,
-              tier,
-              status,
-              createdAt: new Date().toISOString().slice(0, 10),
-            });
-            toast("Đã thêm khách hàng");
-          } else {
-            const u = state.customers.find((x) => x.id === state.editingId);
-            if (u) {
-              u.name = name;
-              u.email = email;
-              u.phone = phone;
-              u.tier = tier;
-              u.status = status;
-              toast("Đã cập nhật khách hàng");
-            }
-          }
-        } else {
-          const seniority = $("fSeniority").value;
-
-          if (state.mode === "add") {
-            state.taskers.unshift({
-              id: "T-" + Math.floor(2000 + Math.random() * 9000),
-              name,
-              phone,
-              seniority,
-              status,
-              createdAt: new Date().toISOString().slice(0, 10),
-            });
-            toast("Đã thêm tasker");
-          } else {
-            const u = state.taskers.find((x) => x.id === state.editingId);
-            if (u) {
-              u.name = name;
-              u.phone = phone;
-              u.seniority = seniority;
-              u.status = status;
-              toast("Đã cập nhật tasker");
-            }
-          }
-        }
-
-        closeModal("modalForm");
-        renderStats();
-        renderTable();
-      }
-
-      function askDelete(id) {
-        state.deleteId = id;
-        const list = state.tab === "customer" ? state.customers : state.taskers;
-        const u = list.find((x) => x.id === id);
-        $("confirmText").textContent = `Bạn chắc chắn muốn xóa "${
-          u ? u.name : ""
-        }"?`;
-        openModal("modalConfirm");
-      }
-
-      function confirmDelete() {
-        if (!state.deleteId) return;
-
-        if (state.tab === "customer") {
-          state.customers = state.customers.filter(
-            (x) => x.id !== state.deleteId
-          );
-          toast("Đã xóa khách hàng");
-        } else {
-          state.taskers = state.taskers.filter((x) => x.id !== state.deleteId);
-          toast("Đã xóa tasker");
-        }
-
-        state.deleteId = null;
-        closeModal("modalConfirm");
-        renderStats();
-        renderTable();
-      }
-
-      function prevPage() {
-        state.page = Math.max(1, state.page - 1);
-        renderTable();
-      }
-
-      function nextPage() {
-        state.page += 1;
-        renderTable();
-      }
-
-      $("searchInput").addEventListener("input", (e) => {
-        state.search = e.target.value || "";
-        state.page = 1;
-        renderTable();
-      });
-
-      $("sortSelect").addEventListener("change", (e) => {
-        state.sort = e.target.value;
-        state.page = 1;
-        renderTable();
-      });
-
-      function initFromHash() {
-        const h = (location.hash || "").toLowerCase();
-        if (h.includes("tasker")) switchTab("tasker");
-        else switchTab("customer");
-      }
-
-      window.openSidebar = openSidebar;
-      window.closeSidebar = closeSidebar;
-      window.switchTab = switchTab;
-      window.setChip = setChip;
-      window.resetFilter = resetFilter;
-      window.openDetail = openDetail;
-      window.openForm = openForm;
-      window.saveForm = saveForm;
-      window.askDelete = askDelete;
-      window.confirmDelete = confirmDelete;
-      window.closeModal = closeModal;
-      window.editFromDetail = editFromDetail;
-      window.prevPage = prevPage;
-      window.nextPage = nextPage;
-
-      renderStats();
-      initFromHash();
-      window.addEventListener("hashchange", initFromHash);
-    </script>
+    <script src="../../public/js/admin_manageservice.js"></script>
   </body>
 </html>

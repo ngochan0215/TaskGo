@@ -8,6 +8,8 @@ const chatSchema = new mongoose.Schema(
       type: [{
         user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         role: { type: String, enum: ["customer", "tasker"], required: true },
+        last_seen_message_id: { type: mongoose.Schema.Types.ObjectId, ref: "Message", default: null},
+        last_seen_at: { type: Date, default: null },
       }],
       validate: v => v.length === 2
     },

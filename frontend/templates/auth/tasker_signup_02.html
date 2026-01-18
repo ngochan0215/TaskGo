@@ -52,39 +52,6 @@
         <form id="tasker-signup-form-2">
 
             <div id="service-grid" class="grid grid-cols-3 gap-4 mb-10">
-
-                <!-- <input type="checkbox" id="service-clean" name="services" value="Dọn dẹp nhà" class="hidden service-checkbox" checked>
-                <label for="service-clean" class="service-label flex flex-col items-center p-4 border-2 border-primary-400 rounded-xl cursor-pointer transition-all relative">
-                    <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center check-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 13L9 17L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 text-gray-700">🧹</div>
-                    <span class="text-sm font-semibold text-center">Dọn dẹp nhà</span>
-                </label>
-
-                <input type="checkbox" id="service-ac" name="services" value="Vệ sinh máy lạnh" class="hidden service-checkbox">
-                <label for="service-ac" class="service-label flex flex-col items-center p-4 border-2 border-gray-300 rounded-xl cursor-pointer transition-all relative hover:border-primary-400">
-                    <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center bg-gray-400 check-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 13L9 17L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 text-gray-700">❄️</div>
-                    <span class="text-sm font-semibold text-center">Vệ sinh máy lạnh</span>
-                </label>
-
-                <input type="checkbox" id="service-washer" name="services" value="Vệ sinh máy giặt" class="hidden service-checkbox">
-                <label for="service-washer" class="service-label flex flex-col items-center p-4 border-2 border-gray-300 rounded-xl cursor-pointer transition-all relative hover:border-primary-400">
-                    <div class="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center bg-gray-400 check-icon">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M5 13L9 17L19 7" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </div>
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center mb-1 text-gray-700">🧺</div>
-                    <span class="text-sm font-semibold text-center">Vệ sinh máy giặt</span>
-                </label> -->
             </div>
 
             <button type="submit"
@@ -95,13 +62,6 @@
     </div>
 
 <script>
-    let token = localStorage.getItem("token");
-    if (!token) {
-        alert("Vui lòng đăng nhập");
-        location.href = "../auth/login-signup.html";
-    }
-    console.log("TOKEN: ", token);
-
     const serviceGrid = document.getElementById("service-grid");
 
     function renderIcon(iconName) {
@@ -115,14 +75,10 @@
     }
 
     async function loadTasks() {
-        const res= await fetch("http://localhost:3000/api/task/all?status=active", 
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const res= await fetch("http://localhost:3000/api/task/all?status=active");
 
-        if (!res.ok) return alert("Không lấy được danh sách các dịch vụ.");
+        if (!res.ok) 
+            return alert("Không lấy được danh sách các dịch vụ.");
         
         const tasks = await res.json();
         console.log("tasks: ", tasks.tasks);
@@ -197,15 +153,26 @@
     document.getElementById('tasker-signup-form-2').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const services = Array.from(
+        const skills = Array.from(
             document.querySelectorAll('input[name="services"]:checked')
         ).map(cb => cb.value);
 
+        // const skillIds = [
+        //     new mongoose.Types.ObjectId("695381903ec470d9d4e31171"),
+        //     new mongoose.Types.ObjectId("694133a81d3395769e5371b3"),
+        //     new mongoose.Types.ObjectId("6941329e44b2bb8724af5f66"),
+        //     new mongoose.Types.ObjectId("69410acbe391b2b7afe0450b"),
+        //     new mongoose.Types.ObjectId("69410abbe391b2b7afe04507"),
+        //     new mongoose.Types.ObjectId("69410a9ae391b2b7afe04503"),
+        //     new mongoose.Types.ObjectId("69410a82e391b2b7afe044ff"),
+        //     new mongoose.Types.ObjectId("69410a6ee391b2b7afe044fb"),
+        // ];
+
         localStorage.setItem(
             'tasker_signup_step2',
-            JSON.stringify({ services })
+            JSON.stringify({ skills })
         );
-        console.log("tasker_signup_step2: ", services);
+        console.log("tasker_signup_step2: ", skills);
         window.location.href = 'tasker_signup_03.html';
     });
 

@@ -147,6 +147,12 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../../js/socket.js";
+
+        initSocket();
+    </script>
     <script>
         const ok = confirm("Dịch vụ này chỉ giành cho bé từ 12 tháng tuổi đến 11 tuổi. Xin quý khách lưu ý!");
         if (!ok) {
@@ -224,7 +230,7 @@
                 const token = localStorage.getItem("token");
                 if (!token) {
                     alert("Vui lòng đăng nhập");
-                    location.href = "../auth/login-signup.html";
+                    location.href = "../../auth/login-signup.html";
                     return;
                 }
 
@@ -240,7 +246,7 @@
                 if (res.status === 401) {
                     localStorage.removeItem("token");
                     alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-                    window.location.href = "../auth/login-signup.html";
+                    window.location.href = "../../auth/login-signup.html";
                     return;
                 }
 

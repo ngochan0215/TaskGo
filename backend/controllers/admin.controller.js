@@ -1,26 +1,5 @@
 import { User, Account, Tasker, Customer } from "../models/index.js";
 
-// export const getAllTaskerss = async (req, res) => {
-//   try {
-//     const taskers = await Tasker.find()
-//       .select("-__v")
-//       .populate({
-//         path: "user_id",
-//         select: "-_id",
-//         populate: {
-//           path: "account_id",
-//           select: "email status -_id",
-//         },
-//       });
-
-//     res.status(200).json(taskers);
-//   } catch (error) {
-//     res.status(500).json({ message: "SERVER ERROR", error: error.message });
-//   }
-// };
-
-// Show all customers in the system along with their information
-
 export const getAllCustomers = async (req, res) => {
   try {
     const customers = await Customer.find()
@@ -34,6 +13,25 @@ export const getAllCustomers = async (req, res) => {
       });
 
     res.status(200).json(customers);
+  } catch (error) {
+    res.status(500).json({ message: "SERVER ERROR", error: error.message });
+  }
+};
+
+export const getAllTaskers = async (req, res) => {
+  try {
+    const taskers = await Tasker.find()
+      .select("-__v")
+      .populate({
+        path: "user_id",
+        select: "-_id",
+        populate: {
+          path: "account_id",
+          select: "email status -_id",
+        },
+      });
+
+    res.status(200).json(taskers);
   } catch (error) {
     res.status(500).json({ message: "SERVER ERROR", error: error.message });
   }
@@ -137,4 +135,52 @@ export const rejectTasker = async (req, res) => {
   res.json({ message: "Tasker rejected and kept inactive" });
 };
 
+export const banCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const customer = await Customer.findById(customerId).populate("user_id");
+    if (!customer) 
+      return res.status(404).json({ message: "Không tìm thấy khách hàng." });
+
+    const account = await Account.findOne({ user_id: customer.user_id });
+    if (!account) 
+      return res.status(404).json({ message: "Không tìm thấy tài khoản khách hàng." });
+
+    account.status = "suspended";        
+    await account.save();
+
+    res.json({ message: "Ban tài khoản khách hàng thành công." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
+
+export const unbanCustomer = async (req, res) => {
+  try {
+    const { customerId } = req.params;
+
+    const customer = await Customer.findById(customerId).populate("user_id");
+    if (!customer) 
+      return res.status(404).json({ message: "Không tìm thấy khách hàng." });
+
+    const account = await Account.findOne({ user_id: customer.user_id });
+    if (!account) 
+      return res.status(404).json({ message: "Không tìm thấy tài khoản khách hàng." });
+
+    if (account.status !== "suspended") 
+      return res.status(404).json({ message: "Tài khoản khách hàng đang không ở trạng thái bị ban." });
+
+    account.status = "active";        
+    await account.save();
+
+    res.json({ message: "Gỡ ban tài khoản khách hàng thành công." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error });
+  }
+};
 

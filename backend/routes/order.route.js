@@ -1,33 +1,50 @@
 import express from "express";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin, isCustomer } from "../middleware/verifyRole.js";
+
 import { getOrderById, getAllOrdersByCustomerId, getAllOrders, deleteOrderById,
-    createOrder, cancelOrderByCustomer,
-    createReceipt, getCustomerOrderStats,
- } from "../controllers/order.controller.js";
+    createOrder, cancelOrderByCustomer, getCustomerOrderStats, getOrderTrends,
+    findTaskerForOrder, getOrderDetailsForCustomer
+} from "../controllers/order.controller.js";
+
+import { getReceiptById, createReceipt, getAllReceipts, 
+    updateReceiptStatus, markReceiptPaid
+} from "../controllers/receipt.controller.js";
 
 import { addReview, editReview, getMyReviews, getReviewByOrder } from "../controllers/review.controller.js";
 
 const router = express.Router();
 
-// lấy số đơn đã hoàn thành và hủy của khách hàng
 router.get("/statistics/completed-cancelled", verifyToken, getCustomerOrderStats);
+router.get("/statistics/trends", verifyToken, isAdmin, getOrderTrends);
 
-router.post("/create", verifyToken, isCustomer, createOrder);
-router.get("/:customerId", verifyToken, getAllOrdersByCustomerId);
-router.put("/cancel/:orderId", verifyToken, isCustomer, cancelOrderByCustomer);
-
+// ADMIN routes - specific paths first
 router.get("/all", verifyToken, isAdmin, getAllOrders);
-router.get("/:id",verifyToken, getOrderById);
 router.delete("/delete/:orderId", verifyToken, isAdmin, deleteOrderById);
 
-// receipt - hóa đơn
-router.post("/receipt/add", verifyToken, createReceipt);
+// Order detail route - use specific path to avoid conflict
+router.get("/detail/:id", verifyToken, getOrderById);
 
-// review - đánh giá
+// CUSTOMER routes
+router.post("/create", verifyToken, isCustomer, createOrder);
+router.get("/:orderId/details", verifyToken, isCustomer, getOrderDetailsForCustomer);
+router.post("/:orderId/find-tasker", verifyToken, isCustomer, findTaskerForOrder);
+router.put("/cancel/:orderId", verifyToken, isCustomer, cancelOrderByCustomer);
+
+// Customer orders - must be after specific routes
+router.get("/customer/:customerId", verifyToken, getAllOrdersByCustomerId);
+
+// reviews
 router.post("/reviews/add", verifyToken, addReview);
 router.get("/reviews/my-reviews", verifyToken, getMyReviews);
 router.get("/reviews/:order_id", verifyToken, getReviewByOrder);
 router.put("/reviews/:order_id/edit", verifyToken, editReview);
+
+// receipt
+router.post("/receipt/add", verifyToken, createReceipt);
+router.get("/receipt/:id", verifyToken, getReceiptById);
+router.get("/receipt/all", verifyToken, getAllReceipts);
+router.patch("/receipt/:id/status", verifyToken, isAdmin, updateReceiptStatus);
+router.post("/receipt/:id/paid", verifyToken, isAdmin, markReceiptPaid);
 
 export default router;

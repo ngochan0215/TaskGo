@@ -26,11 +26,24 @@ const orderStatusLogSchema = new mongoose.Schema(
       required: true
     },
 
-    created_at: { type: Date, default: Date.now },
+    reasons: [{
+        type: String,
+        enum: [
+            "too_far",
+            "busy",
+            "price_not_ok",
+            "time_not_suitable",
+            "skill_not_match",
+            "other"
+        ],
+        default: "time_not_suitable"
+    }],
 
-    reason: { type: String  }
+    note: { type: String, default: "" },
   },
-  { versionKey: false }
+  { 
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" }
+  }
 );
 
 const OrderStatusLog = mongoose.models.OrderStatusLog || mongoose.model("OrderStatusLog", orderStatusLogSchema);

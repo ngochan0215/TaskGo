@@ -12,7 +12,7 @@ import {
 import { getSocketInstance } from "../sockets/instance.js";
 
 // SIGN UP LOGIC //
-export const signup = async (req, res) => {
+export const signUpCustomer = async (req, res) => {
   try {
     const { full_name, email, phone_number, identification, password, role } =
       req.body;
@@ -25,20 +25,20 @@ export const signup = async (req, res) => {
       !password ||
       !role
     ) {
-      throw new Error("All fields are required");
+      throw new Error("Yêu cầu nhập đầy đủ thông tin.");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res
         .status(400)
-        .json({ success: false, message: "Invalid email format" });
+        .json({ success: false, message: "Định dạng email không hợp lệ" });
     }
 
     if (identification.length != 12) {
       return res.status(400).json({
         success: false,
-        message: "Identification must includes only 12 numbers.",
+        message: "CCCD phải là dãy 12 số.",
       });
     }
 
@@ -47,6 +47,20 @@ export const signup = async (req, res) => {
       return res
         .status(400)
         .json({ success: false, message: "Người dùng này đã tồn tại." });
+    }
+
+    const existingCCCD = await User.findOne({ identification });
+    if (existingCCCD) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Số căn cước công dân đã tồn tại." });
+    }
+
+    const existingPhone = await User.findOne({ phone_number });
+    if (existingPhone) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Số điện thoại đã tồn tại." });
     }
 
     const hashedPassword = await bcryptjs.hash(password, 10);
@@ -70,7 +84,7 @@ export const signup = async (req, res) => {
       user_id: user._id,
       email: email,
       password_hash: hashedPassword,
-      role: role,
+      role: role || "customer",
       verificationToken,
       verificationTokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
       status: "inactive",
@@ -80,37 +94,131 @@ export const signup = async (req, res) => {
     user.account_id = account._id;
     await user.save();
 
-    if (role == "customer") {
-      const customer = new Customer({ user_id: user._id });
-      await customer.save();
-    } else if (role == "tasker") {
-      const { introduction, working_area } = req.body;
-
-      const tasker = new Tasker({
-        user_id: user._id,
-        introduction: introduction,
-        working_area: working_area,
-        status: "pending",
-        working_status: "inactive",
-      });
-
-      await tasker.save();
-    }
+    const customer = new Customer({ user_id: user._id });
+    await customer.save();
 
     // send mail to verify email
     await sendVerificationEmail(account.email, verificationToken);
 
     res.status(201).json({
       success: true,
-      message:
-        role === "tasker"
-          ? "Tasker registered successfully."
-          : "Customer registered successfully.",
+      message: "Đăng ký thành công. Vui lòng xác nhận email để hoàn tất đăng ký.",
       user,
     });
   } catch (error) {
     console.error("Signup error:", error);
     res.status(500).json({ success: false, message: "SERVER ERROR: ", error });
+  }
+};
+
+export const signUpTasker = async (req, res) => {
+  try {
+    const { full_name, email, phone_number, identification, password, role } =
+      req.body;
+
+    if (
+      !full_name ||
+      !email ||
+      !phone_number ||
+      !identification ||
+      !password ||
+      !role
+    ) {
+      throw new Error("Yêu cầu nhập đầy đủ thông tin.");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Định dạng email không hợp lệ" });
+    }
+
+    if (identification.length != 12) {
+      return res.status(400).json({
+        success: false,
+        message: "CCCD phải là dãy 12 số.",
+      });
+    }
+
+    // validate existence
+    const existingUser = await Account.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Email này đã tồn tại." });
+    }
+
+    const existingCCCD = await User.findOne({ identification });
+    if (existingCCCD) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Số căn cước công dân đã tồn tại." });
+    }
+
+    const existingPhone = await User.findOne({ phone_number });
+    if (existingPhone) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Số điện thoại đã tồn tại." });
+    }
+
+    const hashedPassword = await bcryptjs.hash(password, 10);
+    const verificationToken = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    const randomAvatar =
+      defaultAvatars[Math.floor(Math.random() * defaultAvatars.length)];
+
+    // insert user general information first
+    const user = new User({
+      full_name: full_name,
+      phone_number: phone_number,
+      identification: identification,
+      avatar_url: randomAvatar,
+    });
+    await user.save();
+
+    // insert account information
+    const account = new Account({
+      user_id: user._id,
+      email: email,
+      password_hash: hashedPassword,
+      role: role || "tasker",
+      verificationToken,
+      verificationTokenExpiresAt: new Date(Date.now() + 60 * 60 * 1000),
+      status: "inactive",
+    });
+    await account.save();
+
+    user.account_id = account._id;
+    await user.save();
+
+    const { introduction, working_area, working_radius, skills } = req.body;
+
+    const tasker = new Tasker({
+      user_id: user._id,
+      skills: skills,
+      introduction: introduction,
+      working_area: working_area,
+      working_radius: working_radius,
+      status: "pending",
+      working_status: "inactive",
+    });
+
+    await tasker.save();
+
+    // send mail to verify email
+    await sendVerificationEmail(account.email, verificationToken);
+
+    res.status(201).json({
+      success: true,
+      message: "Đăng ký làm tasker thành công. Vui lòng xác nhận email và chờ kết quả.",
+      user,
+    });
+  } catch (error) {
+    console.error("Signup error:", error);
+    res.status(500).json({ success: false, message: "SERVER ERROR: " + error });
   }
 };
 
@@ -210,11 +318,19 @@ export const login = async (req, res) => {
         .json({ success: false, message: "Invalid email!" });
     }
 
-    if (account.status !== "active") {
+    if (account.status === "inactive") {
       return res.status(400).json({
         success: false,
         message:
-          "Account is not active. Please verify your email or contact support.",
+          "Tài khoản chưa được kích hoạt hoặc bạn đã ngưng hoạt động. Vui lòng xem lại.",
+      });
+    }
+
+    if (account.status === "suspended") {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Tài khoản của bạn đã bị ban bởi admin. Vui lòng xem lại.",
       });
     }
 

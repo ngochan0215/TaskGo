@@ -77,6 +77,13 @@
         </nav>
     </footer>
 
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../js/socket.js";
+
+        initSocket();
+    </script>
+
     <script>
         const bookingDraftRaw = localStorage.getItem("bookingDraft");
         console.log("BOOKING DRAFT: ", bookingDraftRaw);
@@ -100,7 +107,7 @@
         if (hours > 0) timeText += `${hours}h`;
         if (minutes > 0) timeText += `${minutes}p`;
 
-        totalTextEl.textContent = `${formatCurrency(bookingDraft.base_amount)} / ${timeText? timeText : "h"}`;
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText? timeText : "h"}`;
 
         // ===== LƯU NOTE =====
         function handleGoPayment() {
@@ -112,6 +119,7 @@
                 JSON.stringify(bookingDraft)
             );
 
+            console.log("BOOKING DRAFT BEFORE GOING TO PAYMENT: ", bookingDraft);
             window.location.href = "./payment_pages/payment.html";
         }
     </script>

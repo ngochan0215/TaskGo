@@ -37,7 +37,8 @@
                 Trang chủ
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managecustomers.html">
                 <span class="material-symbols-outlined">person</span>
                 Quản lý Customer
             </a>
@@ -104,7 +105,8 @@
                 Trang chủ
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managecustomers.html">
                 <span class="material-symbols-outlined">person</span>
                 Quản lý Customer
             </a>
@@ -358,6 +360,22 @@
 </div>
 
 <script>
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
+
+    const role = localStorage.getItem("system_role");
+    const _id = localStorage.getItem("user_id");
+    console.log("USER: ", role + " " + _id);
+    console.log("TOKEN: ", token);
+
+    if (role !== "admin") {
+        alert("Bạn không phải Admin. Không có quyền truy cập.");
+        window.location.href = "../auth/login-signup.html";
+    }
+
     const sidebarMobile = document.getElementById("sidebarMobile");
     const backdrop = document.getElementById("backdrop");
 
