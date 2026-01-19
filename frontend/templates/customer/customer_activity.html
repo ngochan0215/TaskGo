@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
@@ -16,93 +16,11 @@
     />
   </head>
 
-  <body class="bg-primary-100 min-h-screen font-montserrat">
-    <header class="bg-primary-200 py-4 sticky top-0 z-50 shadow-md">
-      <div class="flex items-center justify-between px-4 relative">
-        <div
-          class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70"
-        >
-          <a href="#"
-            ><img src="/frontend/public/images/taskgo-logo.png" alt="Logo"
-          /></a>
-        </div>
+  <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
+    <!-- Shared header injected here -->
+    <div id="app-header"></div>
 
-        <h1
-          class="md:hidden font-bold text-xl text-dark-900 absolute left-1/2 -translate-x-1/2"
-        >
-          Hoạt động
-        </h1>
-
-        <nav class="hidden md:flex items-center space-x-6 lg:space-x-10">
-          <a
-            href="./customer_home.html"
-            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
-            >Trang chủ</a
-          >
-          <a
-            href="#"
-            class="text-dark-900 font-bold border-b-2 border-primary-500"
-            >Hoạt động</a
-          >
-          <a
-            href="../chat.html"
-            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
-            >Tin nhắn</a
-          >
-          <a
-            href="../notification.html"
-            class="text-primary-500 hover:text-dark-900 font-medium transition-colors"
-            >Thông báo</a
-          >
-        </nav>
-
-        <div
-          id="menu-btn"
-          class="md:hidden w-10 h-10 flex items-center justify-center cursor-pointer"
-        >
-          <span class="material-symbols-outlined text-primary-500 text-4xl"
-            >menu</span
-          >
-        </div>
-
-        <div class="hidden md:block w-10"></div>
-      </div>
-    </header>
-
-    <div
-      id="mobile-menu"
-      class="hidden fixed top-[72px] left-0 w-full bg-primary-200 shadow-xl z-40 border-b border-primary-300 md:hidden"
-    >
-      <nav class="flex flex-col p-4 space-y-4">
-        <a
-          href="./customer_home.html"
-          class="flex items-center space-x-3 text-primary-500 font-medium"
-        >
-          <span class="material-symbols-outlined">house</span>
-          <span>Trang chủ</span>
-        </a>
-        <a href="#" class="flex items-center space-x-3 text-dark-900 font-bold">
-          <span class="material-symbols-outlined">news</span>
-          <span>Hoạt động</span>
-        </a>
-        <a
-          href="../chat.html"
-          class="flex items-center space-x-3 text-primary-500 font-medium"
-        >
-          <span class="material-symbols-outlined">chat</span>
-          <span>Tin nhắn</span>
-        </a>
-        <a
-          href="../notification.html"
-          class="flex items-center space-x-3 text-primary-500 font-medium"
-        >
-          <span class="material-symbols-outlined">lightbulb</span>
-          <span>Thông báo</span>
-        </a>
-      </nav>
-    </div>
-
-    <main class="p-4 pb-24">
+    <main class="flex-grow p-4 pb-24">
       <div class="mb-4">
         <div class="relative">
           <span
@@ -164,7 +82,8 @@
             <div class="text-sm text-gray-500 mt-1">
               Bạn có thể đặt lịch dịch vụ để theo dõi tại đây.
             </div>
-            <button id="orderIfNone"
+            <button
+              id="orderIfNone"
               class="mt-4 bg-primary-500 text-white px-4 py-2 rounded-xl shadow-md font-semibold"
             >
               Đặt dịch vụ
@@ -203,94 +122,8 @@
       </section>
     </main>
 
-    <footer class="bg-primary-200 border-t border-primary-300 py-8 mt-auto">
-      <div class="max-w-5xl mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          <div class="flex flex-col justify-center space-y-3">
-            <div class="space-y-1">
-              <h4
-                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
-              >
-                Frontend
-              </h4>
-              <div class="flex gap-1.5">
-                <span
-                  class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600"
-                  >#ReactJS</span
-                >
-                <span
-                  class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600"
-                  >#TailwindCSS</span
-                >
-              </div>
-            </div>
-            <div class="space-y-1">
-              <h4
-                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
-              >
-                Backend & Database
-              </h4>
-              <div class="flex flex-wrap gap-1.5">
-                <span
-                  class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600"
-                  >#NodeJS</span
-                >
-                <span
-                  class="px-2 py-0.5 bg-green-50 text-[10px] font-bold rounded border border-green-200 text-green-600"
-                  >#MongoDB</span
-                >
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2"
-          >
-            <div class="flex justify-center items-center space-x-2">
-              <img
-                src="/frontend/public/images/taskgo-logo.png"
-                alt="Logo"
-                class="w-6 h-6 opacity-60"
-              />
-              <span class="text-lg font-black tracking-tighter text-dark-900"
-                >TaskGo</span
-              >
-            </div>
-            <p class="text-xs font-bold text-dark-900 uppercase">
-              Công nghệ Web và ứng dụng
-            </p>
-            <p class="text-[11px] font-medium text-primary-600">
-              SE347.Q14 - NHÓM 8
-            </p>
-          </div>
-
-          <div
-            class="flex flex-col justify-between md:items-end text-center md:text-right py-1"
-          >
-            <div class="space-y-1">
-              <h4
-                class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter"
-              >
-                Giảng viên hướng dẫn
-              </h4>
-              <p class="text-sm font-bold text-dark-900">
-                ThS. Trần Thị Hồng Yến
-              </p>
-              <p class="text-[10px] text-gray-500 font-medium">
-                Đại học Công nghệ Thông tin - ĐHQG TP.HCM
-              </p>
-            </div>
-            <div class="mt-4 md:mt-0">
-              <p
-                class="text-[10px] text-gray-400 font-bold uppercase tracking-widest"
-              >
-                © 2025 NHÓM 8 • UIT
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
+    <!-- Shared footer injected here -->
+    <div id="app-footer"></div>
 
     <div id="sheetBackdrop" class="fixed inset-0 bg-black/40 hidden z-40"></div>
 
@@ -406,29 +239,22 @@
               </button>
             </div>
 
-            <!-- Review Section -->
             <div id="reviewSection" class="hidden"></div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Shared layout init -->
+    <script type="module">
+      import { initLayout } from "../js/ui/shared-layout.js";
+      initLayout({ role: "customer", title: "Hoạt động", active: "activity" });
+    </script>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
       import { initSocket } from "../js/socket.js";
-
       initSocket();
-    </script>
-
-    <script>
-      // Keep menu toggle functionality
-      const menuBtn = document.getElementById("menu-btn");
-      const mobileMenu = document.getElementById("mobile-menu");
-      if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener("click", () =>
-          mobileMenu.classList.toggle("hidden")
-        );
-      }
     </script>
 
     <script src="../js/customer_activity.js"></script>

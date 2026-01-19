@@ -1,105 +1,93 @@
 <!doctype html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskGo</title>
-    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
-</head>
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../public/favicons/favicon.ico"
+    />
+  </head>
 
-<body class="bg-primary-100 min-h-screen font-montserrat">
-    <header class="bg-primary-200 py-4">
-        <div class="flex items-center justify-between px-4">
-            <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href=""><img src="../../public/images/taskgo-logo.png" alt=""></a>
-            </div>
+  <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
+    <!-- Shared header -->
+    <div id="app-header"></div>
 
-            <h1 class="font-bold text-xl text-dark-900">Đặt ngay</h1>
-            <div class="w-10 h-10 flex items-center justify-center">
-                <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-            </div>
+    <main class="p-4 space-y-4 pb-20 flex-grow">
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h2 class="text-2xl font-bold text-primary-500">
+            Ghi chú cho Tasker
+          </h2>
         </div>
-    </header>
 
-    <main class="p-4 space-y-4 pb-20">
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <p class="text-xs mb-4">
+          Ghi chú này sẽ giúp Tasker hoàn thành công việc tốt hơn
+        </p>
 
-            <div class="flex items-center justify-between border-b pb-2">
-                <h2 class="text-2xl font-bold text-primary-500">Ghi chú cho Tasker</h2>
-            </div>
-
-            <p class="text-xs mb-4">
-                Ghi chú này sẽ giúp Tasker hoàn thành công việc tốt hơn
-            </p>
-
-            <div class="mb-6">
-                <textarea rows="5" class="w-full 
-               p-3 
-               border border-gray-300 
-               rounded-lg 
-               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"></textarea>
-            </div>
-            <div class="flex space-x-4">
-                <button onclick="handleGoPayment()" 
-                    class="action-btn action-btn-hover w-full text-center">
-                    <span id="bookingTotalText">---</span>
-                </button>
-            </div>
+        <div class="mb-6">
+          <textarea
+            rows="5"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"
+          ></textarea>
         </div>
+        <div class="flex space-x-4">
+          <button
+            onclick="handleGoPayment()"
+            class="action-btn action-btn-hover w-full text-center"
+          >
+            <span id="bookingTotalText">---</span>
+          </button>
+        </div>
+      </div>
     </main>
 
-    <footer>
-        <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-            <div class="flex justify-around py-2 text-base">
-                <a href="#" class="flex flex-col items-center text-white">
-                    <span class="material-symbols-outlined text-4xl">house</span>
-                    Trang chủ
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">news</span>
-                    Hoạt động
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">chat</span>
-                    Tin nhắn
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                    Thông báo
-                </a>
-            </div>
-        </nav>
-    </footer>
+    <!-- Shared footer -->
+    <div id="app-footer"></div>
+
+    <!-- init shared layout -->
+    <script type="module">
+      import { initLayout } from "../js/ui/shared-layout.js";
+      initLayout({ role: "customer", title: "Đặt ngay", active: "" });
+    </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
-        import { initSocket } from "../js/socket.js";
-
-        initSocket();
+      import { initSocket } from "../js/socket.js";
+      initSocket();
     </script>
 
     <script>
-        const bookingDraftRaw = localStorage.getItem("bookingDraft");
-        console.log("BOOKING DRAFT: ", bookingDraftRaw);
+      const bookingDraftRaw = localStorage.getItem("bookingDraft");
+      console.log("BOOKING DRAFT: ", bookingDraftRaw);
 
-        if (!bookingDraftRaw) {
-            alert("Không tìm thấy thông tin đặt dịch vụ.");
-            window.location.href = "/";
-        }
+      if (!bookingDraftRaw) {
+        alert("Không tìm thấy thông tin đặt dịch vụ.");
+        window.location.href = "./service_listpage.html"; // đổi từ "/" để không bị bay ra root
+      }
 
-        const bookingDraft = JSON.parse(bookingDraftRaw);
+      const bookingDraft = bookingDraftRaw ? JSON.parse(bookingDraftRaw) : null;
 
-        const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
+      const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
 
-        // Render tiền + thời gian
-        const totalTextEl = document.getElementById("bookingTotalText");
+      const totalTextEl = document.getElementById("bookingTotalText");
 
+      if (
+        bookingDraft?.task_payload?.total_time != null &&
+        bookingDraft?.final_amount != null
+      ) {
         const hours = Math.floor(bookingDraft.task_payload.total_time / 60);
         const minutes = bookingDraft.task_payload.total_time % 60;
 
@@ -107,23 +95,21 @@
         if (hours > 0) timeText += `${hours}h`;
         if (minutes > 0) timeText += `${minutes}p`;
 
-        totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText? timeText : "h"}`;
+        totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText ? timeText : "h"}`;
+      }
 
-        // ===== LƯU NOTE =====
-        function handleGoPayment() {
-            const note = document.querySelector("textarea").value.trim();
-            bookingDraft.note = note;
+      // ===== LƯU NOTE =====
+      function handleGoPayment() {
+        if (!bookingDraft) return;
 
-            localStorage.setItem(
-                "bookingDraft",
-                JSON.stringify(bookingDraft)
-            );
+        const note = document.querySelector("textarea").value.trim();
+        bookingDraft.note = note;
 
-            console.log("BOOKING DRAFT BEFORE GOING TO PAYMENT: ", bookingDraft);
-            window.location.href = "./payment_pages/payment.html";
-        }
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+
+        console.log("BOOKING DRAFT BEFORE GOING TO PAYMENT: ", bookingDraft);
+        window.location.href = "./payment_pages/payment.html";
+      }
     </script>
-
-</body>
-
+  </body>
 </html>
