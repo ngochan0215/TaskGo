@@ -154,6 +154,25 @@
                         <p id="totalPlatformFee" class="text-2xl font-black text-amber-600">—</p>
                     </div>
                 </div>
+
+                <!-- Cashout Section -->
+                <div class="mb-6 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div style="background-color: #EEF2FF; border-color: #C7D2FE;" class="border rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase mb-1">Số dư khả dụng</p>
+                            <p id="availableBalance" style="color: #3730A3;" class="text-lg font-bold">—</p>
+                        </div>
+                        <button id="cashoutBtn" class="bg-white text-[#3730A3] text-xs font-bold px-4 py-2 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <span id="cashoutBtnText">Rút ngay</span>
+                            <svg id="cashoutSpinner" xmlns="http://www.w3.org/2000/svg" class="hidden ml-2 h-4 w-4 text-[#3730A3] animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toast Notification -->
+                <div id="toast" class="fixed bottom-20 right-6 hidden z-50"></div>
             </div>
 
             <!-- Filter Bar -->
@@ -502,13 +521,105 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = `px-4 py-3 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500 text-white' : type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'}`;
+            el.textContent = message;
+            toast.appendChild(el);
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        // Load cashout info
+        async function loadCashoutInfo() {
+            try {
+                const availRes = await fetch('http://localhost:3000/api/tasker/cashOut/available', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const availJson = await availRes.json();
+
+                const available = availJson && availJson.success ? availJson.data : 0;
+                const availEl = document.getElementById('availableBalance');
+                const btn = document.getElementById('cashoutBtn');
+
+                if (availEl) availEl.textContent = formatCurrency(available);
+
+                if (btn) {
+                    if (!available || Number(available) <= 0) {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                }
+            } catch (err) {
+                console.error('loadCashoutInfo error', err);
+                showToast('Không thể tải thông tin rút tiền', 'error');
+            }
+        }
+
+        // Perform cashout
+        async function performCashout() {
+            const btn = document.getElementById('cashoutBtn');
+            const spinner = document.getElementById('cashoutSpinner');
+            const text = document.getElementById('cashoutBtnText');
+            if (!btn) return;
+            
+            const originalText = text.textContent;
+            const originalDisabled = btn.disabled;
+            
+            try {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+                text.textContent = 'Đang xử lý...';
+
+                const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+                });
+                const body = await res.json();
+                if (body && body.success) {
+                    showToast('Yêu cầu rút tiền thành công', 'success');
+                    await loadCashoutInfo();
+                    // Reload earnings to reflect updated status
+                    await fetchEarnings();
+                } else {
+                    console.log("error cashing out: ", body);
+                    showToast(body && body.message ? body.message : 'Rút tiền thất bại', 'error');
+                    // Reload cashout info to restore button state
+                    await loadCashoutInfo();
+                }
+            } catch (err) {
+                console.error('performCashout error', err);
+                showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+                // Reload cashout info to restore button state
+                await loadCashoutInfo();
+            } finally {
+                spinner.classList.add('hidden');
+                // Restore button text
+                text.textContent = 'Rút ngay';
+                // Button state will be set by loadCashoutInfo, but ensure it's not stuck disabled
+                btn.disabled = false;
+            }
+        }
+
         // Initialize
         window.filterByPeriod = filterByPeriod;
         window.applyDateFilter = applyDateFilter;
         window.changePage = changePage;
 
-        // Load earnings on page load
+        // Load earnings and cashout info on page load
         fetchEarnings();
+        loadCashoutInfo();
+
+        // Setup cashout button event listener
+        const cashoutBtn = document.getElementById('cashoutBtn');
+        if (cashoutBtn) {
+            cashoutBtn.addEventListener('click', performCashout);
+        }
     </script>
 </body>
 

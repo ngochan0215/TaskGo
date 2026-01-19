@@ -687,29 +687,121 @@ export async function getTaskerAcceptanceRate(taskerId) {
   };
 }
 
-// nhân viên nhận lương
-export async function cashOutForTasker(userId) {
+// Tạo PayoutTasker batch từ các TaskerEarning có status 'available'
+export async function createPayoutBatchForTasker(userId) {
     try {
         const tasker = await Tasker.findOne({ user_id: userId });
         if (!tasker) {
             throw new Error("Tasker not found");
         }
-        const user = await User.findById(userId);
+        const taskerId = tasker._id;
+
+        // Tìm tất cả earnings có status 'available' và chưa được gán vào payout nào
+        const availableEarnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: 'available',
+            payout_id: { $exists: false }
+        }).sort({ completed_at: 1 }); // Sắp xếp theo thời gian hoàn thành
+
+        if (!availableEarnings.length) {
+            return null; // Không có earnings nào để tạo batch
+        }
+
+        // Tính tổng số tiền
+        const totalAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+
+        // Tìm khoảng thời gian (period_start và period_end)
+        const completedDates = availableEarnings.map(e => new Date(e.completed_at));
+        const periodStart = new Date(Math.min(...completedDates));
+        const periodEnd = new Date(Math.max(...completedDates));
+
+        // Tạo PayoutTasker batch
+        const payoutBatch = await PayoutTasker.create({
+            tasker_id: taskerId,
+            earning_ids: availableEarnings.map(e => e._id),
+            total_amount: totalAmount,
+            period_start: periodStart,
+            period_end: periodEnd,
+            status: 'pending'
+        });
+
+        // Cập nhật TaskerEarning records để link với payout_id
+        await TaskerEarning.updateMany(
+            { _id: { $in: availableEarnings.map(e => e._id) } },
+            { payout_id: payoutBatch._id }
+        );
+
+        return payoutBatch;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+// nhân viên nhận lương
+export async function cashOutForTasker(userId) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    let payoutIds = []; // Declare outside try block for error handling
+
+    try {
+        const tasker = await Tasker.findOne({ user_id: userId }).session(session);
+        if (!tasker) {
+            throw new Error("Tasker not found");
+        }
+        const user = await User.findById(userId).session(session);
         if (!user) {
             throw new Error("User not found");
         }
         const taskerId = tasker._id;
-        const payoutBill = await PayoutTasker.find({
+
+        // Tự động tạo payout batch từ available earnings nếu chưa có pending payout
+        let payoutBill = await PayoutTasker.find({
             status: "pending",
             tasker_id: taskerId
-        });
+        }).session(session);
+
+        // Nếu không có pending payout, tạo batch mới từ available earnings
         if (!payoutBill.length) {
-            throw new Error("Không có bill chờ thanh toán");
+            const availableEarnings = await TaskerEarning.find({
+                tasker_id: taskerId,
+                status: 'available',
+                payout_id: { $exists: false }
+            }).session(session).sort({ completed_at: 1 });
+
+            if (!availableEarnings.length) {
+                await session.abortTransaction();
+                throw new Error("Không có tiền lương để rút");
+            }
+
+            const totalAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+            const completedDates = availableEarnings.map(e => new Date(e.completed_at));
+            const periodStart = new Date(Math.min(...completedDates));
+            const periodEnd = new Date(Math.max(...completedDates));
+
+            const newPayoutBatch = await PayoutTasker.create([{
+                tasker_id: taskerId,
+                earning_ids: availableEarnings.map(e => e._id),
+                total_amount: totalAmount,
+                period_start: periodStart,
+                period_end: periodEnd,
+                status: 'pending'
+            }], { session });
+
+            await TaskerEarning.updateMany(
+                { _id: { $in: availableEarnings.map(e => e._id) } },
+                { payout_id: newPayoutBatch[0]._id }
+            ).session(session);
+
+            payoutBill = newPayoutBatch;
         }
-        const amount = payoutBill.reduce((sum, bill) => sum + bill.amount, 0);
+
+        const amount = payoutBill.reduce((sum, bill) => sum + bill.total_amount, 0);
         if (amount <= 0) {
+            await session.abortTransaction();
             throw new Error("Số tiền payout không hợp lệ");
         }
+
         console.log("Thực hiện thanh toán cho tasker:", user.full_name, "số tiền:", amount);
         const payoutPayload = {
             amount: amount,
@@ -718,8 +810,37 @@ export async function cashOutForTasker(userId) {
             toAccountNumber: tasker.account_number
         };
 
-        const orderCode = await payOut(payoutPayload, userId);
-        const orderCodeFromResult = orderCode.split('_')[1];
+        // Update payout status to processing before making payment
+        payoutIds = payoutBill.map(bill => bill._id);
+        await PayoutTasker.updateMany(
+            { _id: { $in: payoutIds } },
+            { status: 'processing' }
+        ).session(session);
+
+        await session.commitTransaction();
+        session.endSession();
+
+        let orderCode;
+        let orderCodeFromResult;
+        try {
+            orderCode = await payOut(payoutPayload, userId);
+            orderCodeFromResult = orderCode.split('_')[1];
+        } catch (payOutError) {
+            // Revert payout status back to pending if payOut fails
+            await PayoutTasker.updateMany(
+                { _id: { $in: payoutIds } },
+                { status: 'pending' }
+            );
+            console.error("PayOut error details:", {
+                message: payOutError.message,
+                status: payOutError.status,
+                code: payOutError.code,
+                response: payOutError.response?.data,
+                stack: payOutError.stack
+            });
+            throw new Error(`Lỗi khi tạo yêu cầu thanh toán trong tasker.service: ${payOutError.message}`);
+        }
+
         const start = Date.now();
         let state = 'PROCESSING';
 
@@ -736,7 +857,7 @@ export async function cashOutForTasker(userId) {
                 continue;
             }
 
-            const payoutState =result?._data?.[0]?.transactions?.[0]?.state;
+            const payoutState = result?._data?.[0]?.transactions?.[0]?.state;
             console.log('Payout state:', payoutState);
             if (!payoutState) {
                 lastError = new Error('Không lấy được trạng thái payout');
@@ -750,10 +871,25 @@ export async function cashOutForTasker(userId) {
                     { status: 'completed' }
                 );
 
+                // Update PayoutTasker status to completed
                 await PayoutTasker.updateMany(
-                    { tasker_id: taskerId, status: 'pending' },
+                    { _id: { $in: payoutIds } },
                     { status: 'completed', processed_at: new Date() }
                 );
+
+                // Update all related TaskerEarning records to 'paid' status
+                const completedPayouts = await PayoutTasker.find({
+                    _id: { $in: payoutIds },
+                    status: 'completed'
+                }).select('earning_ids');
+
+                const allEarningIds = completedPayouts.flatMap(payout => payout.earning_ids);
+                if (allEarningIds.length > 0) {
+                    await TaskerEarning.updateMany(
+                        { _id: { $in: allEarningIds } },
+                        { status: 'paid' }
+                    );
+                }
 
                 state = 'SUCCEEDED';
                 return true; 
@@ -764,6 +900,13 @@ export async function cashOutForTasker(userId) {
                     { order_code: orderCodeFromResult, user_id: userId },
                     { status: 'failed' }
                 );
+
+                // Revert payout status back to pending on failure
+                await PayoutTasker.updateMany(
+                    { _id: { $in: payoutIds } },
+                    { status: 'pending' }
+                );
+
                 state = 'FAILED';
                 throw new Error('Payout failed');
             }
@@ -777,13 +920,49 @@ export async function cashOutForTasker(userId) {
                 user_id: userId
             }, {
                 status: 'failed'
-            })
+            });
+
+            // Revert payout status back to pending on timeout
+            await PayoutTasker.updateMany(
+                { _id: { $in: payoutIds } },
+                { status: 'pending' }
+            );
+
             throw new Error('Payout processing timeout');
         }
         if (lastError) {
+            // Revert payout status back to pending if there's an error
+            if (payoutIds && payoutIds.length > 0) {
+                await PayoutTasker.updateMany(
+                    { _id: { $in: payoutIds } },
+                    { status: 'pending' }
+                );
+            }
             throw lastError;
         }
     } catch (error) {
+        // Revert payout status back to pending if error occurs after transaction commit
+        if (payoutIds && payoutIds.length > 0) {
+            try {
+                const currentPayouts = await PayoutTasker.find({
+                    _id: { $in: payoutIds },
+                    status: 'processing'
+                });
+                if (currentPayouts.length > 0) {
+                    await PayoutTasker.updateMany(
+                        { _id: { $in: payoutIds }, status: 'processing' },
+                        { status: 'pending' }
+                    );
+                }
+            } catch (revertError) {
+                console.error('Error reverting payout status:', revertError);
+            }
+        }
+
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        session.endSession();
         throw new Error(error.message);
     }
 }
@@ -837,11 +1016,23 @@ export const availableCashout = async (userId) => {
         }
         const taskerId = tasker._id;
 
-        const bills = await PayoutTasker.find({
+        // Get available earnings that haven't been included in any payout yet
+        const availableEarnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: 'available',
+            payout_id: { $exists: false }
+        });
+
+        // Only include pending payouts (exclude processing ones as they are in progress)
+        const pendingPayouts = await PayoutTasker.find({
             tasker_id: taskerId,
             status: 'pending'
         });
-        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+
+        const availableAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+        const pendingAmount = pendingPayouts.reduce((sum, bill) => sum + bill.total_amount, 0);
+
+        return availableAmount + pendingAmount;
     }
     catch (error) {
         throw new Error(error.message);

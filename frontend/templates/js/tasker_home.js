@@ -1061,6 +1061,10 @@
         const spinner = document.getElementById('cashoutSpinner');
         const text = document.getElementById('cashoutBtnText');
         if (!btn) return;
+        
+        const originalText = text.textContent;
+        const originalDisabled = btn.disabled;
+        
         try {
             btn.disabled = true;
             spinner.classList.remove('hidden');
@@ -1076,18 +1080,20 @@
                 await loadCashoutInfo();
             } else {
                 showToast(body && body.message ? body.message : 'Rút tiền thất bại', 'error');
+                // Reload cashout info to restore button state
+                await loadCashoutInfo();
             }
         } catch (err) {
             console.error('performCashout error', err);
             showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+            // Reload cashout info to restore button state
+            await loadCashoutInfo();
         } finally {
             spinner.classList.add('hidden');
+            // Restore button text
             text.textContent = 'Rút ngay';
-            const availEl = document.getElementById('availableBalance');
-            const btnNow = document.getElementById('cashoutBtn');
-            const availNum = availEl ? Number((availEl.textContent || '').replace(/\D/g, '')) : 0;
-            if (availNum <= 0) btnNow.disabled = true;
-            else btnNow.disabled = false;
+            // Button state will be set by loadCashoutInfo, but ensure it's not stuck disabled
+            btn.disabled = false;
         }
     }
 

@@ -732,11 +732,7 @@ export async function getWorkScheduleService({
   startDate,
   endDate,
 }) {
-  try {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:747',message:'getWorkScheduleService entry',data:{taskerUserId:String(taskerUserId),startDate,endDate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
+  try {    
     // Validate dates and normalize to start/end of day in UTC
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -744,10 +740,6 @@ export async function getWorkScheduleService({
     // Set start to beginning of day (00:00:00) and end to end of day (23:59:59.999)
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:752',message:'Date validation',data:{startISO:start.toISOString(),endISO:end.toISOString(),startTime:start.getTime(),endTime:end.getTime()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       throw new Error("Invalid date range");
@@ -781,20 +773,12 @@ export async function getWorkScheduleService({
       ]
     };
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:775',message:'Query before find',data:{query:JSON.stringify(query),startISO:start.toISOString(),endISO:end.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     const orders = await Order.find(query)
       .populate("customer_id", "full_name phone_number email")
       .populate("task_id", "task_name unit base_price")
       .populate("address_id")
       .sort({ scheduled_at: 1 })
       .lean();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:782',message:'Orders fetched',data:{orderCount:orders.length,orders:orders.map(o=>({_id:String(o._id),status:o.status,scheduledAt:o.scheduled_at?.toISOString(),dateStr:o.scheduled_at?new Date(o.scheduled_at).toISOString().split('T')[0]:null}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     // Get status logs to calculate actual duration for completed orders
     const orderIds = orders.map(o => o._id);
@@ -817,17 +801,12 @@ export async function getWorkScheduleService({
     const scheduleData = orders.map(order => {
       const scheduledAt = new Date(order.scheduled_at);
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:802',message:'Processing order',data:{orderId:String(order._id),status:order.status,scheduledAtISO:scheduledAt.toISOString(),dateStr:scheduledAt.toISOString().split('T')[0],dayOfWeek:scheduledAt.getDay()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      
       // Determine schedule status
       let scheduleStatus = "upcoming";
       if (["in_progress", "arrived", "departed"].includes(order.status)) {
         // These statuses are always ongoing regardless of order type
         scheduleStatus = "ongoing";
       } else if (order.status === "accepted") {
-        // For accepted orders: scheduled = upcoming (purple), immediate = ongoing (orange)
         if (order.type === "scheduled") {
           scheduleStatus = "upcoming";
         } else {
@@ -840,14 +819,12 @@ export async function getWorkScheduleService({
       } else if (order.status === "assigned") {
         scheduleStatus = "upcoming";
       }
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:815',message:'Status mapping result',data:{orderId:String(order._id),originalStatus:order.status,mappedStatus:scheduleStatus},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       // Calculate duration
       // Default duration: 2 hours for scheduled orders, 1.5 hours for immediate
-      let durationHours = order.type === "scheduled" ? 2 : 1.5;
+      console.log("order before setting duration hours: ", order);
+      let durationHours = order.task_payload.total_time / 60;
+      //let durationHours = order.type === "scheduled" ? 2 : 1.5;
       
       // Try to calculate actual duration from status logs
       const logs = logsByOrder[order._id] || [];
@@ -858,6 +835,7 @@ export async function getWorkScheduleService({
         const startTime = new Date(startLog.created_at);
         const endTime = new Date(endLog.created_at);
         durationHours = (endTime - startTime) / (1000 * 60 * 60); // Convert to hours
+        console.log(`duration hours of order ${startLog.order_id}: `, durationHours);
         // Ensure minimum 0.5 hours and maximum 8 hours
         durationHours = Math.max(0.5, Math.min(8, durationHours));
       }
@@ -875,11 +853,12 @@ export async function getWorkScheduleService({
         minute: "2-digit"
       });
       const endTime = new Date(scheduledAt.getTime() + durationHours * 60 * 60 * 1000);
+      console.log("END TIME: ", endTime);
       const endTimeStr = endTime.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit"
       });
-
+      console.log("END TIME STRING: ", endTimeStr);
       // Get day of week (0 = Sunday, 1 = Monday, etc.)
       const dayOfWeek = scheduledAt.getDay();
       
@@ -911,10 +890,6 @@ export async function getWorkScheduleService({
         durationHours: durationHours,
         type: order.type
       };
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:875',message:'Order result',data:{orderId:String(order._id),date:result.date,dayOfWeek:result.dayOfWeek,scheduleStatus:result.scheduleStatus,originalStatus:order.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       
       return result;
     });
