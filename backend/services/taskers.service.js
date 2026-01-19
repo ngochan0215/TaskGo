@@ -411,6 +411,17 @@ export const confirmDepartureService = async (taskerUserId, orderId) => {
             throw new Error("Order is not accepted")
         }
 
+        // Check if departure is allowed for scheduled tasks (must be within 2 hours before scheduled time)
+        if (order.type === "scheduled" && order.scheduled_at) {
+            const scheduledTime = new Date(order.scheduled_at);
+            const now = new Date();
+            const hoursUntilScheduled = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            
+            if (hoursUntilScheduled > 2) {
+                throw new Error("Bạn chỉ có thể xác nhận khởi hành khi còn 2 giờ trước thời gian đã lên lịch.");
+            }
+        }
+
         // update order status
         const orderLog = await changeOrderStatus({
             orderId,

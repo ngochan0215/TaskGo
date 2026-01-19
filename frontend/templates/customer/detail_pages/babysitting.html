@@ -116,8 +116,8 @@
                     Đặt ngay</a>
                 </button>
 
-                <button class="action-btn action-btn-hover">
-                    <a href="../scheduled.html">Đặt lịch trước</a>
+                <button onclick="handleScheduledBooking()" class="action-btn action-btn-hover">
+                    Đặt lịch trước</a>
                 </button>
 
             </div>
@@ -286,10 +286,10 @@
             return Math.round(amount);
         }
 
-        function saveDraft() {
+        function saveDraft(bookingType) {
             bookingDraft = {
                 task_id: task_id,
-                type: "immediate",
+                type: bookingType,
                 base_amount: calculateBaseAmount(),
                 final_amount: calculateBaseAmount(),
 
@@ -310,6 +310,7 @@
             };
 
             localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+            console.log("BOOKING DRAFT (saveDraft):", bookingDraft);
         }
 
         function handleBookingNow() {
@@ -328,10 +329,32 @@
                 return;
             }
 
-            saveDraft();
-            console.log("BOOKING DRAFT:", bookingDraft);
+            saveDraft("immediate");
+            console.log("BOOKING DRAFT (immedateBooking):", bookingDraft);
 
             window.location.href = "../book_now.html";
+        }
+
+        function handleScheduledBooking() {
+            if (!child_count) {
+                alert("Vui lòng chọn số lượng trẻ!");
+                return;
+            }
+
+            if (child_ages.includes(null)) {
+                alert("Vui lòng chọn độ tuổi cho tất cả các bé!");
+                return;
+            }
+
+            if (!total_time) {
+                alert("Vui lòng chọn số giờ làm việc!");
+                return;
+            }
+
+            saveDraft("scheduled");
+            console.log("BOOKING DRAFT (scheduledBooking):", bookingDraft);
+
+            window.location.href = "../scheduled.html";
         }
     </script>
 </body>

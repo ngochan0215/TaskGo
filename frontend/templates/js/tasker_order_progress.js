@@ -44,6 +44,7 @@ const reviewDisplaySection = document.getElementById('reviewDisplaySection');
 const reviewModal = document.getElementById('reviewModal');
 
 const statusToState = {
+  "pending": -1, // Pending orders (not yet assigned)
   "assigned": 0,
   "accepted": 1,
   "departed": 2,
@@ -615,6 +616,7 @@ function updateUI() {
   const statusBadge = document.getElementById('statusBadge');
   if (statusBadge) {
     const statusText = {
+      "pending": "Chờ nhận",
       "assigned": "Đã được gán",
       "accepted": "Đã nhận đơn",
       "departed": "Đang di chuyển",
@@ -627,14 +629,16 @@ function updateUI() {
       ? "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
       : status === "assigned"
       ? "px-2.5 py-1 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
+      : status === "pending"
+      ? "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
       : "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide";
   }
 
   // Configure button based on state
   let buttonConfig = null;
 
-  if (status === "assigned") {
-    // Show accept button
+  if (status === "pending" || status === "assigned") {
+    // Show accept button for both pending and assigned orders
     buttonConfig = {
       btnText: "Nhận đơn hàng",
       icon: "check_circle",
@@ -642,7 +646,7 @@ function updateUI() {
       action: "accept"
     };
     cancelBtn.style.display = "block";
-    cancelBtn.textContent = "Từ chối đơn hàng";
+    cancelBtn.textContent = status === "pending" ? "Không nhận đơn này" : "Từ chối đơn hàng";
     // Show accept step in timeline
     const acceptStep = document.getElementById("step-0");
     if (acceptStep) {
@@ -725,6 +729,20 @@ async function callTaskerAction(action) {
     return false;
   }
 
+  // Check if departure is allowed for scheduled tasks
+  if (action === "depart" && currentOrder) {
+    if (currentOrder.type === "scheduled" && currentOrder.scheduled_at) {
+      const scheduledTime = new Date(currentOrder.scheduled_at);
+      const now = new Date();
+      const hoursUntilScheduled = (scheduledTime - now) / (1000 * 60 * 60);
+      
+      if (hoursUntilScheduled > 2) {
+        alert("Bạn chỉ có thể xác nhận khởi hành khi còn 2 giờ trước thời gian đã lên lịch.");
+        return false;
+      }
+    }
+  }
+
   try {
     const options = {
       method: config.method,
@@ -755,6 +773,11 @@ async function callTaskerAction(action) {
     if (res.ok && result.success) {
       return true;
     } else {
+      // For pending orders trying to accept, show a helpful message
+      if (action === "accept" && currentOrder?.status === "pending") {
+        alert("Đơn hàng này chưa được gán cho bạn. Vui lòng nhận đơn từ trang chủ trước.");
+        return false;
+      }
       alert(result.message || result.error || "Có lỗi xảy ra");
       return false;
     }
@@ -800,14 +823,24 @@ mainBtn.addEventListener('click', async () => {
 
 // Handle cancel/deny button click
 cancelBtn.addEventListener('click', async () => {
-  if (currentOrder?.status === "assigned") {
-    // Deny action
-    if (!confirm("Bạn có chắc chắn muốn từ chối đơn hàng này?")) {
+  if (currentOrder?.status === "pending" || currentOrder?.status === "assigned") {
+    // Deny action for pending or assigned orders
+    const confirmMsg = currentOrder.status === "pending" 
+      ? "Bạn có chắc chắn không muốn nhận đơn hàng này?"
+      : "Bạn có chắc chắn muốn từ chối đơn hàng này?";
+    
+    if (!confirm(confirmMsg)) {
       return;
     }
 
     cancelBtn.disabled = true;
     cancelBtn.textContent = "Đang xử lý...";
+
+    // For pending orders, just redirect back (no deny API call needed)
+    if (currentOrder.status === "pending") {
+      window.location.href = "./tasker_home.html";
+      return;
+    }
 
     const success = await callTaskerAction("deny");
 
@@ -816,7 +849,7 @@ cancelBtn.addEventListener('click', async () => {
       window.location.href = "./tasker_home.html";
     } else {
       cancelBtn.disabled = false;
-      cancelBtn.textContent = "Từ chối đơn hàng";
+      cancelBtn.textContent = currentOrder.status === "pending" ? "Không nhận đơn này" : "Từ chối đơn hàng";
     }
   } else if (currentOrder?.status === "accepted") {
     // Cancel action (similar to deny but might have different logic)
