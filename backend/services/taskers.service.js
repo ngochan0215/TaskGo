@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { getRouteSummary } from "./location.service.js";
 import { User, Tasker, Customer, PayoutTasker, Order, Task, 
-    Service, TaskerStatusLog, Transaction, OrderStatusLog 
+    Service, TaskerStatusLog, Transaction, OrderStatusLog, TaskerEarning
 } from "../models/index.js";
 import { changeOrderStatus } from "./order.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
@@ -283,7 +283,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) => {
             actorId: taskerUserId
         });
 
-        console.log("ORDER STATUS LOG (acceptTask): ", orderLog);
+        //console.log("ORDER STATUS LOG (acceptTask): ", orderLog);
 
         // update tasker status
         const taskerLog = await changeTaskerStatus({
@@ -294,7 +294,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) => {
             note: "Tasker chấp nhận đơn hàng, actor_id chính là ID của đơn hàng"
         });
 
-        console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
+        //console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
 
         rankingCache.delete(String(order.user_id));
     } catch (error) {
@@ -510,8 +510,8 @@ export const confirmCompleteService = async (
 
     const taskerId = tasker._id;
 
-    // if (order.status !== "in_progress")
-    //   throw new Error("Order's status must be in progress to be completed.");
+    if (order.status !== "in_progress")
+      throw new Error("Order's status must be in progress to be completed.");
 
     // đổi trạng thái order + log
     await changeOrderStatus({
@@ -547,6 +547,26 @@ export const confirmCompleteService = async (
 
     if (order.customer_id)
       rankingCache.delete(String(order.customer_id));
+
+    // tiền thực tasker nhận được là 70% tổng tiền hàng (chưa áp khuyến mãi) + tiền tip
+    // tiền tasker nhận
+    const commissionRate = 0.7;
+    const grossAmount = order.base_amount;
+    const earningAmount = grossAmount * commissionRate + (order.tip_amount || 0);
+    const platformFee = grossAmount - grossAmount * commissionRate;
+
+    await TaskerEarning.create([{
+        tasker_id: taskerId,
+        order_id: order._id,
+
+        gross_amount: grossAmount,
+        commission_rate: commissionRate,
+        earning_amount: earningAmount,
+        platform_fee: platformFee,
+
+        status: "available",
+        completed_at: new Date()
+    }], { session });
 
     // await PayoutTasker.create({
     //     order_id: order._id,
@@ -767,7 +787,9 @@ export async function cashOutForTasker(userId) {
         throw new Error(error.message);
     }
 }
+
 const sleep = ms => new Promise(res => setTimeout(res, ms));
+
 export const getCashoutInfo = async (userId, timespan = 'day') => {
     try {
         const tasker = await Tasker.findOne({ user_id: userId });
@@ -791,7 +813,7 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
             const bills = await PayoutTasker.find({
                 tasker_id: taskerId
             });
-            return bills.reduce((sum, bill) => sum + bill.amount, 0);
+            return bills.reduce((sum, bill) => sum + bill.total_amount, 0);
         }
         else {
             throw new Error('Invalid timespan');
@@ -800,7 +822,7 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
             tasker_id: taskerId,
             created_at: { $gte: startDate }
         });
-        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+        return bills.reduce((sum, bill) => sum + bill.total_amount, 0);
     }
     catch (error) {
         throw new Error(error.message);
@@ -808,13 +830,13 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
 };
 
 export const availableCashout = async (userId) => {
-    try {
+  try {
         const tasker = await Tasker.findOne({ user_id: userId });
         if (!tasker) {
             throw new Error('Tasker not found');
         }
         const taskerId = tasker._id;
-        
+
         const bills = await PayoutTasker.find({
             tasker_id: taskerId,
             status: 'pending'
@@ -822,6 +844,183 @@ export const availableCashout = async (userId) => {
         return bills.reduce((sum, bill) => sum + bill.amount, 0);
     }
     catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+// Get tasker earnings grouped by period (day/week/month)
+export const getTaskerEarningsService = async ({
+    taskerUserId,
+    period = 'week', // 'day', 'week', or 'month'
+    startDate,
+    endDate,
+    page = 1,
+    limit = 50
+}) => {
+    try {
+        const tasker = await Tasker.findOne({ user_id: taskerUserId });
+        if (!tasker) {
+            throw new Error('Tasker not found');
+        }
+        const taskerId = tasker._id;
+        
+        // Build date range query
+        let dateQuery = {};
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setUTCHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            dateQuery.completed_at = { $gte: start, $lte: end };
+        } else {
+            // Default to last period if no dates provided
+            const now = new Date();
+            let start;
+            if (period === 'day') {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                start.setUTCHours(0, 0, 0, 0);
+            } else if (period === 'week') {
+                start = new Date(now);
+                start.setDate(start.getDate() - 7);
+                start.setUTCHours(0, 0, 0, 0);
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                start.setUTCHours(0, 0, 0, 0);
+            } else {
+                throw new Error('Invalid period. Must be day, week, or month');
+            }
+            dateQuery.completed_at = { $gte: start };
+        }
+
+        // Get all earnings for this tasker in the date range
+        const earnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: { $in: ['pending', 'available', 'paid'] }, // Exclude cancelled
+            ...dateQuery
+        })
+            .populate('order_id', 'task_snapshot address_snapshot customer_id scheduled_at type status')
+            .populate('order_id.customer_id', 'full_name')
+            .sort({ completed_at: -1 })
+            .lean();
+
+        // Group earnings by period
+        const groupedEarnings = {};
+        const periodTotals = {};
+
+        earnings.forEach(earning => {
+            const completedDate = new Date(earning.completed_at);
+            let periodKey;
+            let periodLabel;
+
+            if (period === 'day') {
+                const year = completedDate.getFullYear();
+                const month = String(completedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(completedDate.getDate()).padStart(2, '0');
+                periodKey = `${year}-${month}-${day}`;
+                periodLabel = completedDate.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                });
+            } else if (period === 'week') {
+                // Get week start (Monday)
+                const weekStart = new Date(completedDate);
+                const dayOfWeek = completedDate.getDay();
+                const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0
+                weekStart.setDate(completedDate.getDate() - diff);
+                weekStart.setHours(0, 0, 0, 0);
+                
+                const year = weekStart.getFullYear();
+                const month = String(weekStart.getMonth() + 1).padStart(2, '0');
+                const day = String(weekStart.getDate()).padStart(2, '0');
+                periodKey = `${year}-${month}-${day}`;
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                periodLabel = `${weekStart.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} - ${weekEnd.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}`;
+            } else if (period === 'month') {
+                const year = completedDate.getFullYear();
+                const month = String(completedDate.getMonth() + 1).padStart(2, '0');
+                periodKey = `${year}-${month}`;
+                periodLabel = completedDate.toLocaleDateString('vi-VN', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+            }
+
+            if (!groupedEarnings[periodKey]) {
+                groupedEarnings[periodKey] = {
+                    period: periodKey,
+                    periodLabel: periodLabel,
+                    earnings: [],
+                    totalEarning: 0,
+                    totalGross: 0,
+                    totalPlatformFee: 0,
+                    orderCount: 0
+                };
+                periodTotals[periodKey] = {
+                    totalEarning: 0,
+                    totalGross: 0,
+                    totalPlatformFee: 0,
+                    orderCount: 0
+                };
+            }
+
+            groupedEarnings[periodKey].earnings.push({
+                _id: earning._id,
+                orderId: earning.order_id?._id,
+                order: earning.order_id,
+                grossAmount: earning.gross_amount,
+                earningAmount: earning.earning_amount,
+                commissionRate: earning.commission_rate,
+                platformFee: earning.platform_fee,
+                status: earning.status,
+                completedAt: earning.completed_at,
+                payoutId: earning.payout_id
+            });
+
+            periodTotals[periodKey].totalEarning += earning.earning_amount;
+            periodTotals[periodKey].totalGross += earning.gross_amount;
+            periodTotals[periodKey].totalPlatformFee += earning.platform_fee;
+            periodTotals[periodKey].orderCount += 1;
+        });
+
+        // Update totals in grouped earnings
+        Object.keys(groupedEarnings).forEach(key => {
+            groupedEarnings[key].totalEarning = periodTotals[key].totalEarning;
+            groupedEarnings[key].totalGross = periodTotals[key].totalGross;
+            groupedEarnings[key].totalPlatformFee = periodTotals[key].totalPlatformFee;
+            groupedEarnings[key].orderCount = periodTotals[key].orderCount;
+        });
+
+        // Convert to array and sort by period (newest first)
+        const result = Object.values(groupedEarnings).sort((a, b) => {
+            return new Date(b.period) - new Date(a.period);
+        });
+
+        // Apply pagination
+        const skip = (Number(page) - 1) * Number(limit);
+        const paginatedResult = result.slice(skip, skip + Number(limit));
+
+        // Calculate overall totals
+        const overallTotals = {
+            totalEarning: result.reduce((sum, period) => sum + period.totalEarning, 0),
+            totalGross: result.reduce((sum, period) => sum + period.totalGross, 0),
+            totalPlatformFee: result.reduce((sum, period) => sum + period.totalPlatformFee, 0),
+            totalOrders: result.reduce((sum, period) => sum + period.orderCount, 0)
+        };
+
+        return {
+            earnings: paginatedResult,
+            totals: overallTotals,
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+                total: result.length,
+                totalPages: Math.ceil(result.length / Number(limit))
+            }
+        };
+    } catch (error) {
         throw new Error(error.message);
     }
 };

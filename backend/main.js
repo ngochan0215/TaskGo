@@ -7,7 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron, orderStatusCron } from "./utils/cronJobStatus.js";
+import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron } from "./jobs/cronJobStatus.js";
 import '../backend/jobs/transactionStatusJob.js'; 
 
 import authRoutes from "./routes/auth.route.js";
@@ -50,6 +50,7 @@ app.use("/api/notification", notificationRoutes);
 
 voucherStatusCron();
 //orderStatusCron();
+scheduledTaskReminderCron();
 
 app.use("/api/chats", chatRoutes);
 

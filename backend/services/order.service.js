@@ -172,18 +172,6 @@ export async function getAllOrdersByTaskerIdService({
       // Scheduled: pending or assigned orders that are scheduled (type === "scheduled") and assigned to this tasker
       q.status = { $in: ["pending", "assigned"] };
       q.type = "scheduled";
-      // Ensure tasker is assigned (for assigned status) or can be assigned (for pending)
-      // For pending, we might want to show orders that could be assigned, but for activity page, 
-      // we probably only want orders already assigned to this tasker
-      // So we'll filter to only show orders where tasker_id matches (for assigned) or is null (for pending, but only if they're assigned later)
-      // Actually, for activity page, we should only show orders assigned to this tasker
-      // So for scheduled, we want: type=scheduled AND (status=assigned with tasker_id=taskerUserId OR status=pending with tasker_id=taskerUserId)
-      // But actually, pending orders might not have tasker_id yet. Let me check the logic...
-      // For activity page, we want to show orders that are assigned to this tasker, so:
-      // - assigned status with tasker_id = taskerUserId
-      // - pending status with tasker_id = taskerUserId (if they were pre-assigned)
-      // Actually, let's keep it simple: scheduled orders that are assigned to this tasker
-      // We'll rely on the tasker_id filter which is already in the query
     } else if (category === "history") {
       // History: only completed and cancelled
       q.status = { $in: ["completed", "cancelled"] };
@@ -309,12 +297,12 @@ export async function createOrderService({
 
 // assign taskers for an order
 export async function assignTaskerService(order) {
-  console.log("ORDER (assignTaskerService): ", order);
+  //console.log("ORDER (assignTaskerService): ", order);
 
   const { suggestTaskers, suggestion } = await suggestTasker(order._id);
 
-  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
-  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+  // console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  // console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
 
   if (!suggestion || !suggestTaskers) {
     throw new Error("Không tìm thấy tasker phù hợp.");
@@ -340,27 +328,27 @@ export async function assignTaskerService(order) {
     note: "actorId là ID của đơn hàng được gán"
   });
 
-  console.log("HERE???");
+  //console.log("HERE???");
   // thông báo cho khách
   await pushNotification(
     order.customer_id,
     "Tạo đơn hàng thành công",
     "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",                              
+    "Order",                              
+    order._id,                         
+    "unread"                              
   );
 
   // thông báo cho tasker được gán
   await pushNotification(
-    suggestion.user_id,                 // userId (tasker user)
+    suggestion.user_id,
     "Có đơn hàng mới",
     `Bạn có một đơn hàng có ID: ${order._id} phù hợp, vui lòng phản hồi sớm trong vòng 2 phút.`,
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",
+    "Order",
+    order._id,                      
+    "unread"                            
   );
 
   return { suggestion, suggestTaskers };
