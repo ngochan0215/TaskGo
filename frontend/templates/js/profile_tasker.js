@@ -40,6 +40,10 @@ const editableInputs = [
     document.getElementById("account-number"),
 ];
 
+// Bank data storage
+let bankData = {};
+let bankSelect = document.getElementById("bank-select");
+
 editBtn.addEventListener("click", () => {
     isEditing = !isEditing;
 
@@ -47,6 +51,13 @@ editBtn.addEventListener("click", () => {
         input.readOnly = !isEditing;
         input.classList.toggle("bg-white", isEditing);
     });
+
+    // Enable/disable bank select
+    if (bankSelect) {
+        bankSelect.disabled = !isEditing;
+        bankSelect.classList.toggle("bg-gray-50", !isEditing);
+        bankSelect.classList.toggle("bg-white", isEditing);
+    }
 
     updateBtn.disabled = !isEditing;
     updateBtn.classList.toggle("opacity-50", !isEditing);
@@ -287,8 +298,19 @@ async function loadUserProfile() {
     
     await renderSkills(skills);
 
-    document.getElementById("bin").value = BIN || "Chưa xác định";
-    document.getElementById("account-number").value = account_number || "Chưa xác định";
+    document.getElementById("bin").value = BIN || "";
+    document.getElementById("account-number").value = account_number || "";
+    
+    // Set bank selection based on BIN
+    if (BIN && bankSelect) {
+        const matchingBank = Object.keys(bankData).find(key => {
+            const bank = bankData[key];
+            return bank.bin === BIN || bank.bin === BIN.split(',')[0].trim();
+        });
+        if (matchingBank) {
+            bankSelect.value = matchingBank;
+        }
+    }
 
     // avatar
     document.getElementById("avatar").src = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Charlie";
@@ -761,6 +783,58 @@ async function updateAvatar(event) {
     }
 }
 
+// Fetch banks from MoMo API
+async function loadBanks() {
+    try {
+        const response = await fetch("http://localhost:3000/api/momo/bankcodes");
+        if (!response.ok) {
+          throw new Error("Failed to fetch banks");
+        }
+
+        const bankData = await response.json();
+        console.log(bankData);
+        
+        if (bankSelect) {
+            // Clear existing options except the first one
+            bankSelect.innerHTML = '<option value="">-- Chọn ngân hàng --</option>';
+            
+            // Sort banks by name for better UX
+            const sortedBanks = Object.entries(bankData)
+                .filter(([key, bank]) => bank.isDisburse === true) // Only show banks that support disbursement
+                .sort((a, b) => a[1].name.localeCompare(b[1].name, 'vi'));
+            
+            sortedBanks.forEach(([key, bank]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = bank.shortName + " - " + bank.name;
+                option.dataset.bin = bank.bin;
+                bankSelect.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading banks:', error);
+        if (bankSelect) {
+            bankSelect.innerHTML = '<option value="">Lỗi tải danh sách ngân hàng</option>';
+        }
+    }
+}
+
+// Handle bank selection change
+if (bankSelect) {
+    bankSelect.addEventListener('change', function() {
+        const selectedKey = this.value;
+        if (selectedKey && bankData[selectedKey]) {
+            const selectedBank = bankData[selectedKey];
+            const binInput = document.getElementById("bin");
+            if (binInput) {
+                // Handle banks with multiple BINs (comma-separated)
+                const binValue = selectedBank.bin.split(',')[0].trim();
+                binInput.value = binValue;
+            }
+        }
+    });
+}
+
 window.updateProfile = updateProfile;
 window.updateAvatar = updateAvatar;
 window.adjustRadius = adjustRadius;
@@ -768,4 +842,8 @@ window.openAddressModal = openAddressModal;
 window.closeAddressModal = closeAddressModal;
 window.applyAddress = applyAddress;
 
-document.addEventListener("DOMContentLoaded", loadUserProfile);
+// Initialize: Load banks first, then profile
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadBanks();
+    await loadUserProfile();
+});

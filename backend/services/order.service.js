@@ -172,18 +172,6 @@ export async function getAllOrdersByTaskerIdService({
       // Scheduled: pending or assigned orders that are scheduled (type === "scheduled") and assigned to this tasker
       q.status = { $in: ["pending", "assigned"] };
       q.type = "scheduled";
-      // Ensure tasker is assigned (for assigned status) or can be assigned (for pending)
-      // For pending, we might want to show orders that could be assigned, but for activity page, 
-      // we probably only want orders already assigned to this tasker
-      // So we'll filter to only show orders where tasker_id matches (for assigned) or is null (for pending, but only if they're assigned later)
-      // Actually, for activity page, we should only show orders assigned to this tasker
-      // So for scheduled, we want: type=scheduled AND (status=assigned with tasker_id=taskerUserId OR status=pending with tasker_id=taskerUserId)
-      // But actually, pending orders might not have tasker_id yet. Let me check the logic...
-      // For activity page, we want to show orders that are assigned to this tasker, so:
-      // - assigned status with tasker_id = taskerUserId
-      // - pending status with tasker_id = taskerUserId (if they were pre-assigned)
-      // Actually, let's keep it simple: scheduled orders that are assigned to this tasker
-      // We'll rely on the tasker_id filter which is already in the query
     } else if (category === "history") {
       // History: only completed and cancelled
       q.status = { $in: ["completed", "cancelled"] };
@@ -309,12 +297,12 @@ export async function createOrderService({
 
 // assign taskers for an order
 export async function assignTaskerService(order) {
-  console.log("ORDER (assignTaskerService): ", order);
+  //console.log("ORDER (assignTaskerService): ", order);
 
   const { suggestTaskers, suggestion } = await suggestTasker(order._id);
 
-  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
-  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+  // console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  // console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
 
   if (!suggestion || !suggestTaskers) {
     throw new Error("Không tìm thấy tasker phù hợp.");
@@ -340,27 +328,27 @@ export async function assignTaskerService(order) {
     note: "actorId là ID của đơn hàng được gán"
   });
 
-  console.log("HERE???");
+  //console.log("HERE???");
   // thông báo cho khách
   await pushNotification(
     order.customer_id,
     "Tạo đơn hàng thành công",
     "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",                              
+    "Order",                              
+    order._id,                         
+    "unread"                              
   );
 
   // thông báo cho tasker được gán
   await pushNotification(
-    suggestion.user_id,                 // userId (tasker user)
+    suggestion.user_id,
     "Có đơn hàng mới",
     `Bạn có một đơn hàng có ID: ${order._id} phù hợp, vui lòng phản hồi sớm trong vòng 2 phút.`,
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",
+    "Order",
+    order._id,                      
+    "unread"                            
   );
 
   return { suggestion, suggestTaskers };
@@ -744,11 +732,7 @@ export async function getWorkScheduleService({
   startDate,
   endDate,
 }) {
-  try {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:747',message:'getWorkScheduleService entry',data:{taskerUserId:String(taskerUserId),startDate,endDate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
+  try {    
     // Validate dates and normalize to start/end of day in UTC
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -756,10 +740,6 @@ export async function getWorkScheduleService({
     // Set start to beginning of day (00:00:00) and end to end of day (23:59:59.999)
     start.setUTCHours(0, 0, 0, 0);
     end.setUTCHours(23, 59, 59, 999);
-    
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:752',message:'Date validation',data:{startISO:start.toISOString(),endISO:end.toISOString(),startTime:start.getTime(),endTime:end.getTime()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       throw new Error("Invalid date range");
@@ -793,20 +773,12 @@ export async function getWorkScheduleService({
       ]
     };
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:775',message:'Query before find',data:{query:JSON.stringify(query),startISO:start.toISOString(),endISO:end.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
-    
     const orders = await Order.find(query)
       .populate("customer_id", "full_name phone_number email")
       .populate("task_id", "task_name unit base_price")
       .populate("address_id")
       .sort({ scheduled_at: 1 })
       .lean();
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:782',message:'Orders fetched',data:{orderCount:orders.length,orders:orders.map(o=>({_id:String(o._id),status:o.status,scheduledAt:o.scheduled_at?.toISOString(),dateStr:o.scheduled_at?new Date(o.scheduled_at).toISOString().split('T')[0]:null}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
 
     // Get status logs to calculate actual duration for completed orders
     const orderIds = orders.map(o => o._id);
@@ -829,17 +801,12 @@ export async function getWorkScheduleService({
     const scheduleData = orders.map(order => {
       const scheduledAt = new Date(order.scheduled_at);
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:802',message:'Processing order',data:{orderId:String(order._id),status:order.status,scheduledAtISO:scheduledAt.toISOString(),dateStr:scheduledAt.toISOString().split('T')[0],dayOfWeek:scheduledAt.getDay()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
-      
       // Determine schedule status
       let scheduleStatus = "upcoming";
       if (["in_progress", "arrived", "departed"].includes(order.status)) {
         // These statuses are always ongoing regardless of order type
         scheduleStatus = "ongoing";
       } else if (order.status === "accepted") {
-        // For accepted orders: scheduled = upcoming (purple), immediate = ongoing (orange)
         if (order.type === "scheduled") {
           scheduleStatus = "upcoming";
         } else {
@@ -852,14 +819,12 @@ export async function getWorkScheduleService({
       } else if (order.status === "assigned") {
         scheduleStatus = "upcoming";
       }
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:815',message:'Status mapping result',data:{orderId:String(order._id),originalStatus:order.status,mappedStatus:scheduleStatus},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
 
       // Calculate duration
       // Default duration: 2 hours for scheduled orders, 1.5 hours for immediate
-      let durationHours = order.type === "scheduled" ? 2 : 1.5;
+      console.log("order before setting duration hours: ", order);
+      let durationHours = order.task_payload.total_time / 60;
+      //let durationHours = order.type === "scheduled" ? 2 : 1.5;
       
       // Try to calculate actual duration from status logs
       const logs = logsByOrder[order._id] || [];
@@ -870,6 +835,7 @@ export async function getWorkScheduleService({
         const startTime = new Date(startLog.created_at);
         const endTime = new Date(endLog.created_at);
         durationHours = (endTime - startTime) / (1000 * 60 * 60); // Convert to hours
+        console.log(`duration hours of order ${startLog.order_id}: `, durationHours);
         // Ensure minimum 0.5 hours and maximum 8 hours
         durationHours = Math.max(0.5, Math.min(8, durationHours));
       }
@@ -887,11 +853,12 @@ export async function getWorkScheduleService({
         minute: "2-digit"
       });
       const endTime = new Date(scheduledAt.getTime() + durationHours * 60 * 60 * 1000);
+      console.log("END TIME: ", endTime);
       const endTimeStr = endTime.toLocaleTimeString("vi-VN", {
         hour: "2-digit",
         minute: "2-digit"
       });
-
+      console.log("END TIME STRING: ", endTimeStr);
       // Get day of week (0 = Sunday, 1 = Monday, etc.)
       const dayOfWeek = scheduledAt.getDay();
       
@@ -923,10 +890,6 @@ export async function getWorkScheduleService({
         durationHours: durationHours,
         type: order.type
       };
-      
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:875',message:'Order result',data:{orderId:String(order._id),date:result.date,dayOfWeek:result.dayOfWeek,scheduleStatus:result.scheduleStatus,originalStatus:order.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       
       return result;
     });
