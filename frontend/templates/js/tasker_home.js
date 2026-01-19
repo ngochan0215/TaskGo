@@ -852,6 +852,13 @@
         }
 
         jobList.innerHTML = orders.map(order => {
+            // Get current tasker user ID
+            const currentTaskerUserId = _id;
+            
+            // Check if order is assigned to current tasker
+            const orderTaskerId = order.tasker_id?._id || order.tasker_id;
+            const isAssignedToMe = order.status === "assigned" && orderTaskerId && String(orderTaskerId) === String(currentTaskerUserId);
+            
             const isPending = order.status === "pending" && !order.tasker_id;
             const isAssigned = order.status === "assigned" && order.tasker_id;
             const isAccepted = ["accepted", "departed", "arrived", "in_progress"].includes(order.status);
@@ -910,19 +917,19 @@
                         </div>
                     </div>
                     <div class="flex gap-2 mt-5 ml-1">
-                        ${isPending ? 
+                        ${isAssignedToMe ? 
                             `<button onclick="acceptOrder('${order._id}')" style="background-color: #3730A3;" class="flex-1 py-2.5 text-white font-bold rounded-xl shadow-md hover:opacity-90 transition-opacity">
                                 Nhận việc ngay
                             </button>
                             <button onclick="viewOrderDetails('${order._id}')" style="color: #3730A3; border-color: #3730A3;" class="px-4 py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors">
                                 Xem chi tiết
                             </button>` :
-                            isAssigned || isAccepted ?
+                            isAccepted ?
                             `<button onclick="viewOrderDetails('${order._id}')" style="color: #3730A3; border-color: #3730A3;" class="w-full py-2.5 bg-white border-2 font-bold rounded-xl hover:bg-[#EEF2FF] transition-colors">
                                 Xem chi tiết
                             </button>` :
-                            `<button onclick="viewOrderDetails('${order._id}')" class="w-full py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl hover:bg-gray-200 transition-colors">
-                                Xem chi tiết
+                            `<button onclick="viewOrderDetails('${order._id}')" class="w-full py-2.5 bg-gray-100 border border-gray-200 text-gray-400 font-bold rounded-xl hover:bg-gray-200 transition-colors ${isPending ? 'cursor-pointer' : 'cursor-not-allowed'}" ${isPending ? '' : 'disabled'}>
+                                ${isPending ? 'Xem chi tiết' : 'Đã có người nhận'}
                             </button>`
                         }
                     </div>

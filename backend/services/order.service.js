@@ -737,3 +737,202 @@ export async function getOrderTrendsService() {
     throw new Error(err.message);
   }
 }
+
+// Get work schedule for a tasker for a specific week
+export async function getWorkScheduleService({
+  taskerUserId,
+  startDate,
+  endDate,
+}) {
+  try {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:747',message:'getWorkScheduleService entry',data:{taskerUserId:String(taskerUserId),startDate,endDate},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    // Validate dates and normalize to start/end of day in UTC
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Set start to beginning of day (00:00:00) and end to end of day (23:59:59.999)
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:752',message:'Date validation',data:{startISO:start.toISOString(),endISO:end.toISOString(),startTime:start.getTime(),endTime:end.getTime()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new Error("Invalid date range");
+    }
+
+    // Get all orders for this tasker within the date range
+    // Include orders that have scheduled_at within the range, or orders that are in progress/completed
+    const query = {
+      tasker_id: taskerUserId,
+      $or: [
+        // Scheduled orders with scheduled_at in range
+        {
+          scheduled_at: {
+            $gte: start,
+            $lte: end
+          }
+        },
+        // Or orders that are active (not completed) and started before end date
+        {
+          status: { $in: ["accepted", "departed", "arrived", "in_progress"] },
+          scheduled_at: { $lte: end }
+        },
+        // Completed orders must be within the date range
+        {
+          status: { $in: ["completed", "awaiting_payment"] },
+          scheduled_at: {
+            $gte: start,
+            $lte: end
+          }
+        }
+      ]
+    };
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:775',message:'Query before find',data:{query:JSON.stringify(query),startISO:start.toISOString(),endISO:end.toISOString()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+    
+    const orders = await Order.find(query)
+      .populate("customer_id", "full_name phone_number email")
+      .populate("task_id", "task_name unit base_price")
+      .populate("address_id")
+      .sort({ scheduled_at: 1 })
+      .lean();
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:782',message:'Orders fetched',data:{orderCount:orders.length,orders:orders.map(o=>({_id:String(o._id),status:o.status,scheduledAt:o.scheduled_at?.toISOString(),dateStr:o.scheduled_at?new Date(o.scheduled_at).toISOString().split('T')[0]:null}))},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+    // #endregion
+
+    // Get status logs to calculate actual duration for completed orders
+    const orderIds = orders.map(o => o._id);
+    const statusLogs = await OrderStatusLog.find({
+      order_id: { $in: orderIds }
+    })
+      .sort({ created_at: 1 })
+      .lean();
+
+    // Group logs by order_id
+    const logsByOrder = {};
+    statusLogs.forEach(log => {
+      if (!logsByOrder[log.order_id]) {
+        logsByOrder[log.order_id] = [];
+      }
+      logsByOrder[log.order_id].push(log);
+    });
+
+    // Format orders for schedule display
+    const scheduleData = orders.map(order => {
+      const scheduledAt = new Date(order.scheduled_at);
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:802',message:'Processing order',data:{orderId:String(order._id),status:order.status,scheduledAtISO:scheduledAt.toISOString(),dateStr:scheduledAt.toISOString().split('T')[0],dayOfWeek:scheduledAt.getDay()},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+      
+      // Determine schedule status
+      let scheduleStatus = "upcoming";
+      if (["in_progress", "arrived", "departed"].includes(order.status)) {
+        // These statuses are always ongoing regardless of order type
+        scheduleStatus = "ongoing";
+      } else if (order.status === "accepted") {
+        // For accepted orders: scheduled = upcoming (purple), immediate = ongoing (orange)
+        if (order.type === "scheduled") {
+          scheduleStatus = "upcoming";
+        } else {
+          scheduleStatus = "ongoing";
+        }
+      } else if (["completed", "awaiting_payment"].includes(order.status)) {
+        scheduleStatus = "completed";
+      } else if (order.status === "cancelled") {
+        scheduleStatus = "cancelled";
+      } else if (order.status === "assigned") {
+        scheduleStatus = "upcoming";
+      }
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:815',message:'Status mapping result',data:{orderId:String(order._id),originalStatus:order.status,mappedStatus:scheduleStatus},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
+      // #endregion
+
+      // Calculate duration
+      // Default duration: 2 hours for scheduled orders, 1.5 hours for immediate
+      let durationHours = order.type === "scheduled" ? 2 : 1.5;
+      
+      // Try to calculate actual duration from status logs
+      const logs = logsByOrder[order._id] || [];
+      const startLog = logs.find(log => log.to_status === "in_progress");
+      const endLog = logs.find(log => log.to_status === "completed");
+      
+      if (startLog && endLog) {
+        const startTime = new Date(startLog.created_at);
+        const endTime = new Date(endLog.created_at);
+        durationHours = (endTime - startTime) / (1000 * 60 * 60); // Convert to hours
+        // Ensure minimum 0.5 hours and maximum 8 hours
+        durationHours = Math.max(0.5, Math.min(8, durationHours));
+      }
+
+      // Calculate position on schedule grid
+      // Each hour column is 80px wide
+      const hour = scheduledAt.getHours();
+      const minutes = scheduledAt.getMinutes();
+      const leftPosition = (hour * 80) + (minutes / 60 * 80);
+      const width = durationHours * 80;
+
+      // Format time range
+      const startTime = scheduledAt.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      const endTime = new Date(scheduledAt.getTime() + durationHours * 60 * 60 * 1000);
+      const endTimeStr = endTime.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+
+      // Get day of week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = scheduledAt.getDay();
+      
+      // Calculate date in local timezone (not UTC) to avoid timezone issues
+      // For Vietnam (UTC+7), an order at 00:15 on 18/01 should be on 18/01, not 17/01
+      const year = scheduledAt.getFullYear();
+      const month = String(scheduledAt.getMonth() + 1).padStart(2, '0');
+      const day = String(scheduledAt.getDate()).padStart(2, '0');
+      const localDate = `${year}-${month}-${day}`;
+      
+      const result = {
+        _id: order._id,
+        orderId: order._id,
+        service: order.task_snapshot?.name || order.task_id?.task_name || "Dịch vụ",
+        scheduledAt: order.scheduled_at,
+        startTime: startTime,
+        endTime: endTimeStr,
+        timeRange: `${startTime} - ${endTimeStr}`,
+        address: order.address_snapshot?.full_address || order.address_id?.full_address || "—",
+        customer: order.customer_id?.full_name || "—",
+        status: order.status,
+        scheduleStatus: scheduleStatus, // ongoing, upcoming, completed, cancelled
+        dayOfWeek: dayOfWeek, // 0 = Sunday, 1 = Monday, etc.
+        date: localDate, // Use local date instead of UTC date
+        hour: hour,
+        minutes: minutes,
+        leftPosition: leftPosition,
+        width: width,
+        durationHours: durationHours,
+        type: order.type
+      };
+      
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'order.service.js:875',message:'Order result',data:{orderId:String(order._id),date:result.date,dayOfWeek:result.dayOfWeek,scheduleStatus:result.scheduleStatus,originalStatus:order.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
+      // #endregion
+      
+      return result;
+    });
+
+    return scheduleData;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}

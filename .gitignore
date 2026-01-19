@@ -2,7 +2,7 @@
 node_modules/
 .prettierrc
 .vscode/
-
+.cursor/
 ### macOS ###
 *.DS_Store
 createOrder.js

@@ -5,6 +5,7 @@ import { acceptTask, confirmDeparture, denyTask, confirmArriving,
     confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, 
     cashOut, amountCashout, availableCashoutAmount, getOrderDetailsForTasker, 
     getAvailableOrdersForTasker, getTaskerAcceptanceStats, getTaskerOrders,
+    getWorkSchedule,
 } from "../controllers/taskers.controller.js";
 
 const router = express.Router();
@@ -14,6 +15,9 @@ router.get("/orders/available", verifyToken, isTasker, getAvailableOrdersForTask
 
 // Get all orders for tasker (for activity page)
 router.get("/orders", verifyToken, isTasker, getTaskerOrders);
+
+// Get work schedule for tasker
+router.get("/work-schedule", verifyToken, isTasker, getWorkSchedule);
 
 // Get order details for tasker
 router.get("/order/:orderId", verifyToken, isTasker, getOrderDetailsForTasker);

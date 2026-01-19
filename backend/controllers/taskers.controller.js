@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
-import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService, getAllOrdersByTaskerIdService } from "../services/order.service.js";
+import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService, getAllOrdersByTaskerIdService, getWorkScheduleService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
 
 // tasker nhận task
@@ -521,6 +521,34 @@ export const getTaskerOrders = async (req, res) => {
         limit: Number(limit),
         total: ordersWithReceipts.length
       }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Get work schedule for tasker
+export const getWorkSchedule = async (req, res) => {
+  try {
+    const taskerUserId = req.userId;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "startDate and endDate query parameters are required"
+      });
+    }
+
+    const scheduleData = await getWorkScheduleService({
+      taskerUserId,
+      startDate,
+      endDate
+    });
+
+    res.status(200).json({
+      success: true,
+      schedule: scheduleData
     });
   } catch (err) {
     res.status(400).json({ success: false, message: err.message });

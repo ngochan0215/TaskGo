@@ -729,6 +729,20 @@ async function callTaskerAction(action) {
     return false;
   }
 
+  // Check if departure is allowed for scheduled tasks
+  if (action === "depart" && currentOrder) {
+    if (currentOrder.type === "scheduled" && currentOrder.scheduled_at) {
+      const scheduledTime = new Date(currentOrder.scheduled_at);
+      const now = new Date();
+      const hoursUntilScheduled = (scheduledTime - now) / (1000 * 60 * 60);
+      
+      if (hoursUntilScheduled > 2) {
+        alert("Bạn chỉ có thể xác nhận khởi hành khi còn 2 giờ trước thời gian đã lên lịch.");
+        return false;
+      }
+    }
+  }
+
   try {
     const options = {
       method: config.method,
