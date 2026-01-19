@@ -247,10 +247,8 @@
         </div>
     </nav>
 
-
     <main class="flex-grow p-4 md:p-8">
         <div class="p-4 md:p-8 max-w-7xl mx-auto">
-            <!-- Header -->
             <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                 <div class="flex items-center gap-5">
                     <div>
@@ -259,7 +257,6 @@
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Navigation Buttons (Lùi/Tiến tuần) -->
                     <div class="flex items-center bg-white p-1 rounded-2xl shadow-sm border border-slate-200 mr-2">
                         <button class="nav-btn" id="prev-week-btn" title="Tuần trước">
                             <span class="material-symbols-outlined text-xl">chevron_left</span>
@@ -274,7 +271,6 @@
                         </button>
                     </div>
 
-                    <!-- Filter Bar -->
                     <div class="flex items-center bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
                         <button onclick="filterTasks('all')" id="btn-all"
                             class="filter-btn active px-4 py-2 text-xs font-black rounded-xl">TẤT CẢ</button>
@@ -298,12 +294,10 @@
                 </div>
             </div>
 
-            <!-- Schedule Board -->
             <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <div class="min-w-[2040px]">
 
-                        <!-- Giờ (Header) -->
                         <div class="flex bg-slate-50 border-b border-slate-200">
                             <div
                                 class="corner-label shrink-0 flex items-center justify-center font-black text-slate-700 text-sm text-slate-400 uppercase tracking-tighter border-r border-slate-200">
@@ -313,7 +307,6 @@
 
                         <!-- Danh sách các ngày -->
                         <div id="days-container">
-                            <!-- Days will be rendered dynamically -->
                         </div>
                     </div>
                 </div>
@@ -324,7 +317,6 @@
             class="fixed inset-0 z-[100] hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
             <div
                 class="bg-white rounded-[28px] w-full max-w-sm overflow-hidden shadow-2xl transform transition-all border border-slate-100">
-                <!-- Modal Header -->
                 <div id="modalHeader" class="px-6 py-4 flex justify-between items-center border-b border-slate-50">
                     <h3 class="font-black text-slate-800 text-lg">Chi tiết công việc</h3>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -332,7 +324,6 @@
                     </button>
                 </div>
 
-                <!-- Modal Body -->
                 <div class="p-6 space-y-5">
                     <div class="flex items-start gap-4">
                         <div
@@ -429,10 +420,8 @@
             });
         }
 
-        // Pop-up logic
         const modal = document.getElementById('taskModal');
 
-        // Store current order ID for modal
         let currentModalOrderId = null;
 
         function showTaskDetail(el) {
@@ -448,7 +437,6 @@
             document.getElementById('modalAddress').innerText = address;
             document.getElementById('modalCustomer').innerText = customer;
             
-            // Store order ID for view details button
             currentModalOrderId = orderId;
 
             // Hiển thị modal
@@ -479,12 +467,10 @@
             }
         }
 
-        // Work schedule data
         let currentWeekStart = new Date();
         currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
         currentWeekStart.setHours(0, 0, 0, 0);
 
-        // Vietnamese day names
         const dayNames = ['CHỦ NHẬT', 'THỨ HAI', 'THỨ BA', 'THỨ TƯ', 'THỨ NĂM', 'THỨ SÁU', 'THỨ BẢY'];
 
         // Get week range (Monday to Sunday, but include Sunday of previous week)
@@ -509,10 +495,6 @@
                 const startISO = startDate.toISOString();
                 const endISO = endDate.toISOString();
                 
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'work_schedule.html:fetchWorkSchedule',message:'Fetching schedule',data:{startISO,endISO,startDateStr:startDate.toLocaleDateString('vi-VN'),endDateStr:endDate.toLocaleDateString('vi-VN')},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
-                
                 const response = await fetch(
                     `http://localhost:3000/api/tasker/work-schedule?startDate=${startISO}&endDate=${endISO}`,
                     {
@@ -530,14 +512,11 @@
                 }
 
                 const data = await response.json();
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'work_schedule.html:fetchWorkSchedule',message:'Schedule data received',data:{success:data.success,scheduleCount:data.schedule?.length||0,schedule:data.schedule?.map(s=>({orderId:String(s.orderId),date:s.date,dayOfWeek:s.dayOfWeek,status:s.status,scheduleStatus:s.scheduleStatus}))||[]},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                // #endregion
-                
                 if (data.success) {
                     return data.schedule || [];
                 }
+
+                console.log("DATA SCHEDULE: ", data.schedule);
                 return [];
             } catch (error) {
                 console.error("Error fetching work schedule:", error);
@@ -545,13 +524,10 @@
             }
         }
 
-        // Render schedule
         async function renderSchedule() {
             const weekRange = getWeekRange(currentWeekStart);
-            // Update week range display in navigation
-            document.getElementById('week-range-display').textContent = weekRange.text;
 
-            // Fetch schedule data
+            document.getElementById('week-range-display').textContent = weekRange.text;
             const scheduleData = await fetchWorkSchedule(weekRange.start, weekRange.end);
 
             // Group tasks by day of week (0 = Sunday, 1 = Monday, etc.)
@@ -561,6 +537,7 @@
             }
 
             scheduleData.forEach(task => {
+                console.log("SUSPICOUS TASK: ", task);
                 // Calculate which day of the current week this task belongs to
                 // Use the actual scheduledAt timestamp if available, otherwise use the date string
                 let taskDate;
@@ -595,11 +572,6 @@
                 }
                 
                 if (!tasksByDay[dayIndex]) tasksByDay[dayIndex] = [];
-                
-                // #region agent log
-                fetch('http://127.0.0.1:7242/ingest/3d07a9e4-a8de-4351-969c-0273d116a252',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'work_schedule.html:renderSchedule',message:'Grouping task by day',data:{orderId:String(task.orderId),date:task.date,scheduledAt:task.scheduledAt,taskDateAtMidnight:taskDateAtMidnight.toISOString(),daysDiff,dayIndex,weekStartDate:weekStart.toISOString().split('T')[0]},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix'})}).catch(()=>{});
-                // #endregion
-                
                 tasksByDay[dayIndex].push(task);
             });
 
@@ -636,6 +608,7 @@
                 // Add tasks for this day
                 const dayTasks = tasksByDay[i] || [];
                 dayTasks.forEach(task => {
+                    console.log("TASK: ", task);
                     const taskBlock = document.createElement('div');
                     taskBlock.className = `task-block task-${task.scheduleStatus}`;
                     taskBlock.setAttribute('data-status', task.scheduleStatus);
@@ -930,7 +903,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadCashoutInfo();
+            //loadCashoutInfo();
             const btn = document.getElementById('cashoutBtn');
             if (btn) btn.addEventListener('click', performCashout);
         });

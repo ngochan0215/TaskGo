@@ -5,7 +5,7 @@ import { acceptTask, confirmDeparture, denyTask, confirmArriving,
     confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, 
     cashOut, amountCashout, availableCashoutAmount, getOrderDetailsForTasker, 
     getAvailableOrdersForTasker, getTaskerAcceptanceStats, getTaskerOrders,
-    getWorkSchedule,
+    getWorkSchedule, getTaskerEarnings,
 } from "../controllers/taskers.controller.js";
 
 const router = express.Router();
@@ -38,5 +38,8 @@ router.get("/stats/acceptance-rate", verifyToken, getTaskerAcceptanceStats);
 router.put("/cashOut", verifyToken, isTasker, cashOut);
 router.get("/cashOut", verifyToken, isTasker, amountCashout);
 router.get("/cashOut/available", verifyToken, isTasker, availableCashoutAmount);
+
+// Get tasker earnings/salary
+router.get("/earnings", verifyToken, isTasker, getTaskerEarnings);
 
 export default router;

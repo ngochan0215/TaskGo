@@ -17,7 +17,7 @@ const messageSchema = new mongoose.Schema(
     },
 
     message_type: { type: String, enum: ["text", "image", "file"], default: "text" },
-    status: { type: String, enum: ["sent", "deleted", "read"], default: "sent" },
+    status: { type: String, enum: ["sent", "edited", "deleted", "read"], default: "sent" },
     deleted_at: { type: Date, default: null },
 
   },

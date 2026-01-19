@@ -196,3 +196,74 @@ export const getAllChats = async (req, res) => {
     return res.status(500).json({ ok: false, error: "Internal Server Error" });
   }
 };
+
+// Route: GET /api/chats/orders/:orderId/search?keyword=xxx&page=1&limit=20
+export const searchMessagesInOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { keyword, page = 1, limit = 20 } = req.query; 
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ ok: false, error: "Unauthorized" });
+    }
+
+    if (!keyword || keyword.trim().length === 0) {
+      return res.status(400).json({ ok: false, error: "Empty keyword" });
+    }
+
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, Math.min(50, parseInt(limit))); // Cap limit at 50
+    const skip = (pageNum - 1) * limitNum;
+
+    const targetChat = await fetchChat(orderId, userId);
+
+    const searchCriteria = {
+      chat_id: targetChat._id,
+      content: { $regex: keyword, $options: "i" }, // Case-insensitive
+      status: { $ne: "deleted" }, 
+      message_type: "text"
+    };
+
+    // Run Queries (Count + Fetch) parallel for performance
+    const [totalMatches, searchResults] = await Promise.all([
+      Message.countDocuments(searchCriteria),
+      Message.find(searchCriteria)
+        .sort({ createdAt: -1 }) // Newest matches 
+        .skip(skip)
+        .limit(limitNum)
+        .populate("sender_id", "full_name avatar_url")
+        .lean()
+    ]);
+
+    const formattedResults = searchResults.map((m) => ({
+      id: String(m._id),
+      chat_id: String(m.chat_id),
+      sender_id: String(m.sender_id._id),
+      sender: {
+          full_name: m.sender_id.full_name || "Unknown",
+          avatar_url: m.sender_id.avatar_url || null,
+      },
+      content: m.content,
+      message_type: m.message_type,
+      updatedAt: m.updated_at,
+      status: m.status,
+    }));
+
+    return res.status(200).json({
+      ok: true,
+      data: formattedResults,
+      pagination: {
+        total: totalMatches,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalMatches / limitNum),
+        hasMore: pageNum * limitNum < totalMatches
+      }
+    });
+
+  } catch (err) {
+    console.error("API searchMessagesInOrder error:", err);
+    return handleChatErrors(res, err);
+  }
+};

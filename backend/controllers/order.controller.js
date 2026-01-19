@@ -349,7 +349,7 @@ export const findTaskerForOrder = async (req, res) => {
     const { orderId } = req.params;
     const customerId = req.userId;
 
-    console.log("IM CALLED");
+    //console.log("IM CALLED");
     const order = await Order.findById(orderId)
       .populate('customer_id', 'full_name phone_number email')
       .populate('tasker_id', 'full_name phone_number email')
@@ -392,7 +392,7 @@ export const findTaskerForOrder = async (req, res) => {
     // Find and assign tasker
     const { suggestion, suggestTaskers } = await assignTaskerService(order);
 
-    console.log("IM ALWAYS HERE");
+    //console.log("IM ALWAYS HERE");
     // Refresh order to get updated data
     await order.populate('tasker_id', 'full_name phone_number email');
     const updatedOrder = await getOrderByIdService(orderId);
@@ -476,20 +476,22 @@ export const applyVoucherToBooking = async (req, res) => {
       }
     }
 
-    // min order value
+    // Lấy giá hiện tại của order (đã áp discount nếu có)
+    const currentAmount = order.final_amount || order.base_amount;
+
+    // min order value - kiểm tra dựa trên base_amount (giá gốc)
     if (
       voucher.conditions?.min_order_value &&
-      booking.total_amount < voucher.conditions.min_order_value
+      order.base_amount < voucher.conditions.min_order_value
     ) {
       return res.status(400).json({ message: "Giá trị đơn hàng chưa đạt điều kiện áp voucher." });
     }
 
-    // tính discount
+    // tính discount voucher (áp dụng trên giá sau discount)
     let discountAmount = 0;
 
     if (voucher.discount.type === "PERCENT") {
-      discountAmount =
-        booking.total_amount * (voucher.discount.value / 100);
+      discountAmount = currentAmount * (voucher.discount.value / 100);
 
       if (
         voucher.discount.max_discount &&
@@ -503,12 +505,17 @@ export const applyVoucherToBooking = async (req, res) => {
       discountAmount = voucher.discount.value;
     }
 
-    discountAmount = Math.min(discountAmount, booking.total_amount);
+    discountAmount = Math.min(discountAmount, currentAmount);
 
-    // update booking
-    booking.voucher_id = voucher._id;
-    booking.discount_amount = discountAmount;
-    booking.final_amount = booking.total_amount - discountAmount;
+    // update order
+    order.voucher_id = voucher._id;
+    order.voucher_snapshot = {
+      code: voucher.code,
+      name: voucher.name,
+      description: voucher.description,
+      discount_amount: discountAmount
+    };
+    order.final_amount = currentAmount - discountAmount;
 
     // ghi usage
     await VoucherUsage.create(
@@ -534,7 +541,7 @@ export const applyVoucherToBooking = async (req, res) => {
       success: true,
       message: "Áp dụng voucher thành công.",
       discount_amount: discountAmount,
-      final_amount: booking.final_amount
+      final_amount: order.final_amount
     });
 
   } catch (err) {

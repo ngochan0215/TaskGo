@@ -297,17 +297,17 @@ export const updateCustomerProfile = async (req, res) => {
     await user.save();
 
     if (BIN) {
-      const [binInCustomer, binInTasker] = await Promise.all([
-        Customer.findOne({ BIN, _id: { $ne: customer._id } }),
-        Tasker.findOne({ BIN }) // tasker khác customer, không cần $ne
-      ]);
+      // const [binInCustomer, binInTasker] = await Promise.all([
+      //   Customer.findOne({ BIN, _id: { $ne: customer._id } }),
+      //   Tasker.findOne({ BIN }) // tasker khác customer, không cần $ne
+      // ]);
 
-      if (binInCustomer || binInTasker) {
-        return res.status(400).json({
-          success: false,
-          message: "Số thẻ ngân hàng đã được sử dụng."
-        });
-      }
+      // if (binInCustomer || binInTasker) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Số thẻ ngân hàng đã được sử dụng."
+      //   });
+      // }
 
       customer.BIN = BIN;
     }
@@ -392,17 +392,17 @@ export const updateTaskerProfile = async (req, res) => {
     if (skills) tasker.skills = skills;
 
     if (BIN) {
-      const [binInTasker, binInCustomer] = await Promise.all([
-        Tasker.findOne({ BIN, _id: { $ne: tasker._id } }),
-        Customer.findOne({ BIN })
-      ]);
+      // const [binInTasker, binInCustomer] = await Promise.all([
+      //   Tasker.findOne({ BIN, _id: { $ne: tasker._id } }),
+      //   Customer.findOne({ BIN })
+      // ]);
 
-      if (binInCustomer || binInTasker) {
-        return res.status(400).json({
-          success: false,
-          message: "Số thẻ ngân hàng đã được sử dụng."
-        });
-      }
+      // if (binInCustomer || binInTasker) {
+      //   return res.status(400).json({
+      //     success: false,
+      //     message: "Số thẻ ngân hàng đã được sử dụng."
+      //   });
+      // }
 
       tasker.BIN = BIN;
     }

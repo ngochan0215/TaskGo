@@ -181,3 +181,225 @@ export const updateReviewStatus = async (req, res) => {
     return res.status(500).json({ message: "Lỗi server" });
   }
 };
+
+// ========== ADMIN FUNCTIONS ==========
+
+// Get all reviews with filters (Admin only)
+export const getAllReviews = async (req, res) => {
+  try {
+    const { 
+      status, 
+      rating, 
+      reviewee_role, 
+      page = 1, 
+      limit = 10,
+      search 
+    } = req.query;
+
+    const query = {};
+
+    // Filter by status
+    if (status && ["visible", "hidden", "deleted"].includes(status)) {
+      query.status = status;
+    }
+
+    // Filter by rating
+    if (rating) {
+      const ratingNum = parseInt(rating);
+      if (ratingNum >= 1 && ratingNum <= 5) {
+        query.rating = ratingNum;
+      }
+    }
+
+    // Filter by reviewee role
+    if (reviewee_role && ["customer", "tasker"].includes(reviewee_role)) {
+      query.reviewee_role = reviewee_role;
+    }
+
+    // Search by order ID or reviewer/reviewee name
+    if (search) {
+      const searchRegex = { $regex: search, $options: "i" };
+      query.$or = [
+        { order_id: mongoose.isValidObjectId(search) ? search : null },
+      ];
+      // Remove invalid ObjectId from query
+      if (!mongoose.isValidObjectId(search)) {
+        query.$or = [];
+      }
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const reviews = await Review.find(query)
+      .populate("reviewer_id", "full_name avatar_url phone_number")
+      .populate("reviewee_id", "full_name avatar_url phone_number")
+      .populate("order_id", "final_amount status")
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await Review.countDocuments(query);
+
+    return res.json({
+      success: true,
+      reviews,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit)),
+      },
+    });
+  } catch (error) {
+    console.error("Error getting all reviews:", error);
+    return res.status(500).json({ 
+      success: false,
+      message: "Lỗi server",
+      error: error.message 
+    });
+  }
+};
+
+// Get review statistics (Admin only)
+export const getReviewStatistics = async (req, res) => {
+  try {
+    const totalReviews = await Review.countDocuments();
+    const visibleReviews = await Review.countDocuments({ status: "visible" });
+    const hiddenReviews = await Review.countDocuments({ status: "hidden" });
+    const deletedReviews = await Review.countDocuments({ status: "deleted" });
+
+    // Average rating
+    const avgRatingResult = await Review.aggregate([
+      { $match: { status: "visible" } },
+      { $group: { _id: null, avgRating: { $avg: "$rating" } } },
+    ]);
+    const averageRating = avgRatingResult[0]?.avgRating || 0;
+
+    // Rating distribution
+    const ratingDistribution = await Review.aggregate([
+      { $match: { status: "visible" } },
+      { $group: { _id: "$rating", count: { $sum: 1 } } },
+      { $sort: { _id: -1 } },
+    ]);
+
+    // Reviews by role
+    const reviewsByRole = await Review.aggregate([
+      { $match: { status: "visible" } },
+      { $group: { _id: "$reviewee_role", count: { $sum: 1 } } },
+    ]);
+
+    // Recent reviews (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const recentReviews = await Review.countDocuments({
+      created_at: { $gte: sevenDaysAgo },
+      status: "visible",
+    });
+
+    return res.json({
+      success: true,
+      statistics: {
+        total: totalReviews,
+        visible: visibleReviews,
+        hidden: hiddenReviews,
+        deleted: deletedReviews,
+        averageRating: Math.round(averageRating * 10) / 10,
+        ratingDistribution: ratingDistribution.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {}),
+        reviewsByRole: reviewsByRole.reduce((acc, item) => {
+          acc[item._id] = item.count;
+          return acc;
+        }, {}),
+        recentReviews,
+      },
+    });
+  } catch (error) {
+    console.error("Error getting review statistics:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+};
+
+// Get review by ID (Admin only)
+export const getReviewById = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+
+    if (!mongoose.isValidObjectId(reviewId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Review ID không hợp lệ",
+      });
+    }
+
+    const review = await Review.findById(reviewId)
+      .populate("reviewer_id", "full_name avatar_url phone_number email")
+      .populate("reviewee_id", "full_name avatar_url phone_number email")
+      .populate("order_id");
+
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy review",
+      });
+    }
+
+    return res.json({
+      success: true,
+      review,
+    });
+  } catch (error) {
+    console.error("Error getting review by ID:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+};
+
+// Delete review (Admin only - soft delete)
+export const deleteReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const { note } = req.body;
+
+    if (!mongoose.isValidObjectId(reviewId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Review ID không hợp lệ",
+      });
+    }
+
+    const review = await Review.findById(reviewId);
+    if (!review) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy review",
+      });
+    }
+
+    review.status = "deleted";
+    review.note = note || review.note || "";
+
+    await review.save();
+
+    return res.json({
+      success: true,
+      message: "Xóa review thành công",
+      review,
+    });
+  } catch (error) {
+    console.error("Error deleting review:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+};

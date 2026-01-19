@@ -15,6 +15,7 @@ import Order from "./orders.js";
 import OrderStatusLog from "./orderStatusLog.js";
 import Receipt from "./receipts.js";
 import Transaction from "./transaction.js";
+import TaskerEarning from "./earningTasker.js";
 
 import Service from "./services.js";
 import Task from "./tasks.js";
@@ -24,7 +25,7 @@ import PayoutTasker from "./payoutTasker.js";
 
 export {
     Account, User, Customer, Tasker, FavoriteTasker,
-    Discount, Voucher, VoucherUsage, Transaction,
+    Discount, Voucher, VoucherUsage, Transaction, TaskerEarning,
     Order, OrderStatusLog, Receipt, Address, TaskerStatusLog,
     Service, Task, Message, Notification, Review, PayoutTasker,
 };

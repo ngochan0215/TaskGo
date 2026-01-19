@@ -6,7 +6,8 @@ import { createDiscount, getAllDiscounts, getDiscountById, updateDiscount, delet
     getEligibleVouchers,
     unactivateDiscount,
     unactivateVoucher,
-    getPreviewDiscount
+    getPreviewDiscount,
+    getServicePricesWithDiscount
  } from "../controllers/discount.controller.js";
 const router = express.Router();
 
@@ -14,6 +15,8 @@ const router = express.Router();
 router.post("/voucher/eligible-list", verifyToken, getEligibleVouchers);
 // hàm hiển thị trước thông tin khuyến mãi
 router.get("/preview/best", verifyToken, getPreviewDiscount);
+// hàm lấy giá sau discount cho danh sách services
+router.post("/services/prices", verifyToken, getServicePricesWithDiscount);
 
 // DISCOUNT
 router.post("/", verifyToken, isAdmin, createDiscount);

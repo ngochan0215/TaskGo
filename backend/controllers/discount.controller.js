@@ -885,8 +885,8 @@ export const getPreviewDiscount = async (req, res) => {
     const userId = req.userId;
 
     // lấy thông tin customer
-    const customer = await Customer.findOne({ user_id: userId }).select("tier");
-    const customerTier = customer?.tier;
+    const customer = await Customer.findOne({ user_id: userId }).select("type");
+    const customerTier = customer?.type?.toUpperCase() || "NEW";
 
     const now = new Date();
     const dayOfWeek = now.getDay();
@@ -942,6 +942,78 @@ export const getPreviewDiscount = async (req, res) => {
 
   } catch (err) {
     console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: "SERVER ERROR: " + err.message
+    });
+  }
+};
+
+// Hàm lấy giá sau discount cho danh sách services
+export const getServicePricesWithDiscount = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { task_ids, check_time } = req.body; // task_ids là array of task IDs
+
+    if (!task_ids || !Array.isArray(task_ids) || task_ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Cần cung cấp danh sách task_ids"
+      });
+    }
+
+    // Lấy thông tin tasks để có base price
+    const { Task } = await import("../models/index.js");
+    const tasks = await Task.find({
+      _id: { $in: task_ids }
+    }).select("_id pricing");
+
+    if (tasks.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy dịch vụ nào"
+      });
+    }
+
+    // Tính discount cho từng service
+    const { calculateDiscountForService } = await import("../services/discount.service.js");
+    const checkTime = check_time ? new Date(check_time) : new Date();
+
+    const results = await Promise.all(
+      tasks.map(async (task) => {
+        const result = await calculateDiscountForService({
+          userId,
+          taskId: task._id.toString(),
+          basePrice: task.pricing,
+          checkTime
+        });
+
+        return {
+          task_id: task._id,
+          original_price: task.pricing,
+          discount_amount: result.discountAmount,
+          final_price: result.finalPrice,
+          has_discount: result.discountAmount > 0,
+          discount_info: result.discountInfo ? {
+            id: result.discountInfo.id,
+            code: result.discountInfo.code,
+            name: result.discountInfo.name,
+            description: result.discountInfo.description,
+            type: result.discountInfo.type,
+            value: result.discountInfo.value,
+            discount_amount: result.discountInfo.discountAmount
+          } : null
+        };
+      })
+    );
+
+    return res.json({
+      success: true,
+      services: results
+    });
+
+  } catch (err) {
+    console.error("Error getting service prices with discount:", err);
     return res.status(500).json({
       success: false,
       message: "SERVER ERROR: " + err.message
