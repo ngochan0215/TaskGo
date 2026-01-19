@@ -21,6 +21,43 @@
         .calling-animation {
             animation: ripple 2s infinite;
         }
+        /* Modal animations */
+        #edit-message-modal:not(.hidden) > div:last-child,
+        #delete-confirm-modal:not(.hidden) > div:last-child {
+            animation: modalSlideIn 0.2s ease-out;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        /* Message action buttons fade */
+        .message-actions {
+            transition: opacity 0.15s ease-in-out;
+        }
+        /* Search highlight animation */
+        @keyframes searchHighlight {
+            0%, 100% { background-color: transparent; }
+            25%, 75% { background-color: rgba(253, 224, 71, 0.5); }
+        }
+        .search-highlight {
+            animation: searchHighlight 2s ease-in-out;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        /* Line clamp for search results */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 
     <script src="../components/cus_header.js" defer></script>
@@ -128,6 +165,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Search Overlay -->
+            <div id="search-overlay" class="hidden absolute inset-0 z-40 bg-white flex flex-col transition-all duration-300">
+                <!-- Search Header -->
+                <div class="px-4 md:px-6 h-[70px] border-b border-gray-100 flex items-center gap-3 shrink-0 bg-white">
+                    <button id="btn-close-search" class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-700 transition shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                    </button>
+                    <div class="flex-1 relative">
+                        <input 
+                            id="search-input" 
+                            type="text" 
+                            placeholder="Tìm kiếm tin nhắn..." 
+                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-full text-sm text-dark-900 focus:outline-none focus:border-green-500 focus:ring-0 focus:ring-green-200 transition placeholder-gray-400"
+                            autocomplete="off"
+                        >
+                    </div>
+                </div>
+                
+                <!-- Search Loading -->
+                <div id="search-loading" class="hidden absolute top-[70px] left-0 right-0 flex justify-center py-4 bg-white border-b border-gray-100">
+                    <span class="material-symbols-outlined animate-spin text-green-500">progress_activity</span>
+                    <span class="ml-2 text-sm text-gray-500">Đang tìm kiếm...</span>
+                </div>
+                
+                <!-- Search Results -->
+                <div id="search-results" class="flex-1 overflow-y-auto custom-scrollbar p-2">
+                    <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                        <span class="material-symbols-outlined text-[48px] mb-2">search</span>
+                        <p class="text-sm">Nhập từ khóa để tìm kiếm tin nhắn</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="px-4 md:px-6 h-[70px] border-b border-gray-100 flex items-center justify-between shrink-0 bg-white z-10">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div class="relative shrink-0 w-10 h-10">
@@ -141,9 +212,14 @@
                     </div>
                 </div>
 
-                <button id="btn-call" class="w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition shadow-sm active:scale-95">
-                    <span class="material-symbols-outlined text-[20px]">call</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button id="btn-search" class="w-9 h-9 rounded-full bg-gray-50 text-gray-600 flex items-center justify-center hover:bg-gray-200 hover:text-gray-800 transition shadow-sm active:scale-95">
+                        <span class="material-symbols-outlined text-[20px]">search</span>
+                    </button>
+                    <button id="btn-call" class="w-9 h-9 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-500 hover:text-white transition shadow-sm active:scale-95">
+                        <span class="material-symbols-outlined text-[20px]">call</span>
+                    </button>
+                </div>
             </div>
 
             <div id="message-container" class="flex-1 p-4 md:p-6 overflow-y-auto custom-scrollbar flex flex-col bg-[#FAFAFA]">
@@ -168,6 +244,46 @@
 </main>
 
 <app-footer></app-footer>
+
+<!-- Edit Message Modal -->
+<div id="edit-message-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeEditModal()"></div>
+    
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-green-600 text-[20px]">edit</span>
+                </div>
+                <h3 class="font-bold text-lg text-dark-900">Chỉnh sửa tin nhắn</h3>
+            </div>
+            <button onclick="closeEditModal()" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+        
+        <div class="p-5">
+            <textarea 
+                id="edit-message-input" 
+                class="w-full h-32 px-4 py-3 border border-gray-200 rounded-xl text-sm text-dark-900 resize-none focus:outline-none focus:border-green-500 focus:ring-0 transition placeholder-gray-400"
+                placeholder="Nhập nội dung tin nhắn..."
+                maxlength="2000"
+            ></textarea>
+            <p class="text-xs text-gray-400 mt-2 flex justify-end">
+                <span>Tối đa 2000 ký tự</span>
+            </p>
+        </div>
+        
+        <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+            <button onclick="closeEditModal()" class="px-5 py-2.5 text-sm font-medium text-red-500 bg-white border border-gray-200 hover:bg-gray-50 hover:text-red-800 rounded-xl transition shadow-sm">                
+                Hủy
+            </button>
+            <button onclick="saveEditedMessage()" class="px-5 py-2.5 text-sm font-medium text-white bg-green-500 hover:bg-green-600 rounded-xl shadow-md hover:shadow-lg transition flex items-center gap-2">
+                Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script type="module">

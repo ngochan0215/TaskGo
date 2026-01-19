@@ -15,22 +15,27 @@ const eyeSlashIcon = document.getElementById('eye-slash-icon');
 const loginErrorMsg = document.getElementById('login-error');
 const signupErrorMsg = document.getElementById('signup-error');
 
-// ====== FORM SWITCHING ======
 function showSignupForm() {
   formSlider.classList.add('-translate-x-full');
-  tabSignup.classList.add('text-primary-400', 'border-primary-400');
+
+  tabSignup.classList.add('text-primary-400', 'border-primary-400', 'border-b-2');
   tabSignup.classList.remove('text-gray-400');
-  tabLogin.classList.remove('text-primary-400', 'border-primary-400');
+
+  tabLogin.classList.remove('text-primary-400', 'border-primary-400', 'border-b-2');
   tabLogin.classList.add('text-gray-400');
 }
 
+
 function showLoginForm() {
   formSlider.classList.remove('-translate-x-full');
-  tabLogin.classList.add('text-primary-400', 'border-primary-400');
+
+  tabLogin.classList.add('text-primary-400', 'border-primary-400', 'border-b-2');
   tabLogin.classList.remove('text-gray-400');
-  tabSignup.classList.remove('text-primary-400', 'border-primary-400');
+
+  tabSignup.classList.remove('text-primary-400', 'border-primary-400', 'border-b-2');
   tabSignup.classList.add('text-gray-400');
 }
+
 
 // ====== PASSWORD TOGGLE ======
 function togglePassword(input) {
