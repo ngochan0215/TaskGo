@@ -77,6 +77,7 @@
     };
 
     const API_URL = "http://localhost:3000/api/task/service/all?task_status=active";
+    const DISCOUNT_API_URL = "http://localhost:3000/api/discount/services/prices";
 
     async function loadServices() {
     
@@ -88,13 +89,12 @@
       }
 
       try {
+        // Load services
         const res = await fetch(API_URL, {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
-
-        console.log("TOKEN: ", token);
 
         if (res.status === 401) {
           localStorage.removeItem("token");
@@ -106,6 +106,46 @@
         const data = await res.json();
         if (!data.success) return;
 
+        // Collect all task IDs
+        const allTaskIds = [];
+        data.services.forEach(service => {
+          if (service.tasks && service.tasks.length > 0) {
+            service.tasks.forEach(task => {
+              allTaskIds.push(task._id);
+            });
+          }
+        });
+
+        // Get prices with discount
+        let discountPrices = {};
+        if (allTaskIds.length > 0) {
+          try {
+            const discountRes = await fetch(DISCOUNT_API_URL, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                task_ids: allTaskIds
+              })
+            });
+
+            if (discountRes.ok) {
+              const discountData = await discountRes.json();
+              if (discountData.success && discountData.services) {
+                discountData.services.forEach(item => {
+                  discountPrices[item.task_id] = item;
+                });
+              }
+            }
+          } catch (discountErr) {
+            console.error("Error loading discount prices:", discountErr);
+            // Continue without discount prices
+          }
+        }
+
+        // Render services with discount prices
         const container = document.getElementById("service-list");
         container.innerHTML = "";
 
@@ -127,9 +167,24 @@
                 const detailPage = TASK_DETAIL_MAP[task.task_type];
                 if (!detailPage) return "";
 
+                const discountInfo = discountPrices[task._id];
+                const hasDiscount = discountInfo && discountInfo.has_discount;
+                const originalPrice = task.pricing || 0;
+                const finalPrice = hasDiscount ? discountInfo.final_price : originalPrice;
+                const discountAmount = hasDiscount ? discountInfo.discount_amount : 0;
+                const discountPercent = hasDiscount && originalPrice > 0 
+                  ? Math.round((discountAmount / originalPrice) * 100) 
+                  : 0;
+
                 return `
-                  <a href="${detailPage}?id=${task._id}&price=${task.pricing}"
-                    class="flex flex-col items-center space-y-1 text-black">
+                  <a href="${detailPage}?id=${task._id}&price=${finalPrice}"
+                    class="flex flex-col items-center space-y-1 text-black relative">
+
+                    ${hasDiscount ? `
+                      <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
+                        -${discountPercent}%
+                      </span>
+                    ` : ''}
 
                     <span class="material-symbols-outlined
                                 text-primary-500 p-4 mb-3
@@ -138,10 +193,22 @@
                     </span>
 
                     <span>${task.task_name}</span>
-                    <span class="text-sm text-gray-500">
-                      ${Number(task.pricing || 0).toLocaleString()} /
-                      ${UNIT_MAP[task.unit] || task.unit}
-                    </span>
+                    <div class="flex flex-col items-center">
+                      ${hasDiscount ? `
+                        <span class="text-xs text-gray-400 line-through">
+                          ${Number(originalPrice).toLocaleString()}đ
+                        </span>
+                        <span class="text-sm font-bold text-primary-500">
+                          ${Number(finalPrice).toLocaleString()}đ /
+                          ${UNIT_MAP[task.unit] || task.unit}
+                        </span>
+                      ` : `
+                        <span class="text-sm text-gray-500">
+                          ${Number(originalPrice).toLocaleString()}đ /
+                          ${UNIT_MAP[task.unit] || task.unit}
+                        </span>
+                      `}
+                    </div>
                   </a>
                 `;
               }).join("")}

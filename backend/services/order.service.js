@@ -237,9 +237,45 @@ export async function createOrderService({
       }
 
       if (!voucher_id) voucher_id = null;
-      if (!discount_id) discount_id = null;
       if (!voucher_snapshot) voucher_snapshot = null;
-      if (!discount_snapshot) discount_snapshot = null;
+
+      // Tự động tính và áp dụng discount nếu chưa có discount_id
+      let appliedDiscountId = discount_id;
+      let appliedDiscountSnapshot = discount_snapshot;
+      let calculatedFinalAmount = final_amount;
+
+      if (!appliedDiscountId) {
+        try {
+          const { calculateDiscountForService } = await import("./discount.service.js");
+          const discountResult = await calculateDiscountForService({
+            userId: customer_id,
+            taskId: task_id.toString(),
+            basePrice: base_amount,
+            checkTime: scheduleDate // Dùng scheduled_at cho scheduled orders, hiện tại cho immediate
+          });
+
+          if (discountResult.discount && discountResult.discountAmount > 0) {
+            appliedDiscountId = discountResult.discount._id;
+            appliedDiscountSnapshot = {
+              name: discountResult.discount.name,
+              description: discountResult.discount.description,
+              percentage: discountResult.discount.discount.type === "PERCENT" 
+                ? discountResult.discount.discount.value 
+                : null,
+              discount_amount: discountResult.discountAmount,
+              appliedAt: new Date()
+            };
+            // Áp dụng discount vào final_amount (trước khi áp voucher)
+            calculatedFinalAmount = discountResult.finalPrice;
+          }
+        } catch (discountError) {
+          console.error("Error calculating discount for order:", discountError);
+          // Tiếp tục với giá gốc nếu có lỗi
+        }
+      }
+
+      if (!appliedDiscountId) appliedDiscountId = null;
+      if (!appliedDiscountSnapshot) appliedDiscountSnapshot = null;
 
       const order = await Order.create(
         [{
@@ -250,8 +286,10 @@ export async function createOrderService({
           quantity, note,
           address_id, address_snapshot,
           voucher_id, voucher_snapshot,
-          discount_id, discount_snapshot,
-          base_amount, final_amount,
+          discount_id: appliedDiscountId,
+          discount_snapshot: appliedDiscountSnapshot,
+          base_amount, 
+          final_amount: calculatedFinalAmount, // Sử dụng giá đã áp discount
           status: "pending",
         }],
         { session }

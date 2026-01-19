@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>TaskGo Admin - Quản lý Đánh giá</title>
+
+    <link rel="stylesheet" href="../../public/css/output.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200"/>
+
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+
+<body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+
+<div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
+
+<aside id="sidebarMobile" class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
+    <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+            <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-full h-full object-contain p-1">
+        </div>
+        <div class="font-semibold text-sm tracking-wide">Admin</div>
+    </div>
+
+    <nav class="p-3 flex-1 space-y-1">
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_home.html">
+            <span class="material-symbols-outlined">home</span>
+            Trang chủ
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_managecustomers.html">
+            <span class="material-symbols-outlined">person</span>
+            Quản lý Customer
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_managetaskers.html">
+            <span class="material-symbols-outlined">badge</span>
+            Quản lý Tasker
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_manageservices.html">
+            <span class="material-symbols-outlined">design_services</span>
+            Quản lý Dịch vụ
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+            href="./admin_manageorders.html">
+            <span class="material-symbols-outlined">shopping_bag</span>
+            Quản lý Đơn hàng
+        </a>
+
+        <a class="sidebar-link active" 
+            href="./admin_managereviews.html">
+            <span class="material-symbols-outlined">rate_review</span>
+            Quản lý Đánh giá
+        </a>
+
+        <a class="sidebar-link" href="./admin_managediscounts.html">
+            <span class="material-symbols-outlined">percent_discount</span>
+            Quản lý Khuyến mãi
+        </a>
+
+        <a class="sidebar-link" href="./admin_managevouchers.html">
+            <span class="material-symbols-outlined">local_activity</span>
+            Quản lý Voucher
+        </a>
+
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">bar_chart</span>
+            Quản lý Doanh thu
+        </a>
+        
+        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <span class="material-symbols-outlined">settings</span>
+            Cài đặt
+        </a>
+    </nav>
+</aside>
+
+<div class="flex min-h-screen">
+
+    <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+        <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain p-1"/>
+            </div>
+            <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+        </div>
+
+        <nav class="p-3 flex-1 space-y-1">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_home.html">
+                <span class="material-symbols-outlined">home</span>
+                Trang chủ
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managecustomers.html">
+                <span class="material-symbols-outlined">person</span>
+                Quản lý Customer
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_managetaskers.html">
+                <span class="material-symbols-outlined">badge</span>
+                Quản lý Tasker
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_manageservices.html">
+                <span class="material-symbols-outlined">design_services</span>
+                Quản lý Dịch vụ
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
+                href="./admin_manageorders.html">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                Quản lý Đơn hàng
+            </a>
+
+            <a class="sidebar-link active" 
+                href="./admin_managereviews.html">
+                <span class="material-symbols-outlined">rate_review</span>
+                Quản lý Đánh giá
+            </a>
+
+            <a class="sidebar-link" href="./admin_managediscounts.html">
+                <span class="material-symbols-outlined">percent_discount</span>
+                Quản lý Khuyến mãi
+            </a>
+
+            <a class="sidebar-link" href="./admin_managevouchers.html">
+                <span class="material-symbols-outlined">local_activity</span>
+                Quản lý Voucher
+            </a>
+
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Quản lý Doanh thu
+            </a>
+            
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                Cài đặt
+            </a>
+        </nav>
+
+        <div class="p-3 border-t border-white/10">
+            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition" href="#">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
+        </div>
+    </aside>
+
+    <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+
+        <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+            <div class="flex items-center gap-3 min-w-0">
+                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden" type="button" onclick="openSidebar()">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined">rate_review</span>
+                    <div class="font-semibold truncate">Quản lý Đánh giá</div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
+                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="hidden sm:inline">Thông báo</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]">
+
+                <!-- Statistics Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng đánh giá</p>
+                        <p id="totalReviews" class="text-2xl font-bold text-gray-800">0</p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+                        <p class="text-xs text-green-600 font-bold uppercase mb-1">Đang hiển thị</p>
+                        <p id="visibleReviews" class="text-2xl font-bold text-gray-800">0 <span class="text-xs font-medium opacity-80">(0%)</span></p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
+                        <p class="text-xs text-yellow-600 font-bold uppercase mb-1">Đã ẩn</p>
+                        <p id="hiddenReviews" class="text-2xl font-bold text-gray-800">0 <span class="text-xs font-medium opacity-80">(0%)</span></p>
+                    </div>
+                    <div class="p-4 rounded-lg bg-purple-50 border border-purple-100">
+                        <p class="text-xs text-purple-600 font-bold uppercase mb-1">Điểm trung bình</p>
+                        <p id="averageRating" class="text-2xl font-bold text-gray-800">0.0 <span class="text-xs font-medium opacity-80">/ 5.0</span></p>
+                    </div>
+                </div>
+
+                <!-- Rating Distribution Chart -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <div class="border border-gray-100 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">bar_chart</span>
+                            Phân bố điểm đánh giá
+                        </h3>
+                        <div id="ratingDistribution" class="space-y-3">
+                            <!-- Rating bars will be inserted here -->
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-100 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-gray-400 text-lg">pie_chart</span>
+                            Đánh giá theo vai trò
+                        </h3>
+                        <div id="reviewsByRole" class="space-y-4">
+                            <!-- Role distribution will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div class="flex gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                        <button onclick="filterByStatus('')" class="filter-btn px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition" data-status="">Tất cả</button>
+                        <button onclick="filterByStatus('visible')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap" data-status="visible">Hiển thị</button>
+                        <button onclick="filterByStatus('hidden')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap" data-status="hidden">Đã ẩn</button>
+                        <button onclick="filterByStatus('deleted')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-red-500 hover:text-red-600 transition whitespace-nowrap" data-status="deleted">Đã xóa</button>
+                    </div>
+
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <select id="ratingFilter" onchange="applyFilters()" class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 bg-gray-50 focus:bg-white">
+                            <option value="">Tất cả điểm</option>
+                            <option value="5">5 sao</option>
+                            <option value="4">4 sao</option>
+                            <option value="3">3 sao</option>
+                            <option value="2">2 sao</option>
+                            <option value="1">1 sao</option>
+                        </select>
+                        <select id="roleFilter" onchange="applyFilters()" class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 bg-gray-50 focus:bg-white">
+                            <option value="">Tất cả vai trò</option>
+                            <option value="customer">Customer</option>
+                            <option value="tasker">Tasker</option>
+                        </select>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                            <input id="searchInput" type="text" placeholder="Tìm kiếm mã đơn..." class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full md:w-64 bg-gray-50 focus:bg-white transition-all" onkeyup="handleSearch()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews Table -->
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                        <tr>
+                            <th class="px-4 py-3 border-b border-gray-200">Mã ĐH</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Người đánh giá</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Người được đánh giá</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Vai trò</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-center">Điểm</th>
+                            <th class="px-4 py-3 border-b border-gray-200">Bình luận</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
+                            <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
+                        </tr>
+                        </thead>
+                        <tbody id="reviewsTableBody" class="text-sm text-gray-700 divide-y divide-gray-100 bg-white">
+                        <!-- Reviews will be loaded here -->
+                        <tr>
+                            <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+                                <div class="flex flex-col items-center gap-2">
+                                    <span class="material-symbols-outlined text-4xl">hourglass_empty</span>
+                                    <p>Đang tải dữ liệu...</p>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+                    <p id="paginationInfo" class="text-sm text-gray-500">Hiển thị <span class="font-bold">0-0</span> trên <span class="font-bold">0</span> đánh giá</p>
+                    <div id="paginationButtons" class="flex gap-1">
+                        <button onclick="previousPage()" class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">1</button>
+                        <button onclick="nextPage()" class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sidebarMobile = document.getElementById("sidebarMobile");
+    const backdrop = document.getElementById("backdrop");
+
+    function openSidebar() {
+      sidebarMobile.classList.remove("-translate-x-full");
+      backdrop.classList.remove("hidden");
+    }
+
+    function closeSidebar() {
+      sidebarMobile.classList.add("-translate-x-full");
+      backdrop.classList.add("hidden");
+    }
+
+    // API Configuration
+    const API_URL = "http://localhost:3000/api/review";
+    let allReviews = [];
+    let filteredReviews = [];
+    let currentPage = 1;
+    let itemsPerPage = 10;
+    let currentFilter = "";
+    let currentRating = "";
+    let currentRole = "";
+    let searchQuery = "";
+    let statistics = {};
+
+    // Load data when page loads
+    document.addEventListener("DOMContentLoaded", async () => {
+        await loadStatistics();
+        await loadReviews();
+    });
+
+    // Load review statistics
+    async function loadStatistics() {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const response = await fetch(`${API_URL}/statistics`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                alert("Bạn không có quyền truy cập!");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                statistics = data.statistics;
+                updateStatisticsCards();
+                renderRatingDistribution();
+                renderReviewsByRole();
+            } else {
+                console.error("Failed to load statistics");
+            }
+        } catch (error) {
+            console.error("Error loading statistics:", error);
+        }
+    }
+
+    // Update statistics cards
+    function updateStatisticsCards() {
+        const total = statistics.total || 0;
+        const visible = statistics.visible || 0;
+        const hidden = statistics.hidden || 0;
+        const avgRating = statistics.averageRating || 0;
+
+        document.getElementById("totalReviews").textContent = total;
+        document.getElementById("visibleReviews").innerHTML = `${visible} <span class="text-xs font-medium opacity-80">(${total > 0 ? Math.round(visible/total*100) : 0}%)</span>`;
+        document.getElementById("hiddenReviews").innerHTML = `${hidden} <span class="text-xs font-medium opacity-80">(${total > 0 ? Math.round(hidden/total*100) : 0}%)</span>`;
+        document.getElementById("averageRating").innerHTML = `${avgRating.toFixed(1)} <span class="text-xs font-medium opacity-80">/ 5.0</span>`;
+    }
+
+    // Render rating distribution
+    function renderRatingDistribution() {
+        const distribution = statistics.ratingDistribution || {};
+        const total = statistics.visible || 1;
+        const container = document.getElementById("ratingDistribution");
+
+        container.innerHTML = [5, 4, 3, 2, 1].map(rating => {
+            const count = distribution[rating] || 0;
+            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+            const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+            
+            return `
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-gray-600 font-medium">${stars} (${count})</span>
+                        <span class="font-bold">${percent}%</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-yellow-400 h-full transition-all" style="width: ${percent}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Render reviews by role
+    function renderReviewsByRole() {
+        const byRole = statistics.reviewsByRole || {};
+        const total = statistics.visible || 1;
+        const container = document.getElementById("reviewsByRole");
+
+        container.innerHTML = [
+            { role: "customer", label: "Customer", color: "blue" },
+            { role: "tasker", label: "Tasker", color: "green" }
+        ].map(({ role, label, color }) => {
+            const count = byRole[role] || 0;
+            const percent = total > 0 ? Math.round((count / total) * 100) : 0;
+            
+            return `
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span class="text-${color}-600 font-medium">${label}</span>
+                        <span class="font-bold">${count} (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                        <div class="bg-${color}-500 h-full transition-all" style="width: ${percent}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    // Fetch all reviews from API
+    async function loadReviews() {
+        try {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("Vui lòng đăng nhập!");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const params = new URLSearchParams({
+                page: currentPage,
+                limit: itemsPerPage,
+                ...(currentFilter && { status: currentFilter }),
+                ...(currentRating && { rating: currentRating }),
+                ...(currentRole && { reviewee_role: currentRole }),
+                ...(searchQuery && { search: searchQuery })
+            });
+
+            const response = await fetch(`${API_URL}/all?${params}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                alert("Bạn không có quyền truy cập!");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const data = await response.json();
+                
+            if (data.success) {
+                allReviews = data.reviews;
+                filteredReviews = [...allReviews];
+                renderReviews();
+                updatePagination(data.pagination);
+            } else {
+                showError("Không thể tải danh sách đánh giá");
+            }
+        } catch (error) {
+            console.error("Error loading reviews:", error);
+            showError("Lỗi khi tải dữ liệu: " + error.message);
+        }
+    }
+
+    // Render reviews in table
+    function renderReviews() {
+        const tbody = document.getElementById("reviewsTableBody");
+        
+        if (filteredReviews.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="px-4 py-8 text-center text-gray-400">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="material-symbols-outlined text-4xl">inbox</span>
+                            <p>Không có đánh giá nào</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = filteredReviews.map(review => `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-4 py-3 font-medium text-primary-600">#${review.order_id?._id?.substring(0, 8) || 'N/A'}</td>
+                <td class="px-4 py-3">
+                    <div class="font-medium">${review.reviewer_id?.full_name || 'N/A'}</div>
+                    <div class="text-xs text-gray-500">${maskPhone(review.reviewer_id?.phone_number || '')}</div>
+                </td>
+                <td class="px-4 py-3">
+                    <div class="font-medium">${review.reviewee_id?.full_name || 'N/A'}</div>
+                    <div class="text-xs text-gray-500">${maskPhone(review.reviewee_id?.phone_number || '')}</div>
+                </td>
+                <td class="px-4 py-3">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${review.reviewee_role === 'customer' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}">
+                        ${review.reviewee_role === 'customer' ? 'Customer' : 'Tasker'}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex items-center justify-center gap-1">
+                        ${Array.from({ length: 5 }, (_, i) => 
+                            `<span class="text-lg ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>`
+                        ).join('')}
+                        <span class="ml-1 font-bold text-gray-700">${review.rating}</span>
+                    </div>
+                </td>
+                <td class="px-4 py-3 max-w-xs">
+                    <div class="truncate" title="${escapeHtml(review.comment || 'Không có bình luận')}">
+                        ${review.comment || '<span class="text-gray-400 italic">Không có bình luận</span>'}
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-center">${getStatusBadge(review.status)}</td>
+                <td class="px-4 py-3 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="viewReviewDetail('${review._id}')" class="text-gray-400 hover:text-primary-500 transition" title="Xem chi tiết">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                        ${review.status !== 'visible' ? `
+                            <button onclick="updateReviewStatus('${review._id}', 'visible')" class="text-gray-400 hover:text-green-500 transition" title="Hiển thị">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                            </button>
+                        ` : `
+                            <button onclick="updateReviewStatus('${review._id}', 'hidden')" class="text-gray-400 hover:text-yellow-500 transition" title="Ẩn">
+                                <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                            </button>
+                        `}
+                        <button onclick="deleteReview('${review._id}')" class="text-gray-400 hover:text-red-500 transition" title="Xóa">
+                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // Filter by status
+    function filterByStatus(status) {
+        currentFilter = status;
+        currentPage = 1;
+
+        // Update button styles
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.dataset.status === status) {
+                btn.classList.add('bg-gray-800', 'text-white');
+                btn.classList.remove('bg-white', 'text-gray-600');
+            } else {
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-600');
+            }
+        });
+
+        loadReviews();
+    }
+
+    // Apply filters
+    function applyFilters() {
+        currentRating = document.getElementById("ratingFilter").value;
+        currentRole = document.getElementById("roleFilter").value;
+        currentPage = 1;
+        loadReviews();
+    }
+
+    // Search reviews
+    function handleSearch() {
+        searchQuery = document.getElementById("searchInput").value;
+        currentPage = 1;
+        loadReviews();
+    }
+
+    // View review detail
+    async function viewReviewDetail(reviewId) {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_URL}/${reviewId}`, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                }
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showReviewDetailModal(data.review);
+            } else {
+                alert("Không thể tải thông tin đánh giá");
+            }
+        } catch (error) {
+            console.error("Error fetching review detail:", error);
+            alert("Lỗi khi tải chi tiết đánh giá");
+        }
+    }
+
+    // Show review detail modal
+    function showReviewDetailModal(review) {
+        const modal = `
+            <div id="reviewDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onclick="closeModal(event)">
+                <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
+                    <div class="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+                        <h3 class="text-xl font-bold text-gray-800">Chi tiết đánh giá</h3>
+                        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm text-gray-500">Mã đơn hàng</p>
+                                <p class="font-semibold text-primary-600">#${review.order_id?._id?.substring(0, 8) || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Điểm đánh giá</p>
+                                <div class="flex items-center gap-1 mt-1">
+                                    ${Array.from({ length: 5 }, (_, i) => 
+                                        `<span class="text-2xl ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}">★</span>`
+                                    ).join('')}
+                                    <span class="ml-2 font-bold text-lg">${review.rating} / 5</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Người đánh giá</p>
+                                <p class="font-semibold">${review.reviewer_id?.full_name || 'N/A'}</p>
+                                <p class="text-xs text-gray-500">${review.reviewer_id?.phone_number || ''}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Người được đánh giá</p>
+                                <p class="font-semibold">${review.reviewee_id?.full_name || 'N/A'}</p>
+                                <p class="text-xs text-gray-500">${review.reviewee_id?.phone_number || ''}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Vai trò</p>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${review.reviewee_role === 'customer' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}">
+                                    ${review.reviewee_role === 'customer' ? 'Customer' : 'Tasker'}
+                                </span>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Trạng thái</p>
+                                ${getStatusBadge(review.status)}
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Ngày tạo</p>
+                                <p class="font-semibold">${formatDateTime(review.created_at)}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Cập nhật lần cuối</p>
+                                <p class="font-semibold">${formatDateTime(review.updated_at)}</p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <p class="text-sm text-gray-500 mb-2">Bình luận</p>
+                            <div class="bg-gray-50 p-3 rounded-lg">
+                                <p class="text-sm">${review.comment || '<span class="text-gray-400 italic">Không có bình luận</span>'}</p>
+                            </div>
+                        </div>
+                        
+                        ${review.note ? `
+                            <div>
+                                <p class="text-sm text-gray-500 mb-2">Ghi chú (Admin)</p>
+                                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                    <p class="text-sm">${review.note}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modal);
+    }
+
+    // Close modal
+    function closeModal(event) {
+        if (!event || event.target.id === 'reviewDetailModal') {
+            const modal = document.getElementById('reviewDetailModal');
+            if (modal) modal.remove();
+        }
+    }
+
+    // Update review status
+    async function updateReviewStatus(reviewId, status) {
+        const statusText = status === 'visible' ? 'hiển thị' : 'ẩn';
+        if (!confirm(`Bạn có chắc chắn muốn ${statusText} đánh giá này?`)) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_URL}/${reviewId}/status`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ status })
+            });
+
+            const data = await response.json();
+            
+            if (data.success || data.review) {
+                alert(`Cập nhật trạng thái thành công!`);
+                await loadReviews();
+                await loadStatistics();
+            } else {
+                alert("Không thể cập nhật trạng thái: " + (data.message || "Lỗi không xác định"));
+            }
+        } catch (error) {
+            console.error("Error updating review status:", error);
+            alert("Lỗi khi cập nhật trạng thái");
+        }
+    }
+
+    // Delete review
+    async function deleteReview(reviewId) {
+        const note = prompt("Nhập ghi chú (nếu có):");
+        if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_URL}/${reviewId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ note: note || "" })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                alert("Xóa đánh giá thành công!");
+                await loadReviews();
+                await loadStatistics();
+            } else {
+                alert("Không thể xóa đánh giá: " + (data.message || "Lỗi không xác định"));
+            }
+        } catch (error) {
+            console.error("Error deleting review:", error);
+            alert("Lỗi khi xóa đánh giá");
+        }
+    }
+
+    // Pagination
+    function updatePagination(pagination) {
+        const total = pagination.total || 0;
+        const totalPages = pagination.totalPages || 1;
+        const startIndex = ((pagination.page - 1) * pagination.limit) + 1;
+        const endIndex = Math.min(pagination.page * pagination.limit, total);
+
+        document.getElementById("paginationInfo").innerHTML = 
+            `Hiển thị <span class="font-bold">${total > 0 ? startIndex : 0}-${endIndex}</span> trên <span class="font-bold">${total}</span> đánh giá`;
+
+        const buttonsHTML = `
+            <button onclick="previousPage()" ${pagination.page === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-sm">chevron_left</span>
+            </button>
+            ${Array.from({length: totalPages}, (_, i) => i + 1)
+                .filter(page => page === 1 || page === totalPages || Math.abs(page - pagination.page) <= 1)
+                .map(page => `
+                    <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === pagination.page ? 'bg-primary-500 text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'} font-bold text-sm">
+                        ${page}
+                    </button>
+                `).join('')}
+            <button onclick="nextPage()" ${pagination.page === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
+        `;
+
+        document.getElementById("paginationButtons").innerHTML = buttonsHTML;
+    }
+
+    function previousPage() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadReviews();
+        }
+    }
+
+    function nextPage() {
+        currentPage++;
+        loadReviews();
+    }
+
+    function goToPage(page) {
+        currentPage = page;
+        loadReviews();
+    }
+
+    // Utility functions
+    function getStatusBadge(status) {
+        const statusMap = {
+            'visible': { text: 'Hiển thị', class: 'bg-green-100 text-green-700 border-green-200' },
+            'hidden': { text: 'Đã ẩn', class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+            'deleted': { text: 'Đã xóa', class: 'bg-red-100 text-red-700 border-red-200' },
+        };
+
+        const statusInfo = statusMap[status] || { text: status, class: 'bg-gray-100 text-gray-700 border-gray-200' };
+        return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${statusInfo.class} border">${statusInfo.text}</span>`;
+    }
+
+    function formatDateTime(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
+
+    function maskPhone(phone) {
+        if (!phone || phone.length < 6) return phone;
+        return phone.substring(0, 3) + '***' + phone.substring(phone.length - 3);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showError(message) {
+        const tbody = document.getElementById("reviewsTableBody");
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-red-500">
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="material-symbols-outlined text-4xl">error</span>
+                        <p>${message}</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+</script>
+</body>
+</html>
