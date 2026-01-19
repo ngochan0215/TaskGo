@@ -1,110 +1,99 @@
 <!doctype html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskGo</title>
-  <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-  <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
-</head>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskGo</title>
 
-<body class="bg-primary-100 min-h-screen font-montserrat">
-  <header class="bg-primary-200 py-4">
-    <div class="flex items-center justify-between px-4">
-      <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-        <a href=""><img src="../../public/images/taskgo-logo.png" alt=""></a>
-      </div>
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../public/favicons/favicon.ico"
+    />
+  </head>
 
-      <h1 class="font-bold text-xl text-dark-900">Danh sách dịch vụ</h1>
-      <div class="w-10 h-10 flex items-center justify-center">
-        <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-      </div>
-    </div>
-  </header>
+  <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
+    <!-- Shared header injected here -->
+    <div id="app-header"></div>
 
-  <main class="p-4 space-y-4 pb-20">
-    <div id="service-list" class="space-y-6">
-    </div>
-</main>
+    <main class="p-4 space-y-4 pb-20 flex-grow">
+      <div id="service-list" class="space-y-6"></div>
+    </main>
 
-  <footer>
-    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-      <div class="flex justify-around py-2 text-base">
-        <a href="#" class="flex flex-col items-center text-white">
-          <span class="material-symbols-outlined text-4xl">house</span>
-          Trang chủ
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">news</span>
-          Hoạt động
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">chat</span>
-          Tin nhắn
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">lightbulb</span>
-          Thông báo
-        </a>
-      </div>
-    </nav>
-  </footer>
+    <!-- Shared footer injected here -->
+    <div id="app-footer"></div>
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script type="module">
+    <!-- Shared layout init -->
+    <script type="module">
+      import { initLayout } from "../js/ui/shared-layout.js";
+      initLayout({ role: "customer", title: "Danh sách dịch vụ", active: "" });
+    </script>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
       import { initSocket } from "../js/socket.js";
-
       initSocket();
-  </script>
-  <script>
-    const UNIT_MAP = {
-      hour: "giờ",
-      job: "công việc"
-    };
-    const TASK_DETAIL_MAP = {
-      cleaning_washing_machine: "./detail_pages/cleaning_washing_machine.html",
-      cleaning_house: "./detail_pages/cleaning_house.html",
-      cleaning_air_conditioner: "./detail_pages/cleaning_air_conditioner.html",
-      caring_elderly: "./detail_pages/takecare_of_elder.html",
-      caring_thesick: "./detail_pages/takecare_of_sickpeople.html",
-      caring_children: "./detail_pages/babysitting.html",
-      shopping: "./detail_pages/market.html",
-      cooking: "./detail_pages/cooking.html",
-      active: "#"
-    };
+    </script>
+
+    <script>
+      const UNIT_MAP = {
+        hour: "giờ",
+        job: "công việc",
+      };
+      const TASK_DETAIL_MAP = {
+        cleaning_washing_machine:
+          "./detail_pages/cleaning_washing_machine.html",
+        cleaning_house: "./detail_pages/cleaning_house.html",
+        cleaning_air_conditioner:
+          "./detail_pages/cleaning_air_conditioner.html",
+        caring_elderly: "./detail_pages/takecare_of_elder.html",
+        caring_thesick: "./detail_pages/takecare_of_sickpeople.html",
+        caring_children: "./detail_pages/babysitting.html",
+        shopping: "./detail_pages/market.html",
+        cooking: "./detail_pages/cooking.html",
+        active: "#",
+      };
 
     const API_URL = "http://localhost:3000/api/task/service/all?task_status=active";
     const DISCOUNT_API_URL = "http://localhost:3000/api/discount/services/prices";
 
-    async function loadServices() {
-    
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-        window.location.href = "../auth/login-signup.html";
-        return;
-      }
-
-      try {
-        // Load services
-        const res = await fetch(API_URL, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        if (res.status === 401) {
-          localStorage.removeItem("token");
-          alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+      async function loadServices() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
           window.location.href = "../auth/login-signup.html";
           return;
         }
 
-        const data = await res.json();
-        if (!data.success) return;
+        try {
+          const res = await fetch(API_URL, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          console.log("TOKEN: ", token);
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert(
+              "Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.",
+            );
+            window.location.href = "../auth/login-signup.html";
+            return;
+          }
+
+          const data = await res.json();
+          if (!data.success) return;
 
         // Collect all task IDs
         const allTaskIds = [];
@@ -149,23 +138,24 @@
         const container = document.getElementById("service-list");
         container.innerHTML = "";
 
-        data.services.forEach(service => {
-          if (!service.tasks || service.tasks.length === 0) return;
+          data.services.forEach((service) => {
+            if (!service.tasks || service.tasks.length === 0) return;
 
-          const section = document.createElement("div");
-          section.className = "bg-white rounded-xl shadow-md p-4 space-y-4";
+            const section = document.createElement("div");
+            section.className = "bg-white rounded-xl shadow-md p-4 space-y-4";
 
-          section.innerHTML = `
-            <div class="flex items-center justify-between border-b pb-2">
-              <h2 class="text-2xl font-bold text-primary-500">
-                ${service.category_name}
-              </h2>
-            </div>
+            section.innerHTML = `
+              <div class="flex items-center justify-between border-b pb-2">
+                <h2 class="text-2xl font-bold text-primary-500">
+                  ${service.category_name}
+                </h2>
+              </div>
 
-            <div class="grid grid-cols-3 gap-y-4 text-center text-base">
-              ${service.tasks.map(task => {
-                const detailPage = TASK_DETAIL_MAP[task.task_type];
-                if (!detailPage) return "";
+              <div class="grid grid-cols-3 gap-y-4 text-center text-base">
+                ${service.tasks
+                  .map((task) => {
+                    const detailPage = TASK_DETAIL_MAP[task.task_type];
+                    if (!detailPage) return "";
 
                 const discountInfo = discountPrices[task._id];
                 const hasDiscount = discountInfo && discountInfo.has_discount;
@@ -186,11 +176,11 @@
                       </span>
                     ` : ''}
 
-                    <span class="material-symbols-outlined
-                                text-primary-500 p-4 mb-3
-                                bg-primary-200 rounded-md text-4xl">
-                      ${task.icon || "handyman"}
-                    </span>
+                        <span class="material-symbols-outlined
+                                    text-primary-500 p-4 mb-3
+                                    bg-primary-200 rounded-md text-4xl">
+                          ${task.icon || "handyman"}
+                        </span>
 
                     <span>${task.task_name}</span>
                     <div class="flex flex-col items-center">
@@ -215,16 +205,14 @@
             </div>
           `;
 
-          container.appendChild(section);
-        });
-
-      } catch (err) {
-        console.error("Load services failed", err);
+            container.appendChild(section);
+          });
+        } catch (err) {
+          console.error("Load services failed", err);
+        }
       }
-    }
 
-    document.addEventListener("DOMContentLoaded", loadServices);
-  </script>
-
-</body>
+      document.addEventListener("DOMContentLoaded", loadServices);
+    </script>
+  </body>
 </html>
