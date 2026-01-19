@@ -1,3 +1,20 @@
+// validate authorization
+let token = localStorage.getItem("token");
+if (!token) {
+  alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+  window.location.href = "../auth/login-signup.html";
+}
+
+const role = localStorage.getItem("system_role");
+const _id = localStorage.getItem("user_id");
+console.log("USER: ", role + " " + _id);
+console.log("TOKEN: ", token);
+
+if (role !== "customer") {
+  alert("Bạn không phải Khách hàng. Không có quyền truy cập.");
+  window.location.href = "../auth/login-signup.html";
+}
+
 let currentOrder = null;
 let currentReceipt = null;
 let orderPollingInterval = null;
@@ -542,7 +559,8 @@ async function initOrderingSuccess() {
   }
   
   // Check if we have an order and try to find tasker
-  if (currentOrder._id && currentOrder.type === "immediate" && currentOrder.status === "pending") {
+  // Fixed: Call findTaskerForOrder for both immediate AND scheduled orders when status is pending
+  if (currentOrder._id && currentOrder.status === "pending") {
     // Show searching status first
     renderTaskerSearchStatus("searching");
     // Then try to find tasker

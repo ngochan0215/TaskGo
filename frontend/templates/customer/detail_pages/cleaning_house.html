@@ -464,10 +464,10 @@
       event.currentTarget.classList.add("ring-2", "ring-primary-500");
     }
 
-    function saveDraft() {
+    function saveDraft(bookingType) {
       bookingDraft = {
         task_id,
-        type: "immediate",
+        type: bookingType,
         base_amount: baseTimePrice,
         final_amount: final_amount,
 

@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
-import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
+import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService, getAllOrdersByTaskerIdService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
 
 // tasker nhận task
@@ -485,6 +485,45 @@ export const getAvailableOrdersForTasker = async (req, res) => {
       success: false,
       message: err.message
     });
+  }
+};
+
+// Get all orders for tasker (for activity page)
+export const getTaskerOrders = async (req, res) => {
+  try {
+    const taskerUserId = req.userId;
+    const { status, category, page = 1, limit = 50 } = req.query;
+
+    const orders = await getAllOrdersByTaskerIdService({
+      taskerUserId,
+      status,
+      category, // "current_working", "scheduled", or "history"
+      page: Number(page),
+      limit: Number(limit),
+    });
+    
+    // Populate receipt for payment method (if exists)
+    const ordersWithReceipts = await Promise.all(
+      orders.map(async (order) => {
+        const receipt = await Receipt.findOne({ order_id: order._id }).lean();
+        return {
+          ...order,
+          receipt: receipt || null,
+        };
+      })
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      orders: ordersWithReceipts,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: ordersWithReceipts.length
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 

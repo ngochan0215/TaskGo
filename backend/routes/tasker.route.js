@@ -4,13 +4,16 @@ import { isAdmin, isTasker } from "../middleware/verifyRole.js"
 import { acceptTask, confirmDeparture, denyTask, confirmArriving, 
     confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, 
     cashOut, amountCashout, availableCashoutAmount, getOrderDetailsForTasker, 
-    getAvailableOrdersForTasker, getTaskerAcceptanceStats,
+    getAvailableOrdersForTasker, getTaskerAcceptanceStats, getTaskerOrders,
 } from "../controllers/taskers.controller.js";
 
 const router = express.Router();
 
 // Get available orders for tasker (for home page)
 router.get("/orders/available", verifyToken, isTasker, getAvailableOrdersForTasker);
+
+// Get all orders for tasker (for activity page)
+router.get("/orders", verifyToken, isTasker, getTaskerOrders);
 
 // Get order details for tasker
 router.get("/order/:orderId", verifyToken, isTasker, getOrderDetailsForTasker);

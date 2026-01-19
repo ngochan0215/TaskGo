@@ -71,6 +71,8 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       });
     }
 
+    console.log("CUSTOMER ID FROM REQ: ", customerId);
+    console.log("CUSTOMER ID FROM ORDER: ", order.customer_id._id + " " + order.customer_id);
     // Verify ownership
     if (String(order.customer_id._id || order.customer_id) !== String(customerId)) {
       return res.status(403).json({

@@ -76,7 +76,7 @@ export async function getOrderByIdService(orderId) {
 export async function getAllOrdersByCustomerIdService({
   customerId,
   status,
-  category, // "upcoming" or "history"
+  category, // "current_working", "scheduled", or "history"
   page = 1,
   limit = 50,
 }) {
@@ -84,10 +84,14 @@ export async function getAllOrdersByCustomerIdService({
     const q = {};
     if (customerId) q.customer_id = customerId;
     
-    // Filter by category (upcoming vs history)
-    if (category === "upcoming") {
-      // Upcoming: all statuses except completed and cancelled
-      q.status = { $nin: ["completed", "cancelled"] };
+    // Filter by category
+    if (category === "current_working") {
+      // Current working: orders in progress
+      q.status = { $in: ["accepted", "departed", "arrived", "in_progress"] };
+    } else if (category === "scheduled") {
+      // Scheduled: pending or assigned orders that are scheduled (type === "scheduled")
+      q.status = { $in: ["pending", "assigned"] };
+      q.type = "scheduled";
     } else if (category === "history") {
       // History: only completed and cancelled
       q.status = { $in: ["completed", "cancelled"] };
@@ -138,6 +142,62 @@ export async function getAvailableOrdersForTaskerService({
       .populate('tasker_id', 'full_name phone_number email')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
+// Get all orders of a tasker, with pagination + filter by category
+export async function getAllOrdersByTaskerIdService({
+  taskerUserId,
+  status,
+  category, // "current_working", "scheduled", or "history"
+  page = 1,
+  limit = 50,
+}) {
+  try {
+    const q = { tasker_id: taskerUserId };
+    
+    // Filter by category
+    if (category === "current_working") {
+      // Current working: orders in progress assigned to this tasker
+      q.status = { $in: ["accepted", "departed", "arrived", "in_progress"] };
+    } else if (category === "scheduled") {
+      // Scheduled: pending or assigned orders that are scheduled (type === "scheduled") and assigned to this tasker
+      q.status = { $in: ["pending", "assigned"] };
+      q.type = "scheduled";
+      // Ensure tasker is assigned (for assigned status) or can be assigned (for pending)
+      // For pending, we might want to show orders that could be assigned, but for activity page, 
+      // we probably only want orders already assigned to this tasker
+      // So we'll filter to only show orders where tasker_id matches (for assigned) or is null (for pending, but only if they're assigned later)
+      // Actually, for activity page, we should only show orders assigned to this tasker
+      // So for scheduled, we want: type=scheduled AND (status=assigned with tasker_id=taskerUserId OR status=pending with tasker_id=taskerUserId)
+      // But actually, pending orders might not have tasker_id yet. Let me check the logic...
+      // For activity page, we want to show orders that are assigned to this tasker, so:
+      // - assigned status with tasker_id = taskerUserId
+      // - pending status with tasker_id = taskerUserId (if they were pre-assigned)
+      // Actually, let's keep it simple: scheduled orders that are assigned to this tasker
+      // We'll rely on the tasker_id filter which is already in the query
+    } else if (category === "history") {
+      // History: only completed and cancelled
+      q.status = { $in: ["completed", "cancelled"] };
+    } else if (status) {
+      // If specific status is provided, use it
+      q.status = status;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate("task_id", "task_name unit base_price")
+      .populate("tasker_id", "full_name phone_number email")
+      .populate("customer_id", "full_name phone_number email avatar_url")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -245,7 +305,7 @@ export async function createOrderService({
       session.endSession();
       throw new Error(err.message);
     }
-}
+  }
 
 // assign taskers for an order
 export async function assignTaskerService(order) {
@@ -527,6 +587,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       console.log(`Apply penalty of amount: ${penaltyAmount}`);
       // Logic xử lý phí phạt (trừ vào ví, thanh toán, v.v.) sẽ được triển khai ở đây.
     }
+
+    // TODO: đối với những đơn đặt trước và trả full tiền thì cần phải hoàn tiền lại cho khách
 
     await session.commitTransaction();
 
