@@ -137,6 +137,84 @@ export default function registerChatHandlers(io) {
       }
     });
 
+    socket.on("edit-message", async (payload = {}, ack) => {
+      try {
+        const { message_id, new_content } = payload || {};
+
+        if (!message_id)
+           return ack && ack({ ok: false, error: "missing_message_id" });
+
+        if (!new_content || new_content.trim().length === 0)
+           return ack && ack({ ok: false, error: "empty_content" });
+
+        if (new_content.length > max_message_length)
+           return ack && ack({ ok: false, error: "message_too_long" });
+
+        const message = await Message.findById(message_id);
+
+        if (!message) 
+          return ack && ack({ ok: false, error: "message_not_found" });
+
+        // Only sender can edit
+        if (String(message.sender_id) !== userId) 
+          return ack && ack({ ok: false, error: "no_permission" });
+
+        if (message.status === 'deleted')
+          return ack && ack({ ok: false, error: "cannot_edit_deleted_message" });
+
+        message.content = new_content;
+        message.status = "edited"; 
+        await message.save();
+
+        io.to(`chat:${String(message.chat_id)}`).emit("message-updated", {
+          id: String(message._id),
+          chat_id: String(message.chat_id),
+          content: message.content,
+          status: "edited",
+          updatedAt: message.updatedAt
+        });
+
+        return ack && ack({ ok: true });
+
+      } catch (err) {
+        console.error("edit-message error", err);
+        return ack && ack({ ok: false, error: err.message || "server_error" });
+      }
+    });
+
+    socket.on("delete-message", async (payload = {}, ack) => {
+      try {
+        const { message_id } = payload || {};
+
+        if (!message_id) 
+          return ack && ack({ ok: false, error: "missing_message_id" });
+
+        const message = await Message.findById(message_id);
+
+        if (!message) 
+          return ack && ack({ ok: false, error: "message_not_found" });
+
+        if (String(message.sender_id) !== userId) 
+          return ack && ack({ ok: false, error: "no_permission" });
+
+        message.status = 'deleted';
+        await message.save();
+
+        // Broadcast deletion event
+        io.to(`chat:${String(message.chat_id)}`).emit("message-deleted", {
+          id: String(message._id),
+          chat_id: String(message.chat_id),
+          status: 'deleted'
+        });
+
+        return ack && ack({ ok: true });
+
+      } catch (err) {
+        console.error("delete-message error", err);
+        return ack && ack({ ok: false, error: err.message || "server_error" });
+      }
+    });
+
     // Typing indicator
     socket.on("start-typing", async (payload = {}, ack) => {
       try {

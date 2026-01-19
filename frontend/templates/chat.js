@@ -12,7 +12,14 @@ const state = {
     partnerAvatar: null,
     partnerName: null,
     callState: 'idle', // idle, calling, connected
+    editingMessageId: null, // Currently editing message ID
     incomingCallOrderId: null,
+    // Search state
+    isSearching: false,
+    searchResults: [],
+    searchPage: 1,
+    searchHasMore: false,
+    searchKeyword: '',
     peerConnection: null,
     localStream: null,
     remoteStream: null,
@@ -62,7 +69,15 @@ const els = {
     incomingCallAvatar: document.getElementById('incoming-call-avatar'),
     incomingCallName: document.getElementById('incoming-call-name'),
     btnAcceptCall: document.getElementById('btn-accept-call'),
-    btnRejectCall: document.getElementById('btn-reject-call')
+    btnRejectCall: document.getElementById('btn-reject-call'),
+
+    // Search UI
+    btnSearch: document.getElementById('btn-search'),
+    searchOverlay: document.getElementById('search-overlay'),
+    searchInput: document.getElementById('search-input'),
+    searchResults: document.getElementById('search-results'),
+    searchLoading: document.getElementById('search-loading'),
+    btnCloseSearch: document.getElementById('btn-close-search')
 };
 
 const sounds = {
@@ -129,6 +144,18 @@ function initSocket() {
 
     socket.on('stop-typing', () => {
         els.typingIndicator.classList.add('hidden');
+    });
+
+    socket.on('message-updated', (payload) => {
+        if (payload.chat_id === state.currentChatId) {
+            updateMessageInUI(payload);
+        }
+    });
+
+    socket.on('message-deleted', (payload) => {
+        if (payload.chat_id === state.currentChatId) {
+            markMessageAsDeletedInUI(payload.id);
+        }
     });
 
     // Call's socket events
@@ -417,29 +444,77 @@ function prependMessagesToUI(messages) {
 
 function createMessageElement(msg) {
     const isMe = String(msg.sender_id) === String(state.userId);
+    const isDeleted = msg.status === 'deleted';
+    const isEdited = msg.status === "edited";
     const div = document.createElement('div');
     const time = new Date(msg.createdAt || msg.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
+    // Set data attribute for message ID (used for updates)
+    div.setAttribute('data-message-id', msg.id || msg._id);
+
     div.className = isMe 
-        ? "flex flex-col items-end mb-4 ml-auto max-w-[85%]" 
-        : "flex items-end gap-2 mb-4 max-w-[85%]";
+        ? "message-item group flex flex-col items-end mb-4 ml-auto max-w-[85%]" 
+        : "message-item group flex items-end gap-2 mb-4 max-w-[85%]";
 
     const avatarUrl = state.partnerAvatar || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-    if (isMe) {
+    const editedBadge = isEdited ? '<span class="text-[9px] text-gray-400 italic ml-1">(đã chỉnh sửa)</span>' : '';
+    
+    // Action buttons for own messages (only if not deleted)
+    const actionButtons = (isMe && !isDeleted) ? `
+        <div class="message-actions opacity-0 group-hover:opacity-100 flex items-center gap-2 mr-2 transition-opacity duration-200">
+            <button onclick="openEditModal('${msg.id || msg._id}', this)" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition" title="Chỉnh sửa">
+                <span class="material-symbols-outlined text-[16px]">edit</span>
+            </button>
+            <button onclick="confirmDeleteMessage('${msg.id || msg._id}')" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-red-500 transition" title="Xóa">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+        </div>
+    ` : '';
+
+    if (isDeleted) {
+        // Deleted message display
+        if (isMe) {
+            div.innerHTML = `
+                <div class="bg-gray-200 text-gray-400 italic px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-sm break-words">
+                    Tin nhắn đã bị xóa
+                </div>
+                <span class="text-[10px] text-gray-400 mt-1 mr-1">${time}</span>
+            `;
+        } else {
+            div.innerHTML = `
+                <img src="${avatarUrl}" class="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm">
+                <div class="flex flex-col">
+                    <div class="bg-gray-100 border border-gray-200 text-gray-400 italic px-4 py-2.5 rounded-2xl rounded-bl-none text-sm shadow-sm break-words">
+                        Tin nhắn đã bị xóa
+                    </div>
+                    <span class="text-[10px] text-gray-400 mt-1 ml-1">${time}</span>
+                </div>
+            `;
+        }
+    } else if (isMe) {
         div.innerHTML = `
-            <div class="bg-green-500 text-white px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-md break-words">
-                ${escapeHtml(msg.content)}
+            <div class="flex items-center">
+                ${actionButtons}
+                <div class="message-bubble bg-green-500 text-white px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-md break-words">
+                    <span class="message-content">${escapeHtml(msg.content)}</span>
+                </div>
             </div>
-            <span class="text-[10px] text-gray-400 mt-1 mr-1">${time}</span>
+            <div class="flex items-center mt-1 mr-1">
+                <span class="text-[10px] text-gray-400">${time}</span>
+                ${editedBadge}
+            </div>
         `;
     } else {
         div.innerHTML = `
             <img src="${avatarUrl}" class="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm">
             <div class="flex flex-col">
-                <div class="bg-white border border-gray-200 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm text-dark-900 shadow-sm break-words">
-                    ${escapeHtml(msg.content)}
+                <div class="message-bubble bg-white border border-gray-200 px-4 py-2.5 rounded-2xl rounded-bl-none text-sm text-dark-900 shadow-sm break-words">
+                    <span class="message-content">${escapeHtml(msg.content)}</span>
                 </div>
-                <span class="text-[10px] text-gray-400 mt-1 ml-1">${time}</span>
+                <div class="flex items-center mt-1 ml-1">
+                    <span class="text-[10px] text-gray-400">${time}</span>
+                    ${editedBadge}
+                </div>
             </div>
         `;
     }
@@ -555,10 +630,68 @@ function setupEventListeners() {
         els.btnToggleCamera.addEventListener('click', toggleCamera);
     }
 
+    // Search UI Logic
+    if (els.btnSearch) {
+        els.btnSearch.addEventListener('click', openSearchOverlay);
+    }
+    if (els.btnCloseSearch) {
+        els.btnCloseSearch.addEventListener('click', closeSearchOverlay);
+    }
+    if (els.searchInput) {
+        let searchTimeout = null;
+        els.searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                performSearch(els.searchInput.value.trim());
+            }, 300);
+        });
+        els.searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                performSearch(els.searchInput.value.trim());
+            }
+        });
+    }
+    if (els.searchResults) {
+        els.searchResults.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = els.searchResults;
+            if (scrollTop + clientHeight >= scrollHeight - 50 && state.searchHasMore && !state.isSearching) {
+                loadMoreSearchResults();
+            }
+        });
+    }
+
     els.msgContainer.addEventListener('scroll', () => {
         // If scrolled to top (scrollTop === 0) AND we have more data (nextCursor)
         if (els.msgContainer.scrollTop === 0 && state.nextCursor) {
             loadChatHistory(state.nextCursor);
+        }
+    });
+
+    // Edit modal keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        const editModal = document.getElementById('edit-message-modal');
+        const searchOverlay = document.getElementById('search-overlay');
+        
+        // Escape to close modal or search
+        if (e.key === 'Escape') {
+            if (!editModal.classList.contains('hidden')) {
+                closeEditModal();
+            } else if (searchOverlay && !searchOverlay.classList.contains('hidden')) {
+                closeSearchOverlay();
+            }
+        }
+        
+        // Ctrl+Enter to save edit
+        if (e.key === 'Enter' && e.ctrlKey && !editModal.classList.contains('hidden')) {
+            e.preventDefault();
+            saveEditedMessage();
+        }
+        
+        // Ctrl+F to open search
+        if (e.key === 'f' && e.ctrlKey && state.currentOrderId) {
+            e.preventDefault();
+            openSearchOverlay();
         }
     });
 }
@@ -596,6 +729,418 @@ function updateBackButton() {
         backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
     }
 }
+
+// MESSAGE EDIT & DELETE FUNCTIONS
+
+function openEditModal(messageId, buttonElement) {
+    // Find the message element and get its content
+    const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageDiv) return;
+    
+    const contentSpan = messageDiv.querySelector('.message-content');
+    if (!contentSpan) return;
+    
+    const currentContent = contentSpan.textContent;
+    state.editingMessageId = messageId;
+    
+    // Show edit modal
+    const modal = document.getElementById('edit-message-modal');
+    const textarea = document.getElementById('edit-message-input');
+    
+    textarea.value = currentContent;
+    modal.classList.remove('hidden');
+    
+    // Focus and select text
+    setTimeout(() => {
+        textarea.focus();
+        textarea.select();
+    }, 100);
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-message-modal');
+    modal.classList.add('hidden');
+    state.editingMessageId = null;
+}
+
+function saveEditedMessage() {
+    const textarea = document.getElementById('edit-message-input');
+    const newContent = textarea.value.trim();
+    
+    if (!newContent) {
+        alert('Tin nhắn không được để trống');
+        return;
+    }
+    
+    if (newContent.length > 2000) {
+        alert('Tin nhắn quá dài (tối đa 2000 ký tự)');
+        return;
+    }
+    
+    socket.emit('edit-message', {
+        message_id: state.editingMessageId,
+        new_content: newContent
+    }, (ack) => {
+        if (ack.ok) {
+            closeEditModal();
+        } else {
+            alert('Không thể chỉnh sửa tin nhắn: ' + (ack.error || 'Lỗi không xác định'));
+        }
+    });
+}
+
+function confirmDeleteMessage(messageId) {
+    if (confirm('Bạn có chắc chắn muốn xóa tin nhắn này? Tin nhắn sẽ bị xóa vĩnh viễn và không thể khôi phục.')) {
+        socket.emit('delete-message', {
+            message_id: messageId
+        }, (ack) => {
+            if (!ack.ok) {
+                alert('Không thể xóa tin nhắn: ' + (ack.error || 'Lỗi không xác định'));
+            }
+        });
+    }
+}
+
+function updateMessageInUI(payload) {
+    const messageDiv = document.querySelector(`[data-message-id="${payload.id}"]`);
+    if (!messageDiv) return;
+    
+    const contentSpan = messageDiv.querySelector('.message-content');
+    if (contentSpan) {
+        contentSpan.textContent = payload.content;
+    }
+    
+    // Add edited badge if not already present
+    const timeContainer = messageDiv.querySelector('.flex.items-center.mt-1');
+    if (timeContainer && payload.status === 'edited' && !timeContainer.querySelector('.italic')) {
+        const editedBadge = document.createElement('span');
+        editedBadge.className = 'text-[9px] text-gray-400 italic ml-1';
+        editedBadge.textContent = '(đã chỉnh sửa)';
+        timeContainer.appendChild(editedBadge);
+    }
+}
+
+function markMessageAsDeletedInUI(messageId) {
+    const messageDiv = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!messageDiv) return;
+    
+    const isMe = messageDiv.classList.contains('ml-auto');
+    const time = messageDiv.querySelector('.text-\\[10px\\]')?.textContent || '';
+    
+    // Remove group hover class since deleted messages don't have actions
+    messageDiv.classList.remove('group');
+    
+    if (isMe) {
+        messageDiv.innerHTML = `
+            <div class="bg-gray-200 text-gray-400 italic px-4 py-2.5 rounded-2xl rounded-br-none text-sm shadow-sm break-words">
+                Tin nhắn đã bị xóa
+            </div>
+            <span class="text-[10px] text-gray-400 mt-1 mr-1">${time}</span>
+        `;
+    } else {
+        const avatarUrl = state.partnerAvatar || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
+        messageDiv.innerHTML = `
+            <img src="${avatarUrl}" class="w-8 h-8 rounded-full object-cover shrink-0 shadow-sm">
+            <div class="flex flex-col">
+                <div class="bg-gray-100 border border-gray-200 text-gray-400 italic px-4 py-2.5 rounded-2xl rounded-bl-none text-sm shadow-sm break-words">
+                    Tin nhắn đã bị xóa
+                </div>
+                <span class="text-[10px] text-gray-400 mt-1 ml-1">${time}</span>
+            </div>
+        `;
+    }
+}
+
+// Make functions available globally for onclick handlers
+window.openEditModal = openEditModal;
+window.confirmDeleteMessage = confirmDeleteMessage;
+window.closeEditModal = closeEditModal;
+window.saveEditedMessage = saveEditedMessage;
+
+// SEARCH FUNCTIONS
+
+function openSearchOverlay() {
+    if (!state.currentOrderId) {
+        alert('Vui lòng chọn một cuộc trò chuyện trước');
+        return;
+    }
+    
+    els.searchOverlay.classList.remove('hidden');
+    els.searchInput.value = '';
+    els.searchResults.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+            <span class="material-symbols-outlined text-[48px] mb-2">search</span>
+            <p class="text-sm">Nhập từ khóa để tìm kiếm tin nhắn</p>
+        </div>
+    `;
+    state.searchResults = [];
+    state.searchPage = 1;
+    state.searchHasMore = false;
+    state.searchKeyword = '';
+    
+    setTimeout(() => els.searchInput.focus(), 100);
+}
+
+function closeSearchOverlay() {
+    els.searchOverlay.classList.add('hidden');
+    els.searchInput.value = '';
+    state.searchResults = [];
+    state.searchPage = 1;
+    state.searchHasMore = false;
+    state.searchKeyword = '';
+}
+
+async function performSearch(keyword) {
+    if (!keyword || keyword.length === 0) {
+        els.searchResults.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                <span class="material-symbols-outlined text-[48px] mb-2">search</span>
+                <p class="text-sm">Nhập từ khóa để tìm kiếm tin nhắn</p>
+            </div>
+        `;
+        state.searchResults = [];
+        state.searchKeyword = '';
+        return;
+    }
+    
+    state.searchKeyword = keyword;
+    state.searchPage = 1;
+    state.isSearching = true;
+    
+    // Show loading
+    els.searchLoading.classList.remove('hidden');
+    els.searchResults.innerHTML = '';
+    
+    try {
+        const url = `${API_URL}/chats/orders/${state.currentOrderId}/search?keyword=${encodeURIComponent(keyword)}&page=1&limit=20`;
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+        
+        const res = await response.json();
+        if (!response.ok) throw new Error(res.error || 'Search failed');
+        
+        state.searchResults = res.data || [];
+        state.searchHasMore = res.pagination?.hasMore || false;
+        
+        renderSearchResults(state.searchResults, false);
+        
+    } catch (err) {
+        console.error('Search error:', err);
+        els.searchResults.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-red-400">
+                <span class="material-symbols-outlined text-[48px] mb-2">error</span>
+                <p class="text-sm">Lỗi tìm kiếm: ${escapeHtml(err.message)}</p>
+            </div>
+        `;
+    } finally {
+        state.isSearching = false;
+        els.searchLoading.classList.add('hidden');
+    }
+}
+
+async function loadMoreSearchResults() {
+    if (!state.searchKeyword || state.isSearching || !state.searchHasMore) return;
+    
+    state.isSearching = true;
+    state.searchPage++;
+    
+    // Show loading indicator at bottom
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'search-load-more';
+    loadingDiv.className = 'flex justify-center py-3';
+    loadingDiv.innerHTML = '<span class="material-symbols-outlined animate-spin text-green-500">progress_activity</span>';
+    els.searchResults.appendChild(loadingDiv);
+    
+    try {
+        const url = `${API_URL}/chats/orders/${state.currentOrderId}/search?keyword=${encodeURIComponent(state.searchKeyword)}&page=${state.searchPage}&limit=20`;
+        const response = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${state.token}` }
+        });
+        
+        const res = await response.json();
+        if (!response.ok) throw new Error(res.error || 'Search failed');
+        
+        const newResults = res.data || [];
+        state.searchResults = [...state.searchResults, ...newResults];
+        state.searchHasMore = res.pagination?.hasMore || false;
+        
+        // Remove loading indicator
+        const loadMore = document.getElementById('search-load-more');
+        if (loadMore) loadMore.remove();
+        
+        // Append new results
+        renderSearchResults(newResults, true);
+        
+    } catch (err) {
+        console.error('Load more search error:', err);
+        const loadMore = document.getElementById('search-load-more');
+        if (loadMore) loadMore.remove();
+    } finally {
+        state.isSearching = false;
+    }
+}
+
+function renderSearchResults(results, append = false) {
+    if (!append) {
+        els.searchResults.innerHTML = '';
+    }
+    
+    if (results.length === 0 && !append) {
+        els.searchResults.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                <span class="material-symbols-outlined text-[48px] mb-2">search_off</span>
+                <p class="text-sm">Không tìm thấy tin nhắn phù hợp</p>
+            </div>
+        `;
+        return;
+    }
+    
+    results.forEach(msg => {
+        const resultItem = createSearchResultItem(msg);
+        els.searchResults.appendChild(resultItem);
+    });
+}
+
+function createSearchResultItem(msg) {
+    const isMe = String(msg.sender_id) === String(state.userId);
+    const time = new Date(msg.updatedAt).toLocaleString([], {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Determine avatar
+    const avatarUrl = msg.sender?.avatar_url 
+        || (isMe 
+            ? 'https://api.dicebear.com/9.x/bottts/svg?seed=Me' 
+            : (state.partnerAvatar || 'https://api.dicebear.com/9.x/bottts/svg?seed=Julia'));
+    
+    const senderName = isMe ? 'Bạn' : (state.partnerName || 'Đối tác');
+    
+    // Highlight keyword in content
+    const highlightedContent = highlightKeyword(msg.content, state.searchKeyword);
+    
+    const div = document.createElement('div');
+    div.className = 'flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl cursor-pointer transition border-b border-gray-100 last:border-b-0';
+    div.innerHTML = `
+        <img src="${avatarUrl}" class="w-10 h-10 rounded-full object-cover shrink-0 border border-gray-200">
+        <div class="flex-1 min-w-0">
+            <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="font-semibold text-sm text-dark-900 ${isMe ? 'text-green-600' : ''}">${escapeHtml(senderName)}</span>
+                <span class="text-[10px] text-gray-400 shrink-0">${time}</span>
+            </div>
+            <p class="text-sm text-gray-600 line-clamp-2 break-words">${highlightedContent}</p>
+        </div>
+    `;
+    
+    // Click to jump to message
+    div.addEventListener('click', () => jumpToMessage(msg.id));
+    
+    return div;
+}
+
+function highlightKeyword(text, keyword) {
+    if (!keyword || !text) return escapeHtml(text);
+    
+    // Escape keyword for Regex safety
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escapedKeyword})`, 'gi');
+    
+    // Split text by regex matches
+    const parts = text.split(regex);
+    
+    // Map parts: if part matches keyword (case-insensitive), wrap in mark, else just escape
+    return parts.map(part => {
+        if (part.toLowerCase() === keyword.toLowerCase()) {
+            return `<mark class="bg-yellow-200 text-yellow-900 rounded px-0.5">${escapeHtml(part)}</mark>`;
+        }
+        return escapeHtml(part);
+    }).join('');
+}
+
+async function jumpToMessage(messageId) {
+    closeSearchOverlay();
+    
+    // First check if message is already in DOM
+    let messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+    
+    if (messageElement) {
+        // Message exists in DOM, scroll to it
+        scrollToAndHighlightMessage(messageElement);
+        return;
+    }
+    
+    // Message not in DOM, need to load history until we find it
+    // This is a simplified approach - load all messages then find
+    await loadMessagesUntilFound(messageId);
+}
+
+async function loadMessagesUntilFound(targetMessageId, maxAttempts = 10) {
+    let attempts = 0;
+    
+    while (attempts < maxAttempts) {
+        // Check if message exists in DOM
+        let messageElement = document.querySelector(`[data-message-id="${targetMessageId}"]`);
+        if (messageElement) {
+            scrollToAndHighlightMessage(messageElement);
+            return;
+        }
+
+        // If no more history on server, stop
+        if (!state.nextCursor) {
+            break; 
+        }
+
+        try {
+            if (state.isLoadingHistory) {
+                // If already loading, wait for it to finish
+                await new Promise(resolve => {
+                    const checkInterval = setInterval(() => {
+                        if (!state.isLoadingHistory) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                });
+            } else {
+                // Trigger load and wait
+                await loadChatHistory(state.nextCursor);
+            }
+            attempts++;
+        } catch (e) {
+            console.error("Error searching history:", e);
+            break;
+        }
+    }
+    
+    // Final check after loading loop
+    let messageElement = document.querySelector(`[data-message-id="${targetMessageId}"]`);
+    if (messageElement) {
+        scrollToAndHighlightMessage(messageElement);
+    } else {
+        alert('Không thể tìm thấy tin nhắn. Tin nhắn có thể đã bị xóa.');
+    }
+}
+
+function scrollToAndHighlightMessage(element) {
+    // Scroll to message
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Add highlight animation
+    element.classList.add('search-highlight');
+    
+    // Remove highlight after animation
+    setTimeout(() => {
+        element.classList.remove('search-highlight');
+    }, 2000);
+}
+
+// Make search functions globally available
+window.openSearchOverlay = openSearchOverlay;
+window.closeSearchOverlay = closeSearchOverlay;
 
 // VIDEO CALL FUNCTIONS
 
