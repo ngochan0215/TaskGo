@@ -227,11 +227,20 @@
         const urlParams = new URLSearchParams(window.location.search);
         const orderId = urlParams.get('orderCode') || urlParams.get('orderId');
 
+        const orderCreatedStr = localStorage.getItem("orderCreated");
+        const orderCreated = orderCreatedStr
+            ? JSON.parse(orderCreatedStr)
+            : null;
+        const realOrderId = orderCreated?._id;
+        console.log("real order id:", realOrderId);
+
         const bookingDraft = localStorage.getItem("bookingDraft");
         console.log("booking draft in success: ", bookingDraft);
 
-        const paymentPending = localStorage.getItem("paymentPending");
-        console.log("payment pending in success: ", paymentPending);
+        const paymentPendingStr = localStorage.getItem("paymentPending");
+        const paymentPending = paymentPendingStr
+            ? JSON.parse(paymentPendingStr)
+            : null;
 
         async function updateSuccessfulTransaction() {
             if (!orderId) {
@@ -240,7 +249,7 @@
             }
 
             try {
-                const response = await fetch(`/api/transaction/${orderId}/success`, {
+                const response = await fetch(`http://localhost:3000/api/transaction/${orderId}/success`, {
                     method: 'PATCH',
                     headers: {
                         'Content-Type': 'application/json'
@@ -280,7 +289,7 @@
 
         function startRedirectCountdown() {
             const REDIRECT_AFTER = 10;
-            const REDIRECT_URL = `./ordering_success.html?orderId=${orderId}`;
+            const REDIRECT_URL = `./ordering_success.html?orderId=${realOrderId}`;
 
             let remaining = REDIRECT_AFTER;
             const countdownEl = document.getElementById('countdown');

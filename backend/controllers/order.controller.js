@@ -71,6 +71,8 @@ export const getOrderDetailsForCustomer = async (req, res) => {
       });
     }
 
+    console.log("CUSTOMER ID FROM REQ: ", customerId);
+    console.log("CUSTOMER ID FROM ORDER: ", order.customer_id._id + " " + order.customer_id);
     // Verify ownership
     if (String(order.customer_id._id || order.customer_id) !== String(customerId)) {
       return res.status(403).json({
@@ -347,7 +349,7 @@ export const findTaskerForOrder = async (req, res) => {
     const { orderId } = req.params;
     const customerId = req.userId;
 
-    console.log("IM CALLED");
+    //console.log("IM CALLED");
     const order = await Order.findById(orderId)
       .populate('customer_id', 'full_name phone_number email')
       .populate('tasker_id', 'full_name phone_number email')
@@ -390,7 +392,7 @@ export const findTaskerForOrder = async (req, res) => {
     // Find and assign tasker
     const { suggestion, suggestTaskers } = await assignTaskerService(order);
 
-    console.log("IM ALWAYS HERE");
+    //console.log("IM ALWAYS HERE");
     // Refresh order to get updated data
     await order.populate('tasker_id', 'full_name phone_number email');
     const updatedOrder = await getOrderByIdService(orderId);

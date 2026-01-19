@@ -44,6 +44,7 @@ const reviewDisplaySection = document.getElementById('reviewDisplaySection');
 const reviewModal = document.getElementById('reviewModal');
 
 const statusToState = {
+  "pending": -1, // Pending orders (not yet assigned)
   "assigned": 0,
   "accepted": 1,
   "departed": 2,
@@ -615,6 +616,7 @@ function updateUI() {
   const statusBadge = document.getElementById('statusBadge');
   if (statusBadge) {
     const statusText = {
+      "pending": "Chờ nhận",
       "assigned": "Đã được gán",
       "accepted": "Đã nhận đơn",
       "departed": "Đang di chuyển",
@@ -627,14 +629,16 @@ function updateUI() {
       ? "px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
       : status === "assigned"
       ? "px-2.5 py-1 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
+      : status === "pending"
+      ? "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
       : "px-2.5 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full uppercase tracking-wide";
   }
 
   // Configure button based on state
   let buttonConfig = null;
 
-  if (status === "assigned") {
-    // Show accept button
+  if (status === "pending" || status === "assigned") {
+    // Show accept button for both pending and assigned orders
     buttonConfig = {
       btnText: "Nhận đơn hàng",
       icon: "check_circle",
@@ -642,7 +646,7 @@ function updateUI() {
       action: "accept"
     };
     cancelBtn.style.display = "block";
-    cancelBtn.textContent = "Từ chối đơn hàng";
+    cancelBtn.textContent = status === "pending" ? "Không nhận đơn này" : "Từ chối đơn hàng";
     // Show accept step in timeline
     const acceptStep = document.getElementById("step-0");
     if (acceptStep) {
@@ -708,6 +712,53 @@ function updateUI() {
   }
 }
 
+// Helper function to get working time in minutes from task_payload
+function getWorkingTimeMinutes(order) {
+  if (!order || !order.task_payload) {
+    return null;
+  }
+
+  const payload = order.task_payload;
+  const serviceCode = order.task_snapshot?.code;
+
+  // Different services store working time differently
+  if (payload.total_time !== undefined) {
+    // For services like COOKING, CHILDCARE, ELDERLY, SICK - total_time is in minutes
+    if (["COOKING", "CHILDCARE", "ELDERLY", "SICK"].includes(serviceCode)) {
+      return payload.total_time; // Already in minutes
+    }
+    // For services like CLEANING - total_time is in hours
+    if (serviceCode === "CLEANING") {
+      return payload.total_time * 60; // Convert hours to minutes
+    }
+  }
+
+  // For HOUSE_CLEANING, use total_time if available, otherwise base_time
+  if (serviceCode === "HOUSE_CLEANING") {
+    if (payload.total_time !== undefined) {
+      return payload.total_time * 60; // Convert hours to minutes
+    } else if (payload.base_time !== undefined) {
+      return payload.base_time * 60; // Convert hours to minutes
+    }
+  }
+
+  return null;
+}
+
+// Get start time from status logs
+function getStartTime(statusLogs) {
+  if (!statusLogs || !Array.isArray(statusLogs)) {
+    return null;
+  }
+
+  const startLog = statusLogs.find(log => log.to_status === "in_progress");
+  if (startLog && startLog.created_at) {
+    return new Date(startLog.created_at);
+  }
+
+  return null;
+}
+
 // Call API for tasker actions
 async function callTaskerAction(action) {
   const actionMap = {
@@ -723,6 +774,80 @@ async function callTaskerAction(action) {
   if (!config) {
     console.error("Unknown action:", action);
     return false;
+  }
+
+  // Check if departure is allowed for scheduled tasks
+  if (action === "depart" && currentOrder) {
+    if (currentOrder.type === "scheduled" && currentOrder.scheduled_at) {
+      const scheduledTime = new Date(currentOrder.scheduled_at);
+      const now = new Date();
+      const hoursUntilScheduled = (scheduledTime - now) / (1000 * 60 * 60);
+      
+      if (hoursUntilScheduled > 2) {
+        alert("Bạn chỉ có thể xác nhận khởi hành khi còn 2 giờ trước thời gian đã lên lịch.");
+        return false;
+      }
+    }
+  }
+
+  // Check if completion is allowed (must be at least 30 minutes after start + working_time)
+  if (action === "complete" && currentOrder) {
+    const workingTimeMinutes = getWorkingTimeMinutes(currentOrder);
+    
+    if (workingTimeMinutes !== null && workingTimeMinutes > 0) {
+      // Use cached status logs if available, otherwise fetch
+      let statusLogs = currentStatusLogs;
+      
+      if (!statusLogs || statusLogs.length === 0) {
+        try {
+          const details = await fetchOrderDetails();
+          if (details && details.statusLogs) {
+            statusLogs = details.statusLogs;
+            currentStatusLogs = statusLogs;
+          }
+        } catch (error) {
+          console.error("Error fetching status logs:", error);
+        }
+      }
+      
+      if (statusLogs && statusLogs.length > 0) {
+        const startTime = getStartTime(statusLogs);
+        
+        if (startTime) {
+          const now = new Date();
+          const expectedCompletionTime = new Date(startTime.getTime() + workingTimeMinutes * 60 * 1000);
+          const minutesUntilExpected = (expectedCompletionTime - now) / (1000 * 60);
+          
+          // Check if trying to complete more than 30 minutes before expected time
+          if (minutesUntilExpected > 30) {
+            const hours = Math.floor(minutesUntilExpected / 60);
+            const minutes = Math.floor(minutesUntilExpected % 60);
+            let timeRemainingText = "";
+            
+            if (hours > 0) {
+              timeRemainingText = `${hours} giờ ${minutes} phút`;
+            } else {
+              timeRemainingText = `${minutes} phút`;
+            }
+            
+            const workingTimeHours = Math.floor(workingTimeMinutes / 60);
+            const workingTimeMins = workingTimeMinutes % 60;
+            let workingTimeText = "";
+            if (workingTimeHours > 0) {
+              workingTimeText = `${workingTimeHours} giờ ${workingTimeMins} phút`;
+            } else {
+              workingTimeText = `${workingTimeMinutes} phút`;
+            }
+            
+            alert(`Bạn chỉ có thể hoàn thành đơn hàng khi còn 30 phút trước thời gian dự kiến hoàn thành.\n\n` +
+                  `Thời gian làm việc dự kiến: ${workingTimeText}\n` +
+                  `Thời gian còn lại: ${timeRemainingText}\n\n` +
+                  `Vui lòng đợi thêm trước khi hoàn thành.`);
+            return false;
+          }
+        }
+      }
+    }
   }
 
   try {
@@ -755,6 +880,11 @@ async function callTaskerAction(action) {
     if (res.ok && result.success) {
       return true;
     } else {
+      // For pending orders trying to accept, show a helpful message
+      if (action === "accept" && currentOrder?.status === "pending") {
+        alert("Đơn hàng này chưa được gán cho bạn. Vui lòng nhận đơn từ trang chủ trước.");
+        return false;
+      }
       alert(result.message || result.error || "Có lỗi xảy ra");
       return false;
     }
@@ -764,6 +894,9 @@ async function callTaskerAction(action) {
     return false;
   }
 }
+
+// Store status logs globally to avoid refetching
+let currentStatusLogs = [];
 
 // Handle main action button click
 mainBtn.addEventListener('click', async () => {
@@ -783,8 +916,9 @@ mainBtn.addEventListener('click', async () => {
     const details = await fetchOrderDetails();
     if (details) {
       currentOrder = details.order;
+      currentStatusLogs = details.statusLogs || [];
       updateOrderInfo(currentOrder, details.receipt);
-      updateTimeline(details.statusLogs || []);
+      updateTimeline(currentStatusLogs);
       updateUI();
       // Check review status after reload (especially if order was just completed)
       await checkReview();
@@ -800,14 +934,24 @@ mainBtn.addEventListener('click', async () => {
 
 // Handle cancel/deny button click
 cancelBtn.addEventListener('click', async () => {
-  if (currentOrder?.status === "assigned") {
-    // Deny action
-    if (!confirm("Bạn có chắc chắn muốn từ chối đơn hàng này?")) {
+  if (currentOrder?.status === "pending" || currentOrder?.status === "assigned") {
+    // Deny action for pending or assigned orders
+    const confirmMsg = currentOrder.status === "pending" 
+      ? "Bạn có chắc chắn không muốn nhận đơn hàng này?"
+      : "Bạn có chắc chắn muốn từ chối đơn hàng này?";
+    
+    if (!confirm(confirmMsg)) {
       return;
     }
 
     cancelBtn.disabled = true;
     cancelBtn.textContent = "Đang xử lý...";
+
+    // For pending orders, just redirect back (no deny API call needed)
+    if (currentOrder.status === "pending") {
+      window.location.href = "./tasker_home.html";
+      return;
+    }
 
     const success = await callTaskerAction("deny");
 
@@ -816,7 +960,7 @@ cancelBtn.addEventListener('click', async () => {
       window.location.href = "./tasker_home.html";
     } else {
       cancelBtn.disabled = false;
-      cancelBtn.textContent = "Từ chối đơn hàng";
+      cancelBtn.textContent = currentOrder.status === "pending" ? "Không nhận đơn này" : "Từ chối đơn hàng";
     }
   } else if (currentOrder?.status === "accepted") {
     // Cancel action (similar to deny but might have different logic)
@@ -1085,9 +1229,10 @@ async function init() {
   }
 
   currentOrder = details.order;
+  currentStatusLogs = details.statusLogs || [];
   currentCustomerReviews = details.customerReviews || { review_count: 0, average_rating: 0 };
   updateOrderInfo(currentOrder, details.receipt, currentCustomerReviews);
-  updateTimeline(details.statusLogs || []);
+  updateTimeline(currentStatusLogs);
   updateUI();
   
   await checkReview();

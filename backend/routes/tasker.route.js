@@ -4,13 +4,20 @@ import { isAdmin, isTasker } from "../middleware/verifyRole.js"
 import { acceptTask, confirmDeparture, denyTask, confirmArriving, 
     confirmComplete, confirmStart, getAllTaskers, updateWorkingStatus, 
     cashOut, amountCashout, availableCashoutAmount, getOrderDetailsForTasker, 
-    getAvailableOrdersForTasker, getTaskerAcceptanceStats,
+    getAvailableOrdersForTasker, getTaskerAcceptanceStats, getTaskerOrders,
+    getWorkSchedule, getTaskerEarnings,
 } from "../controllers/taskers.controller.js";
 
 const router = express.Router();
 
 // Get available orders for tasker (for home page)
 router.get("/orders/available", verifyToken, isTasker, getAvailableOrdersForTasker);
+
+// Get all orders for tasker (for activity page)
+router.get("/orders", verifyToken, isTasker, getTaskerOrders);
+
+// Get work schedule for tasker
+router.get("/work-schedule", verifyToken, isTasker, getWorkSchedule);
 
 // Get order details for tasker
 router.get("/order/:orderId", verifyToken, isTasker, getOrderDetailsForTasker);
@@ -31,5 +38,8 @@ router.get("/stats/acceptance-rate", verifyToken, getTaskerAcceptanceStats);
 router.put("/cashOut", verifyToken, isTasker, cashOut);
 router.get("/cashOut", verifyToken, isTasker, amountCashout);
 router.get("/cashOut/available", verifyToken, isTasker, availableCashoutAmount);
+
+// Get tasker earnings/salary
+router.get("/earnings", verifyToken, isTasker, getTaskerEarnings);
 
 export default router;

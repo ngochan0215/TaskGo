@@ -2,13 +2,13 @@ import {
     acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService,
     cashOutForTasker, getCashoutInfo, availableCashout,
-    getTaskerAcceptanceRate
+    getTaskerAcceptanceRate, getTaskerEarningsService
 } from "../services/taskers.service.js";
 import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
 import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
-import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService } from "../services/order.service.js";
+import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService, getAllOrdersByTaskerIdService, getWorkScheduleService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
 
 // tasker nhận task
@@ -317,9 +317,9 @@ export const confirmComplete = async (req, res) => {
 
     if (receipt.payment_method === "cash") {
       // tiền mặt thì phải update thời điểm thanh toán thủ công
-      console.log("before marking paid receipt!!!");
-      console.log("receipt_id: ", receipt._id);
-      console.log("transaction_id in receipt: ", receipt.transaction_id);
+      // console.log("before marking paid receipt!!!");
+      // console.log("receipt_id: ", receipt._id);
+      // console.log("transaction_id in receipt: ", receipt.transaction_id);
       
       await markReceiptPaidService({
         receiptId: receipt._id,
@@ -337,7 +337,7 @@ export const confirmComplete = async (req, res) => {
 
     let reputationDelta = Math.floor(receipt.total_amount * 0.1);
     if (reputationDelta === 0) reputationDelta = 10;
-    console.log("reputation delta: ", reputationDelta);
+    //console.log("reputation delta: ", reputationDelta);
     
     // update điểm danh tiếng của khách
     await User.updateOne(
@@ -345,7 +345,7 @@ export const confirmComplete = async (req, res) => {
       { $inc: { reputation_score: reputationDelta } },
       { session }
     );
-    console.log("DONE UPDATING REPUTATION SCORE FOR CUSTOMER");
+    //console.log("DONE UPDATING REPUTATION SCORE FOR CUSTOMER");
 
     // update điểm danh tiếng của tasker
     await User.updateOne(
@@ -354,7 +354,7 @@ export const confirmComplete = async (req, res) => {
       { session }
     );
     
-    console.log("DONE UPDATING REPUTATION SCORE FOR TASKER");
+    //console.log("DONE UPDATING REPUTATION SCORE FOR TASKER");
     await session.commitTransaction();
 
     await pushNotification(
@@ -485,6 +485,73 @@ export const getAvailableOrdersForTasker = async (req, res) => {
       success: false,
       message: err.message
     });
+  }
+};
+
+// Get all orders for tasker (for activity page)
+export const getTaskerOrders = async (req, res) => {
+  try {
+    const taskerUserId = req.userId;
+    const { status, category, page = 1, limit = 50 } = req.query;
+
+    const orders = await getAllOrdersByTaskerIdService({
+      taskerUserId,
+      status,
+      category, // "current_working", "scheduled", or "history"
+      page: Number(page),
+      limit: Number(limit),
+    });
+    
+    // Populate receipt for payment method (if exists)
+    const ordersWithReceipts = await Promise.all(
+      orders.map(async (order) => {
+        const receipt = await Receipt.findOne({ order_id: order._id }).lean();
+        return {
+          ...order,
+          receipt: receipt || null,
+        };
+      })
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      orders: ordersWithReceipts,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total: ordersWithReceipts.length
+      }
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+// Get work schedule for tasker
+export const getWorkSchedule = async (req, res) => {
+  try {
+    const taskerUserId = req.userId;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message: "startDate and endDate query parameters are required"
+      });
+    }
+
+    const scheduleData = await getWorkScheduleService({
+      taskerUserId,
+      startDate,
+      endDate
+    });
+
+    res.status(200).json({
+      success: true,
+      schedule: scheduleData
+    });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
   }
 };
 
@@ -657,5 +724,32 @@ export const availableCashoutAmount = async (req, res) => {
     }
     catch (error) {
         res.status(500).json({ success: false, message: "Lấy số tiền có thể rút thất bại.", error: error.message });
+    }
+};
+
+// Get tasker earnings
+export const getTaskerEarnings = async (req, res) => {
+    try {
+        const taskerUserId = req.userId;
+        const { period = 'week', startDate, endDate, page = 1, limit = 50 } = req.query;
+
+        const result = await getTaskerEarningsService({
+            taskerUserId,
+            period,
+            startDate,
+            endDate,
+            page: Number(page),
+            limit: Number(limit)
+        });
+
+        res.status(200).json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message || "Failed to get earnings"
+        });
     }
 };

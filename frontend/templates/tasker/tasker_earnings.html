@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskGo - Thu nhập</title>
+
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .line-clamp-1 {
+            display: -webkit-box;
+            -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+
+        /* Animation cho Toggle */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3730A3;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #3730A3;
+        }
+
+        /* Filter Styles */
+        .filter-btn {
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .filter-btn.active {
+            border-color: #6366f1;
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .earning-card {
+            transition: all 0.3s ease;
+        }
+
+        .earning-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body style="background-color: #E0E7FF;" class="text-[#111827] min-h-screen flex flex-col">
+
+    <nav class="sticky top-0 z-[100] bg-white shadow-sm">
+        <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
+            <div class="flex items-center gap-3">
+                <a href="./tasker_home.html" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </a>
+                <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Thu nhập</h1>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="notification-btn"
+                    class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
+                    <span class="material-symbols-outlined text-[#111827]">notifications</span>
+                    <span
+                        class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>
+                </button>
+                <button id="menu-btn"
+                    class="p-2 focus:outline-none flex items-center bg-white/20 rounded-lg hover:bg-white/40 transition text-[#111827]">
+                    <span id="menu-icon" class="material-symbols-outlined">menu</span>
+                </button>
+            </div>
+        </header>
+
+        <div id="menu-overlay"
+            class="menu-hamburger absolute top-full left-0 w-full bg-white shadow-xl transition-all duration-300 -translate-y-[150%] z-40 border-t border-gray-100 opacity-0 pointer-events-none">
+            <nav class="flex flex-col p-6 space-y-6 text-[#111827] font-bold max-w-7xl mx-auto">
+                <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
+                    <div
+                        class="w-12 h-12 rounded-full bg-[#E0E7FF] text-[#3730A3] flex items-center justify-center border border-[#A5B4FC]">
+                        <span class="material-symbols-outlined text-2xl">person</span>
+                    </div>
+                    <div>
+                        <p class="text-lg">Nguyễn Văn A</p>
+                        <p class="text-xs font-medium text-gray-500">ID: #TK8821</p>
+                    </div>
+                </div>
+                <a href="./tasker_home.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Trang chủ</a>
+                <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
+                <a href="./tasker_activity.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch sử nhận việc</a>
+                <a href="./tasker_earnings.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
+                <a href="./work_schedule.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch làm việc</a>
+                <a href="#" id="logout-btn"
+                    class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
+                    <span class="material-symbols-outlined">logout</span> Đăng xuất
+                </a>
+            </nav>
+        </div>
+    </nav>
+
+    <main class="flex-grow p-4 md:p-8">
+        <div class="p-4 md:p-8 max-w-7xl mx-auto">
+            <!-- Header with Summary Cards -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-black tracking-tight text-slate-800 mb-6">Thu nhập</h1>
+                
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tổng thu nhập</span>
+                            <span class="material-symbols-outlined text-indigo-500">account_balance_wallet</span>
+                        </div>
+                        <p id="totalEarning" class="text-2xl font-black text-indigo-600">—</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tổng đơn hàng</span>
+                            <span class="material-symbols-outlined text-green-500">shopping_bag</span>
+                        </div>
+                        <p id="totalOrders" class="text-2xl font-black text-green-600">—</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tổng giá trị</span>
+                            <span class="material-symbols-outlined text-blue-500">attach_money</span>
+                        </div>
+                        <p id="totalGross" class="text-2xl font-black text-blue-600">—</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Phí nền tảng</span>
+                            <span class="material-symbols-outlined text-amber-500">percent</span>
+                        </div>
+                        <p id="totalPlatformFee" class="text-2xl font-black text-amber-600">—</p>
+                    </div>
+                </div>
+
+                <!-- Cashout Section -->
+                <div class="mb-6 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <div style="background-color: #EEF2FF; border-color: #C7D2FE;" class="border rounded-xl p-4 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-gray-500 font-bold uppercase mb-1">Số dư khả dụng</p>
+                            <p id="availableBalance" style="color: #3730A3;" class="text-lg font-bold">—</p>
+                        </div>
+                        <button id="cashoutBtn" class="bg-white text-[#3730A3] text-xs font-bold px-4 py-2 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <span id="cashoutBtnText">Rút ngay</span>
+                            <svg id="cashoutSpinner" xmlns="http://www.w3.org/2000/svg" class="hidden ml-2 h-4 w-4 text-[#3730A3] animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toast Notification -->
+                <div id="toast" class="fixed bottom-20 right-6 hidden z-50"></div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+                    <button onclick="filterByPeriod('day')" id="btn-day"
+                        class="filter-btn active px-4 py-2 text-xs font-black rounded-xl">THEO NGÀY</button>
+                    <button onclick="filterByPeriod('week')" id="btn-week"
+                        class="filter-btn px-4 py-2 text-xs font-black rounded-xl">THEO TUẦN</button>
+                    <button onclick="filterByPeriod('month')" id="btn-month"
+                        class="filter-btn px-4 py-2 text-xs font-black rounded-xl">THEO THÁNG</button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="date" id="start-date" class="px-4 py-2 text-xs font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <span class="text-gray-500 font-bold">đến</span>
+                    <input type="date" id="end-date" class="px-4 py-2 text-xs font-bold border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+                    <button onclick="applyDateFilter()" class="px-4 py-2 text-xs font-black bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition">
+                        Áp dụng
+                    </button>
+                </div>
+            </div>
+
+            <!-- Earnings List -->
+            <div id="earnings-container" class="space-y-4">
+                <!-- Earnings will be rendered here -->
+            </div>
+
+            <!-- Pagination -->
+            <div id="pagination" class="mt-6 flex justify-center items-center gap-2">
+                <!-- Pagination will be rendered here -->
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-white border-t border-gray-200 py-6 mt-auto">
+        <div class="max-w-7xl mx-auto text-center text-sm text-gray-500">
+            &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+        import { initSocket } from "../js/socket.js";
+        initSocket();
+    </script>
+
+    <script>
+        // validate authorization
+        let token = localStorage.getItem("token");
+        if (!token) {
+            alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
+
+        const role = localStorage.getItem("system_role");
+        const _id = localStorage.getItem("user_id");
+        console.log("USER: ", role + " " + _id);
+        console.log("TOKEN: ", token);
+
+        if (role !== "tasker") {
+            alert("Bạn không phải Tasker. Không có quyền truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
+
+        const menuBtn = document.getElementById('menu-btn');
+        const menuOverlay = document.getElementById('menu-overlay');
+        if (menuBtn) {
+            menuBtn.addEventListener('click', () => {
+                const isOpened = menuOverlay.classList.contains('translate-y-0');
+                if (isOpened) {
+                    menuOverlay.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                    menuOverlay.classList.add('-translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+                } else {
+                    menuOverlay.classList.remove('-translate-y-[150%]', 'opacity-0', 'pointer-events-none');
+                    menuOverlay.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+                }
+            });
+        }
+
+        // logic đăng xuất
+        const logoutBtn = document.getElementById("logout-btn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", async (e) => {
+                e.preventDefault();
+
+                try {
+                    const res = await fetch("http://localhost:3000/api/auth/logout", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user_id");
+                        localStorage.removeItem("system_role");
+
+                        alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                        window.location.href = "../auth/login-signup.html";
+                    } else {
+                        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+                    }
+                } catch (err) {
+                    console.error("LOGOUT ERROR:", err);
+                    alert("Có lỗi xảy ra khi đăng xuất.");
+                }
+            });
+        }
+
+        // logic show thông báo
+        const notificationBtn = document.getElementById("notification-btn");
+        if (notificationBtn) {
+            notificationBtn.addEventListener("click", async (e) => {
+                window.location.href = "../notification.html";
+            });
+        }
+
+        // Earnings data
+        let currentPeriod = 'week';
+        let currentPage = 1;
+        let currentStartDate = null;
+        let currentEndDate = null;
+
+        function formatCurrency(amount) {
+            try {
+                return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
+            } catch (e) {
+                return amount;
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return "—";
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function formatDateTime(dateString) {
+            if (!dateString) return "—";
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'pending': { text: 'Chờ xử lý', class: 'bg-yellow-100 text-yellow-700' },
+                'available': { text: 'Có thể rút', class: 'bg-green-100 text-green-700' },
+                'paid': { text: 'Đã thanh toán', class: 'bg-blue-100 text-blue-700' },
+                'cancelled': { text: 'Đã hủy', class: 'bg-red-100 text-red-700' }
+            };
+            return statusMap[status] || { text: status, class: 'bg-gray-100 text-gray-700' };
+        }
+
+        // Fetch earnings
+        async function fetchEarnings() {
+            try {
+                let url = `http://localhost:3000/api/tasker/earnings?period=${currentPeriod}&page=${currentPage}&limit=10`;
+                if (currentStartDate && currentEndDate) {
+                    url += `&startDate=${currentStartDate}&endDate=${currentEndDate}`;
+                }
+
+                const response = await fetch(url, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Phiên đăng nhập hết hạn");
+                    window.location.href = "../auth/login-signup.html";
+                    return;
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    renderEarnings(data.earnings, data.totals, data.pagination);
+                } else {
+                    console.error("Failed to load earnings:", data.message);
+                    alert("Không thể tải dữ liệu thu nhập");
+                }
+            } catch (error) {
+                console.error("Error fetching earnings:", error);
+                alert("Có lỗi xảy ra khi tải dữ liệu thu nhập");
+            }
+        }
+
+        // Render earnings
+        function renderEarnings(earnings, totals, pagination) {
+            // Update summary cards
+            document.getElementById('totalEarning').textContent = formatCurrency(totals.totalEarning);
+            document.getElementById('totalOrders').textContent = totals.totalOrders || 0;
+            document.getElementById('totalGross').textContent = formatCurrency(totals.totalGross);
+            document.getElementById('totalPlatformFee').textContent = formatCurrency(totals.totalPlatformFee);
+
+            // Render earnings list
+            const container = document.getElementById('earnings-container');
+            if (!earnings || earnings.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-12 text-center shadow-sm border border-slate-200">
+                        <span class="material-symbols-outlined text-6xl text-gray-300 mb-4">account_balance_wallet</span>
+                        <p class="text-gray-500 font-medium">Không có dữ liệu thu nhập trong khoảng thời gian này</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = earnings.map(period => `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden earning-card">
+                    <div class="p-5 border-b border-slate-100 bg-gradient-to-r from-indigo-50 to-white">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-black text-slate-800">${period.periodLabel}</h3>
+                                <p class="text-xs text-gray-500 mt-1">${period.orderCount} đơn hàng</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide">Tổng thu nhập</p>
+                                <p class="text-2xl font-black text-indigo-600">${formatCurrency(period.totalEarning)}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <div class="space-y-3">
+                            ${period.earnings.map(earning => {
+                                const statusBadge = getStatusBadge(earning.status);
+                                const order = earning.order || {};
+                                const serviceName = order.task_snapshot?.name || 'Dịch vụ';
+                                const customerName = order.customer_id?.full_name || 'Khách hàng';
+                                
+                                return `
+                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-3 mb-2">
+                                                <h4 class="font-bold text-slate-800">${serviceName}</h4>
+                                                <span class="${statusBadge.class} text-[10px] px-2 py-0.5 rounded font-bold uppercase">${statusBadge.text}</span>
+                                            </div>
+                                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[16px]">person</span>
+                                                    ${customerName}
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[16px]">schedule</span>
+                                                    ${formatDateTime(earning.completedAt)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right ml-4">
+                                            <p class="text-lg font-black text-indigo-600">${formatCurrency(earning.earningAmount)}</p>
+                                            <p class="text-xs text-gray-500">Từ ${formatCurrency(earning.grossAmount)}</p>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Render pagination
+            renderPagination(pagination);
+        }
+
+        function renderPagination(pagination) {
+            const paginationEl = document.getElementById('pagination');
+            if (!pagination || pagination.totalPages <= 1) {
+                paginationEl.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            if (pagination.page > 1) {
+                paginationHTML += `
+                    <button onclick="changePage(${pagination.page - 1})" class="px-4 py-2 text-sm font-bold text-indigo-600 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50 transition">
+                        Trước
+                    </button>
+                `;
+            }
+
+            paginationHTML += `
+                <span class="px-4 py-2 text-sm font-bold text-gray-600">
+                    Trang ${pagination.page} / ${pagination.totalPages}
+                </span>
+            `;
+
+            if (pagination.page < pagination.totalPages) {
+                paginationHTML += `
+                    <button onclick="changePage(${pagination.page + 1})" class="px-4 py-2 text-sm font-bold text-indigo-600 bg-white border border-indigo-200 rounded-xl hover:bg-indigo-50 transition">
+                        Sau
+                    </button>
+                `;
+            }
+
+            paginationEl.innerHTML = paginationHTML;
+        }
+
+        function filterByPeriod(period) {
+            currentPeriod = period;
+            currentPage = 1;
+            currentStartDate = null;
+            currentEndDate = null;
+            
+            // Update filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn-${period}`).classList.add('active');
+            
+            // Clear date inputs
+            document.getElementById('start-date').value = '';
+            document.getElementById('end-date').value = '';
+            
+            fetchEarnings();
+        }
+
+        function applyDateFilter() {
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            
+            if (startDate && endDate) {
+                currentStartDate = new Date(startDate).toISOString();
+                currentEndDate = new Date(endDate).toISOString();
+                currentPage = 1;
+                fetchEarnings();
+            } else {
+                alert("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc");
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            fetchEarnings();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerHTML = '';
+            const el = document.createElement('div');
+            el.className = `px-4 py-3 rounded-lg shadow-lg ${type === 'success' ? 'bg-green-500 text-white' : type === 'error' ? 'bg-red-500 text-white' : 'bg-gray-800 text-white'}`;
+            el.textContent = message;
+            toast.appendChild(el);
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        // Load cashout info
+        async function loadCashoutInfo() {
+            try {
+                const availRes = await fetch('http://localhost:3000/api/tasker/cashOut/available', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const availJson = await availRes.json();
+
+                const available = availJson && availJson.success ? availJson.data : 0;
+                const availEl = document.getElementById('availableBalance');
+                const btn = document.getElementById('cashoutBtn');
+
+                if (availEl) availEl.textContent = formatCurrency(available);
+
+                if (btn) {
+                    if (!available || Number(available) <= 0) {
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                }
+            } catch (err) {
+                console.error('loadCashoutInfo error', err);
+                showToast('Không thể tải thông tin rút tiền', 'error');
+            }
+        }
+
+        // Perform cashout
+        async function performCashout() {
+            const btn = document.getElementById('cashoutBtn');
+            const spinner = document.getElementById('cashoutSpinner');
+            const text = document.getElementById('cashoutBtnText');
+            if (!btn) return;
+            
+            const originalText = text.textContent;
+            const originalDisabled = btn.disabled;
+            
+            try {
+                btn.disabled = true;
+                spinner.classList.remove('hidden');
+                text.textContent = 'Đang xử lý...';
+
+                const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+                });
+                const body = await res.json();
+                if (body && body.success) {
+                    showToast('Yêu cầu rút tiền thành công', 'success');
+                    await loadCashoutInfo();
+                    // Reload earnings to reflect updated status
+                    await fetchEarnings();
+                } else {
+                    console.log("error cashing out: ", body);
+                    showToast(body && body.message ? body.message : 'Rút tiền thất bại', 'error');
+                    // Reload cashout info to restore button state
+                    await loadCashoutInfo();
+                }
+            } catch (err) {
+                console.error('performCashout error', err);
+                showToast('Lỗi kết nối, vui lòng thử lại', 'error');
+                // Reload cashout info to restore button state
+                await loadCashoutInfo();
+            } finally {
+                spinner.classList.add('hidden');
+                // Restore button text
+                text.textContent = 'Rút ngay';
+                // Button state will be set by loadCashoutInfo, but ensure it's not stuck disabled
+                btn.disabled = false;
+            }
+        }
+
+        // Initialize
+        window.filterByPeriod = filterByPeriod;
+        window.applyDateFilter = applyDateFilter;
+        window.changePage = changePage;
+
+        // Load earnings and cashout info on page load
+        fetchEarnings();
+        loadCashoutInfo();
+
+        // Setup cashout button event listener
+        const cashoutBtn = document.getElementById('cashoutBtn');
+        if (cashoutBtn) {
+            cashoutBtn.addEventListener('click', performCashout);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { getRouteSummary } from "./location.service.js";
 import { User, Tasker, Customer, PayoutTasker, Order, Task, 
-    Service, TaskerStatusLog, Transaction, OrderStatusLog 
+    Service, TaskerStatusLog, Transaction, OrderStatusLog, TaskerEarning
 } from "../models/index.js";
 import { changeOrderStatus } from "./order.service.js";
 import { getSocketInstance } from "../sockets/instance.js";
@@ -283,7 +283,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) => {
             actorId: taskerUserId
         });
 
-        console.log("ORDER STATUS LOG (acceptTask): ", orderLog);
+        //console.log("ORDER STATUS LOG (acceptTask): ", orderLog);
 
         // update tasker status
         const taskerLog = await changeTaskerStatus({
@@ -294,7 +294,7 @@ export const acceptTaskRequest = async (taskerUserId, orderId) => {
             note: "Tasker chấp nhận đơn hàng, actor_id chính là ID của đơn hàng"
         });
 
-        console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
+        //console.log("TASKER STATUS LOG (acceptTask): ", taskerLog);
 
         rankingCache.delete(String(order.user_id));
     } catch (error) {
@@ -411,6 +411,17 @@ export const confirmDepartureService = async (taskerUserId, orderId) => {
             throw new Error("Order is not accepted")
         }
 
+        // Check if departure is allowed for scheduled tasks (must be within 2 hours before scheduled time)
+        if (order.type === "scheduled" && order.scheduled_at) {
+            const scheduledTime = new Date(order.scheduled_at);
+            const now = new Date();
+            const hoursUntilScheduled = (scheduledTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+            
+            if (hoursUntilScheduled > 2) {
+                throw new Error("Bạn chỉ có thể xác nhận khởi hành khi còn 2 giờ trước thời gian đã lên lịch.");
+            }
+        }
+
         // update order status
         const orderLog = await changeOrderStatus({
             orderId,
@@ -499,8 +510,8 @@ export const confirmCompleteService = async (
 
     const taskerId = tasker._id;
 
-    // if (order.status !== "in_progress")
-    //   throw new Error("Order's status must be in progress to be completed.");
+    if (order.status !== "in_progress")
+      throw new Error("Order's status must be in progress to be completed.");
 
     // đổi trạng thái order + log
     await changeOrderStatus({
@@ -536,6 +547,26 @@ export const confirmCompleteService = async (
 
     if (order.customer_id)
       rankingCache.delete(String(order.customer_id));
+
+    // tiền thực tasker nhận được là 70% tổng tiền hàng (chưa áp khuyến mãi) + tiền tip
+    // tiền tasker nhận
+    const commissionRate = 0.7;
+    const grossAmount = order.base_amount;
+    const earningAmount = grossAmount * commissionRate + (order.tip_amount || 0);
+    const platformFee = grossAmount - grossAmount * commissionRate;
+
+    await TaskerEarning.create([{
+        tasker_id: taskerId,
+        order_id: order._id,
+
+        gross_amount: grossAmount,
+        commission_rate: commissionRate,
+        earning_amount: earningAmount,
+        platform_fee: platformFee,
+
+        status: "available",
+        completed_at: new Date()
+    }], { session });
 
     // await PayoutTasker.create({
     //     order_id: order._id,
@@ -656,29 +687,121 @@ export async function getTaskerAcceptanceRate(taskerId) {
   };
 }
 
-// nhân viên nhận lương
-export async function cashOutForTasker(userId) {
+// Tạo PayoutTasker batch từ các TaskerEarning có status 'available'
+export async function createPayoutBatchForTasker(userId) {
     try {
         const tasker = await Tasker.findOne({ user_id: userId });
         if (!tasker) {
             throw new Error("Tasker not found");
         }
-        const user = await User.findById(userId);
+        const taskerId = tasker._id;
+
+        // Tìm tất cả earnings có status 'available' và chưa được gán vào payout nào
+        const availableEarnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: 'available',
+            payout_id: { $exists: false }
+        }).sort({ completed_at: 1 }); // Sắp xếp theo thời gian hoàn thành
+
+        if (!availableEarnings.length) {
+            return null; // Không có earnings nào để tạo batch
+        }
+
+        // Tính tổng số tiền
+        const totalAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+
+        // Tìm khoảng thời gian (period_start và period_end)
+        const completedDates = availableEarnings.map(e => new Date(e.completed_at));
+        const periodStart = new Date(Math.min(...completedDates));
+        const periodEnd = new Date(Math.max(...completedDates));
+
+        // Tạo PayoutTasker batch
+        const payoutBatch = await PayoutTasker.create({
+            tasker_id: taskerId,
+            earning_ids: availableEarnings.map(e => e._id),
+            total_amount: totalAmount,
+            period_start: periodStart,
+            period_end: periodEnd,
+            status: 'pending'
+        });
+
+        // Cập nhật TaskerEarning records để link với payout_id
+        await TaskerEarning.updateMany(
+            { _id: { $in: availableEarnings.map(e => e._id) } },
+            { payout_id: payoutBatch._id }
+        );
+
+        return payoutBatch;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+// nhân viên nhận lương
+export async function cashOutForTasker(userId) {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    let payoutIds = []; // Declare outside try block for error handling
+
+    try {
+        const tasker = await Tasker.findOne({ user_id: userId }).session(session);
+        if (!tasker) {
+            throw new Error("Tasker not found");
+        }
+        const user = await User.findById(userId).session(session);
         if (!user) {
             throw new Error("User not found");
         }
         const taskerId = tasker._id;
-        const payoutBill = await PayoutTasker.find({
+
+        // Tự động tạo payout batch từ available earnings nếu chưa có pending payout
+        let payoutBill = await PayoutTasker.find({
             status: "pending",
             tasker_id: taskerId
-        });
+        }).session(session);
+
+        // Nếu không có pending payout, tạo batch mới từ available earnings
         if (!payoutBill.length) {
-            throw new Error("Không có bill chờ thanh toán");
+            const availableEarnings = await TaskerEarning.find({
+                tasker_id: taskerId,
+                status: 'available',
+                payout_id: { $exists: false }
+            }).session(session).sort({ completed_at: 1 });
+
+            if (!availableEarnings.length) {
+                await session.abortTransaction();
+                throw new Error("Không có tiền lương để rút");
+            }
+
+            const totalAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+            const completedDates = availableEarnings.map(e => new Date(e.completed_at));
+            const periodStart = new Date(Math.min(...completedDates));
+            const periodEnd = new Date(Math.max(...completedDates));
+
+            const newPayoutBatch = await PayoutTasker.create([{
+                tasker_id: taskerId,
+                earning_ids: availableEarnings.map(e => e._id),
+                total_amount: totalAmount,
+                period_start: periodStart,
+                period_end: periodEnd,
+                status: 'pending'
+            }], { session });
+
+            await TaskerEarning.updateMany(
+                { _id: { $in: availableEarnings.map(e => e._id) } },
+                { payout_id: newPayoutBatch[0]._id }
+            ).session(session);
+
+            payoutBill = newPayoutBatch;
         }
-        const amount = payoutBill.reduce((sum, bill) => sum + bill.amount, 0);
+
+        const amount = payoutBill.reduce((sum, bill) => sum + bill.total_amount, 0);
         if (amount <= 0) {
+            await session.abortTransaction();
             throw new Error("Số tiền payout không hợp lệ");
         }
+
         console.log("Thực hiện thanh toán cho tasker:", user.full_name, "số tiền:", amount);
         const payoutPayload = {
             amount: amount,
@@ -687,8 +810,37 @@ export async function cashOutForTasker(userId) {
             toAccountNumber: tasker.account_number
         };
 
-        const orderCode = await payOut(payoutPayload, userId);
-        const orderCodeFromResult = orderCode.split('_')[1];
+        // Update payout status to processing before making payment
+        payoutIds = payoutBill.map(bill => bill._id);
+        await PayoutTasker.updateMany(
+            { _id: { $in: payoutIds } },
+            { status: 'processing' }
+        ).session(session);
+
+        await session.commitTransaction();
+        session.endSession();
+
+        let orderCode;
+        let orderCodeFromResult;
+        try {
+            orderCode = await payOut(payoutPayload, userId);
+            orderCodeFromResult = orderCode.split('_')[1];
+        } catch (payOutError) {
+            // Revert payout status back to pending if payOut fails
+            await PayoutTasker.updateMany(
+                { _id: { $in: payoutIds } },
+                { status: 'pending' }
+            );
+            console.error("PayOut error details:", {
+                message: payOutError.message,
+                status: payOutError.status,
+                code: payOutError.code,
+                response: payOutError.response?.data,
+                stack: payOutError.stack
+            });
+            throw new Error(`Lỗi khi tạo yêu cầu thanh toán trong tasker.service: ${payOutError.message}`);
+        }
+
         const start = Date.now();
         let state = 'PROCESSING';
 
@@ -705,7 +857,7 @@ export async function cashOutForTasker(userId) {
                 continue;
             }
 
-            const payoutState =result?._data?.[0]?.transactions?.[0]?.state;
+            const payoutState = result?._data?.[0]?.transactions?.[0]?.state;
             console.log('Payout state:', payoutState);
             if (!payoutState) {
                 lastError = new Error('Không lấy được trạng thái payout');
@@ -719,10 +871,25 @@ export async function cashOutForTasker(userId) {
                     { status: 'completed' }
                 );
 
+                // Update PayoutTasker status to completed
                 await PayoutTasker.updateMany(
-                    { tasker_id: taskerId, status: 'pending' },
+                    { _id: { $in: payoutIds } },
                     { status: 'completed', processed_at: new Date() }
                 );
+
+                // Update all related TaskerEarning records to 'paid' status
+                const completedPayouts = await PayoutTasker.find({
+                    _id: { $in: payoutIds },
+                    status: 'completed'
+                }).select('earning_ids');
+
+                const allEarningIds = completedPayouts.flatMap(payout => payout.earning_ids);
+                if (allEarningIds.length > 0) {
+                    await TaskerEarning.updateMany(
+                        { _id: { $in: allEarningIds } },
+                        { status: 'paid' }
+                    );
+                }
 
                 state = 'SUCCEEDED';
                 return true; 
@@ -733,6 +900,13 @@ export async function cashOutForTasker(userId) {
                     { order_code: orderCodeFromResult, user_id: userId },
                     { status: 'failed' }
                 );
+
+                // Revert payout status back to pending on failure
+                await PayoutTasker.updateMany(
+                    { _id: { $in: payoutIds } },
+                    { status: 'pending' }
+                );
+
                 state = 'FAILED';
                 throw new Error('Payout failed');
             }
@@ -746,17 +920,55 @@ export async function cashOutForTasker(userId) {
                 user_id: userId
             }, {
                 status: 'failed'
-            })
+            });
+
+            // Revert payout status back to pending on timeout
+            await PayoutTasker.updateMany(
+                { _id: { $in: payoutIds } },
+                { status: 'pending' }
+            );
+
             throw new Error('Payout processing timeout');
         }
         if (lastError) {
+            // Revert payout status back to pending if there's an error
+            if (payoutIds && payoutIds.length > 0) {
+                await PayoutTasker.updateMany(
+                    { _id: { $in: payoutIds } },
+                    { status: 'pending' }
+                );
+            }
             throw lastError;
         }
     } catch (error) {
+        // Revert payout status back to pending if error occurs after transaction commit
+        if (payoutIds && payoutIds.length > 0) {
+            try {
+                const currentPayouts = await PayoutTasker.find({
+                    _id: { $in: payoutIds },
+                    status: 'processing'
+                });
+                if (currentPayouts.length > 0) {
+                    await PayoutTasker.updateMany(
+                        { _id: { $in: payoutIds }, status: 'processing' },
+                        { status: 'pending' }
+                    );
+                }
+            } catch (revertError) {
+                console.error('Error reverting payout status:', revertError);
+            }
+        }
+
+        if (session.inTransaction()) {
+            await session.abortTransaction();
+        }
+        session.endSession();
         throw new Error(error.message);
     }
 }
+
 const sleep = ms => new Promise(res => setTimeout(res, ms));
+
 export const getCashoutInfo = async (userId, timespan = 'day') => {
     try {
         const tasker = await Tasker.findOne({ user_id: userId });
@@ -780,7 +992,7 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
             const bills = await PayoutTasker.find({
                 tasker_id: taskerId
             });
-            return bills.reduce((sum, bill) => sum + bill.amount, 0);
+            return bills.reduce((sum, bill) => sum + bill.total_amount, 0);
         }
         else {
             throw new Error('Invalid timespan');
@@ -789,7 +1001,7 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
             tasker_id: taskerId,
             created_at: { $gte: startDate }
         });
-        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+        return bills.reduce((sum, bill) => sum + bill.total_amount, 0);
     }
     catch (error) {
         throw new Error(error.message);
@@ -797,20 +1009,209 @@ export const getCashoutInfo = async (userId, timespan = 'day') => {
 };
 
 export const availableCashout = async (userId) => {
-    try {
+  try {
         const tasker = await Tasker.findOne({ user_id: userId });
         if (!tasker) {
             throw new Error('Tasker not found');
         }
         const taskerId = tasker._id;
-        
-        const bills = await PayoutTasker.find({
+
+        // Get available earnings that haven't been included in any payout yet
+        const availableEarnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: 'available',
+            payout_id: { $exists: false }
+        });
+
+        // Only include pending payouts (exclude processing ones as they are in progress)
+        const pendingPayouts = await PayoutTasker.find({
             tasker_id: taskerId,
             status: 'pending'
         });
-        return bills.reduce((sum, bill) => sum + bill.amount, 0);
+
+        const availableAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+        const pendingAmount = pendingPayouts.reduce((sum, bill) => sum + bill.total_amount, 0);
+
+        return availableAmount + pendingAmount;
     }
     catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+// Get tasker earnings grouped by period (day/week/month)
+export const getTaskerEarningsService = async ({
+    taskerUserId,
+    period = 'week', // 'day', 'week', or 'month'
+    startDate,
+    endDate,
+    page = 1,
+    limit = 50
+}) => {
+    try {
+        const tasker = await Tasker.findOne({ user_id: taskerUserId });
+        if (!tasker) {
+            throw new Error('Tasker not found');
+        }
+        const taskerId = tasker._id;
+        
+        // Build date range query
+        let dateQuery = {};
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            start.setUTCHours(0, 0, 0, 0);
+            const end = new Date(endDate);
+            end.setUTCHours(23, 59, 59, 999);
+            dateQuery.completed_at = { $gte: start, $lte: end };
+        } else {
+            // Default to last period if no dates provided
+            const now = new Date();
+            let start;
+            if (period === 'day') {
+                start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                start.setUTCHours(0, 0, 0, 0);
+            } else if (period === 'week') {
+                start = new Date(now);
+                start.setDate(start.getDate() - 7);
+                start.setUTCHours(0, 0, 0, 0);
+            } else if (period === 'month') {
+                start = new Date(now.getFullYear(), now.getMonth(), 1);
+                start.setUTCHours(0, 0, 0, 0);
+            } else {
+                throw new Error('Invalid period. Must be day, week, or month');
+            }
+            dateQuery.completed_at = { $gte: start };
+        }
+
+        // Get all earnings for this tasker in the date range
+        const earnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: { $in: ['pending', 'available', 'paid'] }, // Exclude cancelled
+            ...dateQuery
+        })
+            .populate('order_id', 'task_snapshot address_snapshot customer_id scheduled_at type status')
+            .populate('order_id.customer_id', 'full_name')
+            .sort({ completed_at: -1 })
+            .lean();
+
+        // Group earnings by period
+        const groupedEarnings = {};
+        const periodTotals = {};
+
+        earnings.forEach(earning => {
+            const completedDate = new Date(earning.completed_at);
+            let periodKey;
+            let periodLabel;
+
+            if (period === 'day') {
+                const year = completedDate.getFullYear();
+                const month = String(completedDate.getMonth() + 1).padStart(2, '0');
+                const day = String(completedDate.getDate()).padStart(2, '0');
+                periodKey = `${year}-${month}-${day}`;
+                periodLabel = completedDate.toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric' 
+                });
+            } else if (period === 'week') {
+                // Get week start (Monday)
+                const weekStart = new Date(completedDate);
+                const dayOfWeek = completedDate.getDay();
+                const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0
+                weekStart.setDate(completedDate.getDate() - diff);
+                weekStart.setHours(0, 0, 0, 0);
+                
+                const year = weekStart.getFullYear();
+                const month = String(weekStart.getMonth() + 1).padStart(2, '0');
+                const day = String(weekStart.getDate()).padStart(2, '0');
+                periodKey = `${year}-${month}-${day}`;
+                
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                periodLabel = `${weekStart.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} - ${weekEnd.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })}`;
+            } else if (period === 'month') {
+                const year = completedDate.getFullYear();
+                const month = String(completedDate.getMonth() + 1).padStart(2, '0');
+                periodKey = `${year}-${month}`;
+                periodLabel = completedDate.toLocaleDateString('vi-VN', { 
+                    month: 'long', 
+                    year: 'numeric' 
+                });
+            }
+
+            if (!groupedEarnings[periodKey]) {
+                groupedEarnings[periodKey] = {
+                    period: periodKey,
+                    periodLabel: periodLabel,
+                    earnings: [],
+                    totalEarning: 0,
+                    totalGross: 0,
+                    totalPlatformFee: 0,
+                    orderCount: 0
+                };
+                periodTotals[periodKey] = {
+                    totalEarning: 0,
+                    totalGross: 0,
+                    totalPlatformFee: 0,
+                    orderCount: 0
+                };
+            }
+
+            groupedEarnings[periodKey].earnings.push({
+                _id: earning._id,
+                orderId: earning.order_id?._id,
+                order: earning.order_id,
+                grossAmount: earning.gross_amount,
+                earningAmount: earning.earning_amount,
+                commissionRate: earning.commission_rate,
+                platformFee: earning.platform_fee,
+                status: earning.status,
+                completedAt: earning.completed_at,
+                payoutId: earning.payout_id
+            });
+
+            periodTotals[periodKey].totalEarning += earning.earning_amount;
+            periodTotals[periodKey].totalGross += earning.gross_amount;
+            periodTotals[periodKey].totalPlatformFee += earning.platform_fee;
+            periodTotals[periodKey].orderCount += 1;
+        });
+
+        // Update totals in grouped earnings
+        Object.keys(groupedEarnings).forEach(key => {
+            groupedEarnings[key].totalEarning = periodTotals[key].totalEarning;
+            groupedEarnings[key].totalGross = periodTotals[key].totalGross;
+            groupedEarnings[key].totalPlatformFee = periodTotals[key].totalPlatformFee;
+            groupedEarnings[key].orderCount = periodTotals[key].orderCount;
+        });
+
+        // Convert to array and sort by period (newest first)
+        const result = Object.values(groupedEarnings).sort((a, b) => {
+            return new Date(b.period) - new Date(a.period);
+        });
+
+        // Apply pagination
+        const skip = (Number(page) - 1) * Number(limit);
+        const paginatedResult = result.slice(skip, skip + Number(limit));
+
+        // Calculate overall totals
+        const overallTotals = {
+            totalEarning: result.reduce((sum, period) => sum + period.totalEarning, 0),
+            totalGross: result.reduce((sum, period) => sum + period.totalGross, 0),
+            totalPlatformFee: result.reduce((sum, period) => sum + period.totalPlatformFee, 0),
+            totalOrders: result.reduce((sum, period) => sum + period.orderCount, 0)
+        };
+
+        return {
+            earnings: paginatedResult,
+            totals: overallTotals,
+            pagination: {
+                page: Number(page),
+                limit: Number(limit),
+                total: result.length,
+                totalPages: Math.ceil(result.length / Number(limit))
+            }
+        };
+    } catch (error) {
         throw new Error(error.message);
     }
 };

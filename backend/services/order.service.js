@@ -76,7 +76,7 @@ export async function getOrderByIdService(orderId) {
 export async function getAllOrdersByCustomerIdService({
   customerId,
   status,
-  category, // "upcoming" or "history"
+  category, // "current_working", "scheduled", or "history"
   page = 1,
   limit = 50,
 }) {
@@ -84,10 +84,14 @@ export async function getAllOrdersByCustomerIdService({
     const q = {};
     if (customerId) q.customer_id = customerId;
     
-    // Filter by category (upcoming vs history)
-    if (category === "upcoming") {
-      // Upcoming: all statuses except completed and cancelled
-      q.status = { $nin: ["completed", "cancelled"] };
+    // Filter by category
+    if (category === "current_working") {
+      // Current working: orders in progress
+      q.status = { $in: ["accepted", "departed", "arrived", "in_progress"] };
+    } else if (category === "scheduled") {
+      // Scheduled: pending or assigned orders that are scheduled (type === "scheduled")
+      q.status = { $in: ["pending", "assigned"] };
+      q.type = "scheduled";
     } else if (category === "history") {
       // History: only completed and cancelled
       q.status = { $in: ["completed", "cancelled"] };
@@ -138,6 +142,50 @@ export async function getAvailableOrdersForTaskerService({
       .populate('tasker_id', 'full_name phone_number email')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    return orders;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
+// Get all orders of a tasker, with pagination + filter by category
+export async function getAllOrdersByTaskerIdService({
+  taskerUserId,
+  status,
+  category, // "current_working", "scheduled", or "history"
+  page = 1,
+  limit = 50,
+}) {
+  try {
+    const q = { tasker_id: taskerUserId };
+    
+    // Filter by category
+    if (category === "current_working") {
+      // Current working: orders in progress assigned to this tasker
+      q.status = { $in: ["accepted", "departed", "arrived", "in_progress"] };
+    } else if (category === "scheduled") {
+      // Scheduled: pending or assigned orders that are scheduled (type === "scheduled") and assigned to this tasker
+      q.status = { $in: ["pending", "assigned"] };
+      q.type = "scheduled";
+    } else if (category === "history") {
+      // History: only completed and cancelled
+      q.status = { $in: ["completed", "cancelled"] };
+    } else if (status) {
+      // If specific status is provided, use it
+      q.status = status;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const orders = await Order.find(q)
+      .populate("task_id", "task_name unit base_price")
+      .populate("tasker_id", "full_name phone_number email")
+      .populate("customer_id", "full_name phone_number email avatar_url")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -245,16 +293,16 @@ export async function createOrderService({
       session.endSession();
       throw new Error(err.message);
     }
-}
+  }
 
 // assign taskers for an order
 export async function assignTaskerService(order) {
-  console.log("ORDER (assignTaskerService): ", order);
+  //console.log("ORDER (assignTaskerService): ", order);
 
   const { suggestTaskers, suggestion } = await suggestTasker(order._id);
 
-  console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
-  console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
+  // console.log("SUGGESTION TASKER (assignTaskerService): ", suggestion);
+  // console.log("SUGGESTING TASKERS (assignTaskerService): ", suggestTaskers);
 
   if (!suggestion || !suggestTaskers) {
     throw new Error("Không tìm thấy tasker phù hợp.");
@@ -280,27 +328,27 @@ export async function assignTaskerService(order) {
     note: "actorId là ID của đơn hàng được gán"
   });
 
-  console.log("HERE???");
+  //console.log("HERE???");
   // thông báo cho khách
   await pushNotification(
     order.customer_id,
     "Tạo đơn hàng thành công",
     "Bạn có một đơn hàng mới đang được hệ thống tìm tasker phù hợp. Vui lòng chờ đợi giây lát.",
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",                              
+    "Order",                              
+    order._id,                         
+    "unread"                              
   );
 
   // thông báo cho tasker được gán
   await pushNotification(
-    suggestion.user_id,                 // userId (tasker user)
+    suggestion.user_id,
     "Có đơn hàng mới",
     `Bạn có một đơn hàng có ID: ${order._id} phù hợp, vui lòng phản hồi sớm trong vòng 2 phút.`,
-    "order",                              // type
-    "Order",                              // kind
-    order._id,                         // refId
-    "unread"                              // status
+    "order",
+    "Order",
+    order._id,                      
+    "unread"                            
   );
 
   return { suggestion, suggestTaskers };
@@ -528,6 +576,8 @@ export async function cancelOrderByCustomerService({ orderId, customerId, reason
       // Logic xử lý phí phạt (trừ vào ví, thanh toán, v.v.) sẽ được triển khai ở đây.
     }
 
+    // TODO: đối với những đơn đặt trước và trả full tiền thì cần phải hoàn tiền lại cho khách
+
     await session.commitTransaction();
 
     return { order, penaltyAmount };
@@ -671,6 +721,180 @@ export async function getOrderTrendsService() {
     }
 
     return trends;
+  } catch (err) {
+    throw new Error(err.message);
+  }
+}
+
+// Get work schedule for a tasker for a specific week
+export async function getWorkScheduleService({
+  taskerUserId,
+  startDate,
+  endDate,
+}) {
+  try {    
+    // Validate dates and normalize to start/end of day in UTC
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Set start to beginning of day (00:00:00) and end to end of day (23:59:59.999)
+    start.setUTCHours(0, 0, 0, 0);
+    end.setUTCHours(23, 59, 59, 999);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      throw new Error("Invalid date range");
+    }
+
+    // Get all orders for this tasker within the date range
+    // Include orders that have scheduled_at within the range, or orders that are in progress/completed
+    const query = {
+      tasker_id: taskerUserId,
+      $or: [
+        // Scheduled orders with scheduled_at in range
+        {
+          scheduled_at: {
+            $gte: start,
+            $lte: end
+          }
+        },
+        // Or orders that are active (not completed) and started before end date
+        {
+          status: { $in: ["accepted", "departed", "arrived", "in_progress"] },
+          scheduled_at: { $lte: end }
+        },
+        // Completed orders must be within the date range
+        {
+          status: { $in: ["completed", "awaiting_payment"] },
+          scheduled_at: {
+            $gte: start,
+            $lte: end
+          }
+        }
+      ]
+    };
+    
+    const orders = await Order.find(query)
+      .populate("customer_id", "full_name phone_number email")
+      .populate("task_id", "task_name unit base_price")
+      .populate("address_id")
+      .sort({ scheduled_at: 1 })
+      .lean();
+
+    // Get status logs to calculate actual duration for completed orders
+    const orderIds = orders.map(o => o._id);
+    const statusLogs = await OrderStatusLog.find({
+      order_id: { $in: orderIds }
+    })
+      .sort({ created_at: 1 })
+      .lean();
+
+    // Group logs by order_id
+    const logsByOrder = {};
+    statusLogs.forEach(log => {
+      if (!logsByOrder[log.order_id]) {
+        logsByOrder[log.order_id] = [];
+      }
+      logsByOrder[log.order_id].push(log);
+    });
+
+    // Format orders for schedule display
+    const scheduleData = orders.map(order => {
+      const scheduledAt = new Date(order.scheduled_at);
+      
+      // Determine schedule status
+      let scheduleStatus = "upcoming";
+      if (["in_progress", "arrived", "departed"].includes(order.status)) {
+        // These statuses are always ongoing regardless of order type
+        scheduleStatus = "ongoing";
+      } else if (order.status === "accepted") {
+        if (order.type === "scheduled") {
+          scheduleStatus = "upcoming";
+        } else {
+          scheduleStatus = "ongoing";
+        }
+      } else if (["completed", "awaiting_payment"].includes(order.status)) {
+        scheduleStatus = "completed";
+      } else if (order.status === "cancelled") {
+        scheduleStatus = "cancelled";
+      } else if (order.status === "assigned") {
+        scheduleStatus = "upcoming";
+      }
+
+      // Calculate duration
+      // Default duration: 2 hours for scheduled orders, 1.5 hours for immediate
+      console.log("order before setting duration hours: ", order);
+      let durationHours = order.task_payload.total_time / 60;
+      //let durationHours = order.type === "scheduled" ? 2 : 1.5;
+      
+      // Try to calculate actual duration from status logs
+      const logs = logsByOrder[order._id] || [];
+      const startLog = logs.find(log => log.to_status === "in_progress");
+      const endLog = logs.find(log => log.to_status === "completed");
+      
+      if (startLog && endLog) {
+        const startTime = new Date(startLog.created_at);
+        const endTime = new Date(endLog.created_at);
+        durationHours = (endTime - startTime) / (1000 * 60 * 60); // Convert to hours
+        console.log(`duration hours of order ${startLog.order_id}: `, durationHours);
+        // Ensure minimum 0.5 hours and maximum 8 hours
+        durationHours = Math.max(0.5, Math.min(8, durationHours));
+      }
+
+      // Calculate position on schedule grid
+      // Each hour column is 80px wide
+      const hour = scheduledAt.getHours();
+      const minutes = scheduledAt.getMinutes();
+      const leftPosition = (hour * 80) + (minutes / 60 * 80);
+      const width = durationHours * 80;
+
+      // Format time range
+      const startTime = scheduledAt.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      const endTime = new Date(scheduledAt.getTime() + durationHours * 60 * 60 * 1000);
+      console.log("END TIME: ", endTime);
+      const endTimeStr = endTime.toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      console.log("END TIME STRING: ", endTimeStr);
+      // Get day of week (0 = Sunday, 1 = Monday, etc.)
+      const dayOfWeek = scheduledAt.getDay();
+      
+      // Calculate date in local timezone (not UTC) to avoid timezone issues
+      // For Vietnam (UTC+7), an order at 00:15 on 18/01 should be on 18/01, not 17/01
+      const year = scheduledAt.getFullYear();
+      const month = String(scheduledAt.getMonth() + 1).padStart(2, '0');
+      const day = String(scheduledAt.getDate()).padStart(2, '0');
+      const localDate = `${year}-${month}-${day}`;
+      
+      const result = {
+        _id: order._id,
+        orderId: order._id,
+        service: order.task_snapshot?.name || order.task_id?.task_name || "Dịch vụ",
+        scheduledAt: order.scheduled_at,
+        startTime: startTime,
+        endTime: endTimeStr,
+        timeRange: `${startTime} - ${endTimeStr}`,
+        address: order.address_snapshot?.full_address || order.address_id?.full_address || "—",
+        customer: order.customer_id?.full_name || "—",
+        status: order.status,
+        scheduleStatus: scheduleStatus, // ongoing, upcoming, completed, cancelled
+        dayOfWeek: dayOfWeek, // 0 = Sunday, 1 = Monday, etc.
+        date: localDate, // Use local date instead of UTC date
+        hour: hour,
+        minutes: minutes,
+        leftPosition: leftPosition,
+        width: width,
+        durationHours: durationHours,
+        type: order.type
+      };
+      
+      return result;
+    });
+
+    return scheduleData;
   } catch (err) {
     throw new Error(err.message);
   }

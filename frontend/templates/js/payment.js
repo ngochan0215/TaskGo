@@ -2,13 +2,33 @@
 let bookingDraft = null;
 let voucherDraft = null;
 let task_code = null;
+let houseCleaning_baseAmount = 0;
+
 const formatCurrency = (v) => Number(v || 0).toLocaleString("vi-VN") + " VND";
+
+const houseTypeMap = {
+  apartment: "Căn hộ",
+  townhouse: "Nhà phố",
+  office: "Văn phòng",
+  shop: "Cửa hàng"
+};
 
 const serviceRenderers = {
   COOKING: (p) => `
     <p>👥 Nấu cho: ${p.people} người</p>
     <p>🍽️ Số món: ${p.dishes}</p>
     <p>⏱️ Thời gian làm việc: ${Math.floor(p.total_time / 60)}h ${p.total_time % 60}p</p>
+    <p>📋 Danh sách món ăn:</p>
+    <ul>
+      ${
+        p.dish_list
+          ? p.dish_list
+              .split('\n')
+              .map(dish => `<li>${dish}</li>`)
+              .join('')
+          : '<li>Không có</li>'
+      }
+    </ul>
     ${p.has_dessert ? "<p>🍎 Có tráng miệng</p>" : ""}
     ${p.do_grocery ? "<p>🛒 Có đi chợ</p>" : ""}
   `,
@@ -52,10 +72,13 @@ const serviceRenderers = {
         ${
           p.house_type
             ? `<p>🏠 Loại nhà: 
-                <strong>${p.house_type}</strong>
+                <strong>${houseTypeMap[p.house_type]}</strong>
               </p>`
             : ""
         }
+        <p>🧾 Tiền dịch vụ gốc (chưa thêm dịch vụ kèm theo): 
+          <strong>${houseCleaning_baseAmount}</strong>
+        </p>
         ${
           extrasArr.length
             ? `
@@ -158,6 +181,8 @@ function loadBookingDraft() {
   }
   bookingDraft = JSON.parse(raw);
   task_code = bookingDraft.task_snapshot.code;
+  if (task_code === "HOUSE_CLEANING") 
+    houseCleaning_baseAmount = formatCurrency(bookingDraft.base_amount); 
   console.log("BOOKING DRAFT IN PAYMENT (loadBookingDraft): ", bookingDraft);
 }
 
@@ -169,6 +194,7 @@ function initVoucherDraft() {
     discount_amount: 0, 
     final_amount: bookingDraft.final_amount 
   }; 
+
   voucherDraft.base_amount = bookingDraft.base_amount; 
   localStorage.setItem("voucherDraft", JSON.stringify(voucherDraft)); 
   console.log("VOUCHER DRAFT IN PAYMENT (initVoucherDraft): ", voucherDraft); 
@@ -190,6 +216,12 @@ function renderAmounts() {
 
   if (task_code === "GROCERY") {
     document.getElementById("extraFee").innerText = formatCurrency(bookingDraft.task_payload.estimated_budget);
+  } else {
+    document.getElementById("extraFee").innerText = "0 VND";
+  }
+
+  if (task_code === "HOUSE_CLEANING") {
+    document.getElementById("baseAmount").innerText = formatCurrency(bookingDraft.final_amount);
   } else {
     document.getElementById("extraFee").innerText = "0 VND";
   }
@@ -237,82 +269,5 @@ function renderServiceSummary() {
     }
   `;
 }
-
-// function bindAddressSelect() {
-//   document
-//     .getElementById("addressSelect")
-//     .addEventListener("change", (e) => {
-//       saveSelectedAddress(e.target.value);
-//     });
-// }
-
-// async function loadMyAddresses() {
-//   try {
-//     const token = localStorage.getItem("token");
-//     if (!token) {
-//       alert("Vui lòng đăng nhập");
-//       location.href = "../auth/login-signup.html";
-//       return;
-//     }
-
-//     const res = await fetch(
-//       "http://localhost:3000/api/user/addresses/my",
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`
-//         }
-//       }
-//     );
-
-//     if (res.status === 401) {
-//       localStorage.removeItem("token");
-//       alert("Phiên đăng nhập hết hạn");
-//       location.href = "../auth/login-signup.html";
-//       return;
-//     }
-
-//     const { data } = await res.json();
-//     const select = document.getElementById("addressSelect");
-
-//     select.innerHTML = `<option value="">-- Chọn địa chỉ --</option>`;
-//     addressMap = {};
-
-//     if (!data || data.length === 0) {
-//       select.innerHTML += `<option disabled>Chưa có địa chỉ</option>`;
-//       return;
-//     }
-
-//     data.forEach((addr) => {
-//       addressMap[addr._id] = addr;
-
-//       const opt = document.createElement("option");
-//       opt.value = addr._id;
-//       opt.textContent = addr.full_address;
-
-//       if (addr.is_default) {
-//         opt.selected = true;
-//         saveSelectedAddress(addr._id);
-//       }
-
-//       select.appendChild(opt);
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     alert("Không thể tải danh sách địa chỉ");
-//   }
-// }
-
-// function saveSelectedAddress(addressId) {
-//   if (!addressMap[addressId]) return;
-
-//   bookingDraft.address_id = addressId;
-//   bookingDraft.address_snapshot = {
-//     full_address: addressMap[addressId].full_address,
-//     latitude: addressMap[addressId].latitude,
-//     longtitude: addressMap[addressId].longtitude
-//   };
-
-//   localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-// }
 
 document.addEventListener("DOMContentLoaded", initPaymentPage);

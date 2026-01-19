@@ -4,10 +4,12 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import http from "http";
 import path from "path";
+import fetch from "node-fetch";
+
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron, orderStatusCron } from "./utils/cronJobStatus.js";
+import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron } from "./jobs/cronJobStatus.js";
 import '../backend/jobs/transactionStatusJob.js'; 
 
 import authRoutes from "./routes/auth.route.js";
@@ -50,8 +52,17 @@ app.use("/api/notification", notificationRoutes);
 
 voucherStatusCron();
 //orderStatusCron();
+scheduledTaskReminderCron();
 
 app.use("/api/chats", chatRoutes);
+
+app.get("/api/momo/bankcodes", async (req, res) => {
+  const response = await fetch(
+    "https://payment.momo.vn/v2/gateway/api/bankcodes"
+  );
+  const data = await response.json();
+  res.json(data);
+});
 
 const httpServer = http.createServer(app);
 initSocket(httpServer);      

@@ -36,8 +36,8 @@ export const createPayment = async (transaction, userId) => {
         amount,
         description,
         items,
-        cancelUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/cancel.html',
-        returnUrl: 'http://localhost:3000/frontend/templates/customer/payment_pages/success.html',
+        cancelUrl: 'http://127.0.0.1:5500/frontend/templates/customer/payment_pages/cancel.html',
+        returnUrl: 'http://127.0.0.1:5500/frontend/templates/customer/payment_pages/success.html',
         expiredAt: Math.floor(Date.now() / 1000) + (5 * 60),
     };
 

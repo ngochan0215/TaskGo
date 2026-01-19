@@ -51,6 +51,7 @@
                 search
             </span>
             <input
+                    id="searchInput"
                     type="text"
                     placeholder="Tìm theo mã đơn / khách / địa chỉ..."
                     class="w-full bg-white shadow-md pl-12 pr-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:border-indigo-500"
@@ -59,9 +60,13 @@
     </div>
 
     <div class="bg-indigo-50 rounded-2xl p-1 flex gap-1 shadow-sm border border-indigo-200">
-        <button id="tabUpcoming"
+        <button id="tabCurrentWorking"
                 class="flex-1 py-2 rounded-xl text-sm font-bold bg-white text-gray-900">
-            Công việc sắp tới
+            Đang làm
+        </button>
+        <button id="tabScheduled"
+                class="flex-1 py-2 rounded-xl text-sm font-bold text-indigo-600 hover:text-gray-900">
+            Đã đặt lịch
         </button>
         <button id="tabHistory"
                 class="flex-1 py-2 rounded-xl text-sm font-bold text-indigo-600 hover:text-gray-900">
@@ -69,162 +74,66 @@
         </button>
     </div>
 
-    <section id="upcomingSection" class="mt-4">
+    <section id="currentWorkingSection" class="mt-4">
         <div class="flex justify-between items-center mb-2">
-            <h2 class="font-semibold">Đơn đã nhận</h2>
-            <span class="text-sm text-indigo-600 font-semibold">2 đơn</span>
+            <h2 class="font-semibold">Công việc đang làm</h2>
+            <span id="currentWorkingCount" class="text-sm text-indigo-600 font-semibold">0 đơn</span>
         </div>
 
-        <div class="space-y-3">
+        <div id="currentWorkingList" class="space-y-3"></div>
 
-           <a href="./tasker_order_detail.html"
-                class="block bg-white rounded-2xl border shadow-sm p-4 hover:shadow-md transition">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Mã đơn</p>
-                        <p class="font-bold text-indigo-700">#TG24031501</p>
-                    </div>
-                    <span class="px-3 py-1 text-xs font-bold rounded-full
-                                 bg-blue-100 text-blue-700
-                                 flex items-center justify-center leading-none">
-                        Sắp làm
-                    </span>
+        <div id="currentWorkingEmpty" class="hidden mt-6">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-indigo-500">work</span>
                 </div>
-
-                <div class="mt-3 space-y-1">
-                    <p class="font-bold">Dọn dẹp nhà cửa</p>
-
-                    <p class="text-sm text-gray-600 font-medium">
-                        Khách hàng: <span class="font-semibold">Nguyễn Văn Minh</span>
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">location_on</span>
-                        Quận 7, TP.HCM
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">schedule</span>
-                        09:00 • 20/03/2025
-                    </p>
-                </div>
-
-                <div class="mt-3 flex justify-between">
-                    <p class="font-bold">350.000đ</p>
-                    <span class="text-xs text-indigo-600 font-bold">Xem chi tiết →</span>
-                </div>
-            </a>
-
-            <div class="bg-white rounded-2xl border shadow-sm p-4">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Mã đơn</p>
-                        <p class="font-bold text-indigo-700">#TG24031502</p>
-                    </div>
-                    <span class="px-3 py-1 text-xs font-bold rounded-full
-                                 bg-yellow-100 text-yellow-700
-                                 flex items-center justify-center leading-none">
-                        Đang di chuyển
-                    </span>
-                </div>
-
-                <div class="mt-3 space-y-1">
-                    <p class="font-bold">Sửa máy giặt</p>
-
-                    <p class="text-sm text-gray-600 font-medium">
-                        Khách hàng: <span class="font-semibold">Trần Hoàng Nam</span>
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">location_on</span>
-                        Thủ Đức, TP.HCM
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">schedule</span>
-                        13:30 • 20/03/2025
-                    </p>
-                </div>
-
-                <div class="mt-3 flex justify-between">
-                    <p class="font-bold">450.000đ</p>
-                    <span class="text-xs text-indigo-600 font-bold">Xem chi tiết →</span>
+                <div class="mt-3 font-bold text-gray-900">Chưa có công việc đang làm</div>
+                <div class="text-sm text-gray-500 mt-1">
+                    Các đơn hàng bạn đang thực hiện sẽ hiển thị ở đây.
                 </div>
             </div>
+        </div>
+    </section>
 
+    <section id="scheduledSection" class="mt-4 hidden">
+        <div class="flex justify-between items-center mb-2">
+            <h2 class="font-semibold">Đơn đã đặt lịch</h2>
+            <span id="scheduledCount" class="text-sm text-indigo-600 font-semibold">0 đơn</span>
+        </div>
+
+        <div id="scheduledList" class="space-y-3"></div>
+
+        <div id="scheduledEmpty" class="hidden mt-6">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-indigo-500">event_available</span>
+                </div>
+                <div class="mt-3 font-bold text-gray-900">Chưa có đơn đặt lịch</div>
+                <div class="text-sm text-gray-500 mt-1">
+                    Các đơn hàng đã được đặt lịch sẽ hiển thị ở đây.
+                </div>
+            </div>
+        </div>
     </section>
 
     <section id="historySection" class="mt-4 hidden">
         <div class="flex justify-between items-center mb-2">
             <h2 class="font-semibold">Lịch sử công việc</h2>
-            <span class="text-sm text-indigo-600 font-semibold">2 đơn</span>
+            <span id="historyCount" class="text-sm text-indigo-600 font-semibold">0 đơn</span>
         </div>
 
-        <div class="space-y-3">
+        <div id="historyList" class="space-y-3"></div>
 
-            <div class="bg-white rounded-2xl border shadow-sm p-4 opacity-90">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Mã đơn</p>
-                        <p class="font-bold">#TG24031021</p>
-                    </div>
-                    <span class="px-3 py-1 text-xs font-bold rounded-full
-                                 bg-green-100 text-green-700
-                                 flex items-center justify-center leading-none">
-                        Hoàn thành
-                    </span>
+        <div id="historyEmpty" class="hidden mt-6">
+            <div class="bg-white rounded-2xl shadow-md border border-gray-200 p-5 text-center">
+                <div class="w-12 h-12 mx-auto rounded-full bg-indigo-100 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-indigo-500">receipt_long</span>
                 </div>
-
-                <div class="mt-3 space-y-1">
-                    <p class="font-bold">Vệ sinh máy lạnh</p>
-
-                    <p class="text-sm text-gray-600 font-medium">
-                        Khách hàng: <span class="font-semibold">Lê Thị Hồng</span>
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">location_on</span>
-                        Quận Bình Thạnh
-                    </p>
-                </div>
-
-                <div class="mt-3 flex justify-between">
-                    <p class="font-bold">300.000đ</p>
-                    <p class="text-xs text-gray-400 font-bold">Đã thanh toán</p>
+                <div class="mt-3 font-bold text-gray-900">Chưa có lịch sử</div>
+                <div class="text-sm text-gray-500 mt-1">
+                    Khi bạn hoàn tất đơn, lịch sử sẽ hiển thị ở đây.
                 </div>
             </div>
-
-            <div class="bg-white rounded-2xl border shadow-sm p-4 opacity-90">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <p class="text-xs text-gray-400 font-bold uppercase">Mã đơn</p>
-                        <p class="font-bold">#TG24030918</p>
-                    </div>
-                    <span class="px-3 py-1 text-xs font-bold rounded-full
-                                 bg-red-100 text-red-700
-                                 flex items-center justify-center leading-none">
-                        Bị huỷ
-                    </span>
-                </div>
-
-                <div class="mt-3 space-y-1">
-                    <p class="font-bold">Lắp đặt đèn</p>
-
-                    <p class="text-sm text-gray-600 font-medium">
-                        Khách hàng: <span class="font-semibold">Phạm Quốc Huy</span>
-                    </p>
-
-                    <p class="text-sm text-gray-500 flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">location_on</span>
-                        Quận 10
-                    </p>
-                </div>
-
-                <div class="mt-3 text-xs text-gray-400 font-bold">
-                    Khách huỷ trước giờ làm
-                </div>
-            </div>
-
         </div>
     </section>
 
@@ -237,26 +146,12 @@
 </footer>
 
 
-<script>
-    const tabUpcoming = document.getElementById("tabUpcoming");
-    const tabHistory = document.getElementById("tabHistory");
-    const upcomingSection = document.getElementById("upcomingSection");
-    const historySection = document.getElementById("historySection");
-
-    tabUpcoming.onclick = () => {
-        tabUpcoming.classList.add("bg-white","text-gray-900");
-        tabHistory.classList.remove("bg-white","text-gray-900");
-        upcomingSection.classList.remove("hidden");
-        historySection.classList.add("hidden");
-    };
-
-    tabHistory.onclick = () => {
-        tabHistory.classList.add("bg-white","text-gray-900");
-        tabUpcoming.classList.remove("bg-white","text-gray-900");
-        historySection.classList.remove("hidden");
-        upcomingSection.classList.add("hidden");
-    };
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script type="module">
+  import { initSocket } from "../js/socket.js";
+  initSocket();
 </script>
+<script src="../js/tasker_activity.js"></script>
 
 </body>
 </html>

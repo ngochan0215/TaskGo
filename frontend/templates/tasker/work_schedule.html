@@ -114,9 +114,9 @@
         }
 
         .task-ongoing {
-            background-color: #dcfce7;
-            border-left: 4px solid #22c55e;
-            color: #166534;
+            background-color: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            color: #92400e;
         }
 
         .task-ongoing:hover {
@@ -127,6 +127,18 @@
             background-color: #e0e7ff;
             border-left: 4px solid #6366f1;
             color: #3730a3;
+        }
+
+        .task-completed {
+            background-color: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            color: #1e40af;
+        }
+
+        .task-cancelled {
+            background-color: #fee2e2;
+            border-left: 4px solid #ef4444;
+            color: #991b1b;
         }
 
         /* Filter Styles */
@@ -235,53 +247,57 @@
         </div>
     </nav>
 
-
     <main class="flex-grow p-4 md:p-8">
         <div class="p-4 md:p-8 max-w-7xl mx-auto">
-            <!-- Header -->
             <div class="mb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
                 <div class="flex items-center gap-5">
                     <div>
                         <h1 class="text-2xl font-black tracking-tight text-slate-800">Lịch làm việc</h1>
-                        <p id="week-range-text" class="text-indigo-600 font-bold text-sm tracking-wide">19/01 - 25/01</p>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-3">
-                    <!-- Navigation Buttons (Lùi/Tiến tuần) -->
                     <div class="flex items-center bg-white p-1 rounded-2xl shadow-sm border border-slate-200 mr-2">
-                        <button class="nav-btn" title="Tuần trước">
+                        <button class="nav-btn" id="prev-week-btn" title="Tuần trước">
                             <span class="material-symbols-outlined text-xl">chevron_left</span>
                         </button>
-                        <button class="px-4 text-xs font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest">Hôm nay
+                        <div class="px-4 text-xs font-black text-indigo-600 uppercase tracking-widest" id="week-range-display">
+                            19/01 - 25/01
+                        </div>
+                        <button class="px-3 text-xs font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest" id="today-btn">Hôm nay
                         </button>
-                        <button class="nav-btn" title="Tuần tới">
+                        <button class="nav-btn" id="next-week-btn" title="Tuần tới">
                             <span class="material-symbols-outlined text-xl">chevron_right</span>
                         </button>
                     </div>
 
-                    <!-- Filter Bar -->
                     <div class="flex items-center bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
                         <button onclick="filterTasks('all')" id="btn-all"
                             class="filter-btn active px-4 py-2 text-xs font-black rounded-xl">TẤT CẢ</button>
                         <button onclick="filterTasks('ongoing')" id="btn-ongoing"
                             class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
-                            <span class="w-2 h-2 bg-green-500 rounded-full"></span> ĐANG LÀM
+                            <span class="w-2 h-2 bg-amber-500 rounded-full"></span> ĐANG LÀM
                         </button>
                         <button onclick="filterTasks('upcoming')" id="btn-upcoming"
                             class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
                             <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> SẮP TỚI
                         </button>
+                        <button onclick="filterTasks('completed')" id="btn-completed"
+                            class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
+                            <span class="w-2 h-2 bg-blue-500 rounded-full"></span> HOÀN THÀNH
+                        </button>
+                        <button onclick="filterTasks('cancelled')" id="btn-cancelled"
+                            class="filter-btn px-4 py-2 text-xs font-black rounded-xl flex items-center gap-2">
+                            <span class="w-2 h-2 bg-red-500 rounded-full"></span> ĐÃ HỦY
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- Schedule Board -->
             <div class="bg-white rounded-[32px] shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <div class="min-w-[2040px]">
 
-                        <!-- Giờ (Header) -->
                         <div class="flex bg-slate-50 border-b border-slate-200">
                             <div
                                 class="corner-label shrink-0 flex items-center justify-center font-black text-slate-700 text-sm text-slate-400 uppercase tracking-tighter border-r border-slate-200">
@@ -291,92 +307,6 @@
 
                         <!-- Danh sách các ngày -->
                         <div id="days-container">
-                            <!-- Thứ 2 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">19/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ HAI</span>
-                                    <div
-                                        class="mt-1 px-2 py-0.5 bg-indigo-50 text-xs font-bold rounded-full text-indigo-500">
-                                        HÔM NAY</div>
-                                </div>
-                                <div class="schedule-grid">
-                                    <div class="task-block task-ongoing" data-status="ongoing"
-                                        data-service=" Dọn dẹp nhà cửa" data-time="08:00 - 11:00"
-                                        data-address="Chung cư Vinhomes Central Park, Bình Thạnh"
-                                        data-customer="Nguyễn Văn A" onclick="showTaskDetail(this)"
-                                        style="left: 640px; width: 240px;">
-                                        <p class="truncate uppercase text-sm">Dọn dẹp nhà #9901</p>
-                                        <p class="opacity-75 text-xs">08:00 - 11:00</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Thứ 3 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">20/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ BA</span>
-                                </div>
-                                <div class="schedule-grid bg-indigo-50/10"></div>
-                            </div>
-
-                            <!-- Thứ 4 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">21/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ TƯ</span>
-                                </div>
-                                <div class="schedule-grid">
-                                    <div class="task-block task-upcoming" data-status="upcoming"
-                                        style="left: 1120px; width: 320px;">
-                                        <p class="truncate uppercase text-sm">Nấu ăn gia đình #9955</p>
-                                        <p class="opacity-75 text-xs">14:00 - 18:00</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Thứ 5 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">22/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ NĂM</span>
-                                </div>
-                                <div class="schedule-grid">
-                                    <div class="task-block task-upcoming" data-status="upcoming"
-                                        style="left: 640px; width: 160px;">
-                                        <p class="truncate uppercase text-sm">Vệ sinh máy lạnh #3425</p>
-                                        <p class="opacity-75 text-xs">08:00 - 10:00</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Thứ 6 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">23/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ SÁU</span>
-                                </div>
-                                <div class="schedule-grid"></div>
-                            </div>
-
-                            <!-- Thứ 7 -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">24/01</span>
-                                    <span class="text-sm font-black text-slate-700">THỨ BẢY</span>
-                                </div>
-                                <div class="schedule-grid bg-amber-50/10"></div>
-                            </div>
-
-                            <!-- Chủ Nhật -->
-                            <div class="day-row">
-                                <div class="day-label">
-                                    <span class="text-xs font-black text-slate-400">25/01</span>
-                                    <span class="text-sm font-black text-slate-700 text-red-600">CHỦ NHẬT</span>
-                                </div>
-                                <div class="schedule-grid bg-red-50/10"></div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -387,7 +317,6 @@
             class="fixed inset-0 z-[100] hidden bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
             <div
                 class="bg-white rounded-[28px] w-full max-w-sm overflow-hidden shadow-2xl transform transition-all border border-slate-100">
-                <!-- Modal Header -->
                 <div id="modalHeader" class="px-6 py-4 flex justify-between items-center border-b border-slate-50">
                     <h3 class="font-black text-slate-800 text-lg">Chi tiết công việc</h3>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
@@ -395,7 +324,6 @@
                     </button>
                 </div>
 
-                <!-- Modal Body -->
                 <div class="p-6 space-y-5">
                     <div class="flex items-start gap-4">
                         <div
@@ -443,7 +371,11 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="bg-slate-50 px-6 py-4 flex justify-end gap-3">
+                <div class="bg-slate-50 px-6 py-4 flex justify-between gap-3">
+                    <button id="modal-view-details-btn" onclick="viewOrderDetailsFromModal()"
+                        class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black hover:bg-indigo-700 transition-all">
+                        Xem chi tiết
+                    </button>
                     <button onclick="closeModal()"
                         class="px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 hover:bg-slate-100 transition-all">ĐÓNG</button>
                 </div>
@@ -488,8 +420,9 @@
             });
         }
 
-        // Pop-up logic
         const modal = document.getElementById('taskModal');
+
+        let currentModalOrderId = null;
 
         function showTaskDetail(el) {
             const service = el.getAttribute('data-service');
@@ -497,17 +430,27 @@
             const address = el.getAttribute('data-address');
             const customer = el.getAttribute('data-customer');
             const status = el.getAttribute('data-status');
+            const orderId = el.getAttribute('data-order-id');
 
             document.getElementById('modalService').innerText = service;
             document.getElementById('modalTime').innerText = time;
             document.getElementById('modalAddress').innerText = address;
             document.getElementById('modalCustomer').innerText = customer;
+            
+            currentModalOrderId = orderId;
 
             // Hiển thị modal
             modal.classList.remove('hidden');
             setTimeout(() => {
                 modal.classList.add('opacity-100');
             }, 10);
+        }
+
+        function viewOrderDetailsFromModal() {
+            if (currentModalOrderId) {
+                localStorage.setItem("currentOrderId", currentModalOrderId);
+                window.location.href = `./tasker_order_progress.html?orderId=${currentModalOrderId}`;
+            }
         }
 
         function closeModal() {
@@ -524,7 +467,196 @@
             }
         }
 
+        let currentWeekStart = new Date();
+        currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1); // Monday
+        currentWeekStart.setHours(0, 0, 0, 0);
+
+        const dayNames = ['CHỦ NHẬT', 'THỨ HAI', 'THỨ BA', 'THỨ TƯ', 'THỨ NĂM', 'THỨ SÁU', 'THỨ BẢY'];
+
+        // Get week range (Monday to Sunday, but include Sunday of previous week)
+        function getWeekRange(startDate) {
+            // startDate is Monday, so we go back 1 day to include Sunday
+            const weekStart = new Date(startDate);
+            weekStart.setDate(weekStart.getDate() - 1); // Include Sunday
+            weekStart.setHours(0, 0, 0, 0);
+            
+            const endDate = new Date(startDate);
+            endDate.setDate(endDate.getDate() + 5); // Saturday (6 days from Monday = Saturday)
+            endDate.setHours(23, 59, 59, 999);
+            
+            const startStr = weekStart.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            const endStr = endDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+            return { start: weekStart, end: endDate, text: `${startStr} - ${endStr}` };
+        }
+
+        // Fetch work schedule data
+        async function fetchWorkSchedule(startDate, endDate) {
+            try {
+                const startISO = startDate.toISOString();
+                const endISO = endDate.toISOString();
+                
+                const response = await fetch(
+                    `http://localhost:3000/api/tasker/work-schedule?startDate=${startISO}&endDate=${endISO}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if (response.status === 401) {
+                    localStorage.removeItem("token");
+                    alert("Phiên đăng nhập hết hạn");
+                    window.location.href = "../auth/login-signup.html";
+                    return [];
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    return data.schedule || [];
+                }
+
+                console.log("DATA SCHEDULE: ", data.schedule);
+                return [];
+            } catch (error) {
+                console.error("Error fetching work schedule:", error);
+                return [];
+            }
+        }
+
+        async function renderSchedule() {
+            const weekRange = getWeekRange(currentWeekStart);
+
+            document.getElementById('week-range-display').textContent = weekRange.text;
+            const scheduleData = await fetchWorkSchedule(weekRange.start, weekRange.end);
+
+            // Group tasks by day of week (0 = Sunday, 1 = Monday, etc.)
+            const tasksByDay = {};
+            for (let i = 0; i < 7; i++) {
+                tasksByDay[i] = [];
+            }
+
+            scheduleData.forEach(task => {
+                console.log("SUSPICOUS TASK: ", task);
+                // Calculate which day of the current week this task belongs to
+                // Use the actual scheduledAt timestamp if available, otherwise use the date string
+                let taskDate;
+                if (task.scheduledAt) {
+                    // Use the actual scheduled timestamp to get the correct local date
+                    taskDate = new Date(task.scheduledAt);
+                } else {
+                    // Fallback to date string (parse in local timezone)
+                    taskDate = new Date(task.date + 'T00:00:00');
+                }
+                
+                // Get the local date components (year, month, day) at midnight
+                const taskYear = taskDate.getFullYear();
+                const taskMonth = taskDate.getMonth();
+                const taskDay = taskDate.getDate();
+                const taskDateAtMidnight = new Date(taskYear, taskMonth, taskDay, 0, 0, 0, 0);
+                
+                // Week starts on Sunday (currentWeekStart - 1 day)
+                const weekStart = new Date(currentWeekStart);
+                weekStart.setDate(weekStart.getDate() - 1); // Sunday
+                weekStart.setHours(0, 0, 0, 0);
+                
+                // Calculate days difference using dates at midnight
+                const daysDiff = Math.floor((taskDateAtMidnight - weekStart) / (1000 * 60 * 60 * 24));
+                
+                // Ensure it's within the week (0-6, where 0=Sunday, 6=Saturday)
+                let dayIndex = daysDiff;
+                if (dayIndex < 0 || dayIndex > 6) {
+                    // Task is outside the current week, skip it or handle appropriately
+                    console.warn(`Task ${task.orderId} date ${task.date} (scheduledAt: ${task.scheduledAt}) is outside week range. daysDiff: ${daysDiff}`);
+                    return; // Skip this task
+                }
+                
+                if (!tasksByDay[dayIndex]) tasksByDay[dayIndex] = [];
+                tasksByDay[dayIndex].push(task);
+            });
+
+            // Render days
+            const daysContainer = document.getElementById('days-container');
+            daysContainer.innerHTML = '';
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Render 7 days starting from Sunday (weekStart - 1 day = Sunday)
+            for (let i = 0; i < 7; i++) {
+                const dayDate = new Date(currentWeekStart);
+                dayDate.setDate(dayDate.getDate() + i - 1); // Start from Sunday (i=0 = Sunday)
+                
+                const isToday = dayDate.getTime() === today.getTime();
+                const dayName = dayNames[dayDate.getDay()];
+                const dateStr = dayDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                
+                const dayRow = document.createElement('div');
+                dayRow.className = 'day-row';
+                
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'day-label';
+                dayLabel.innerHTML = `
+                    <span class="text-xs font-black text-slate-400">${dateStr}</span>
+                    <span class="text-sm font-black ${dayDate.getDay() === 0 ? 'text-red-600' : 'text-slate-700'}">${dayName}</span>
+                    ${isToday ? '<div class="mt-1 px-2 py-0.5 bg-indigo-50 text-xs font-bold rounded-full text-indigo-500">HÔM NAY</div>' : ''}
+                `;
+
+                const scheduleGrid = document.createElement('div');
+                scheduleGrid.className = 'schedule-grid';
+
+                // Add tasks for this day
+                const dayTasks = tasksByDay[i] || [];
+                dayTasks.forEach(task => {
+                    console.log("TASK: ", task);
+                    const taskBlock = document.createElement('div');
+                    taskBlock.className = `task-block task-${task.scheduleStatus}`;
+                    taskBlock.setAttribute('data-status', task.scheduleStatus);
+                    taskBlock.setAttribute('data-service', task.service);
+                    taskBlock.setAttribute('data-time', task.timeRange);
+                    taskBlock.setAttribute('data-address', task.address);
+                    taskBlock.setAttribute('data-customer', task.customer);
+                    taskBlock.setAttribute('data-order-id', task.orderId);
+                    taskBlock.setAttribute('onclick', 'showTaskDetail(this)');
+                    taskBlock.style.left = `${task.leftPosition}px`;
+                    taskBlock.style.width = `${task.width}px`;
+                    
+                    // Extract order ID from service name if possible, or use a short version
+                    const orderIdShort = task.orderId ? task.orderId.toString().slice(-4) : '';
+                    taskBlock.innerHTML = `
+                        <p class="truncate uppercase text-sm">${task.service}${orderIdShort ? ' #' + orderIdShort : ''}</p>
+                        <p class="opacity-75 text-xs">${task.timeRange}</p>
+                    `;
+                    
+                    scheduleGrid.appendChild(taskBlock);
+                });
+
+                dayRow.appendChild(dayLabel);
+                dayRow.appendChild(scheduleGrid);
+                daysContainer.appendChild(dayRow);
+            }
+        }
+
+        // Week navigation
+        document.getElementById('prev-week-btn').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+            renderSchedule();
+        });
+
+        document.getElementById('next-week-btn').addEventListener('click', () => {
+            currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+            renderSchedule();
+        });
+
+        document.getElementById('today-btn').addEventListener('click', () => {
+            currentWeekStart = new Date();
+            currentWeekStart.setDate(currentWeekStart.getDate() - currentWeekStart.getDay() + 1);
+            currentWeekStart.setHours(0, 0, 0, 0);
+            renderSchedule();
+        });
+
         window.onload = () => {
+            renderSchedule();
             const scrollContainer = document.querySelector('.overflow-x-auto');
             // Cuộn mặc định đến mốc 8h sáng để người dùng dễ quan sát khung giờ chính
             scrollContainer.scrollLeft = 580;
@@ -771,7 +903,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadCashoutInfo();
+            //loadCashoutInfo();
             const btn = document.getElementById('cashoutBtn');
             if (btn) btn.addEventListener('click', performCashout);
         });

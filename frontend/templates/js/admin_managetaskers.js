@@ -1,6 +1,6 @@
 const API_BASE_URL = 'http://localhost:3000/api/admin'; 
 
-const getToken = () => localStorage.getItem('accessToken'); 
+const getToken = () => localStorage.getItem('token'); 
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);

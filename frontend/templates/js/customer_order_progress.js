@@ -940,23 +940,85 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Cancel order
-async function cancelOrder() {
+// Open cancel reason modal
+function openCancelReasonModal() {
   if (!canCancel) {
     alert("Không thể hủy đơn hàng này");
     return;
   }
+  
+  // Reset form
+  document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
+    radio.checked = false;
+  });
+  document.getElementById("customReasonText").value = "";
+  document.getElementById("customReasonContainer").classList.add("hidden");
+  
+  // Show modal
+  document.getElementById("cancelReasonModal").classList.remove("hidden");
+  
+  // Listen for "other" selection
+  document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
+    radio.removeEventListener("change", handleReasonChange);
+    radio.addEventListener("change", handleReasonChange);
+  });
+}
 
+function handleReasonChange() {
+  if (this.value === "other") {
+    document.getElementById("customReasonContainer").classList.remove("hidden");
+  } else {
+    document.getElementById("customReasonContainer").classList.add("hidden");
+  }
+}
+
+// Close cancel reason modal
+function closeCancelReasonModal() {
+  document.getElementById("cancelReasonModal").classList.add("hidden");
+}
+
+// Confirm cancel with reason
+async function confirmCancelWithReason() {
+  const selectedReason = document.querySelector('input[name="cancelReason"]:checked');
+  const customReason = document.getElementById("customReasonText").value.trim();
+  
+  if (!selectedReason) {
+    alert("Vui lòng chọn lý do hủy đơn");
+    return;
+  }
+  
+  let reason = selectedReason.value;
+  
+  // If "other" is selected, use custom text or default
+  if (reason === "other") {
+    reason = customReason || "Lý do khác";
+  }
+  
+  // Map enum to Vietnamese for display
+  const reasonMap = {
+    "too_far": "Quá xa",
+    "busy": "Bận việc",
+    "price_not_ok": "Giá không phù hợp",
+    "time_not_suitable": "Thời gian không phù hợp",
+    "skill_not_match": "Kỹ năng không phù hợp",
+    "other": customReason || "Lý do khác"
+  };
+  
+  const reasonText = reasonMap[selectedReason.value] || reason;
+  
   const penaltyMsg = penaltyAmount > 0 
     ? `\n\nLưu ý: Bạn sẽ bị phạt ${formatCurrency(penaltyAmount)} khi hủy đơn này.`
     : "";
-
-  if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng này?${penaltyMsg}`)) {
+  
+  if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng này?\nLý do: ${reasonText}${penaltyMsg}`)) {
     return;
   }
-
-  const reason = prompt("Vui lòng nhập lý do hủy đơn (tùy chọn):") || "Khách hàng hủy đơn";
-
+  
+  const confirmBtn = document.getElementById("confirmCancelBtn");
+  const originalText = confirmBtn.textContent;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Đang xử lý...";
+  
   try {
     const res = await fetch(
       `http://localhost:3000/api/order/cancel/${orderId}`,
@@ -966,7 +1028,7 @@ async function cancelOrder() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason: reason })
       }
     );
 
@@ -981,6 +1043,7 @@ async function cancelOrder() {
 
     if (res.ok && result.success) {
       alert("Đã hủy đơn hàng thành công");
+      closeCancelReasonModal();
       // Reload order details
       const details = await fetchOrderDetails();
       if (details) {
@@ -996,7 +1059,15 @@ async function cancelOrder() {
   } catch (error) {
     console.error("Error cancelling order:", error);
     alert("Có lỗi xảy ra khi hủy đơn hàng");
+  } finally {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = originalText;
   }
+}
+
+// Cancel order (opens modal)
+function cancelOrder() {
+  openCancelReasonModal();
 }
 
 // Open chat function
@@ -1345,6 +1416,9 @@ window.submitReview = submitReview;
 window.toggleFavorite = toggleFavorite;
 window.openTaskerModal = openTaskerModal;
 window.closeTaskerModal = closeTaskerModal;
+window.openCancelReasonModal = openCancelReasonModal;
+window.closeCancelReasonModal = closeCancelReasonModal;
+window.confirmCancelWithReason = confirmCancelWithReason;
 
 // Initialize page
 async function init() {

@@ -40,11 +40,18 @@
         class="bg-primary-200 rounded-2xl p-1 flex gap-1 shadow-sm border border-primary-300"
       >
         <button
-          id="tabUpcoming"
+          id="tabCurrentWorking"
           type="button"
           class="flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900"
         >
-          Đơn sắp tới
+          Đang làm
+        </button>
+        <button
+          id="tabScheduled"
+          type="button"
+          class="flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900"
+        >
+          Đã đặt lịch
         </button>
         <button
           id="tabHistory"
@@ -55,19 +62,52 @@
         </button>
       </div>
 
-      <section id="upcomingSection" class="mt-4">
+      <section id="currentWorkingSection" class="mt-4">
         <div class="flex justify-between items-center mb-2">
-          <h2 class="font-semibold text-dark-900">Đơn đặt trước</h2>
+          <h2 class="font-semibold text-dark-900">Đơn đang thực hiện</h2>
           <span
-            id="upcomingCount"
+            id="currentWorkingCount"
             class="text-sm text-primary-500 font-semibold"
             >0 đơn</span
           >
         </div>
 
-        <div id="upcomingList" class="space-y-3"></div>
+        <div id="currentWorkingList" class="space-y-3"></div>
 
-        <div id="upcomingEmpty" class="hidden mt-6">
+        <div id="currentWorkingEmpty" class="hidden mt-6">
+          <div
+            class="bg-white rounded-2xl shadow-md border border-primary-300 p-5 text-center"
+          >
+            <div
+              class="w-12 h-12 mx-auto rounded-full bg-primary-100 flex items-center justify-center"
+            >
+              <span class="material-symbols-outlined text-primary-500"
+                >work</span
+              >
+            </div>
+            <div class="mt-3 font-bold text-dark-900">
+              Chưa có đơn đang thực hiện
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+              Các đơn hàng đang được thực hiện sẽ hiển thị ở đây.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="scheduledSection" class="mt-4 hidden">
+        <div class="flex justify-between items-center mb-2">
+          <h2 class="font-semibold text-dark-900">Đơn đã đặt lịch</h2>
+          <span
+            id="scheduledCount"
+            class="text-sm text-primary-500 font-semibold"
+            >0 đơn</span
+          >
+        </div>
+
+        <div id="scheduledList" class="space-y-3"></div>
+
+        <div id="scheduledEmpty" class="hidden mt-6">
           <div
             class="bg-white rounded-2xl shadow-md border border-primary-300 p-5 text-center"
           >
@@ -78,9 +118,9 @@
                 >event_available</span
               >
             </div>
-            <div class="mt-3 font-bold text-dark-900">Chưa có đơn sắp tới</div>
+            <div class="mt-3 font-bold text-dark-900">Chưa có đơn đặt lịch</div>
             <div class="text-sm text-gray-500 mt-1">
-              Bạn có thể đặt lịch dịch vụ để theo dõi tại đây.
+              Các đơn hàng đã được đặt lịch sẽ hiển thị ở đây.
             </div>
             <button
               id="orderIfNone"

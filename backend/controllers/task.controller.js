@@ -475,7 +475,7 @@ export const getTopPopularTasks = async (req, res) => {
     const tasksWithDetails = await Promise.all(
       data.map(async (item) => {
         const task = await Task.findById(item._id)
-          .select("task_name description pricing unit avatar_url")
+          .select("task_name description pricing unit avatar_url task_type")
           .lean();
         
         return {
@@ -485,7 +485,8 @@ export const getTopPopularTasks = async (req, res) => {
           pricing: task?.pricing || 0,
           unit: task?.unit || "hour",
           avatar_url: task?.avatar_url || null,
-          total_orders: item.total_orders
+          total_orders: item.total_orders,
+		  task_type: task.task_type
         };
       })
     );

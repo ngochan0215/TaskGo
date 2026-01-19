@@ -14,19 +14,28 @@ console.log("CUSTOMER USER ID: ", customerUserId);
 
 const $ = (id) => document.getElementById(id);
 
-const tabUpcoming = $("tabUpcoming");
+// tab
+const tabCurrentWorking = $("tabCurrentWorking");
+const tabScheduled = $("tabScheduled");
 const tabHistory = $("tabHistory");
-const upcomingSection = $("upcomingSection");
+
+const currentWorkingSection = $("currentWorkingSection");
+const scheduledSection = $("scheduledSection");
 const historySection = $("historySection");
 
-const upcomingList = $("upcomingList");
+const currentWorkingList = $("currentWorkingList");
+const scheduledList = $("scheduledList");
 const historyList = $("historyList");
-const upcomingEmpty = $("upcomingEmpty");
-const historyEmpty = $("historyEmpty");
-const upcomingCount = $("upcomingCount");
-const historyCount = $("historyCount");
-const searchInput = $("searchInput");
 
+const currentWorkingEmpty = $("currentWorkingEmpty");
+const scheduledEmpty = $("scheduledEmpty");
+const historyEmpty = $("historyEmpty");
+
+const currentWorkingCount = $("currentWorkingCount");
+const scheduledCount = $("scheduledCount");
+const historyCount = $("historyCount");
+
+const searchInput = $("searchInput");
 const sheetBackdrop = $("sheetBackdrop");
 const sheet = $("sheet");
 const closeSheetBtn = $("closeSheetBtn");
@@ -46,9 +55,10 @@ const dangerActionBtn = $("dangerActionBtn");
 const chatActionBtn = $("chatActionBtn");
 
 let currentQuery = "";
-let allOrders = [];
-let upcomingOrders = [];
+let currentWorkingOrders = [];
+let scheduledOrders = [];
 let historyOrders = [];
+let allOrders = [];
 let currentOrderDetail = null; // Store current order detail for cancel action
 
 // Payment method mapping
@@ -176,10 +186,20 @@ function transformOrder(order) {
   const time = formatDateTime(order.scheduled_at);
   const timeISO = order.scheduled_at;
 
+  // Determine category
+  let category = "history";
+  if (["accepted", "departed", "arrived", "in_progress"].includes(order.status)) {
+    category = "current_working";
+  } else if (order.type === "scheduled" && ["pending", "assigned"].includes(order.status)) {
+    category = "scheduled";
+  } else if (["completed", "cancelled"].includes(order.status)) {
+    category = "history";
+  }
+
   return {
     id: orderId,
     _id: order._id,
-    type: ["completed", "cancelled"].includes(order.status) ? "history" : "upcoming",
+    category: category,
     status: order.status,
     service: service,
     task: service, // Can be enhanced with more details
@@ -244,9 +264,19 @@ function applySearch(list) {
 // Fetch orders from API
 async function fetchOrders() {
   try {
-    // Fetch upcoming orders
-    const upcomingRes = await fetch(
-      `http://localhost:3000/api/order/customer/${customerUserId}?category=upcoming&limit=100`,
+    // Fetch current working orders
+    const currentWorkingRes = await fetch(
+      `http://localhost:3000/api/order/customer/${customerUserId}?category=current_working&limit=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    // Fetch scheduled orders
+    const scheduledRes = await fetch(
+      `http://localhost:3000/api/order/customer/${customerUserId}?category=scheduled&limit=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -264,25 +294,30 @@ async function fetchOrders() {
       }
     );
 
-    if (upcomingRes.status === 401 || historyRes.status === 401) {
+    if (currentWorkingRes.status === 401 || scheduledRes.status === 401 || historyRes.status === 401) {
       localStorage.removeItem("token");
       alert("Phiên đăng nhập hết hạn");
       location.href = "../auth/login-signup.html";
       return;
     }
 
-    const upcomingData = await upcomingRes.json();
+    const currentWorkingData = await currentWorkingRes.json();
+    const scheduledData = await scheduledRes.json();
     const historyData = await historyRes.json();
 
-    if (upcomingData.success) {
-      upcomingOrders = upcomingData.orders.map(transformOrder);
+    if (currentWorkingData.success) {
+      currentWorkingOrders = currentWorkingData.orders.map(transformOrder);
+    }
+
+    if (scheduledData.success) {
+      scheduledOrders = scheduledData.orders.map(transformOrder);
     }
 
     if (historyData.success) {
       historyOrders = historyData.orders.map(transformOrder);
     }
 
-    allOrders = [...upcomingOrders, ...historyOrders];
+    allOrders = [...currentWorkingOrders, ...scheduledOrders, ...historyOrders];
     render();
   } catch (error) {
     console.error("Error fetching orders:", error);
@@ -292,26 +327,27 @@ async function fetchOrders() {
 
 // Render orders
 function render() {
-  const upcoming = applySearch(upcomingOrders);
+  const current = applySearch(currentWorkingOrders);
+  const scheduled = applySearch(scheduledOrders);
   const history = applySearch(historyOrders);
 
-  upcomingCount.textContent = `${upcoming.length} đơn`;
+  currentWorkingCount.textContent = `${current.length} đơn`;
+  scheduledCount.textContent = `${scheduled.length} đơn`;
   historyCount.textContent = `${history.length} đơn`;
 
-  upcomingList.innerHTML = upcoming.map(cardTemplate).join("");
+  currentWorkingList.innerHTML = current.map(cardTemplate).join("");
+  scheduledList.innerHTML = scheduled.map(cardTemplate).join("");
   historyList.innerHTML = history.map(cardTemplate).join("");
 
-  upcomingEmpty.classList.toggle("hidden", upcoming.length !== 0);
+  currentWorkingEmpty.classList.toggle("hidden", current.length !== 0);
+  scheduledEmpty.classList.toggle("hidden", scheduled.length !== 0);
   historyEmpty.classList.toggle("hidden", history.length !== 0);
 
-  // Attach click handlers
   document.querySelectorAll("[data-order]").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const orderId = btn.getAttribute("data-order");
-      const order = allOrders.find((o) => String(o._id) === String(orderId));
-      if (order) {
-        openDetail(order);
-      }
+      const orderId = btn.dataset.order;
+      const order = allOrders.find(o => String(o._id) === String(orderId));
+      if (order) openDetail(order);
     });
   });
 }
@@ -467,9 +503,9 @@ async function openDetail(orderData) {
     : "Chưa thanh toán";
   dPaymentNote.textContent = `Thanh toán: ${paymentMethod}`;
 
-  // Countdown for upcoming orders
-  const isUpcoming = !["completed", "cancelled"].includes(order.status);
-  const cd = isUpcoming ? calcCountdown(order.scheduled_at) : null;
+  // Countdown for current working or scheduled orders
+  const isActive = !["completed", "cancelled"].includes(order.status);
+  const cd = isActive ? calcCountdown(order.scheduled_at) : null;
   if (cd) {
     dCountdown.textContent = cd;
     dCountdown.classList.remove("hidden");
@@ -492,7 +528,7 @@ async function openDetail(orderData) {
     chatActionBtn.classList.add("hidden");
   }
   
-  if (isUpcoming) {
+  if (isActive) {
     primaryActionBtn.textContent = "Liên hệ hỗ trợ";
     secondaryActionBtn.textContent = "Xem chi tiết";
     if (canCancel) {
@@ -546,11 +582,15 @@ async function openDetail(orderData) {
       const noteDiv = document.createElement("div");
       noteDiv.id = "noteSection";
       noteDiv.className = "mt-3 bg-gray-50 border border-gray-200 rounded-2xl p-4";
+      
       noteDiv.innerHTML = `
         <div class="text-xs text-gray-500 mb-1">Ghi chú</div>
         <p class="text-sm text-gray-700">${order.note}</p>
       `;
-      dPaymentNote.parentElement.parentElement.after(noteDiv);
+
+      const totalBox = dPaymentNote.closest(".bg-white.border");
+      totalBox.insertAdjacentElement("afterend", noteDiv);
+
     } else {
       noteSection.innerHTML = `
         <div class="text-xs text-gray-500 mb-1">Ghi chú</div>
@@ -565,43 +605,132 @@ async function openDetail(orderData) {
 function closeDetail() {
   sheetBackdrop.classList.add("hidden");
   sheet.classList.add("hidden");
+
+  const noteSection = document.getElementById("noteSection");
+  if (noteSection) noteSection.remove();
 }
 
 // Set active tab
 function setTab(tab) {
-  if (tab === "upcoming") {
-    tabUpcoming.className =
-      "flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900";
-    tabHistory.className =
-      "flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900";
-    upcomingSection.classList.remove("hidden");
-    historySection.classList.add("hidden");
-  } else {
-    tabHistory.className =
-      "flex-1 py-2 rounded-xl text-sm font-bold bg-white text-dark-900";
-    tabUpcoming.className =
-      "flex-1 py-2 rounded-xl text-sm font-bold text-primary-600 hover:text-dark-900";
+  // Reset all tabs
+  [tabCurrentWorking, tabScheduled, tabHistory].forEach(t => {
+    t.classList.remove("bg-white", "text-dark-900");
+    t.classList.add("text-primary-600", "hover:text-dark-900");
+  });
+
+  // Hide all sections
+  [currentWorkingSection, scheduledSection, historySection].forEach(s => {
+    s.classList.add("hidden");
+  });
+
+  // Activate selected tab
+  if (tab === "current_working") {
+    tabCurrentWorking.classList.add("bg-white", "text-dark-900");
+    tabCurrentWorking.classList.remove("text-primary-600", "hover:text-dark-900");
+    currentWorkingSection.classList.remove("hidden");
+  } else if (tab === "scheduled") {
+    tabScheduled.classList.add("bg-white", "text-dark-900");
+    tabScheduled.classList.remove("text-primary-600", "hover:text-dark-900");
+    scheduledSection.classList.remove("hidden");
+  } else if (tab === "history") {
+    tabHistory.classList.add("bg-white", "text-dark-900");
+    tabHistory.classList.remove("text-primary-600", "hover:text-dark-900");
     historySection.classList.remove("hidden");
-    upcomingSection.classList.add("hidden");
   }
 }
 
-// Cancel order
-async function cancelOrder(orderId) {
-  if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng này?")) {
+// Cancel reason modal state
+let pendingCancelOrderId = null;
+let pendingCancelPenaltyAmount = 0;
+
+// Open cancel reason modal
+function openCancelReasonModal(orderId, penaltyAmount = 0) {
+  pendingCancelOrderId = orderId;
+  pendingCancelPenaltyAmount = penaltyAmount;
+  
+  // Reset form
+  document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
+    radio.checked = false;
+  });
+  document.getElementById("customReasonText").value = "";
+  document.getElementById("customReasonContainer").classList.add("hidden");
+  
+  // Show modal
+  document.getElementById("cancelReasonModal").classList.remove("hidden");
+  
+  // Listen for "other" selection
+  document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
+    radio.addEventListener("change", function() {
+      if (this.value === "other") {
+        document.getElementById("customReasonContainer").classList.remove("hidden");
+      } else {
+        document.getElementById("customReasonContainer").classList.add("hidden");
+      }
+    });
+  });
+}
+
+// Close cancel reason modal
+function closeCancelReasonModal() {
+  document.getElementById("cancelReasonModal").classList.add("hidden");
+  pendingCancelOrderId = null;
+  pendingCancelPenaltyAmount = 0;
+}
+
+// Confirm cancel with reason
+async function confirmCancelWithReason() {
+  if (!pendingCancelOrderId) return;
+  
+  const selectedReason = document.querySelector('input[name="cancelReason"]:checked');
+  const customReason = document.getElementById("customReasonText").value.trim();
+  
+  if (!selectedReason) {
+    alert("Vui lòng chọn lý do hủy đơn");
     return;
   }
-
+  
+  let reason = selectedReason.value;
+  
+  // If "other" is selected, use custom text or default
+  if (reason === "other") {
+    reason = customReason || "Lý do khác";
+  }
+  
+  // Map enum to Vietnamese for display
+  const reasonMap = {
+    "too_far": "Quá xa",
+    "busy": "Bận việc",
+    "price_not_ok": "Giá không phù hợp",
+    "time_not_suitable": "Thời gian không phù hợp",
+    "skill_not_match": "Kỹ năng không phù hợp",
+    "other": customReason || "Lý do khác"
+  };
+  
+  const reasonText = reasonMap[selectedReason.value] || reason;
+  
+  const penaltyMsg = pendingCancelPenaltyAmount > 0 
+    ? `\n\nLưu ý: Bạn sẽ bị phạt ${formatMoney(pendingCancelPenaltyAmount)} khi hủy đơn này.`
+    : "";
+  
+  if (!confirm(`Bạn có chắc chắn muốn hủy đơn hàng này?\nLý do: ${reasonText}${penaltyMsg}`)) {
+    return;
+  }
+  
+  const confirmBtn = document.getElementById("confirmCancelBtn");
+  const originalText = confirmBtn.textContent;
+  confirmBtn.disabled = true;
+  confirmBtn.textContent = "Đang xử lý...";
+  
   try {
     const res = await fetch(
-      `http://localhost:3000/api/order/cancel/${orderId}`,
+      `http://localhost:3000/api/order/cancel/${pendingCancelOrderId}`,
       {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ reason: "Khách hàng hủy đơn" })
+        body: JSON.stringify({ reason: reason })
       }
     );
 
@@ -609,6 +738,7 @@ async function cancelOrder(orderId) {
 
     if (res.ok && result.success) {
       alert("Hủy đơn hàng thành công");
+      closeCancelReasonModal();
       closeDetail();
       await fetchOrders(); // Refresh orders
     } else {
@@ -617,12 +747,22 @@ async function cancelOrder(orderId) {
   } catch (error) {
     console.error("Error canceling order:", error);
     alert("Có lỗi xảy ra khi hủy đơn hàng");
+  } finally {
+    confirmBtn.disabled = false;
+    confirmBtn.textContent = originalText;
   }
 }
 
+// Cancel order (opens modal instead of direct cancel)
+function cancelOrder(orderId, penaltyAmount = 0) {
+  openCancelReasonModal(orderId, penaltyAmount);
+}
+
 // Event listeners
-tabUpcoming.addEventListener("click", () => setTab("upcoming"));
+tabCurrentWorking.addEventListener("click", () => setTab("current_working"));
+tabScheduled.addEventListener("click", () => setTab("scheduled"));
 tabHistory.addEventListener("click", () => setTab("history"));
+
 closeSheetBtn.addEventListener("click", closeDetail);
 sheetBackdrop.addEventListener("click", closeDetail);
 
@@ -642,9 +782,12 @@ secondaryActionBtn.addEventListener("click", () => {
   }
 });
 
-document.getElementById("orderIfNone").addEventListener("click", () => {
-  window.location.href = "service_listpage.html";
-});
+const orderIfNoneBtn = document.getElementById("orderIfNone");
+if (orderIfNoneBtn) {
+  orderIfNoneBtn.addEventListener("click", () => {
+    window.location.href = "service_listpage.html";
+  });
+}
 
 chatActionBtn.addEventListener("click", () => {
   if (currentOrderDetail && currentOrderDetail.order && currentOrderDetail.order._id) {
@@ -655,15 +798,18 @@ chatActionBtn.addEventListener("click", () => {
 
 dangerActionBtn.addEventListener("click", () => {
   if (currentOrderDetail && currentOrderDetail.order && currentOrderDetail.order._id) {
-    const penaltyMsg = currentOrderDetail.penaltyAmount > 0 
-      ? `\n\nLưu ý: Bạn sẽ bị phạt ${formatMoney(currentOrderDetail.penaltyAmount)} khi hủy đơn này.`
-      : "";
-    if (confirm(`Bạn có chắc chắn muốn hủy đơn hàng này?${penaltyMsg}`)) {
-      cancelOrder(currentOrderDetail.order._id);
-    }
+    cancelOrder(
+      currentOrderDetail.order._id,
+      currentOrderDetail.penaltyAmount || 0
+    );
   }
 });
 
+// Expose functions to window for onclick handlers
+window.openCancelReasonModal = openCancelReasonModal;
+window.closeCancelReasonModal = closeCancelReasonModal;
+window.confirmCancelWithReason = confirmCancelWithReason;
+
 // Initialize
 fetchOrders();
-setTab("upcoming");
+setTab("current_working");
