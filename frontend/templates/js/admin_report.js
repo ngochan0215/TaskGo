@@ -314,12 +314,12 @@ async function loadServiceStatistics() {
     const data = await res.json();
     if (!data.success) return;
 
-    // Update cards
+    // Update Service (danh mục) cards
     document.getElementById("services-total-orders").textContent = formatNumber(data.totals.totalOrders);
     document.getElementById("services-total-revenue").textContent = formatCurrency(data.totals.totalRevenue);
     document.getElementById("services-count").textContent = formatNumber(data.topByOrders.length);
 
-    // Chart: Top services by orders (bar)
+    // Chart: Top services (danh mục) by orders (bar)
     const ordersCtx = document.getElementById("chart-services-orders");
     if (charts.servicesOrders) charts.servicesOrders.destroy();
     charts.servicesOrders = new Chart(ordersCtx, {
@@ -344,7 +344,7 @@ async function loadServiceStatistics() {
       }
     });
 
-    // Chart: Top services by revenue (bar)
+    // Chart: Top services (danh mục) by revenue (bar)
     const revenueCtx = document.getElementById("chart-services-revenue");
     if (charts.servicesRevenue) charts.servicesRevenue.destroy();
     charts.servicesRevenue = new Chart(revenueCtx, {
@@ -379,27 +379,112 @@ async function loadServiceStatistics() {
       }
     });
 
-    // Chart: Service distribution (pie)
-    const distCtx = document.getElementById("chart-services-distribution");
-    if (charts.servicesDistribution) charts.servicesDistribution.destroy();
-    charts.servicesDistribution = new Chart(distCtx, {
-      type: "pie",
-      data: {
-        labels: data.serviceDistribution.map(s => s.name),
-        datasets: [{
-          data: data.serviceDistribution.map(s => s.count),
-          backgroundColor: [
-            "#3b5f43", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#f97316"
-          ]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" }
+    // Chart: Service (danh mục) distribution (pie)
+    // const distCtx = document.getElementById("chart-services-distribution");
+    // if (charts.tasksOrders) charts.tasksOrders.destroy();
+    //   charts.tasksOrders = new Chart(distCtx, {
+    //     type: "pie",
+    //     data: {
+    //       labels: data.topTasksByOrders.map(t => `${t.taskName} - ${t.serviceName}`),
+    //       datasets: [{
+    //         label: "Số đơn",
+    //         data: data.topTasksByOrders.map(t => t.orderCount),
+    //         backgroundColor: [
+    //           "#3b5f43", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#f97316"
+    //         ]
+    //       }]
+    //     },
+    //     options: {
+    //       responsive: true,
+    //       plugins: {
+    //         legend: { position: "bottom" }
+    //       }
+    //     }
+    //   });
+    // if (charts.servicesDistribution) charts.servicesDistribution.destroy();
+    // charts.servicesDistribution = new Chart(distCtx, {
+    //   type: "pie",
+    //   data: {
+    //     labels: data.serviceDistribution.map(s => s.name),
+    //     datasets: [{
+    //       data: data.serviceDistribution.map(s => s.count),
+    //       backgroundColor: [
+    //         "#3b5f43", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#f97316"
+    //       ]
+    //     }]
+    //   },
+    //   options: {
+    //     responsive: true,
+    //     plugins: {
+    //       legend: { position: "bottom" }
+    //     }
+    //   }
+    // });
+
+    // Update Task (dịch vụ cụ thể) cards
+    if (data.topTasksByOrders && data.topTasksByOrders.length > 0) {
+      // document.getElementById("tasks-total-orders").textContent = formatNumber(data.totals.totalOrders);
+      // document.getElementById("tasks-total-revenue").textContent = formatCurrency(data.totals.totalRevenue);
+      // document.getElementById("tasks-count").textContent = formatNumber(data.topTasksByOrders.length);
+
+      // Chart: Top tasks (dịch vụ cụ thể) 
+      const tasksOrdersCtx = document.getElementById("chart-tasks-orders");
+      if (charts.tasksOrders) charts.tasksOrders.destroy();
+      charts.tasksOrders = new Chart(tasksOrdersCtx, {
+        type: "pie",
+        data: {
+          labels: data.topTasksByOrders.map(t => `${t.taskName} - ${t.serviceName}`),
+          datasets: [{
+            label: "Số đơn",
+            data: data.topTasksByOrders.map(t => t.orderCount),
+            backgroundColor: [
+              "#3b5f43", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#f97316"
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "bottom" }
+          }
         }
-      }
-    });
+      });
+
+      // Chart: Top tasks (dịch vụ cụ thể) by revenue (bar)
+      const tasksRevenueCtx = document.getElementById("chart-tasks-revenue");
+      if (charts.tasksRevenue) charts.tasksRevenue.destroy();
+      charts.tasksRevenue = new Chart(tasksRevenueCtx, {
+        type: "bar",
+        data: {
+          labels: data.topTasksByRevenue.map(t => `${t.taskName}`),
+          datasets: [{
+            label: "Doanh thu",
+            data: data.topTasksByRevenue.map(t => t.revenue),
+            backgroundColor: "#06b6d4"
+          }]
+        },
+        options: {
+          responsive: true,
+          indexAxis: "y",
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => formatCurrency(context.parsed.x)
+              }
+            }
+          },
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                callback: (value) => formatCurrency(value)
+              }
+            }
+          }
+        }
+      });
+    }
   } catch (err) {
     console.error("Load service statistics error:", err);
   }
@@ -834,6 +919,58 @@ window.loadTabData = function(tabName) {
   }
 };
 
+async function exportReportPDF() {
+  try {
+    const period = getPeriod();
+    const periodLabel = period === "7days" ? "7 ngày qua" : period === "year" ? "Năm nay" : "Tháng này";
+    
+    if (!confirm(`Bạn có muốn xuất báo cáo PDF cho kỳ "${periodLabel}"?`)) {
+      return;
+    }
+
+    // Show loading
+    const btn = document.getElementById("btn-export-pdf");
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm animate-spin">sync</span> Đang tạo PDF...';
+
+    const res = await fetch(`${API_BASE}/export-full-pdf?period=${period}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (res.status === 401) {
+      localStorage.removeItem("token");
+      alert("Phiên đăng nhập hết hạn");
+      window.location.href = "../auth/login-signup.html";
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error("Không thể tạo PDF");
+    }
+
+    // Download PDF
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bao-cao-thong-ke-${period}-${Date.now()}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    alert("Xuất PDF thành công!");
+  } catch (err) {
+    console.error("Export PDF error:", err);
+    alert("Không thể xuất PDF. Vui lòng thử lại.");
+  } finally {
+    const btn = document.getElementById("btn-export-pdf");
+    btn.disabled = false;
+    btn.innerHTML = '<span class="material-symbols-outlined text-sm">picture_as_pdf</span> Xuất PDF';
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   // Load initial tab
   loadOrderStatistics();
@@ -855,4 +992,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadTabData(tabId);
     }
   });
+
+  // Export PDF button
+  document.getElementById("btn-export-pdf")?.addEventListener("click", exportReportPDF);
 });

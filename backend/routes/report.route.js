@@ -7,6 +7,7 @@ import {
   getActiveTaskers,
   getOrderStatusStats,
   exportReportPdf,
+  exportFullReportPdf,
   getOrderStatistics,
   getServiceStatistics,
   getUserStatistics,
@@ -37,8 +38,11 @@ router.get("/active-taskers", verifyToken, isAdmin, getActiveTaskers);
 // Thống kê đơn theo trạng thái
 router.get("/order-status", verifyToken, isAdmin, getOrderStatusStats);
 
-// Xuất báo cáo PDF
+// Xuất báo cáo PDF (cũ - giữ để tương thích)
 router.get("/export-pdf", verifyToken, isAdmin, exportReportPdf);
+
+// Xuất báo cáo PDF tổng hợp chi tiết: ?period=7days|month|year
+router.get("/export-full-pdf", verifyToken, isAdmin, exportFullReportPdf);
 
 // Thống kê đơn hàng chi tiết: ?period=7days|month|year
 router.get("/orders/statistics", verifyToken, isAdmin, getOrderStatistics);

@@ -163,9 +163,13 @@
                     <option value="month" selected>Tháng này</option>
                     <option value="year">Năm nay</option>
                 </select>
-                <button id="btn-refresh" class="px-4 py-1.5 bg-primary-500 text-white rounded-md text-sm hover:bg-primary-600 transition">
-                    <span class="material-symbols-outlined text-sm align-middle">refresh</span>
+                <button id="btn-refresh" class="px-4 py-1.5 bg-primary-500 text-white rounded-md text-sm hover:bg-primary-600 transition flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">refresh</span>
                     Làm mới
+                </button>
+                <button id="btn-export-pdf" class="px-4 py-1.5 bg-green-600 text-white rounded-md text-sm hover:bg-green-700 transition flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                    Xuất PDF
                 </button>
             </div>
         </header>
@@ -277,35 +281,69 @@
 
             <!-- Tab Content: Services -->
             <div id="tab-services" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-white rounded-lg shadow-sm p-4">
-                        <p class="text-sm text-gray-500 mb-1">Tổng số đơn</p>
-                        <p id="services-total-orders" class="text-2xl font-bold text-gray-800">-</p>
+                <!-- Danh mục dịch vụ (Service) -->
+                <div class="mb-8">
+                    <h2 class="text-xl font-semibold mb-4">Danh mục dịch vụ</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Tổng số đơn</p>
+                            <p id="services-total-orders" class="text-2xl font-bold text-gray-800">-</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Tổng doanh thu</p>
+                            <p id="services-total-revenue" class="text-2xl font-bold text-primary-500">-</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Số danh mục</p>
+                            <p id="services-count" class="text-2xl font-bold text-gray-800">-</p>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm p-4">
-                        <p class="text-sm text-gray-500 mb-1">Tổng doanh thu</p>
-                        <p id="services-total-revenue" class="text-2xl font-bold text-primary-500">-</p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4">Top danh mục theo số đơn</h3>
+                            <canvas id="chart-services-orders"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4">Top danh mục theo doanh thu</h3>
+                            <canvas id="chart-services-revenue"></canvas>
+                        </div>
                     </div>
-                    <div class="bg-white rounded-lg shadow-sm p-4">
-                        <p class="text-sm text-gray-500 mb-1">Số dịch vụ</p>
-                        <p id="services-count" class="text-2xl font-bold text-gray-800">-</p>
-                    </div>
+
+                    <!-- <div class="bg-white rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-semibold mb-4">Phân bố từng dịch vụ</h3>
+                        <canvas id="chart-services-distribution"></canvas>
+                    </div> -->
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h3 class="text-lg font-semibold mb-4">Top dịch vụ theo số đơn</h3>
-                        <canvas id="chart-services-orders"></canvas>
-                    </div>
-                    <div class="bg-white rounded-lg shadow-sm p-6">
-                        <h3 class="text-lg font-semibold mb-4">Top dịch vụ theo doanh thu</h3>
-                        <canvas id="chart-services-revenue"></canvas>
-                    </div>
-                </div>
+                <!-- Dịch vụ cụ thể (Task) -->
+                <div class="mt-8">
+                    <!-- <h2 class="text-xl font-semibold mb-4">Dịch vụ cụ thể</h2> -->
+                    <!-- <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Tổng số đơn</p>
+                            <p id="tasks-total-orders" class="text-2xl font-bold text-gray-800">-</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Tổng doanh thu</p>
+                            <p id="tasks-total-revenue" class="text-2xl font-bold text-primary-500">-</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-4">
+                            <p class="text-sm text-gray-500 mb-1">Số dịch vụ</p>
+                            <p id="tasks-count" class="text-2xl font-bold text-gray-800">-</p>
+                        </div>
+                    </div> -->
 
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <h3 class="text-lg font-semibold mb-4">Phân bố dịch vụ</h3>
-                    <canvas id="chart-services-distribution"></canvas>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4">Top dịch vụ theo số đơn</h3>
+                            <canvas id="chart-tasks-orders"></canvas>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-sm p-6">
+                            <h3 class="text-lg font-semibold mb-4">Top dịch vụ theo doanh thu</h3>
+                            <canvas id="chart-tasks-revenue"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
 

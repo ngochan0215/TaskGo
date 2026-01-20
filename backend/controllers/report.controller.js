@@ -10,6 +10,7 @@ import Voucher from "../models/vouchers.js";
 import TaskerEarning from "../models/earningTasker.js";
 import PayoutTasker from "../models/payoutTasker.js";
 import PDFDocument from "pdfkit";
+import path from "path";
 
 const WEEKDAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
@@ -66,10 +67,7 @@ function getPeriodRange(period) {
   };
 }
 
-/**
- * Dashboard tổng hợp cho admin home
- * GET /api/report/dashboard?period=month|7days
- */
+// tổng hợp cho admin home
 export async function getDashboard(req, res) {
   try {
     const period = (req.query.period || "month") === "7days" ? "7days" : "month";
@@ -222,9 +220,7 @@ export async function getDashboard(req, res) {
   }
 }
 
-/**
- * Tổng số customer, tasker (dùng Mongoose)
- */
+// tổng số tasker, khách hàng
 export async function getCounts(req, res) {
   try {
     const [taskerCount, customerCount] = await Promise.all([
@@ -237,9 +233,7 @@ export async function getCounts(req, res) {
   }
 }
 
-/**
- * Tổng số đơn, đơn hoàn thành, đơn hủy (Mongoose)
- */
+// tổng số đơn hoàn thành, hủy
 export async function getOrderStats(req, res) {
   try {
     const [totalOrders, completedOrders, cancelledOrders] = await Promise.all([
@@ -253,9 +247,7 @@ export async function getOrderStats(req, res) {
   }
 }
 
-/**
- * Doanh thu theo ngày/tháng/năm (Mongoose, từ Receipt success)
- */
+// doanh thu theo ngày tháng năm
 export async function getRevenue(req, res) {
   try {
     const { type = "day" } = req.query;
@@ -281,9 +273,7 @@ export async function getRevenue(req, res) {
   }
 }
 
-/**
- * Số tasker đang hoạt động: status=working (Mongoose)
- */
+
 export async function getActiveTaskers(req, res) {
   try {
     const activeTaskers = await Tasker.countDocuments({ status: "working" });
@@ -293,9 +283,7 @@ export async function getActiveTaskers(req, res) {
   }
 }
 
-/**
- * Thống kê đơn theo trạng thái (Mongoose)
- */
+// thống kê đơn theo trạng thái
 export async function getOrderStatusStats(req, res) {
   try {
     const stats = await Order.aggregate([
@@ -308,9 +296,580 @@ export async function getOrderStatusStats(req, res) {
   }
 }
 
-/**
- * Xuất báo cáo PDF (Mongoose)
- */
+// xuất báo cáo PDF chi tiết
+export async function exportFullReportPdf(req, res) {
+  try {
+    const period = req.query.period || "month";
+    const { currentStart, currentEnd } = getPeriodRange(period);
+
+    // Lấy tất cả dữ liệu từ các API statistics
+    const [
+      ordersData,
+      servicesData,
+      tasksData,
+      usersData,
+      reviewsData,
+      promotionsData,
+      revenueData
+    ] = await Promise.all([
+      // Orders
+      (async () => {
+        const totalOrders = await Order.countDocuments({
+          created_at: { $gte: currentStart, $lt: currentEnd }
+        });
+        const statusStats = await Order.aggregate([
+          { $match: { created_at: { $gte: currentStart, $lt: currentEnd } } },
+          { $group: { _id: "$status", count: { $sum: 1 } } },
+          { $sort: { count: -1 } }
+        ]);
+        const completed = statusStats.find(s => s._id === "completed")?.count || 0;
+        const cancelled = statusStats.find(s => s._id === "cancelled")?.count || 0;
+        return { totalOrders, statusStats, completed, cancelled };
+      })(),
+      // Services (danh mục)
+      (async () => {
+        const topByOrders = await Order.aggregate([
+          { $match: { status: { $ne: "cancelled" } } },
+          { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
+          { $unwind: { path: "$task", preserveNullAndEmptyArrays: false } },
+          { $lookup: { from: "services", localField: "task.service_id", foreignField: "_id", as: "service" } },
+          { $unwind: { path: "$service", preserveNullAndEmptyArrays: false } },
+          {
+            $group: {
+              _id: "$service._id",
+              serviceName: { $first: "$service.category_name" },
+              orderCount: { $sum: 1 },
+              totalRevenue: { $sum: "$final_amount" }
+            }
+          },
+          { $sort: { orderCount: -1 } },
+          { $limit: 10 }
+        ]);
+        return { topByOrders };
+      })(),
+      // Tasks (dịch vụ cụ thể)
+      (async () => {
+        const topTasksByOrders = await Order.aggregate([
+          { $match: { status: { $ne: "cancelled" } } },
+          { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
+          { $unwind: { path: "$task", preserveNullAndEmptyArrays: false } },
+          { $lookup: { from: "services", localField: "task.service_id", foreignField: "_id", as: "service" } },
+          { $unwind: { path: "$service", preserveNullAndEmptyArrays: false } },
+          {
+            $group: {
+              _id: "$task._id",
+              taskName: { $first: "$task.task_name" },
+              serviceName: { $first: "$service.category_name" },
+              orderCount: { $sum: 1 },
+              totalRevenue: { $sum: "$final_amount" }
+            }
+          },
+          { $sort: { orderCount: -1 } },
+          { $limit: 10 }
+        ]);
+        return { topTasksByOrders };
+      })(),
+      // Users
+      (async () => {
+        const [totalCustomers, totalTaskers, newCustomers, newTaskers] = await Promise.all([
+          Customer.countDocuments(),
+          Tasker.countDocuments(),
+          Customer.countDocuments({ created_at: { $gte: currentStart, $lt: currentEnd } }),
+          Tasker.countDocuments({ created_at: { $gte: currentStart, $lt: currentEnd } })
+        ]);
+        const customerTiers = await Customer.aggregate([
+          { $group: { _id: "$type", count: { $sum: 1 } } }
+        ]);
+        const taskerStatus = await Tasker.aggregate([
+          { $group: { _id: "$status", count: { $sum: 1 } } }
+        ]);
+        return { totalCustomers, totalTaskers, newCustomers, newTaskers, customerTiers, taskerStatus };
+      })(),
+      // Reviews
+      (async () => {
+        const totalReviews = await Review.countDocuments({
+          status: "visible",
+          created_at: { $gte: currentStart, $lt: currentEnd }
+        });
+        const avgRating = await Review.aggregate([
+          { $match: { status: "visible", created_at: { $gte: currentStart, $lt: currentEnd } } },
+          { $group: { _id: null, average: { $avg: "$rating" } } }
+        ]);
+        const ratingDistribution = await Review.aggregate([
+          { $match: { status: "visible", created_at: { $gte: currentStart, $lt: currentEnd } } },
+          { $group: { _id: "$rating", count: { $sum: 1 } } },
+          { $sort: { _id: 1 } }
+        ]);
+        return { totalReviews, averageRating: avgRating[0]?.average || 0, ratingDistribution };
+      })(),
+      // Promotions
+      (async () => {
+        const totalDiscounts = await Discount.countDocuments();
+        const activeDiscounts = await Discount.countDocuments({
+          is_active: true,
+          begin_date: { $lte: new Date() },
+          end_date: { $gte: new Date() }
+        });
+        const totalVouchers = await Voucher.countDocuments();
+        const activeVouchers = await Voucher.countDocuments({
+          is_active: true,
+          begin_date: { $lte: new Date() },
+          end_date: { $gte: new Date() }
+        });
+        const discountUsage = await Order.aggregate([
+          {
+            $match: {
+              discount_id: { $ne: null },
+              created_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          { $group: { _id: "$discount_id", usageCount: { $sum: 1 } } },
+          { $sort: { usageCount: -1 } },
+          { $limit: 5 }
+        ]);
+        const voucherUsage = await Order.aggregate([
+          {
+            $match: {
+              voucher_id: { $ne: null },
+              created_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          { $group: { _id: "$voucher_id", usageCount: { $sum: 1 } } },
+          { $sort: { usageCount: -1 } },
+          { $limit: 5 }
+        ]);
+        return { totalDiscounts, activeDiscounts, totalVouchers, activeVouchers, discountUsage, voucherUsage };
+      })(),
+      // Revenue
+      (async () => {
+        const revenue = await Receipt.aggregate([
+          {
+            $match: {
+              status: "success",
+              created_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$total_amount" },
+              byMethod: { $push: { method: "$payment_method", amount: "$total_amount" } }
+            }
+          }
+        ]);
+        const payouts = await PayoutTasker.aggregate([
+          {
+            $match: {
+              status: "completed",
+              processed_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$total_amount" }
+            }
+          }
+        ]);
+        const pendingEarnings = await TaskerEarning.aggregate([
+          {
+            $match: {
+              status: { $in: ["pending", "available"] },
+              completed_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$earning_amount" }
+            }
+          }
+        ]);
+        const revenueByMethod = await Receipt.aggregate([
+          {
+            $match: {
+              status: "success",
+              created_at: { $gte: currentStart, $lt: currentEnd }
+            }
+          },
+          {
+            $group: {
+              _id: "$payment_method",
+              total: { $sum: "$total_amount" },
+              count: { $sum: 1 }
+            }
+          }
+        ]);
+        return {
+          total: revenue[0]?.total || 0,
+          payouts: payouts[0]?.total || 0,
+          pendingEarnings: pendingEarnings[0]?.total || 0,
+          revenueByMethod
+        };
+      })()
+    ]);
+
+    const doc = new PDFDocument({ margin: 50, size: "A4" });
+
+    // REGISTER FONT
+    doc.registerFont("regular", path.resolve("../backend/config/Roboto-Regular.ttf"));
+    doc.registerFont("bold", path.resolve("../backend/config/Roboto-Bold.ttf"));
+
+    // SET FONT MẶC ĐỊNH
+    doc.font("regular");
+
+    res.setHeader("Content-Type", "application/pdf");
+    const periodLabel = period === "7days" ? "7 ngày qua" : period === "year" ? "Năm nay" : "Tháng này";
+    res.setHeader("Content-Disposition", `attachment; filename="bao-cao-thong-ke-${period}-${Date.now()}.pdf"`);
+    doc.pipe(res);
+
+    // Helper functions
+    const formatCurrency = (amount) => new Intl.NumberFormat("vi-VN").format(amount || 0) + " VNĐ";
+    const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num || 0);
+
+    
+    
+    const resetX = () => {
+  doc.x = doc.page.margins.left;
+};
+
+    
+    // Hàm vẽ bảng với border
+    const drawTable = (headers, rows, colWidths = null) => {
+      const startX = 50;
+      const pageWidth = 495; // A4 width - 2*margin (50*2)
+      const availableWidth = pageWidth;
+      
+      // Tính toán độ rộng cột
+      let widths;
+      if (colWidths && colWidths.length === headers.length) {
+        widths = colWidths.map(w => (w * availableWidth) / 100);
+      } else {
+        const colCount = headers.length;
+        widths = Array(colCount).fill(availableWidth / colCount);
+      }
+      
+      // Kiểm tra page break
+      const rowHeight = 20;
+      const headerHeight = 25;
+      const estimatedHeight = headerHeight + (rows.length * rowHeight);
+      if (doc.y + estimatedHeight > 750) {
+        doc.addPage();
+      }
+      
+      let currentY = doc.y;
+      const lineHeight = rowHeight;
+      const padding = 5;
+      
+      // Vẽ header
+      doc.font("bold").fontSize(10);
+      let currentX = startX;
+      headers.forEach((header, i) => {
+        // Vẽ border cho header cell
+        doc.rect(currentX, currentY, widths[i], headerHeight).stroke();
+        // Vẽ text trong cell
+        doc.text(header, currentX + padding, currentY + padding, {
+          width: widths[i] - (padding * 2),
+          //align: 'left'
+          align: i === 0 ? 'left' : 'right'
+        });
+        currentX += widths[i];
+      }); 
+      currentY += headerHeight;
+      
+      // Vẽ rows
+      doc.font("regular").fontSize(9);
+      rows.forEach((row, rowIdx) => {
+        // Kiểm tra page break cho mỗi row
+        if (currentY + lineHeight > 750) {
+          doc.addPage();
+          currentY = 50;
+        }
+        
+        currentX = startX;
+        row.forEach((cell, colIdx) => {
+          // Vẽ border cho cell
+          doc.rect(currentX, currentY, widths[colIdx], lineHeight).stroke();
+          // Vẽ text trong cell
+          const cellText = String(cell || '');
+          doc.text(cellText, currentX + padding, currentY + padding, {
+            width: widths[colIdx] - (padding * 2),
+            align: colIdx === 0 ? 'left' : 'right'
+            //align: 'right'
+          });
+          currentX += widths[colIdx];
+        });
+        currentY += lineHeight;
+      });
+      
+      // Cập nhật vị trí y của document
+      doc.y = currentY + 10; // Thêm khoảng cách sau bảng
+    };
+    
+    const addSection = (title) => {
+      resetX();
+      if (doc.y > 700) {
+        doc.addPage();
+      }
+      doc.font("bold").fontSize(16).text(title, { underline: true });
+      doc.moveDown(0.8);
+    };
+
+    const addSubSection = (title) => {
+      resetX();
+      if (doc.y > 720) {
+        doc.addPage();
+      }
+      doc.font("bold").fontSize(11).text(title);
+      doc.moveDown(0.5);
+    };
+
+
+    // Header
+    doc.font("bold").fontSize(24).text("BÁO CÁO THỐNG KÊ TỔNG HỢP", { align: "center" });
+    doc.moveDown(1);
+    doc.font("regular").fontSize(12).text(`Kỳ báo cáo: ${periodLabel}`, { align: "center" });
+    doc.fontSize(10).text(`Ngày xuất: ${new Date().toLocaleString("vi-VN")}`, { align: "center" });
+    doc.moveDown(1.5);
+
+    // 1. ĐƠN HÀNG
+    addSection("1. THỐNG KÊ ĐƠN HÀNG");
+    const successRate = ordersData.totalOrders > 0 
+      ? Math.round((ordersData.completed / ordersData.totalOrders) * 100) 
+      : 0;
+    const cancelRate = ordersData.totalOrders > 0 
+      ? Math.round((ordersData.cancelled / ordersData.totalOrders) * 100) 
+      : 0;
+    
+    drawTable(
+      ["Chỉ số", "Giá trị"],
+      [
+        ["Tổng số đơn hàng", formatNumber(ordersData.totalOrders)],
+        ["Đơn hoàn thành", formatNumber(ordersData.completed)],
+        ["Đơn đã hủy", formatNumber(ordersData.cancelled)],
+        ["Tỉ lệ thành công", successRate + "%"],
+        ["Tỉ lệ hủy", cancelRate + "%"]
+      ],
+      [60, 40]
+    );
+    
+    addSubSection("Đơn hàng theo trạng thái:");
+    const STATUS_LABELS = {
+      pending: "Chờ xử lý",
+      assigned: "Đã gán",
+      accepted: "Đã nhận",
+      departed: "Đã khởi hành",
+      arrived: "Đã đến",
+      in_progress: "Đang thực hiện",
+      completed: "Hoàn thành",
+      awaiting_payment: "Chờ thanh toán",
+      cancelled: "Đã hủy"
+    };
+    const statusRows = ordersData.statusStats.map(s => [
+      STATUS_LABELS[s._id] || s._id,
+      formatNumber(s.count)
+    ]);
+    drawTable(
+      ["Trạng thái", "Số lượng"],
+      statusRows,
+      [60, 40]
+    );
+    doc.moveDown(0.5);
+
+    // 2. DỊCH VỤ
+    addSection("2. THỐNG KÊ DỊCH VỤ");
+    
+    // 2.1. Danh mục dịch vụ (Service)
+    addSubSection("2.1. Top 10 danh mục dịch vụ được đặt nhiều nhất:");
+    const serviceRows = servicesData.topByOrders.slice(0, 10).map((s, idx) => [
+      `${idx + 1}. ${s.serviceName}`,
+      `${formatNumber(s.orderCount)} đơn`,
+      formatCurrency(s.totalRevenue)
+    ]);
+    drawTable(
+      ["STT. Tên danh mục", "Số đơn", "Doanh thu"],
+      serviceRows,
+      [50, 20, 30]
+    );
+    doc.moveDown(0.5);
+
+    // 2.2. Dịch vụ cụ thể (Task)
+    addSubSection("2.2. Top 10 dịch vụ cụ thể được đặt nhiều nhất:");
+    const taskRows = tasksData.topTasksByOrders.slice(0, 10).map((t, idx) => [
+      `${idx + 1}. ${t.taskName}`,
+      t.serviceName,
+      `${formatNumber(t.orderCount)} đơn`,
+      formatCurrency(t.totalRevenue)
+    ]);
+    drawTable(
+      ["STT. Tên dịch vụ", "Danh mục", "Số đơn", "Doanh thu"],
+      taskRows,
+      [35, 25, 15, 25]
+    );
+    doc.moveDown(0.5);
+
+    // 3. NGƯỜI DÙNG
+    addSection("3. THỐNG KÊ NGƯỜI DÙNG");
+    drawTable(
+      ["Chỉ số", "Giá trị"],
+      [
+        ["Tổng số Customer", formatNumber(usersData.totalCustomers)],
+        ["Tổng số Tasker", formatNumber(usersData.totalTaskers)],
+        ["Customer mới trong kỳ", formatNumber(usersData.newCustomers)],
+        ["Tasker mới trong kỳ", formatNumber(usersData.newTaskers)]
+      ],
+      [60, 40]
+    );
+    
+    addSubSection("Phân bố Customer theo hạng:");
+    const TIER_LABELS = { new: "Mới", loyal: "Thân thiết", vip: "VIP" };
+    const tierRows = usersData.customerTiers.map(t => [
+      TIER_LABELS[t._id] || t._id,
+      formatNumber(t.count)
+    ]);
+    drawTable(
+      ["Hạng", "Số lượng"],
+      tierRows,
+      [60, 40]
+    );
+    
+    addSubSection("Phân bố Tasker theo trạng thái:");
+    const TASKER_STATUS_LABELS = { pending: "Chờ duyệt", working: "Đang làm", resign: "Nghỉ việc" };
+    const taskerStatusRows = usersData.taskerStatus.map(s => [
+      TASKER_STATUS_LABELS[s._id] || s._id,
+      formatNumber(s.count)
+    ]);
+    drawTable(
+      ["Trạng thái", "Số lượng"],
+      taskerStatusRows,
+      [60, 40]
+    );
+    doc.moveDown(0.5);
+
+    // 4. ĐÁNH GIÁ
+    addSection("4. THỐNG KÊ ĐÁNH GIÁ");
+    drawTable(
+      ["Chỉ số", "Giá trị"],
+      [
+        ["Tổng số đánh giá", formatNumber(reviewsData.totalReviews)],
+        ["Điểm trung bình", reviewsData.averageRating.toFixed(1) + " / 5.0"]
+      ],
+      [60, 40]
+    );
+    
+    addSubSection("Phân bố đánh giá theo sao:");
+    const ratingRows = [];
+    for (let i = 1; i <= 5; i++) {
+      const rating = reviewsData.ratingDistribution.find(r => r._id === i);
+      ratingRows.push([`${i} sao`, formatNumber(rating?.count || 0)]);
+    }
+    drawTable(
+      ["Số sao", "Số lượng"],
+      ratingRows,
+      [60, 40]
+    );
+    doc.moveDown(0.5);
+
+    // 5. KHUYẾN MÃI
+    addSection("5. THỐNG KÊ KHUYẾN MÃI");
+    drawTable(
+      ["Chỉ số", "Giá trị"],
+      [
+        ["Tổng số Discount", formatNumber(promotionsData.totalDiscounts)],
+        ["Discount đang hoạt động", formatNumber(promotionsData.activeDiscounts)],
+        ["Tổng số Voucher", formatNumber(promotionsData.totalVouchers)],
+        ["Voucher đang hoạt động", formatNumber(promotionsData.activeVouchers)]
+      ],
+      [60, 40]
+    );
+    
+    if (promotionsData.discountUsage.length > 0) {
+      addSubSection("Top Discount được sử dụng:");
+      const discountRows = promotionsData.discountUsage.map((d, idx) => [
+        `Discount ID ${d._id.toString().slice(-8)}`,
+        `${formatNumber(d.usageCount)} lần`
+      ]);
+      drawTable(
+        ["Discount", "Số lần sử dụng"],
+        discountRows,
+        [60, 40]
+      );
+    }
+    
+    if (promotionsData.voucherUsage.length > 0) {
+      addSubSection("Top Voucher được sử dụng:");
+      const voucherRows = promotionsData.voucherUsage.map((v, idx) => [
+        `Voucher ID ${v._id.toString().slice(-8)}`,
+        `${formatNumber(v.usageCount)} lần`
+      ]);
+      drawTable(
+        ["Voucher", "Số lần sử dụng"],
+        voucherRows,
+        [60, 40]
+      );
+    }
+    doc.moveDown(0.5);
+
+    // 6. DOANH THU
+    addSection("6. THỐNG KÊ DOANH THU");
+    const netProfit = revenueData.total - revenueData.payouts - revenueData.pendingEarnings;
+    const profitPercent = revenueData.total > 0 
+      ? Math.round((netProfit / revenueData.total) * 100) 
+      : 0;
+    
+    drawTable(
+      ["Chỉ số", "Giá trị"],
+      [
+        ["Tổng doanh thu", formatCurrency(revenueData.total)],
+        ["Tổng trả lương", formatCurrency(revenueData.payouts)],
+        ["Thu nhập chưa trả", formatCurrency(revenueData.pendingEarnings)],
+        ["Lợi nhuận ròng", formatCurrency(netProfit)],
+        ["Tỉ lệ lợi nhuận", profitPercent + "%"]
+      ],
+      [60, 40]
+    );
+    
+    addSubSection("Doanh thu theo phương thức thanh toán:");
+    const PAYMENT_LABELS = {
+      cash: "Tiền mặt",
+      credit_card: "Thẻ tín dụng",
+      bank_transfer: "Chuyển khoản",
+      ewallet: "Ví điện tử"
+    };
+    const paymentRows = revenueData.revenueByMethod.map(r => {
+      const percent = revenueData.total > 0 
+        ? Math.round((r.total / revenueData.total) * 100) 
+        : 0;
+      return [
+        PAYMENT_LABELS[r._id] || r._id,
+        formatCurrency(r.total),
+        `${percent}%`
+      ];
+    });
+    drawTable(
+      ["Phương thức", "Doanh thu", "Tỉ lệ"],
+      paymentRows,
+      [40, 35, 25]
+    );
+
+    // Footer
+    doc.moveDown(1);
+    if (doc.y > 750) {
+      doc.addPage();
+    }
+    doc.font("regular").fontSize(8).text(
+      "Báo cáo được tạo tự động bởi hệ thống TaskGo",
+      { align: "center" }
+    );
+
+    doc.end();
+  } catch (err) {
+    console.error("exportFullReportPdf error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+// xuất báo cáo PDF đơn giản
 export async function exportReportPdf(req, res) {
   try {
     const [taskerCount, customerCount, totalOrders, completedOrders, cancelledOrders, activeTaskers, statusStats] =
@@ -363,10 +922,7 @@ export async function exportReportPdf(req, res) {
   }
 }
 
-/**
- * Thống kê đơn hàng chi tiết: tỉ lệ thành công, hủy, theo trạng thái, theo thời gian
- * GET /api/report/orders/statistics?period=7days|month|year
- */
+// thống kê đơn hàng chi tiết: tỉ lệ thành công, hủy, theo trạng thái, theo thời gian
 export async function getOrderStatistics(req, res) {
   try {
     const period = req.query.period || "month";
@@ -433,15 +989,12 @@ export async function getOrderStatistics(req, res) {
   }
 }
 
-/**
- * Thống kê dịch vụ: top dịch vụ, doanh thu theo dịch vụ, số đơn theo dịch vụ
- * GET /api/report/services/statistics?limit=10
- */
+// thống kê dịch vụ: top dịch vụ, doanh thu theo dịch vụ, số đơn theo dịch vụ
 export async function getServiceStatistics(req, res) {
   try {
     const limit = parseInt(req.query.limit) || 10;
 
-    // Top dịch vụ theo số đơn
+    // Top dịch vụ (danh mục) theo số đơn
     const topByOrders = await Order.aggregate([
       { $match: { status: { $ne: "cancelled" } } },
       { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
@@ -460,7 +1013,7 @@ export async function getServiceStatistics(req, res) {
       { $limit: limit }
     ]);
 
-    // Top dịch vụ theo doanh thu
+    // Top dịch vụ (danh mục) theo doanh thu
     const topByRevenue = await Order.aggregate([
       { $match: { status: { $ne: "cancelled" } } },
       { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
@@ -471,6 +1024,48 @@ export async function getServiceStatistics(req, res) {
         $group: {
           _id: "$service._id",
           serviceName: { $first: "$service.category_name" },
+          orderCount: { $sum: 1 },
+          totalRevenue: { $sum: "$final_amount" }
+        }
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: limit }
+    ]);
+
+    // Top Task (dịch vụ cụ thể) theo số đơn
+    const topTasksByOrders = await Order.aggregate([
+      { $match: { status: { $ne: "cancelled" } } },
+      { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
+      { $unwind: { path: "$task", preserveNullAndEmptyArrays: false } },
+      { $lookup: { from: "services", localField: "task.service_id", foreignField: "_id", as: "service" } },
+      { $unwind: { path: "$service", preserveNullAndEmptyArrays: false } },
+      {
+        $group: {
+          _id: "$task._id",
+          taskName: { $first: "$task.task_name" },
+          serviceName: { $first: "$service.category_name" },
+          serviceId: { $first: "$service._id" },
+          orderCount: { $sum: 1 },
+          totalRevenue: { $sum: "$final_amount" }
+        }
+      },
+      { $sort: { orderCount: -1 } },
+      { $limit: limit }
+    ]);
+
+    // Top Task (dịch vụ cụ thể) theo doanh thu
+    const topTasksByRevenue = await Order.aggregate([
+      { $match: { status: { $ne: "cancelled" } } },
+      { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "task" } },
+      { $unwind: { path: "$task", preserveNullAndEmptyArrays: false } },
+      { $lookup: { from: "services", localField: "task.service_id", foreignField: "_id", as: "service" } },
+      { $unwind: { path: "$service", preserveNullAndEmptyArrays: false } },
+      {
+        $group: {
+          _id: "$task._id",
+          taskName: { $first: "$task.task_name" },
+          serviceName: { $first: "$service.category_name" },
+          serviceId: { $first: "$service._id" },
           orderCount: { $sum: 1 },
           totalRevenue: { $sum: "$final_amount" }
         }
@@ -492,7 +1087,7 @@ export async function getServiceStatistics(req, res) {
     ]);
     const totals = totalStats[0] || { totalOrders: 0, totalRevenue: 0 };
 
-    // Phân bố dịch vụ theo số đơn (cho biểu đồ tròn)
+    // Phân bố dịch vụ (danh mục) theo số đơn (cho biểu đồ tròn)
     const serviceDistribution = topByOrders.map(s => ({
       name: s.serviceName,
       count: s.orderCount,
@@ -501,6 +1096,7 @@ export async function getServiceStatistics(req, res) {
 
     res.json({
       success: true,
+      // Thống kê theo danh mục (Service)
       topByOrders: topByOrders.map(s => ({
         id: s._id.toString(),
         name: s.serviceName,
@@ -516,6 +1112,25 @@ export async function getServiceStatistics(req, res) {
         revenuePercentage: totals.totalRevenue > 0 ? Math.round((s.totalRevenue / totals.totalRevenue) * 100) : 0
       })),
       serviceDistribution,
+      // Thống kê theo dịch vụ cụ thể (Task)
+      topTasksByOrders: topTasksByOrders.map(t => ({
+        id: t._id.toString(),
+        taskName: t.taskName,
+        serviceName: t.serviceName,
+        serviceId: t.serviceId.toString(),
+        orderCount: t.orderCount,
+        revenue: t.totalRevenue,
+        orderPercentage: totals.totalOrders > 0 ? Math.round((t.orderCount / totals.totalOrders) * 100) : 0
+      })),
+      topTasksByRevenue: topTasksByRevenue.map(t => ({
+        id: t._id.toString(),
+        taskName: t.taskName,
+        serviceName: t.serviceName,
+        serviceId: t.serviceId.toString(),
+        orderCount: t.orderCount,
+        revenue: t.totalRevenue,
+        revenuePercentage: totals.totalRevenue > 0 ? Math.round((t.totalRevenue / totals.totalRevenue) * 100) : 0
+      })),
       totals: {
         totalOrders: totals.totalOrders,
         totalRevenue: totals.totalRevenue
@@ -527,10 +1142,7 @@ export async function getServiceStatistics(req, res) {
   }
 }
 
-/**
- * Thống kê người dùng: số lượng customer/tasker, phân bố theo tier, tăng trưởng
- * GET /api/report/users/statistics?period=7days|month|year
- */
+// Thống kê người dùng: số lượng customer/tasker, phân bố theo tier, tăng trưởng
 export async function getUserStatistics(req, res) {
   try {
     const period = req.query.period || "month";
@@ -638,10 +1250,7 @@ export async function getUserStatistics(req, res) {
   }
 }
 
-/**
- * Thống kê đánh giá: phân bố rating, số lượng review theo thời gian
- * GET /api/report/reviews/statistics?period=7days|month|year
- */
+// Thống kê đánh giá: phân bố rating, số lượng review theo thời gian
 export async function getReviewStatistics(req, res) {
   try {
     const period = req.query.period || "month";
@@ -733,10 +1342,7 @@ export async function getReviewStatistics(req, res) {
   }
 }
 
-/**
- * Thống kê khuyến mãi và voucher: số lượng, tỉ lệ sử dụng, hiệu quả
- * GET /api/report/promotions/statistics?period=7days|month|year
- */
+// Thống kê khuyến mãi và voucher: số lượng, tỉ lệ sử dụng, hiệu quả
 export async function getPromotionStatistics(req, res) {
   try {
     const period = req.query.period || "month";
@@ -924,10 +1530,7 @@ export async function getPromotionStatistics(req, res) {
   }
 }
 
-/**
- * Thống kê doanh thu chi tiết: phương thức thanh toán, tiền vào/ra, lợi nhuận
- * GET /api/report/revenue/statistics?period=7days|month|year
- */
+// Thống kê doanh thu chi tiết: phương thức thanh toán, tiền vào/ra, lợi nhuận
 export async function getRevenueStatistics(req, res) {
   try {
     const period = req.query.period || "month";
@@ -1157,3 +1760,9 @@ export async function getRevenueStatistics(req, res) {
     res.status(500).json({ success: false, message: err.message });
   }
 }
+
+export const exportReport = async (req, res) => {
+  const data = await getAllStatistics(req.query); 
+  await exportFullReportPdf(req, res, data);
+};
+
