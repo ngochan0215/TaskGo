@@ -28,6 +28,13 @@ const TASK_API_BASE = "http://localhost:3000/api/task";
 let currentVoucherId = null;
 let deleteVoucherId = null;
 let allServices = [];
+let currentPage = 1;
+let itemsPerPage = 10;
+let totalItems = 0;
+let currentFilterStatus = "";
+let currentFilterActive = "";
+let searchQuery = "";
+let allVouchers = []; // Store all vouchers for client-side filtering
 
 async function loadServices() {
   try {
@@ -277,7 +284,27 @@ function getApplicableDisplay(applicable_model) {
 
 async function loadVouchers() {
   try {
-    const res = await fetch(`${API_BASE}/voucher/all`, {
+    // Check if we need to load all data for client-side search
+    const isSearchingByName = searchQuery && !/^[A-Z0-9]+$/.test(searchQuery.toUpperCase());
+    
+    const params = new URLSearchParams();
+    if (isSearchingByName) {
+      // Load all data for client-side filtering
+      params.append("page", 1);
+      params.append("limit", 10000);
+    } else {
+      params.append("page", currentPage);
+      params.append("limit", itemsPerPage);
+    }
+
+    if (currentFilterStatus) params.append("status", currentFilterStatus);
+    if (currentFilterActive) params.append("is_active", currentFilterActive);
+    // Backend supports code search
+    if (searchQuery && /^[A-Z0-9]+$/.test(searchQuery.toUpperCase())) {
+      params.append("code", searchQuery.toUpperCase());
+    }
+
+    const res = await fetch(`${API_BASE}/voucher/all?${params.toString()}`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -294,16 +321,49 @@ async function loadVouchers() {
     console.log("vouchers: ", data);
     const tbody = $("data-table-body");
     
-    if (!data.data || data.data.length === 0) {
+    if (!data.success || !data.data || data.data.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6" class="px-4 py-8 text-center text-gray-500">Không có dữ liệu</td>
+          <td colspan="7" class="px-4 py-8 text-center text-gray-500">Không có dữ liệu</td>
         </tr>
       `;
+      totalItems = 0;
+      allVouchers = [];
+      updatePagination();
       return;
     }
 
-    tbody.innerHTML = data.data.map(voucher => {
+    // Apply client-side search for name/description if needed
+    let vouchers = data.data;
+    if (isSearchingByName) {
+      const queryLower = searchQuery.toLowerCase();
+      vouchers = vouchers.filter(v => 
+        v.name?.toLowerCase().includes(queryLower) ||
+        v.description?.toLowerCase().includes(queryLower)
+      );
+      allVouchers = vouchers;
+      totalItems = vouchers.length;
+      
+      // Client-side pagination
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      vouchers = vouchers.slice(startIndex, endIndex);
+    } else {
+      totalItems = data.total;
+      allVouchers = [];
+    }
+
+    if (vouchers.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="px-4 py-8 text-center text-gray-500">Không tìm thấy voucher nào</td>
+        </tr>
+      `;
+      updatePagination();
+      return;
+    }
+
+    tbody.innerHTML = vouchers.map(voucher => {
       const discountDisplay = getDiscountDisplay(voucher.discount);
       const applicableDisplay = getApplicableDisplay(voucher.applicable_model);
       const beginDate = formatDate(voucher.begin_date);
@@ -313,17 +373,21 @@ async function loadVouchers() {
       return `
         <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
           <td class="p-4 font-medium text-slate-800">${voucher.code || ""}</td>
-          <td class="p-4 text-slate-600 text-sm truncate max-w-[200px]" title="${voucher.description || ""}">
-            ${voucher.description || voucher.name || ""}
+          <td class="p-4 text-slate-600 text-sm">
+            <div class="font-medium">${voucher.name || ""}</div>
+            <div class="text-xs text-gray-500 truncate max-w-[200px]" title="${voucher.description || ""}">
+              ${voucher.description || ""}
+            </div>
           </td>
           <td class="p-4">
             <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">${discountDisplay}</span>
           </td>
-          <td class="p-4 text-sm text-slate-600">${applicableDisplay}</td>
+          <td class="p-4 text-sm text-slate-600 max-w-[200px] truncate" title="${applicableDisplay}">${applicableDisplay}</td>
           <td class="p-4 text-sm text-slate-500">
             <div>Bắt đầu: ${beginDate}</div>
             <div>Kết thúc: ${endDate}</div>
           </td>
+          <td class="p-4">${statusBadge}</td>
           <td class="p-4 text-center">
             <div class="flex justify-center space-x-2">
               <button title="Xem chi tiết" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" onclick="openVoucherModal('view', '${voucher._id}')">
@@ -340,9 +404,17 @@ async function loadVouchers() {
         </tr>
       `;
     }).join("");
+
+    updatePagination();
   } catch (err) {
     console.error("Error loading vouchers:", err);
     toast("Không thể tải danh sách voucher");
+    const tbody = $("data-table-body");
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-4 py-8 text-center text-red-500">Lỗi khi tải dữ liệu</td>
+      </tr>
+    `;
   }
 }
 
@@ -563,6 +635,8 @@ async function saveVoucher() {
     if (res.ok && data.success) {
       toast(currentVoucherId ? "Đã cập nhật voucher" : "Đã tạo voucher");
       closeModal("modalVoucher");
+      allVouchers = []; // Clear cache
+      currentPage = 1;
       await loadVouchers();
     } else {
       toast(data.message || "Thất bại");
@@ -594,6 +668,8 @@ async function confirmDeleteVoucher() {
     if (res.ok && data.success) {
       toast("Đã xóa voucher");
       closeModal("modalConfirm");
+      allVouchers = []; // Clear cache
+      currentPage = 1;
       await loadVouchers();
     } else {
       toast(data.message || "Xóa voucher thất bại");
@@ -609,6 +685,177 @@ async function confirmDeleteVoucher() {
 // Event listeners
 $("discountType").addEventListener("change", updateMaxDiscountVisibility);
 
+// Pagination functions
+function updatePagination() {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+  $("paginationInfo").innerHTML = 
+    `Hiển thị <span class="font-bold">${startIndex}-${endIndex}</span> trên <span class="font-bold">${totalItems}</span> voucher`;
+
+  const buttonsHTML = `
+    <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span class="material-symbols-outlined text-sm">chevron_left</span>
+    </button>
+    ${Array.from({length: totalPages}, (_, i) => i + 1)
+      .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+      .map(page => `
+        <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === currentPage ? 'bg-primary-500 text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'} font-bold text-sm">
+          ${page}
+        </button>
+      `).join('')}
+    <button onclick="nextPage()" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      <span class="material-symbols-outlined text-sm">chevron_right</span>
+    </button>
+  `;
+
+  $("paginationButtons").innerHTML = buttonsHTML;
+}
+
+function previousPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    // If we have allVouchers cached, use client-side pagination
+    if (allVouchers.length > 0) {
+      renderVouchersFromCache();
+    } else {
+      loadVouchers();
+    }
+  }
+}
+
+function nextPage() {
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  if (currentPage < totalPages) {
+    currentPage++;
+    // If we have allVouchers cached, use client-side pagination
+    if (allVouchers.length > 0) {
+      renderVouchersFromCache();
+    } else {
+      loadVouchers();
+    }
+  }
+}
+
+function renderVouchersFromCache() {
+  const tbody = $("data-table-body");
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const vouchers = allVouchers.slice(startIndex, endIndex);
+
+  if (vouchers.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="px-4 py-8 text-center text-gray-500">Không có dữ liệu</td>
+      </tr>
+    `;
+    updatePagination();
+    return;
+  }
+
+  tbody.innerHTML = vouchers.map(voucher => {
+    const discountDisplay = getDiscountDisplay(voucher.discount);
+    const applicableDisplay = getApplicableDisplay(voucher.applicable_model);
+    const beginDate = formatDate(voucher.begin_date);
+    const endDate = formatDate(voucher.end_date);
+    const statusBadge = getStatusBadge(voucher.status);
+    
+    return `
+      <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
+        <td class="p-4 font-medium text-slate-800">${voucher.code || ""}</td>
+        <td class="p-4 text-slate-600 text-sm">
+          <div class="font-medium">${voucher.name || ""}</div>
+          <div class="text-xs text-gray-500 truncate max-w-[200px]" title="${voucher.description || ""}">
+            ${voucher.description || ""}
+          </div>
+        </td>
+        <td class="p-4">
+          <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-sm font-bold">${discountDisplay}</span>
+        </td>
+        <td class="p-4 text-sm text-slate-600 max-w-[200px] truncate" title="${applicableDisplay}">${applicableDisplay}</td>
+        <td class="p-4 text-sm text-slate-500">
+          <div>Bắt đầu: ${beginDate}</div>
+          <div>Kết thúc: ${endDate}</div>
+        </td>
+        <td class="p-4">${statusBadge}</td>
+        <td class="p-4 text-center">
+          <div class="flex justify-center space-x-2">
+            <button title="Xem chi tiết" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" onclick="openVoucherModal('view', '${voucher._id}')">
+              <span class="material-symbols-outlined">visibility</span>
+            </button>
+            <button title="Sửa" class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors" onclick="openVoucherModal('edit', '${voucher._id}')">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <button title="Xóa" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors" onclick="askDeleteVoucher('${voucher._id}', '${voucher.code || ""}')">
+              <span class="material-symbols-outlined">delete</span>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  updatePagination();
+}
+
+function goToPage(page) {
+  currentPage = page;
+  // If we have allVouchers cached, use client-side pagination
+  if (allVouchers.length > 0) {
+    renderVouchersFromCache();
+  } else {
+    loadVouchers();
+  }
+}
+
+// Filter and search functions
+function clearFilters() {
+  $("filterStatus").value = "";
+  $("filterActive").value = "";
+  $("searchInput").value = "";
+  currentFilterStatus = "";
+  currentFilterActive = "";
+  searchQuery = "";
+  currentPage = 1;
+  allVouchers = [];
+  loadVouchers();
+}
+
+// Event listeners for filters
+$("filterStatus").addEventListener("change", () => {
+  currentFilterStatus = $("filterStatus").value;
+  currentPage = 1;
+  allVouchers = []; // Clear cache when filter changes
+  loadVouchers();
+});
+
+$("filterActive").addEventListener("change", () => {
+  currentFilterActive = $("filterActive").value;
+  currentPage = 1;
+  allVouchers = []; // Clear cache when filter changes
+  loadVouchers();
+});
+
+$("searchInput").addEventListener("input", debounce(() => {
+  searchQuery = $("searchInput").value.trim();
+  currentPage = 1;
+  allVouchers = []; // Clear cache when search changes
+  loadVouchers();
+}, 500));
+
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 // Expose functions to window
 window.openVoucherModal = openVoucherModal;
 window.askDeleteVoucher = askDeleteVoucher;
@@ -619,6 +866,10 @@ window.openSidebar = openSidebar;
 window.closeSidebar = closeSidebar;
 window.handleServiceCheckboxChange = handleServiceCheckboxChange;
 window.handleTaskCheckboxChange = handleTaskCheckboxChange;
+window.previousPage = previousPage;
+window.nextPage = nextPage;
+window.goToPage = goToPage;
+window.clearFilters = clearFilters;
 
 // Load services and vouchers on page load
 loadServices().then(() => {

@@ -22,8 +22,8 @@ export async function getAllOrdersService({
     const skip = (Number(page) - 1) * Number(limit);
 
     const orders = await Order.find(q)
-      .populate('customer_id', 'full_name phone_number email')
-      .populate('tasker_id', 'full_name phone_number email')
+      .populate('customer_id', 'full_name phone_number avatar_url')
+      .populate('tasker_id', 'full_name phone_number avatar_url')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
       .sort({ createdAt: -1 })
@@ -55,11 +55,11 @@ export async function deleteOrderByIdService(orderId) {
 export async function getOrderByIdService(orderId) {
   try {
     const order = await Order.findById(orderId)
-      .populate('customer_id', 'full_name phone_number email')
-      .populate('tasker_id', 'full_name phone_number email')
+      .populate('customer_id', 'full_name phone_number avatar_url')
+      .populate('tasker_id', 'full_name phone_number avatar_url')
       .populate('task_id', 'task_name unit base_price')
       .populate('address_id')
-      .select("-__v -created_at -updated_at")
+      .select("-__v")
       .lean();
       
     if (!order) 

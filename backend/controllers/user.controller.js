@@ -254,7 +254,7 @@ export const getAUserProfile = async (req, res) => {
 export const updateCustomerProfile = async (req, res) => {
   try {
     const { full_name, phone_number, identification,
-      BIN, account_number } = req.body;
+      BIN, account_number, bank_shortName } = req.body;
 
     const user = await User.findById(req.userId);
     if (!user) {
@@ -328,6 +328,10 @@ export const updateCustomerProfile = async (req, res) => {
       customer.account_number = account_number;
     }
 
+    if (bank_shortName !== undefined) {
+      customer.bank_shortName = bank_shortName || null;
+    }
+
     await customer.save();
 
     return res.status(200).json({ success: true, message: "Cập nhật thông tin cá nhân thành công." });
@@ -341,7 +345,7 @@ export const updateCustomerProfile = async (req, res) => {
 export const updateTaskerProfile = async (req, res) => {
   try {
     const { full_name, phone_number, identification,
-      introduction, working_area, working_radius, BIN, account_number, skills
+      introduction, working_area, working_radius, BIN, account_number, bank_shortName, skills
      } = req.body;
 
     const user = await User.findById(req.userId);
@@ -421,6 +425,10 @@ export const updateTaskerProfile = async (req, res) => {
       }
 
       tasker.account_number = account_number;
+    }
+
+    if (bank_shortName !== undefined) {
+      tasker.bank_shortName = bank_shortName || null;
     }
     
     await tasker.save();

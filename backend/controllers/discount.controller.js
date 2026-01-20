@@ -91,7 +91,7 @@ export const createDiscount = async (req, res) => {
     }
 
     if (conditions) {
-      const { min_order_value, days_of_week, hours_range } = conditions;
+      const { min_order_value, days_of_week, hours_range, customer_tiers, task_ids } = conditions;
 
       if (min_order_value != null && min_order_value < 0) {
         return res.status(400).json({
@@ -101,13 +101,19 @@ export const createDiscount = async (req, res) => {
       }
 
       if (days_of_week) {
+        if (!Array.isArray(days_of_week)) {
+          return res.status(400).json({
+            success: false,
+            message: "days_of_week phải là mảng"
+          });
+        }
         const invalidDay = days_of_week.some(
           d => typeof d !== "number" || d < 0 || d > 6
         );
         if (invalidDay) {
           return res.status(400).json({
             success: false,
-            message: "Ngày trong tuần chỉ nhận giá trị từ 0 đến 6 (thứ 2 đến chủ nhật)."
+            message: "Ngày trong tuần chỉ nhận giá trị từ 0 đến 6 (0=Chủ nhật, 1=Thứ 2, ..., 6=Thứ 7)."
           });
         }
       }
@@ -123,6 +129,41 @@ export const createDiscount = async (req, res) => {
           return res.status(400).json({
             success: false,
             message: "Khung giờ khuyến mãi không hợp lệ"
+          });
+        }
+      }
+
+      if (customer_tiers) {
+        if (!Array.isArray(customer_tiers)) {
+          return res.status(400).json({
+            success: false,
+            message: "customer_tiers phải là mảng"
+          });
+        }
+        const validTiers = ["NEW", "LOYAL", "VIP"];
+        const invalidTier = customer_tiers.some(tier => !validTiers.includes(tier));
+        if (invalidTier) {
+          return res.status(400).json({
+            success: false,
+            message: "Hạng khách hàng chỉ nhận giá trị: NEW, LOYAL, VIP"
+          });
+        }
+      }
+
+      if (task_ids) {
+        if (!Array.isArray(task_ids)) {
+          return res.status(400).json({
+            success: false,
+            message: "task_ids phải là mảng"
+          });
+        }
+        // Validate ObjectIds
+        const mongoose = (await import("mongoose")).default;
+        const invalidId = task_ids.some(id => !mongoose.isValidObjectId(id));
+        if (invalidId) {
+          return res.status(400).json({
+            success: false,
+            message: "task_ids chứa ID không hợp lệ"
           });
         }
       }
@@ -154,21 +195,25 @@ export const createDiscount = async (req, res) => {
     }
 
     let is_active = false;
+    let status = "upcoming";
     if (now >= begin && now <= end) {
       is_active = true;
+      status = "ongoing";
+    } else if (now > end) {
+      status = "finished";
     }
 
     const newDiscount = await Discount.create({
-      code,
+      code: code.toUpperCase(),
       name,
       description,
       discount,
-      conditions,
+      conditions: conditions && Object.keys(conditions).length > 0 ? conditions : undefined,
       begin_date: begin,
       end_date: end,
-      priority,
+      priority: priority || 1,
       is_active,
-      status: is_active? "ongoing" : "upcoming"
+      status
     });
 
     return res.status(201).json({
@@ -236,8 +281,8 @@ export const getAllDiscounts = async (req, res) => {
 
     const discounts = await Discount
       .find(filter)
-      .select("-__v -created_at -updated_at")
-      .sort({ created_at: -1 })
+      .select("-__v")
+      .sort({ priority: -1, created_at: -1 })
       .lean();
 
     return res.json({
@@ -337,58 +382,311 @@ export const unactivateDiscount = async (req, res) => {
 export const updateDiscount = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, begin_date, end_date, percentage, applied_model, applied_model_id } = req.body;
+    const payload = req.body;
 
     const discount = await Discount.findById(id);
-    if (!discount)
-      return res.status(404).json({ success: false, message: "Discount not found!" });
+    if (!discount) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Không tìm thấy khuyến mãi" 
+      });
+    }
 
     const now = new Date();
-    if (now >= discount.begin_date) {
-      return res.status(400).json({
-        success: false,
-        message: "Unable to update as discount already began!"
+    const isRunning = discount.is_active && now >= discount.begin_date && now <= discount.end_date;
+
+    // Chặn update một số trường quan trọng khi đang chạy (tùy chọn - có thể bỏ nếu muốn cho phép update)
+    // if (isRunning) {
+    //   const blockedFields = ["begin_date", "discount", "conditions"];
+    //   for (const field of blockedFields) {
+    //     if (payload[field] !== undefined) {
+    //       return res.status(400).json({
+    //         success: false,
+    //         message: "Không thể chỉnh sửa khuyến mãi đang hoạt động."
+    //       });
+    //     }
+    //   }
+    // }
+
+    // Check trùng code
+    if (payload.code) {
+      const exist = await Discount.findOne({
+        code: payload.code.toUpperCase(),
+        _id: { $ne: id }
       });
+      if (exist) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Mã khuyến mãi đã tồn tại." 
+        });
+      }
+      discount.code = payload.code.toUpperCase();
     }
 
-    if (discount.end_date < now) {
-      return res.status(400).json({
-        success: false,
-        message: "Cannot update completed discount"
+    // Check trùng name
+    if (payload.name) {
+      const exist = await Discount.findOne({
+        name: payload.name,
+        _id: { $ne: id }
       });
+      if (exist) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Tên khuyến mãi đã tồn tại." 
+        });
+      }
+      discount.name = payload.name;
     }
 
-    if (begin_date || end_date) {
-      const validDate = validateDate({ begin_date, end_date });
-      if (!validDate.valid)
-        return res.status(400).json({ success: false, message: validDate.message });
-
-      discount.begin_date = validDate.begin;
-      discount.end_date = validDate.end;
+    // Update description
+    if (payload.description !== undefined) {
+      discount.description = payload.description;
     }
 
-    if (name && name !== discount.name) {
-      const existing = await Discount.findOne({ name, _id: { $ne: id } });
-      if (existing)
-        return res.status(400).json({ success: false, message: "Discount's name already exists." });
-      discount.name = name;
+    // Validate & update date
+    if (payload.begin_date || payload.end_date) {
+      const begin = payload.begin_date ? new Date(payload.begin_date) : discount.begin_date;
+      const end = payload.end_date ? new Date(payload.end_date) : discount.end_date;
+
+      if (isNaN(begin.getTime()) || isNaN(end.getTime())) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Định dạng ngày không hợp lệ." 
+        });
+      }
+
+      if (end <= begin) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Ngày kết thúc phải sau ngày bắt đầu." 
+        });
+      }
+
+      discount.begin_date = begin;
+      discount.end_date = end;
+      
+      // Cập nhật is_active và status
+      if (now >= begin && now <= end) {
+        discount.is_active = true;
+        discount.status = "ongoing";
+      } else if (now < begin) {
+        discount.is_active = false;
+        discount.status = "upcoming";
+      } else {
+        discount.is_active = false;
+        discount.status = "finished";
+      }
     }
 
-    if (description) discount.description = description;
-    if (applied_model) discount.applied_model = applied_model;
+    // Update priority
+    if (payload.priority !== undefined) {
+      if (typeof payload.priority !== "number" || payload.priority < 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Độ ưu tiên phải là số >= 1"
+        });
+      }
+      discount.priority = payload.priority;
+    }
 
-    if (typeof percentage !== "undefined") {
-      if (percentage <= 0 || percentage > 100)
-        return res.status(400).json({ success: false, message: "Discount's percentage must be between 1% and 100%." });
-      discount.percentage = percentage;
+    // Update discount object
+    if (payload.discount) {
+      const { type, value, max_discount } = payload.discount;
+
+      if (!["PERCENT", "FIXED"].includes(type)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Loại giảm giá không hợp lệ." 
+        });
+      }
+
+      if (value == null || value <= 0) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Giá trị giảm phải lớn hơn 0." 
+        });
+      }
+
+      if (type === "PERCENT") {
+        if (value > 100) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Giảm % không vượt quá 100." 
+          });
+        }
+        if (!max_discount || max_discount <= 0) {
+          return res.status(400).json({
+            success: false,
+            message: "Cần cung cấp số tiền khuyến mãi tối đa cho loại phần trăm."
+          });
+        }
+      }
+
+      discount.discount = {
+        type,
+        value,
+        max_discount: type === "PERCENT" ? max_discount : undefined
+      };
+    }
+
+    // Update conditions
+    if (payload.conditions !== undefined) {
+      // Nếu conditions là null, xóa tất cả conditions
+      if (payload.conditions === null) {
+        discount.conditions = {};
+      } else {
+        const { min_order_value, days_of_week, hours_range, customer_tiers, task_ids } = payload.conditions;
+
+        // Validate min_order_value
+        if (min_order_value !== undefined) {
+          if (min_order_value < 0) {
+            return res.status(400).json({
+              success: false,
+              message: "Tiền đơn hàng tối thiểu không được âm"
+            });
+          }
+        }
+
+        // Validate days_of_week
+        if (days_of_week !== undefined) {
+          if (days_of_week !== null && !Array.isArray(days_of_week)) {
+            return res.status(400).json({
+              success: false,
+              message: "days_of_week phải là mảng hoặc null"
+            });
+          }
+          if (Array.isArray(days_of_week)) {
+            const invalidDay = days_of_week.some(
+              d => typeof d !== "number" || d < 0 || d > 6
+            );
+            if (invalidDay) {
+              return res.status(400).json({
+                success: false,
+                message: "Ngày trong tuần chỉ nhận giá trị từ 0 đến 6 (0=Chủ nhật, 1=Thứ 2, ..., 6=Thứ 7)."
+              });
+            }
+          }
+        }
+
+        // Validate hours_range
+        if (hours_range !== undefined) {
+          if (hours_range === null) {
+            // Cho phép xóa hours_range bằng cách set null
+          } else if (hours_range) {
+            const { from, to } = hours_range;
+            if (
+              from == null || to == null ||
+              from < 0 || from > 23 ||
+              to < 0 || to > 23 ||
+              from > to
+            ) {
+              return res.status(400).json({
+                success: false,
+                message: "Khung giờ khuyến mãi không hợp lệ"
+              });
+            }
+          }
+        }
+
+        // Validate customer_tiers
+        if (customer_tiers !== undefined) {
+          if (customer_tiers !== null && !Array.isArray(customer_tiers)) {
+            return res.status(400).json({
+              success: false,
+              message: "customer_tiers phải là mảng hoặc null"
+            });
+          }
+          if (Array.isArray(customer_tiers)) {
+            const validTiers = ["NEW", "LOYAL", "VIP"];
+            const invalidTier = customer_tiers.some(tier => !validTiers.includes(tier));
+            if (invalidTier) {
+              return res.status(400).json({
+                success: false,
+                message: "Hạng khách hàng chỉ nhận giá trị: NEW, LOYAL, VIP"
+              });
+            }
+          }
+        }
+
+        // Validate task_ids
+        if (task_ids !== undefined) {
+          if (task_ids !== null && !Array.isArray(task_ids)) {
+            return res.status(400).json({
+              success: false,
+              message: "task_ids phải là mảng hoặc null"
+            });
+          }
+          if (Array.isArray(task_ids)) {
+            const mongoose = (await import("mongoose")).default;
+            const invalidId = task_ids.some(id => !mongoose.isValidObjectId(id));
+            if (invalidId) {
+              return res.status(400).json({
+                success: false,
+                message: "task_ids chứa ID không hợp lệ"
+              });
+            }
+          }
+        }
+
+        // Merge conditions - chỉ update các field được gửi lên
+        discount.conditions = discount.conditions || {};
+        
+        if (min_order_value !== undefined) {
+          if (min_order_value > 0) {
+            discount.conditions.min_order_value = min_order_value;
+          } else {
+            delete discount.conditions.min_order_value;
+          }
+        }
+        
+        if (days_of_week !== undefined) {
+          if (days_of_week === null || (Array.isArray(days_of_week) && days_of_week.length === 0)) {
+            delete discount.conditions.days_of_week;
+          } else if (Array.isArray(days_of_week)) {
+            discount.conditions.days_of_week = days_of_week;
+          }
+        }
+        
+        if (hours_range !== undefined) {
+          if (hours_range === null) {
+            delete discount.conditions.hours_range;
+          } else if (hours_range) {
+            discount.conditions.hours_range = hours_range;
+          }
+        }
+        
+        if (customer_tiers !== undefined) {
+          if (customer_tiers === null || (Array.isArray(customer_tiers) && customer_tiers.length === 0)) {
+            delete discount.conditions.customer_tiers;
+          } else if (Array.isArray(customer_tiers)) {
+            discount.conditions.customer_tiers = customer_tiers;
+          }
+        }
+        
+        if (task_ids !== undefined) {
+          if (task_ids === null || (Array.isArray(task_ids) && task_ids.length === 0)) {
+            delete discount.conditions.task_ids;
+          } else if (Array.isArray(task_ids)) {
+            discount.conditions.task_ids = task_ids;
+          }
+        }
+      }
     }
 
     await discount.save();
-    return res.status(200).json({ success: true, message: "Update discount successfully!", discount });
+
+    return res.status(200).json({ 
+      success: true, 
+      message: "Cập nhật khuyến mãi thành công",
+      data: discount
+    });
 
   } catch (err) { 
     console.error(err);
-    return res.status(500).json({ success: false, message: "SERVER ERROR: " + err.message });
+    return res.status(500).json({ 
+      success: false, 
+      message: "SERVER ERROR: " + err.message 
+    });
   }
 };
 
@@ -510,14 +808,22 @@ export const getAllVouchers = async (req, res) => {
       ];
     }
 
+    const skip = (parseInt(page) - 1) * parseInt(limit);
     const vouchers = await Voucher
       .find(filter)
-      .select("-__v -created_at -updated_at")
+      .select("-__v")
       .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
       .lean();
 
+    const total = await Voucher.countDocuments(filter);
+
     return res.status(200).json({
-      total: vouchers.length,
+      success: true,
+      page: Number(page),
+      limit: Number(limit),
+      total,
       data: vouchers
     });
 

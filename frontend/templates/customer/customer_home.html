@@ -428,6 +428,13 @@
         window.location.href = "../auth/login-signup.html";
       }
 
+      const role = localStorage.getItem("system_role");
+      console.log("User role:", role);
+      if (role !== "customer") {
+        alert("Bạn không có quyền truy cập trang này. Vui lòng đăng nhập lại.");
+        window.location.href = "../auth/login-signup.html";
+      }
+
       const TASK_DETAIL_MAP = {
         cleaning_washing_machine:
           "./detail_pages/cleaning_washing_machine.html",

@@ -38,8 +38,8 @@ editBtn.addEventListener("click", () => {
     isEditing = !isEditing;
 
     editableInputs.forEach(input => {
-    input.readOnly = !isEditing;
-    input.classList.toggle("bg-white", isEditing);
+      input.readOnly = !isEditing;
+      input.classList.toggle("bg-white", isEditing);
     });
 
     // Enable/disable bank select
@@ -581,7 +581,7 @@ async function loadUserProfile() {
 
         const { role, email } = data.account;
         const user = data.user;
-        const { BIN, account_number, type } = data.customer;
+        const { BIN, account_number, bank_shortName, type } = data.customer;
         const reviews = data.reviews || { review_count: 0, average_rating: 0 };
 
         // chỉ xử lý customer
@@ -597,14 +597,20 @@ async function loadUserProfile() {
         document.getElementById("bin").value = BIN || "";
         document.getElementById("account-number").value = account_number || "";
         
-        // Set bank selection based on BIN
-        if (BIN && bankSelect) {
-            const matchingBank = Object.keys(bankData).find(key => {
-                const bank = bankData[key];
-                return bank.bin === BIN || bank.bin === BIN.split(',')[0].trim();
-            });
-            if (matchingBank) {
-                bankSelect.value = matchingBank;
+        // Set bank selection based on bank_shortName or BIN
+        if (bankSelect && bankData) {
+            if (bank_shortName && bankData[bank_shortName]) {
+                // Use bank_shortName if available (preferred)
+                bankSelect.value = bank_shortName;
+            } else if (BIN) {
+                // Fallback to matching by BIN
+                const matchingBank = Object.keys(bankData).find(key => {
+                    const bank = bankData[key];
+                    return bank.bin === BIN || bank.bin === BIN.split(',')[0].trim();
+                });
+                if (matchingBank) {
+                    bankSelect.value = matchingBank;
+                }
             }
         }
 
@@ -632,13 +638,14 @@ async function updateProfile() {
         
         const BIN = document.getElementById("bin").value;
         const account_number = document.getElementById("account-number").value;
+        const bank_shortName = bankSelect ? bankSelect.value : null;
 
         if (!BIN || !account_number) {
         return alert("Yêu cầu nhập đầy đủ thông tin tài khoản ngân hàng.");
         }
         
         const payload = {
-            full_name, phone_number, identification, BIN, account_number,
+            full_name, phone_number, identification, BIN, account_number, bank_shortName,
         };
 
         Object.keys(payload).forEach(
@@ -726,8 +733,8 @@ async function loadBanks() {
           throw new Error("Failed to fetch banks");
         }
 
-        const bankData = await response.json();
-        console.log(bankData);
+        bankData = await response.json();
+        console.log("BANK DATA: ", bankData);
         
         if (bankSelect) {
             // Clear existing options except the first one
