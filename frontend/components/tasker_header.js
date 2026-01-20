@@ -57,7 +57,7 @@ class TaskerHeader extends HTMLElement {
                 <a href="../tasker/tasker_home.html" class="${getLinkClass('home')}">Trang chủ</a>
                 <a href="../tasker/profile.html" class="${getLinkClass('profile')}">Profile cá nhân</a>
                 <a href="../tasker/tasker_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
-                <a href="../tasker/tasker_earnings.html" class="${getLinkClass('earnings')}">Thu nhập</a>
+                <a href="../tasker/tasker_earnings.html" class="${getLinkClass('earning')}">Thu nhập</a>
                 <a href="../tasker/work_schedule.html" class="${getLinkClass('schedule')}">Lịch làm việc</a>
                 <a href="../tasker/tasker_chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
 

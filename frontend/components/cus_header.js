@@ -53,7 +53,6 @@ class AppHeader extends HTMLElement {
                 <a href="../templates/customer/customer_home.html" class="${getLinkClass('home')}">Trang chủ</a>
                 <a href="../templates/customer/customer_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
                 <a href="../templates/chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
-                <a href="../templates/notification.html" class="${getLinkClass('notification')}">Thông báo</a>
                 <a href="../templates/customer/profile.html" class="${getLinkClass('profile')}">Tài khoản</a>
 
                 <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
