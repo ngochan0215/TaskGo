@@ -1,14 +1,17 @@
 const sidebarMobile = document.getElementById("sidebarMobile");
 const backdrop = document.getElementById("backdrop");
 
-function openSidebar() {
-  sidebarMobile.classList.remove("closed");
-  backdrop.classList.add("show");
+if (sidebarMobile) {
+  window.openSidebar = function () {
+    sidebarMobile.classList.remove("-translate-x-full");
+    if (backdrop) backdrop.classList.remove("hidden");
+  };
 }
-
-function closeSidebar() {
-  sidebarMobile.classList.add("closed");
-  backdrop.classList.remove("show");
+if (backdrop) {
+  window.closeSidebar = function () {
+    if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
+    backdrop.classList.add("hidden");
+  };
 }
 
 const $ = (id) => document.getElementById(id);
@@ -22,10 +25,13 @@ if (!token || role !== "admin") {
   window.location.href = "../auth/login-signup.html";
 }
 
-const API_BASE_URL = 'http://localhost:3000/api/admin';
+const API_BASE_URL = "http://localhost:3000/api/admin";
 
 const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
 };
 
 function openModal(id) {
@@ -46,33 +52,48 @@ function toast(msg) {
 function getStatusBadge(status, type = "account") {
   const statusMap = {
     account: {
-      active: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ACTIVE</span>',
-      inactive: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">INACTIVE</span>',
-      banned: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">BANNED</span>'
+      active:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ACTIVE</span>',
+      inactive:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">INACTIVE</span>',
+      banned:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">BANNED</span>',
     },
     working: {
-      pending: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">ĐANG CHỜ</span>',
-      available: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ĐANG RẢNH</span>',
+      pending:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">ĐANG CHỜ</span>',
+      available:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ĐANG RẢNH</span>',
       busy: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700 border border-orange-200">ĐANG BẬN</span>',
-      offline: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">OFFLINE</span>',
-      paused: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">TẠM DỪNG</span>',
-      inactive: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">KHÔNG HOẠT ĐỘNG</span>'
+      offline:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">OFFLINE</span>',
+      paused:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">TẠM DỪNG</span>',
+      inactive:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-100 text-red-700 border border-red-200">KHÔNG HOẠT ĐỘNG</span>',
     },
     main: {
-      pending: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">ĐANG CHỜ DUYỆT</span>',
-      working: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ĐANG LÀM VIỆC</span>',
-      resign: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">ĐÃ NGHỈ VIỆC</span>'
-    }
+      pending:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">ĐANG CHỜ DUYỆT</span>',
+      working:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">ĐANG LÀM VIỆC</span>',
+      resign:
+        '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">ĐÃ NGHỈ VIỆC</span>',
+    },
   };
-  
+
   const map = statusMap[type] || statusMap.account;
-  return map[status] || map.inactive || '<span class="text-xs text-gray-500">—</span>';
+  return (
+    map[status] ||
+    map.inactive ||
+    '<span class="text-xs text-gray-500">—</span>'
+  );
 }
 
-async function apiCall(endpoint, method = 'GET', body = null) {
+async function apiCall(endpoint, method = "GET", body = null) {
   const headers = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
   };
 
   const config = { method, headers };
@@ -81,16 +102,16 @@ async function apiCall(endpoint, method = 'GET', body = null) {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
     const data = await response.json();
-    
+
     if (response.status === 401) {
       localStorage.removeItem("token");
       alert("Phiên đăng nhập hết hạn");
       window.location.href = "../auth/login-signup.html";
       return null;
     }
-    
+
     if (!response.ok) {
-      throw new Error(data.message || 'Có lỗi xảy ra');
+      throw new Error(data.message || "Có lỗi xảy ra");
     }
     return data;
   } catch (error) {
@@ -128,8 +149,8 @@ function getBankName(bankShortName) {
 }
 
 async function loadTaskers() {
-  const tableBody = $('data-table-body');
-  
+  const tableBody = $("data-table-body");
+
   tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Đang tải dữ liệu...</td></tr>`;
 
   try {
@@ -141,18 +162,21 @@ async function loadTaskers() {
       page: currentPage,
       limit: itemsPerPage,
       sort_by: "created_at",
-      sort_dir: "desc"
+      sort_dir: "desc",
     });
 
     if (mainStatus) params.append("status", mainStatus);
     if (accountStatus) params.append("account_status", accountStatus);
     if (search) params.append("search", search);
 
-    const response = await fetch(`${API_BASE_URL}/taskers/all?${params.toString()}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/taskers/all?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     if (response.status === 401) {
       localStorage.removeItem("token");
@@ -171,28 +195,29 @@ async function loadTaskers() {
     }
 
     totalItems = result.total;
-    tableBody.innerHTML = '';
+    tableBody.innerHTML = "";
 
-    result.data.forEach(tasker => {
+    result.data.forEach((tasker) => {
       const user = tasker.user_id || {};
       const account = user.account_id || {};
-      
+
       const name = user.full_name || account.email || "Không xác định";
-      const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Eve";
+      const avatar =
+        user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Eve";
       const experience = `${tasker.working_year || 0} năm`;
       const rate = formatCurrency(tasker.hourly_rate || 0) + "/giờ";
-      
-      const accStatus = account.status || 'inactive';
-      const workStatus = tasker.working_status || 'pending';
-      const mainStatus = tasker.status || 'pending';
+
+      const accStatus = account.status || "inactive";
+      const workStatus = tasker.working_status || "pending";
+      const mainStatus = tasker.status || "pending";
 
       const accStatusBadge = getStatusBadge(accStatus, "account");
       const workStatusBadge = getStatusBadge(workStatus, "working");
       const mainStatusBadge = getStatusBadge(mainStatus, "main");
 
-      let actionButtons = '';
-      
-      if (mainStatus === 'pending') {
+      let actionButtons = "";
+
+      if (mainStatus === "pending") {
         actionButtons = `
           <button onclick="openTaskerModal('view', '${tasker._id}')" title="Xem chi tiết" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
             <span class="material-symbols-outlined">visibility</span>
@@ -215,9 +240,10 @@ async function loadTaskers() {
         `;
       }
 
-      const tr = document.createElement('tr');
-      tr.className = "border-b border-gray-50 hover:bg-slate-50 transition-colors";
-      
+      const tr = document.createElement("tr");
+      tr.className =
+        "border-b border-gray-50 hover:bg-slate-50 transition-colors";
+
       tr.innerHTML = `
         <td class="p-4">
           <div class="flex items-center gap-3">
@@ -252,21 +278,29 @@ function updatePagination() {
   const startIndex = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  $("paginationInfo").innerHTML = 
+  $("paginationInfo").innerHTML =
     `Hiển thị <span class="font-bold">${startIndex}-${endIndex}</span> trên <span class="font-bold">${totalItems}</span> tasker`;
 
   const buttonsHTML = `
-    <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+    <button onclick="previousPage()" ${currentPage === 1 ? "disabled" : ""} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
       <span class="material-symbols-outlined text-sm">chevron_left</span>
     </button>
-    ${Array.from({length: totalPages}, (_, i) => i + 1)
-      .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-      .map(page => `
-        <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === currentPage ? 'bg-primary-500 text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'} font-bold text-sm">
+    ${Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(
+        (page) =>
+          page === 1 ||
+          page === totalPages ||
+          Math.abs(page - currentPage) <= 1,
+      )
+      .map(
+        (page) => `
+        <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === currentPage ? "bg-primary-500 text-white" : "border border-gray-200 hover:bg-gray-50 text-gray-600"} font-bold text-sm">
           ${page}
         </button>
-      `).join('')}
-    <button onclick="nextPage()" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      `,
+      )
+      .join("")}
+    <button onclick="nextPage()" ${currentPage === totalPages || totalPages === 0 ? "disabled" : ""} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
       <span class="material-symbols-outlined text-sm">chevron_right</span>
     </button>
   `;
@@ -373,11 +407,14 @@ async function openTaskerModal(mode, taskerId) {
   // Load tasker data
   try {
     const params = new URLSearchParams({ limit: 1000 });
-    const response = await fetch(`${API_BASE_URL}/taskers/all?${params.toString()}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/taskers/all?${params.toString()}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     if (response.status === 401) {
       localStorage.removeItem("token");
@@ -387,15 +424,17 @@ async function openTaskerModal(mode, taskerId) {
     }
 
     const result = await response.json();
-    
+
     const taskersList = result.success ? result.data : [];
-    
+
     if (!taskersList || taskersList.length === 0) {
       toast("Không thể tải thông tin tasker");
       return;
     }
 
-    const tasker = taskersList.find(t => t._id === taskerId || String(t._id) === String(taskerId));
+    const tasker = taskersList.find(
+      (t) => t._id === taskerId || String(t._id) === String(taskerId),
+    );
     if (!tasker) {
       toast("Không tìm thấy tasker");
       return;
@@ -406,9 +445,14 @@ async function openTaskerModal(mode, taskerId) {
     const account = user.account_id || {};
 
     // Fill form
-    const avatar = user.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=" + (user.full_name || "Tasker");
+    const avatar =
+      user.avatar_url ||
+      "https://api.dicebear.com/9.x/bottts/svg?seed=" +
+        (user.full_name || "Tasker");
     $("taskerAvatar").src = avatar;
-    $("taskerAvatar").onerror = function() { this.src = "https://api.dicebear.com/9.x/bottts/svg?seed=Tasker"; };
+    $("taskerAvatar").onerror = function () {
+      this.src = "https://api.dicebear.com/9.x/bottts/svg?seed=Tasker";
+    };
     $("taskerFullName").textContent = user.full_name || "—";
     $("taskerEmail").textContent = account.email || "—";
     $("taskerPhone").textContent = user.phone_number || "—";
@@ -418,12 +462,14 @@ async function openTaskerModal(mode, taskerId) {
     $("taskerIntroduction").value = tasker.introduction || "";
     $("taskerAccountStatus").value = account.status || "inactive";
     $("taskerWorkingStatus").value = tasker.working_status || "pending";
-    $("taskerMainStatus").innerHTML = getStatusBadge(tasker.status || "pending", "main");
+    $("taskerMainStatus").innerHTML = getStatusBadge(
+      tasker.status || "pending",
+      "main",
+    );
     $("taskerCompletedOrders").textContent = tasker.total_completed_orders || 0;
     $("taskerBIN").textContent = tasker.BIN || "—";
     $("taskerAccountNumber").textContent = tasker.account_number || "—";
     $("taskerBankName").textContent = getBankName(tasker.bank_shortName);
-
   } catch (error) {
     console.error("Error loading tasker:", error);
     toast("Không thể tải thông tin tasker");
@@ -447,11 +493,15 @@ async function saveTasker() {
   const body = {
     hourly_rate: hourlyRate,
     account_status: accountStatus,
-    tasker_status: taskerStatus
+    tasker_status: taskerStatus,
   };
 
-  const result = await apiCall(`/taskers/update/${currentTaskerId}`, 'PATCH', body);
-  if (result && (result.success !== false)) {
+  const result = await apiCall(
+    `/taskers/update/${currentTaskerId}`,
+    "PATCH",
+    body,
+  );
+  if (result && result.success !== false) {
     toast("Cập nhật thành công!");
     closeModal("modalTasker");
     await loadTaskers();
@@ -460,10 +510,11 @@ async function saveTasker() {
 
 function approveTasker() {
   if (!currentTaskerId) return;
-  
+
   $("confirmText").textContent = "Bạn có chắc chắn muốn duyệt Tasker này?";
   $("btnConfirmAction").textContent = "Duyệt";
-  $("btnConfirmAction").className = "px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-green-600 transition";
+  $("btnConfirmAction").className =
+    "px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-green-600 transition";
   pendingAction = "approve";
   closeModal("modalTasker");
   openModal("modalConfirm");
@@ -471,10 +522,11 @@ function approveTasker() {
 
 function rejectTasker() {
   if (!currentTaskerId) return;
-  
+
   $("confirmText").textContent = "Bạn có chắc chắn muốn từ chối Tasker này?";
   $("btnConfirmAction").textContent = "Từ chối";
-  $("btnConfirmAction").className = "px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition";
+  $("btnConfirmAction").className =
+    "px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition";
   pendingAction = "reject";
   closeModal("modalTasker");
   openModal("modalConfirm");
@@ -492,17 +544,21 @@ async function confirmAction() {
     return;
   }
 
-  const result = await apiCall(endpoint, 'PATCH');
+  const result = await apiCall(endpoint, "PATCH");
   if (result && result.message) {
-    toast(pendingAction === "approve" ? "Duyệt thành công!" : "Đã từ chối Tasker!");
+    toast(
+      pendingAction === "approve" ? "Duyệt thành công!" : "Đã từ chối Tasker!",
+    );
     closeModal("modalConfirm");
     await loadTaskers();
   } else if (result) {
-    toast(pendingAction === "approve" ? "Duyệt thành công!" : "Đã từ chối Tasker!");
+    toast(
+      pendingAction === "approve" ? "Duyệt thành công!" : "Đã từ chối Tasker!",
+    );
     closeModal("modalConfirm");
     await loadTaskers();
   }
-  
+
   pendingAction = null;
   currentTaskerId = null;
 }
@@ -518,10 +574,13 @@ $("filterMainStatus").addEventListener("change", () => {
   loadTaskers();
 });
 
-$("searchInput").addEventListener("input", debounce(() => {
-  currentPage = 1;
-  loadTaskers();
-}, 500));
+$("searchInput").addEventListener(
+  "input",
+  debounce(() => {
+    currentPage = 1;
+    loadTaskers();
+  }, 500),
+);
 
 function debounce(func, wait) {
   let timeout;
@@ -550,7 +609,7 @@ window.goToPage = goToPage;
 window.clearFilters = clearFilters;
 
 // Load data on page load
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
   await loadBankData();
   await loadTaskers();
 });
