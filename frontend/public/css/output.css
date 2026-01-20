@@ -1698,10 +1698,6 @@ header {
   width: 1rem;
 }
 
-.w-40 {
-  width: 10rem;
-}
-
 .w-5 {
   width: 1.25rem;
 }
@@ -1732,10 +1728,6 @@ header {
 
 .w-\[280px\] {
   width: 280px;
-}
-
-.w-\[30\%\] {
-  width: 30%;
 }
 
 .w-\[80px\] {
@@ -3752,6 +3744,11 @@ header {
 .sidebar-mobile.closed {
   --tw-translate-x: -100%;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.hover-text-red-400:hover {
+  --tw-text-opacity: 1;
+  color: rgb(248 113 113 / var(--tw-text-opacity, 1));
 }
 
 .backdrop {
