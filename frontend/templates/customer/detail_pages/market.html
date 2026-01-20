@@ -1,363 +1,505 @@
 <!doctype html>
-<html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskGo</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../../../public/css/output.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../../public/favicons/favicon.ico"
+    />
+  </head>
 
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskGo</title>
-  <link rel="stylesheet" type="text/css" href="../../../public/css/output.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-  <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
-</head>
+  <body class="bg-primary-100 min-h-screen font-montserrat">
+    <header class="bg-primary-200 py-4">
+      <div class="flex items-center justify-between px-4">
+        <div
+          class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70"
+        >
+          <a href=""
+            ><img src="../../../public/images/taskgo-logo.png" alt=""
+          /></a>
+        </div>
 
-<body class="bg-primary-100 min-h-screen font-montserrat">
-  <header class="bg-primary-200 py-4">
-    <div class="flex items-center justify-between px-4">
-      <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-        <a href=""><img src="../../../public/images/taskgo-logo.png" alt=""></a>
-      </div>
-
-      <h1 class="font-bold text-xl text-dark-900">Chi tiết dịch vụ</h1>
-      <div class="w-10 h-10 flex items-center justify-center">
-        <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-      </div>
-    </div>
-  </header>
-
-  <main class="p-4 space-y-4 pb-20">
-    <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
-
-      <div class="flex items-center justify-between border-b pb-2">
-        <h2 class="text-2xl font-bold text-primary-500">Đi chợ</h2>
-      </div>
-
-      <p class="text-base mb-4">
-        Đây là dịch vụ đi chợ hộ. Bạn có thể chọn các sản phẩm từ danh sách có sẵn hoặc nhập sản phẩm nếu chưa có.
-        <br>Sau đó chọn khối lượng của từng món mà bạn muốn tasker mua hộ nhé.
-      </p>
-
-      <div>
-        <div class="flex items-center space-x-2 bg-white p-3 border border-gray-300 rounded-lg">
-          <select id="productSelect" class="border-dashed bg-transparent flex-1 focus:outline-none">
-            <option value="">-- Chọn nhanh sản phẩm --</option>
-          </select>
-
-          <input type="text" id="productInput"
-            placeholder="Hoặc nhập sản phẩm khác"
-            class="flex-1 border-dashed focus:outline-none bg-transparent" />
-
-          <button id="addProductBtn">
-            <span class="material-symbols-outlined text-xl">add</span>
-          </button>
+        <h1 class="font-bold text-xl text-dark-900">Chi tiết dịch vụ</h1>
+        <div class="w-10 h-10 flex items-center justify-center">
+          <a href=""
+            ><span class="material-symbols-outlined text-primary-500 text-4xl"
+              >menu</span
+            ></a
+          >
         </div>
       </div>
+    </header>
 
-      <div class="flex items-center space-x-2">
-        <h3 class="flex-1 text-base text-dark-900 font-bold my-2">
-          Danh sách sản phẩm:
-        </h3>
-        <button class="font-bold text-dark-900 hover:text-red-500">
-          Xoá tất cả
-        </button>
-      </div>
+    <main class="p-4 space-y-4 pb-28">
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h2 class="text-2xl font-bold text-primary-500" id="serviceName">
+            Đi chợ
+          </h2>
+        </div>
 
-      <ul id="selectedProducts" class="space-y-2 text-base mb-6"></ul>
+        <p class="text-base mb-2">
+          Đây là dịch vụ đi chợ hộ. Bạn có thể chọn các sản phẩm từ danh sách có
+          sẵn hoặc nhập sản phẩm nếu chưa có.
+          <br />Sau đó chọn khối lượng của từng món mà bạn muốn tasker mua hộ
+          nhé.
+        </p>
 
-      <div>
+        <!-- Add product -->
+        <div>
+          <div
+            class="flex items-center space-x-2 bg-white p-3 border border-gray-300 rounded-lg"
+          >
+            <select
+              id="productSelect"
+              class="border-dashed bg-transparent flex-1 focus:outline-none"
+            >
+              <option value="">-- Chọn nhanh sản phẩm --</option>
+            </select>
+
+            <input
+              type="text"
+              id="productInput"
+              placeholder="Hoặc nhập sản phẩm khác"
+              class="flex-1 border-dashed focus:outline-none bg-transparent"
+            />
+
+            <button id="addProductBtn" type="button">
+              <span class="material-symbols-outlined text-xl">add</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- List header -->
+        <div class="flex items-center space-x-2">
+          <h3 class="flex-1 text-base text-dark-900 font-bold my-2">
+            Danh sách sản phẩm:
+          </h3>
+          <button
+            id="clearAllBtn"
+            type="button"
+            class="font-bold text-dark-900 hover:text-red-500"
+          >
+            Xoá tất cả
+          </button>
+        </div>
+
+        <ul id="selectedProducts" class="space-y-2 text-base mb-2"></ul>
+
+        <!-- Estimated budget -->
+        <div>
           <h3 class="flex-1 text-base text-dark-900 font-bold my-2">
             Số tiền đi chợ ước tính:
           </h3>
-          <p class="text-sm text-dark-100 mb-2">Bạn sẽ cần phải trả trước số tiền này</p>
-          <div class="flex space-x-2">
-          <select id="estimatedSelect" class="p-3 border rounded-lg">
-            <option value="">Chọn nhanh</option>
-            <option value="200000">200.000</option>
-            <option value="300000">300.000</option>
-            <option value="500000">500.000</option>
-            <option value="700000">700.000</option>
-            <option value="1000000">1.000.000</option>
-          </select>
+          <p class="text-sm text-dark-100 mb-2">
+            Bạn sẽ cần phải trả trước số tiền này
+          </p>
 
-          <input type="text" id="estimated_amount"
-            placeholder="Nhập số tiền"
-            class="flex-1 p-3 border border-gray-300 rounded-lg" />
+          <div class="flex space-x-2">
+            <select id="estimatedSelect" class="p-3 border rounded-lg">
+              <option value="">Chọn nhanh</option>
+              <option value="200000">200.000</option>
+              <option value="300000">300.000</option>
+              <option value="500000">500.000</option>
+              <option value="700000">700.000</option>
+              <option value="1000000">1.000.000</option>
+            </select>
+
+            <input
+              type="text"
+              id="estimated_amount"
+              placeholder="Nhập số tiền"
+              class="flex-1 p-3 border border-gray-300 rounded-lg"
+            />
+          </div>
+        </div>
+
+        <!-- ✅ Service fee + total preview -->
+        <div
+          class="bg-white rounded-xl shadow-md p-4 space-y-2 border border-gray-200"
+        >
+          <div class="flex justify-between">
+            <span class="text-gray-800">Phí dịch vụ</span>
+            <span id="serviceFeeText" class="font-semibold text-gray-800"
+              >0đ</span
+            >
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-800">Tiền đi chợ ước tính</span>
+            <span id="estimatedText" class="font-semibold text-gray-800"
+              >0đ</span
+            >
+          </div>
+          <div class="flex justify-between border-t border-gray-200 pt-2">
+            <span class="font-bold text-dark-900">Tổng tạm tính</span>
+            <span id="totalText" class="font-bold text-dark-900">0đ</span>
+          </div>
+
+          <p class="text-xs text-gray-500">
+            Phí dịch vụ áp dụng cho tối đa 10 món. Từ món thứ 11 trở đi tính
+            thêm phụ phí.
+          </p>
+        </div>
+
+        <div class="flex space-x-4">
+          <button
+            onclick="handleBookingNow()"
+            class="action-btn action-btn-hover"
+          >
+            Đặt ngay
+          </button>
+
+          <button
+            onclick="handleScheduledBooking()"
+            class="action-btn action-btn-hover"
+          >
+            Đặt lịch trước
+          </button>
         </div>
       </div>
+    </main>
 
-      <p id="servicePrice" class="text-sm text-dark-900 font-medium">Phí dịch vụ ban đầu: 80.000 VND/h cho 10 món</p>
-      <div class="flex space-x-4">
+    <footer>
+      <nav
+        class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl"
+      >
+        <div class="flex justify-around py-2 text-base">
+          <a href="#" class="flex flex-col items-center text-white">
+            <span class="material-symbols-outlined text-4xl">house</span>
+            Trang chủ
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-4xl">news</span>
+            Hoạt động
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-4xl">chat</span>
+            Tin nhắn
+          </a>
+          <a href="#" class="flex flex-col items-center text-primary-500">
+            <span class="material-symbols-outlined text-4xl">lightbulb</span>
+            Thông báo
+          </a>
+        </div>
+      </nav>
+    </footer>
 
-        <button onclick="handleBookingNow()" class="action-btn action-btn-hover">
-          Đặt ngay</a>
-        </button>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script type="module">
+      import { initSocket } from "../../js/socket.js";
+      initSocket();
+    </script>
 
-        <button class="action-btn action-btn-hover">
-          <a href="../scheduled.html">Đặt lịch trước</a>
-        </button>
+    <script>
+      // ====== State ======
+      let selectedProducts = [];
+      let estimatedAmount = 0;
+      let bookingDraft = null;
 
-      </div>
-    </div>
-  </main>
+      // params
+      const urlParams = new URLSearchParams(window.location.search);
+      const basePrice = Number(urlParams.get("price")) || 80000; // phí dịch vụ gốc
+      const task_id = urlParams.get("id");
+      let task_name = "Đi chợ hộ";
+      let task_unit = "lần";
 
-  <footer>
-    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-      <div class="flex justify-around py-2 text-base">
-        <a href="#" class="flex flex-col items-center text-white">
-          <span class="material-symbols-outlined text-4xl">house</span>
-          Trang chủ
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">news</span>
-          Hoạt động
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">chat</span>
-          Tin nhắn
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">lightbulb</span>
-          Thông báo
-        </a>
-      </div>
-    </nav>
-  </footer>
+      const MARKET_ITEMS = [
+        "Gạo",
+        "Mì gói",
+        "Bún tươi",
+        "Bánh mì",
+        "Thịt heo",
+        "Thịt bò",
+        "Thịt gà",
+        "Cá hồi",
+        "Cá thu",
+        "Cá basa",
+        "Tôm",
+        "Mực",
+        "Trứng gà",
+        "Trứng vịt",
+        "Sữa tươi",
+        "Sữa đặc",
+        "Cải thảo",
+        "Rau muống",
+        "Xà lách",
+        "Cà chua",
+        "Khoai tây",
+        "Cà rốt",
+        "Hành lá",
+        "Hành tây",
+        "Tỏi",
+        "Ớt",
+        "Dầu ăn",
+        "Nước mắm",
+        "Muối",
+        "Tiêu",
+      ];
 
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script type="module">
-    import { initSocket } from "../../js/socket.js";
+      // elements
+      const productSelect = document.getElementById("productSelect");
+      const productInput = document.getElementById("productInput");
+      const selectedList = document.getElementById("selectedProducts");
+      const estimatedSelect = document.getElementById("estimatedSelect");
+      const estimatedInput = document.getElementById("estimated_amount");
 
-    initSocket();
-  </script>
-  
-  <script>
-    let selectedProducts = [];
-    let estimatedAmount = 0;
-    let bookingDraft = null;
+      const serviceFeeText = document.getElementById("serviceFeeText");
+      const estimatedText = document.getElementById("estimatedText");
+      const totalText = document.getElementById("totalText");
 
-    // khởi tạo các biến lưu thông tin task cho snapshot
-    const urlParams = new URLSearchParams(window.location.search);
-    const basePrice = Number(urlParams.get("price")) || 80000; // Giá mặc định nếu không có tham số
-    const task_id = urlParams.get("id");
-    let task_name = "";
-    let task_unit = "";
+      const formatCurrency = (v) =>
+        (Number(v) || 0).toLocaleString("vi-VN") + "đ";
 
-    const MARKET_ITEMS = [
-      "Gạo", "Mì gói", "Bún tươi", "Bánh mì",
-      "Thịt heo", "Thịt bò", "Thịt gà",
-      "Cá hồi", "Cá thu", "Cá basa",
-      "Tôm", "Mực",
-      "Trứng gà", "Trứng vịt",
-      "Sữa tươi", "Sữa đặc",
-      "Cải thảo", "Rau muống", "Xà lách",
-      "Cà chua", "Khoai tây", "Cà rốt",
-      "Hành lá", "Hành tây", "Tỏi", "Ớt",
-      "Dầu ăn", "Nước mắm", "Muối", "Tiêu"
-    ];
-
-    const productSelect = document.getElementById("productSelect");
-    const productInput = document.getElementById("productInput");
-    const selectedList = document.getElementById("selectedProducts");
-    const estimatedSelect = document.getElementById("estimatedSelect");
-    const estimatedInput = document.getElementById("estimated_amount");
-
-    estimatedSelect.onchange = e => {
-      console.log("IM CALLED");
-      estimatedAmount = Number(e.target.value);
-      estimatedInput.value = e.target.value;
-      console.log("FEE: ", estimatedAmount);
-      saveDraft();
-    };
-
-    estimatedInput.oninput = e => {
-      estimatedAmount = Number(e.target.value.replace(/\D/g, ""));
-      saveDraft();
-    };
-
-    document.getElementById("addProductBtn").onclick = () => {
-      const name = productSelect.value || productInput.value.trim();
-      addProduct(name);
-      productSelect.value = "";
-      productInput.value = "";
-    };
-
-    MARKET_ITEMS.forEach(item => {
-      const opt = document.createElement("option");
-      opt.value = item;
-      opt.textContent = item;
-      productSelect.appendChild(opt);
-    });
-
-    function createWeightSelect() {
-      const select = document.createElement("select");
-      select.className = "border rounded px-2 py-1 text-sm";
-      for (let i = 0.5; i <= 5; i += 0.5) {
+      // populate select
+      MARKET_ITEMS.forEach((item) => {
         const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = `${i} kg`;
-        select.appendChild(opt);
+        opt.value = item;
+        opt.textContent = item;
+        productSelect.appendChild(opt);
+      });
+
+      // ====== API: task detail ======
+      async function getTaskDetail() {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Vui lòng đăng nhập");
+            location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const res = await fetch(`http://localhost:3000/api/task/${task_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert(
+              "Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.",
+            );
+            window.location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const data = await res.json();
+          if (!data?.success) return;
+
+          task_name = data.task.task_name || task_name;
+          task_unit = data.task.unit || task_unit;
+
+          const nameEl = document.getElementById("serviceName");
+          if (nameEl) nameEl.textContent = task_name;
+        } catch (err) {
+          console.error("Load services failed", err);
+        }
       }
-      return select;
-    }
+      if (task_id) getTaskDetail();
 
-    function updateServicePriceUI() {
-      const price = calculateBaseAmount();
-      document.getElementById("servicePrice").textContent =
-        `Phí dịch vụ: ${price.toLocaleString()} VNĐ`;
-    }
+      // ====== Pricing ======
+      function calculateServiceFee() {
+        const includedItems = 10;
+        const extraPricePerItem = 8000;
 
-    function renderProducts() {
-      selectedList.innerHTML = "";
+        const totalItems = selectedProducts.length;
+        if (totalItems <= includedItems) return basePrice;
 
-      selectedProducts.forEach((product, index) => {
-        const li = document.createElement("li");
-        li.className = "flex items-center space-x-2 p-3 border border-gray-300 rounded-lg";
+        return basePrice + (totalItems - includedItems) * extraPricePerItem;
+      }
 
-        const p = document.createElement("p");
-        p.className = "flex-1 font-medium";
-        p.textContent = product.name;
+      function updatePriceUI() {
+        const serviceFee = calculateServiceFee();
+        const total = serviceFee + (estimatedAmount || 0);
 
-        const weightSelect = createWeightSelect();
-        weightSelect.value = product.quantity;
+        serviceFeeText.textContent = formatCurrency(serviceFee);
+        estimatedText.textContent = formatCurrency(estimatedAmount || 0);
+        totalText.textContent = formatCurrency(total);
+      }
 
-        weightSelect.onchange = e => {
-          selectedProducts[index].quantity = Number(e.target.value);
-          saveDraft();
-        };
+      // ====== UI: weight select ======
+      function createWeightSelect() {
+        const select = document.createElement("select");
+        select.className = "border rounded px-2 py-1 text-sm";
+        for (let i = 0.5; i <= 5; i += 0.5) {
+          const opt = document.createElement("option");
+          opt.value = i;
+          opt.textContent = `${i} kg`;
+          select.appendChild(opt);
+        }
+        return select;
+      }
 
-        const delBtn = document.createElement("button");
-        delBtn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
-        delBtn.onclick = () => {
-          selectedProducts.splice(index, 1);
-          renderProducts();
-          saveDraft();
-        };
+      function renderProducts() {
+        selectedList.innerHTML = "";
 
-        li.appendChild(p);
-        li.appendChild(weightSelect);
-        li.appendChild(delBtn);
-        selectedList.appendChild(li);
-
-        updateServicePriceUI();
-      });
-    }
-
-    function addProduct(name) {
-      if (!name) return;
-
-      // tránh trùng
-      const existed = selectedProducts.find(p => p.name === name);
-      if (existed) return;
-
-      selectedProducts.push({
-        name,
-        quantity: 0.5,
-        unit: "kg"
-      });
-
-      renderProducts();
-      saveDraft();
-    }
-
-    async function getTaskDetail() {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Vui lòng đăng nhập");
-          location.href = "../../auth/login-signup.html";
+        if (selectedProducts.length === 0) {
+          selectedList.innerHTML = `<li class="text-sm text-gray-500 italic">Chưa có sản phẩm nào</li>`;
+          updatePriceUI();
           return;
         }
 
-        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
+        selectedProducts.forEach((product, index) => {
+          const li = document.createElement("li");
+          li.className =
+            "flex items-center space-x-2 p-3 border border-gray-300 rounded-lg";
+
+          const p = document.createElement("p");
+          p.className = "flex-1 font-medium";
+          p.textContent = product.name;
+
+          const weightSelect = createWeightSelect();
+          weightSelect.value = product.quantity;
+
+          weightSelect.onchange = (e) => {
+            selectedProducts[index].quantity = Number(e.target.value);
+            saveDraft("immediate"); // chỉ lưu nháp, type sẽ set lại khi bấm đặt
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.innerHTML = `<span class="material-symbols-outlined">delete</span>`;
+          delBtn.onclick = () => {
+            selectedProducts.splice(index, 1);
+            renderProducts();
+            saveDraft("immediate");
+          };
+
+          li.appendChild(p);
+          li.appendChild(weightSelect);
+          li.appendChild(delBtn);
+          selectedList.appendChild(li);
         });
 
-        console.log("TOKEN: ", token);
-
-        if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../../auth/login-signup.html";
-            return;
-        }
-
-        const data = await res.json();
-        console.log("TASK DETAIL: ", data.task);
-        if (!data.success) return;
-
-        task_name = data.task.task_name;
-        task_unit = data.task.unit;
-
-      } catch (err) {
-        console.error("Load services failed", err);
-      }
-    }
-
-    getTaskDetail();
-
-    function calculateBaseAmount() {
-      const includedItems = 10;
-      const extraPricePerItem = 8000;
-
-      const totalItems = selectedProducts.length;
-
-      if (totalItems <= includedItems) {
-        return basePrice;
+        updatePriceUI();
       }
 
-      return basePrice + (totalItems - includedItems) * extraPricePerItem;
-    }
+      function addProduct(name) {
+        name = (name || "").trim();
+        if (!name) return;
 
-    function saveDraft() {
-      bookingDraft = {
-        task_id: task_id,
-        type: "immediate",
-        base_amount: calculateBaseAmount(),
-        final_amount: estimatedAmount + calculateBaseAmount(),
+        const existed = selectedProducts.find(
+          (p) => p.name.toLowerCase() === name.toLowerCase(),
+        );
+        if (existed) return;
 
-        task_snapshot: {
-          code: "GROCERY",
-          name: "Đi chợ hộ",
-          pricing: basePrice,
-          unit: task_unit
-        },
+        selectedProducts.push({ name, quantity: 0.5, unit: "kg" });
+        renderProducts();
+        saveDraft("immediate");
+      }
 
-        task_payload: {
-          items: selectedProducts.map(p => ({
-            name: p.name,
-            quantity: p.quantity,
-            unit: "kg"
-          })),
-          estimated_budget: estimatedAmount
-        },
-
-        note: ""
+      // ====== Events ======
+      document.getElementById("addProductBtn").onclick = () => {
+        const name = productSelect.value || productInput.value;
+        addProduct(name);
+        productSelect.value = "";
+        productInput.value = "";
       };
 
-      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-    }
+      document.getElementById("clearAllBtn").onclick = () => {
+        selectedProducts = [];
+        renderProducts();
+        saveDraft("immediate");
+      };
 
-    function handleBookingNow() {
-      if (!selectedList) {
-        alert("Vui lòng chọn hoặc nhập ít nhất một sản phẩm!");
-        return;
+      estimatedSelect.onchange = (e) => {
+        const v = Number(e.target.value || 0);
+        estimatedAmount = v;
+        estimatedInput.value = v ? String(v) : "";
+        updatePriceUI();
+        saveDraft("immediate");
+      };
+
+      estimatedInput.oninput = (e) => {
+        const raw = String(e.target.value || "");
+        estimatedAmount = Number(raw.replace(/\D/g, "")) || 0;
+        updatePriceUI();
+        saveDraft("immediate");
+      };
+
+      // ====== Draft ======
+      function saveDraft(type) {
+        const serviceFee = calculateServiceFee();
+        const total = serviceFee + (estimatedAmount || 0);
+
+        bookingDraft = {
+          task_id,
+          type, // immediate / scheduled
+          base_amount: serviceFee,
+          final_amount: total,
+
+          task_snapshot: {
+            code: "GROCERY",
+            name: task_name,
+            pricing: basePrice,
+            unit: task_unit,
+          },
+
+          task_payload: {
+            items: selectedProducts.map((p) => ({
+              name: p.name,
+              quantity: p.quantity,
+              unit: "kg",
+            })),
+            estimated_budget: estimatedAmount,
+          },
+
+          note: "",
+        };
+
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        // console.log("BOOKING DRAFT:", bookingDraft);
       }
 
-      if (!estimatedAmount) {
-        alert("Vui lòng chọn hoặc nhập số tiền đi chợ ước tính!");
-        return;
+      function handleBookingNow() {
+        if (selectedProducts.length === 0) {
+          alert("Vui lòng chọn hoặc nhập ít nhất một sản phẩm!");
+          return;
+        }
+        if (!estimatedAmount) {
+          alert("Vui lòng chọn hoặc nhập số tiền đi chợ ước tính!");
+          return;
+        }
+
+        saveDraft("immediate");
+        window.location.href = "../book_now.html";
       }
 
-      localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-      console.log("BOOKING DRAFT: ", bookingDraft);
-      window.location.href = "../book_now.html";
-    }
-  
-  </script>
-</body>
+      function handleScheduledBooking() {
+        if (selectedProducts.length === 0) {
+          alert("Vui lòng chọn hoặc nhập ít nhất một sản phẩm!");
+          return;
+        }
+        if (!estimatedAmount) {
+          alert("Vui lòng chọn hoặc nhập số tiền đi chợ ước tính!");
+          return;
+        }
 
+        saveDraft("scheduled");
+        window.location.href = "../scheduled.html";
+      }
+
+      // expose
+      window.handleBookingNow = handleBookingNow;
+      window.handleScheduledBooking = handleScheduledBooking;
+
+      // init UI
+      renderProducts();
+      updatePriceUI();
+    </script>
+  </body>
 </html>
