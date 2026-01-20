@@ -1,31 +1,22 @@
 <!doctype html>
 <html>
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TaskGo</title>
+
   <link rel="stylesheet" type="text/css" href="../../../public/css/output.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+  />
   <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
-  
 </head>
 
 <body class="bg-primary-100 min-h-screen font-montserrat">
-  <header class="bg-primary-200 py-4">
-    <div class="flex items-center justify-between px-4">
-      <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-        <a href=""><img src="../../../public/images/taskgo-logo.png" alt=""></a>
-      </div>
 
-      <h1 class="font-bold text-xl text-dark-900">Chi tiết dịch vụ</h1>
-      <div class="w-10 h-10 flex items-center justify-center">
-        <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-      </div>
-    </div>
-  </header>
+  <div id="app-header"></div>
 
   <main class="p-4 space-y-4 pb-20">
     <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
@@ -85,7 +76,7 @@
         </button>
 
         <!-- combo 4 giờ -->
-         <button
+        <button
           class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
                 hover:shadow-lg hover:scale-[1.02]"
           onclick="selectTime(4, 360000, this)">
@@ -115,7 +106,7 @@
         </button>
 
         <!-- combo 6 giờ -->
-         <button
+        <button
           class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
                 hover:shadow-lg hover:scale-[1.02]"
           onclick="selectTime(6, 520000, this)">
@@ -130,7 +121,7 @@
         </button>
 
         <!-- combo 7 giờ -->
-         <button
+        <button
           class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
                 hover:shadow-lg hover:scale-[1.02]"
           onclick="selectTime(7, 600000, this)">
@@ -145,7 +136,7 @@
         </button>
 
         <!-- combo 8 giờ -->
-         <button
+        <button
           class="time-card w-full rounded-xl border p-4 bg-white transition-all duration-300
                 hover:shadow-lg hover:scale-[1.02]"
           onclick="selectTime(8, 680000, this)">
@@ -162,9 +153,9 @@
 
       <div id="price-summary" class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform">
         <div>
-            <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
-            <p id="total-price" class="text-2xl font-bold">0đ</p>
-            <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
+          <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
+          <p id="total-price" class="text-2xl font-bold">0đ</p>
+          <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
         </div>
         <span class="material-symbols-outlined text-4xl">payments</span>
       </div>
@@ -176,40 +167,29 @@
         <button class="action-btn action-btn-hover">
           <a href="../scheduled.html">Đặt lịch trước</a>
         </button>
-
       </div>
     </div>
   </main>
 
-  <footer>
-    <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-      <div class="flex justify-around py-2 text-base">
-        <a href="#" class="flex flex-col items-center text-white">
-          <span class="material-symbols-outlined text-4xl">house</span>
-          Trang chủ
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">news</span>
-          Hoạt động
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">chat</span>
-          Tin nhắn
-        </a>
-        <a href="#" class="flex flex-col items-center text-primary-500">
-          <span class="material-symbols-outlined text-4xl">lightbulb</span>
-          Thông báo
-        </a>
-      </div>
-    </nav>
-  </footer>
+  <!-- Mount Footer -->
+  <div id="app-footer"></div>
+
+  <!-- Init shared header/footer -->
+  <script type="module">
+    import { initLayout } from "../../js/ui/shared-layout.js";
+    initLayout({
+      role: "customer",
+      title: "Chi tiết dịch vụ",
+      active: "",
+    });
+  </script>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script type="module">
     import { initSocket } from "../../js/socket.js";
-
     initSocket();
   </script>
+
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const basePrice = Number(urlParams.get("price")) || 100000; // Giá mặc định nếu không có tham số
@@ -228,7 +208,7 @@
           return;
         }
 
-        const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
+        const res = await fetch(`http://localhost:3000/api/task/${task_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -238,10 +218,10 @@
         console.log("TOKEN: ", token);
 
         if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-            window.location.href = "../../auth/login-signup.html";
-            return;
+          localStorage.removeItem("token");
+          alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
+          window.location.href = "../../auth/login-signup.html";
+          return;
         }
 
         const data = await res.json();
@@ -315,7 +295,7 @@
 
       animatePrice();
     }
-    
+
     function highlightSelected(hours) {
       document.querySelectorAll("#time-options button").forEach(btn => {
         btn.classList.remove("ring-2", "ring-primary-500");
@@ -359,8 +339,6 @@
       console.log("BOOKING DRAFT: ", bookingDraft);
       window.location.href = "../book_now.html";
     }
-
   </script>
 </body>
-
 </html>
