@@ -9,8 +9,12 @@ import fetch from "node-fetch";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron } from "./jobs/cronJobStatus.js";
-import '../backend/jobs/transactionStatusJob.js'; 
+import {
+  voucherStatusCron,
+  orderStatusCron,
+  scheduledTaskReminderCron,
+} from "./jobs/cronJobStatus.js";
+import "../backend/jobs/transactionStatusJob.js";
 
 import authRoutes from "./routes/auth.route.js";
 import userRoutes from "./routes/user.route.js";
@@ -22,6 +26,8 @@ import discountRoutes from "./routes/discount.route.js";
 import transactionRoutes from "./routes/transaction.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import chatRoutes from "./routes/chat.route.js";
+
+import reportRoutes from "./routes/report.route.js";
 
 dotenv.config();
 
@@ -36,9 +42,9 @@ app.use(cookieParser());
 app.use(cors({ origin: true, credentials: true }));
 
 // Serve static files từ thư mục frontend
-console.log('__dirname =', __dirname);
+console.log("__dirname =", __dirname);
 
-app.use('/frontend', express.static(path.join(__dirname, '..', 'frontend')));
+app.use("/frontend", express.static(path.join(__dirname, "..", "frontend")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
@@ -50,6 +56,9 @@ app.use("/api/discount", discountRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api/notification", notificationRoutes);
 
+// Route báo cáo thống kê admin
+app.use("/api/report", reportRoutes);
+
 voucherStatusCron();
 //orderStatusCron();
 scheduledTaskReminderCron();
@@ -58,19 +67,16 @@ app.use("/api/chats", chatRoutes);
 
 app.get("/api/momo/bankcodes", async (req, res) => {
   const response = await fetch(
-    "https://payment.momo.vn/v2/gateway/api/bankcodes"
+    "https://payment.momo.vn/v2/gateway/api/bankcodes",
   );
   const data = await response.json();
   res.json(data);
 });
 
 const httpServer = http.createServer(app);
-initSocket(httpServer);      
+initSocket(httpServer);
 
 httpServer.listen(PORT, () => {
   connectDB();
   console.log(`Server listening on port ${PORT}`);
 });
-
-
-
