@@ -128,7 +128,15 @@ export default function registerChatHandlers(io) {
         };
 
         // Emit to everyone in chat room
-        io.to(`chat:${targetChat._id}`).emit("receive-message", payloadToEmit);
+        // io.to(`chat:${targetChat._id}`).emit("receive-message", payloadToEmit);
+        
+        // Send to every participant's personal "User Room"
+        // This ensures they get the message even if they are looking at a different order
+        if (targetChat.participants && targetChat.participants.length > 0) {
+            targetChat.participants.forEach((p) => {
+                io.to(`user:${p.user_id}`).emit("receive-message", payloadToEmit);
+            });
+        }
 
       } catch (err) {
         console.error("send-message error", err);

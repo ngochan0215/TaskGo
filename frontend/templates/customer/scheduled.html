@@ -1,231 +1,220 @@
 <!doctype html>
-<html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskGo</title>
-    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
-</head>
 
-<body class="bg-primary-100 min-h-screen font-montserrat">
-    <header class="bg-primary-200 py-4">
-        <div class="flex items-center justify-between px-4">
-            <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href=""><img src="../../public/images/taskgo-logo.png" alt=""></a>
-            </div>
+    <link rel="stylesheet" type="text/css" href="../../public/css/output.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../public/favicons/favicon.ico"
+    />
+  </head>
 
-            <h1 class="font-bold text-xl text-dark-900">Đặt lịch trước</h1>
-            <div class="w-10 h-10 flex items-center justify-center">
-                <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-            </div>
-        </div>
-    </header>
+  <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
+    <!-- Shared header injected here -->
+    <div id="app-header"></div>
 
-    <main class="p-4 space-y-4 pb-20">
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-                <h2 class="text-2xl font-bold text-primary-500 flex items-center gap-2">
-                <span class="material-symbols-outlined">event</span>
-                Thời gian làm việc
-                </h2>
-            </div>
-
-            <p class="text-l text-dark-300">
-                Chọn ngày và giờ Tasker đến làm việc
-            </p>
-
-            <div class="space-y-2">
-                <label class="text-sm font-medium text-dark-500 flex items-center gap-1">
-                <span class="material-symbols-outlined text-base">schedule</span>
-                Ngày & giờ
-                </label>
-
-                <input
-                type="datetime-local"
-                id="workdate"
-                class="w-full rounded-lg border px-3 py-2 text-lg
-                        focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                onchange="handleSelectDate()"
-                />
-            </div>
-
-            <div id="selectedDatePreview"
-                class="hidden mt-2 p-3 rounded-lg bg-primary-50 text-primary-700 text-sm flex items-center gap-2">
-                <span class="material-symbols-outlined">check_circle</span>
-                <span id="selectedDateText"></span>
-            </div>
-
-            <div class="flex space-x-4 pt-4">
-                <button
-                onclick="resetDate()"
-                class="action-btn action-btn-hover w-full flex items-center justify-center gap-1">
-                <span class="material-symbols-outlined">refresh</span>
-                Chọn lại
-                </button>
-
-                <button
-                onclick="setToday()"
-                class="action-btn action-btn-hover w-full flex items-center justify-center gap-1">
-                <span class="material-symbols-outlined">today</span>
-                Đặt hôm nay
-                </button>
-            </div>
+    <main class="p-4 space-y-4 pb-20 flex-grow">
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h2
+            class="text-2xl font-bold text-primary-500 flex items-center gap-2"
+          >
+            <span class="material-symbols-outlined">event</span>
+            Thời gian làm việc
+          </h2>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
-            <div class="flex items-center justify-between border-b pb-2">
-                <h2 class="text-2xl font-bold text-primary-500">Ghi chú cho Tasker</h2>
-            </div>
+        <p class="text-l text-dark-300">Chọn ngày và giờ Tasker đến làm việc</p>
 
-            <p class="text-xs mb-4">
-                Ghi chú này sẽ giúp Tasker hoàn thành công việc tốt hơn
-            </p>
+        <div class="space-y-2">
+          <label
+            class="text-sm font-medium text-dark-500 flex items-center gap-1"
+          >
+            <span class="material-symbols-outlined text-base">schedule</span>
+            Ngày & giờ
+          </label>
 
-            <div class="mb-6">
-                <textarea rows="5" class="w-full 
-               p-3 
-               border border-gray-300 
-               rounded-lg 
-               focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"></textarea>
-            </div>
-            <div class="flex space-x-4">
-                <button onclick="handleGoPayment()" 
-                    class="action-btn action-btn-hover w-full text-center">
-                    <span id="bookingTotalText">---</span>
-                </button>
-            </div>
+          <input
+            type="datetime-local"
+            id="workdate"
+            class="w-full rounded-lg border px-3 py-2 text-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            onchange="handleSelectDate()"
+          />
         </div>
+
+        <div
+          id="selectedDatePreview"
+          class="hidden mt-2 p-3 rounded-lg bg-primary-50 text-primary-700 text-sm flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined">check_circle</span>
+          <span id="selectedDateText"></span>
+        </div>
+
+        <div class="flex space-x-4 pt-4">
+          <button
+            onclick="resetDate()"
+            class="action-btn action-btn-hover w-full flex items-center justify-center gap-1"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+            Chọn lại
+          </button>
+
+          <button
+            onclick="setToday()"
+            class="action-btn action-btn-hover w-full flex items-center justify-center gap-1"
+          >
+            <span class="material-symbols-outlined">today</span>
+            Đặt hôm nay
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <div class="flex items-center justify-between border-b pb-2">
+          <h2 class="text-2xl font-bold text-primary-500">
+            Ghi chú cho Tasker
+          </h2>
+        </div>
+
+        <p class="text-xs mb-4">
+          Ghi chú này sẽ giúp Tasker hoàn thành công việc tốt hơn
+        </p>
+
+        <div class="mb-6">
+          <textarea
+            rows="5"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Bạn có yêu cầu gì thêm hãy nhập ở đây"
+          ></textarea>
+        </div>
+        <div class="flex space-x-4">
+          <button
+            onclick="handleGoPayment()"
+            class="action-btn action-btn-hover w-full text-center"
+          >
+            <span id="bookingTotalText">---</span>
+          </button>
+        </div>
+      </div>
     </main>
 
-    <footer>
-        <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-            <div class="flex justify-around py-2 text-base">
-                <a href="#" class="flex flex-col items-center text-white">
-                    <span class="material-symbols-outlined text-4xl">house</span>
-                    Trang chủ
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">news</span>
-                    Hoạt động
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">chat</span>
-                    Tin nhắn
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                    Thông báo
-                </a>
-            </div>
-        </nav>
-    </footer>
+    <!-- Shared footer injected here -->
+    <div id="app-footer"></div>
+
+    <!-- Shared layout init -->
+    <script type="module">
+      import { initLayout } from "../js/ui/shared-layout.js";
+      initLayout({ role: "customer", title: "Đặt lịch trước", active: "" });
+    </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
-        import { initSocket } from "../js/socket.js";
-
-        initSocket();
+      import { initSocket } from "../js/socket.js";
+      initSocket();
     </script>
-    
+
     <script>
-        let token = localStorage.getItem("token");
-        if (!token) {
-            alert("Vui lòng đăng nhập");
-            location.href = "../../auth/login-signup.html";
-        } 
-        console.log("TOKEN: ", token);
+      let token = localStorage.getItem("token");
+      if (!token) {
+        alert("Vui lòng đăng nhập");
+        location.href = "../../auth/login-signup.html";
+      }
+      console.log("TOKEN: ", token);
 
-        
-        const bookingDraftRaw = localStorage.getItem("bookingDraft");
-        if (!bookingDraftRaw) {
-            alert("Không tìm thấy thông tin đặt dịch vụ.");
-            window.location.href = "/";
+      const bookingDraftRaw = localStorage.getItem("bookingDraft");
+      if (!bookingDraftRaw) {
+        alert("Không tìm thấy thông tin đặt dịch vụ.");
+        window.location.href = "/";
+      }
+      let bookingDraft = JSON.parse(bookingDraftRaw);
+      console.log("BOOKING DRAFT IN SCHEDULED (first): ", bookingDraft);
+
+      const workdateInput = document.getElementById("workdate");
+      const previewBox = document.getElementById("selectedDatePreview");
+      const previewText = document.getElementById("selectedDateText");
+
+      function toDatetimeLocalVN(date) {
+        const vn = new Date(date.getTime() + 7 * 60 * 60 * 1000);
+        return vn.toISOString().slice(0, 16);
+      }
+
+      function handleSelectDate() {
+        if (!workdateInput.value) return;
+
+        const date = new Date(workdateInput.value);
+        bookingDraft.scheduled_at = date.toISOString();
+
+        previewText.innerText = `Đã chọn: ${date.toLocaleDateString("vi-VN")} lúc ${date.toLocaleTimeString(
+          "vi-VN",
+          {
+            hour: "2-digit",
+            minute: "2-digit",
+          },
+        )}`;
+
+        previewBox.classList.remove("hidden");
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        console.log(
+          "SCHEDULED DATE (handleSelectDate): ",
+          bookingDraft.scheduled_at,
+        );
+      }
+
+      function setToday() {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 30);
+
+        workdateInput.value = toDatetimeLocalVN(now);
+        handleSelectDate();
+      }
+
+      function resetDate() {
+        workdateInput.value = "";
+        delete bookingDraft.scheduled_at;
+        previewBox.classList.add("hidden");
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+      }
+
+      const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
+
+      const totalTextEl = document.getElementById("bookingTotalText");
+
+      const hours = Math.floor(bookingDraft.task_payload.total_time / 60);
+      const minutes = bookingDraft.task_payload.total_time % 60;
+
+      let timeText = "";
+      if (hours > 0) timeText += `${hours}h`;
+      if (minutes > 0) timeText += `${minutes}p`;
+
+      totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText ? timeText : "h"}`;
+
+      function handleGoPayment() {
+        if (!bookingDraft.scheduled_at) {
+          alert("Vui lòng chọn thời gian làm việc!");
+          return;
         }
-        let bookingDraft = JSON.parse(bookingDraftRaw);
-        console.log("BOOKING DRAFT IN SCHEDULED (first): ", bookingDraft);
 
-        const workdateInput = document.getElementById("workdate");
-        const previewBox = document.getElementById("selectedDatePreview");
-        const previewText = document.getElementById("selectedDateText");
+        const note = document.querySelector("textarea").value.trim();
+        bookingDraft.note = note;
+        bookingDraft.type = "scheduled";
 
-        // xử lý chọn ngày
-        function toDatetimeLocalVN(date) {
-            const vn = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-            return vn.toISOString().slice(0, 16);
-        }
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
 
-        function handleSelectDate() {
-            if (!workdateInput.value) return;
-
-            const date = new Date(workdateInput.value);
-            bookingDraft.scheduled_at = date.toISOString();
-            
-            previewText.innerText =
-                `Đã chọn: ${date.toLocaleDateString("vi-VN")} lúc ${date.toLocaleTimeString("vi-VN", {
-                hour: "2-digit",
-                minute: "2-digit"
-                })}`;
-
-            previewBox.classList.remove("hidden");
-            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-            console.log("SCHEDULED DATE (handleSelectDate): ", bookingDraft.scheduled_at);
-        }
-
-        function setToday() {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() + 30);
-
-            workdateInput.value = toDatetimeLocalVN(now);
-            handleSelectDate();
-        }
-
-        function resetDate() {
-            workdateInput.value = "";
-            delete bookingDraft.scheduled_at;
-            previewBox.classList.add("hidden");
-            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-        }
-
-        const formatCurrency = (v) => v.toLocaleString("vi-VN") + " VND";
-
-        // Render tiền + thời gian
-        const totalTextEl = document.getElementById("bookingTotalText");
-
-        const hours = Math.floor(bookingDraft.task_payload.total_time / 60);
-        const minutes = bookingDraft.task_payload.total_time % 60;
-
-        let timeText = "";
-        if (hours > 0) timeText += `${hours}h`;
-        if (minutes > 0) timeText += `${minutes}p`;
-
-        totalTextEl.textContent = `${formatCurrency(bookingDraft.final_amount)} / ${timeText? timeText : "h"}`;
-
-        // lưu note
-        function handleGoPayment() {
-            if (!bookingDraft.scheduled_at) {
-                alert("Vui lòng chọn thời gian làm việc!");
-                return;
-            }
-
-            const note = document.querySelector("textarea").value.trim();
-            bookingDraft.note = note;
-            bookingDraft.type = "scheduled";
-
-            localStorage.setItem(
-                "bookingDraft",
-                JSON.stringify(bookingDraft)
-            );
-
-            console.log("BOOKING DRAFT IN SCHEDULED: ", bookingDraft);
-            window.location.href = "./payment_pages/payment.html";
-        }
+        console.log("BOOKING DRAFT IN SCHEDULED: ", bookingDraft);
+        window.location.href = "./payment_pages/payment.html";
+      }
     </script>
-</body>
-
+  </body>
 </html>

@@ -630,7 +630,8 @@
     // Store original orders and current sort mode
     let allOrders = [];
     let currentSortMode = null; // "near", "price", or null
-
+    let currentPage = 1;
+    const itemsPerPage = 6;
     // Calculate distance between two coordinates (Haversine formula)
     function getDistanceKm(lat1, lon1, lat2, lon2) {
         const R = 6371; // Earth radius in km
@@ -715,32 +716,41 @@
     }
 
     // Apply sorting and render
-    function applySortingAndRender() {
-        let sortedOrders = [...allOrders];
+    // Apply sorting and render
+        function applySortingAndRender() {
+            let sortedOrders = [...allOrders];
 
-        // First apply priority sorting (assigned first, then pending)
-        sortedOrders = sortedOrders.sort((a, b) => {
-            const aIsAssigned = a.status === "assigned" && a.tasker_id;
-            const bIsAssigned = b.status === "assigned" && b.tasker_id;
-            const aIsPending = a.status === "pending" && !a.tasker_id;
-            const bIsPending = b.status === "pending" && !b.tasker_id;
-            
-            if (aIsAssigned && !bIsAssigned) return -1;
-            if (!aIsAssigned && bIsAssigned) return 1;
-            if (aIsPending && !bIsPending) return -1;
-            if (!aIsPending && bIsPending) return 1;
-            return 0;
-        });
+            // First apply priority sorting (assigned first, then pending)
+            sortedOrders = sortedOrders.sort((a, b) => {
+                const aIsAssigned = a.status === "assigned" && a.tasker_id;
+                const bIsAssigned = b.status === "assigned" && b.tasker_id;
+                const aIsPending = a.status === "pending" && !a.tasker_id;
+                const bIsPending = b.status === "pending" && !b.tasker_id;
 
-        // Then apply user-selected sorting
-        if (currentSortMode === "near") {
-            sortedOrders = sortByDistance(sortedOrders);
-        } else if (currentSortMode === "price") {
-            sortedOrders = sortByPrice(sortedOrders);
+                if (aIsAssigned && !bIsAssigned) return -1;
+                if (!aIsAssigned && bIsAssigned) return 1;
+                if (aIsPending && !bIsPending) return -1;
+                if (!aIsPending && bIsPending) return 1;
+                return 0;
+            });
+
+            // Then apply user-selected sorting
+            if (currentSortMode === "near") {
+                sortedOrders = sortByDistance(sortedOrders);
+            } else if (currentSortMode === "price") {
+                sortedOrders = sortByPrice(sortedOrders);
+            }
+
+            const totalItems = sortedOrders.length;
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            const ordersForCurrentPage = sortedOrders.slice(startIndex, endIndex);
+
+            renderOrders(ordersForCurrentPage);
+
+            renderPagination(totalItems);
         }
-
-        renderOrders(sortedOrders);
-    }
 
     // Load available orders
     async function loadAvailableOrders() {
@@ -835,6 +845,63 @@
             "in_progress": "Đang làm việc"
         };
         return statusMap[status] || status;
+    }
+
+    function renderPagination(totalItems) {
+        const container = document.getElementById("pagination-controls");
+        if (!container) return;
+        container.innerHTML = "";
+
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        if (totalPages <= 1) return;
+
+        const prevBtn = document.createElement("button");
+        prevBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_left</span>';
+        prevBtn.className = `w-8 h-8 flex items-center justify-center rounded-lg border ${currentPage === 1 ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-[#3730A3]'}`;
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.onclick = () => {
+            if (currentPage > 1) {
+                currentPage--;
+                applySortingAndRender();
+                // Cuộn lên đầu danh sách việc
+                document.getElementById("job-list").scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        };
+        container.appendChild(prevBtn);
+
+        // Các nút số trang
+        for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement("button");
+            btn.innerText = i;
+            if (i === currentPage) {
+                // Style cho trang đang chọn
+                btn.className = "w-8 h-8 flex items-center justify-center rounded-lg bg-[#3730A3] text-white font-bold shadow-md";
+            } else {
+                // Style cho trang thường
+                btn.className = "w-8 h-8 flex items-center justify-center rounded-lg border border-gray-300 text-gray-600 hover:bg-gray-50 hover:text-[#3730A3]";
+            }
+            btn.onclick = () => {
+                currentPage = i;
+                applySortingAndRender();
+                document.getElementById("job-list").scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+            container.appendChild(btn);
+        }
+
+        // Nút Next
+        const nextBtn = document.createElement("button");
+        nextBtn.innerHTML = '<span class="material-symbols-outlined text-sm">chevron_right</span>';
+        nextBtn.className = `w-8 h-8 flex items-center justify-center rounded-lg border ${currentPage === totalPages ? 'text-gray-300 border-gray-200 cursor-not-allowed' : 'text-gray-600 border-gray-300 hover:bg-gray-50 hover:text-[#3730A3]'}`;
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.onclick = () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                applySortingAndRender();
+                document.getElementById("job-list").scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        };
+        container.appendChild(nextBtn);
     }
 
     function renderOrders(orders) {
@@ -982,6 +1049,7 @@
             } else {
                 currentSortMode = "near";
             }
+            currentPage = 1;
             updateFilterButtons(currentSortMode);
             applySortingAndRender();
         });
@@ -995,6 +1063,7 @@
             } else {
                 currentSortMode = "price";
             }
+            currentPage = 1;
             updateFilterButtons(currentSortMode);
             applySortingAndRender();
         });
