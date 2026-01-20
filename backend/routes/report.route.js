@@ -7,6 +7,12 @@ import {
   getActiveTaskers,
   getOrderStatusStats,
   exportReportPdf,
+  getOrderStatistics,
+  getServiceStatistics,
+  getUserStatistics,
+  getReviewStatistics,
+  getPromotionStatistics,
+  getRevenueStatistics,
 } from "../controllers/report.controller.js";
 import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin } from "../middleware/verifyRole.js";
@@ -33,5 +39,23 @@ router.get("/order-status", verifyToken, isAdmin, getOrderStatusStats);
 
 // Xuất báo cáo PDF
 router.get("/export-pdf", verifyToken, isAdmin, exportReportPdf);
+
+// Thống kê đơn hàng chi tiết: ?period=7days|month|year
+router.get("/orders/statistics", verifyToken, isAdmin, getOrderStatistics);
+
+// Thống kê dịch vụ: ?limit=10
+router.get("/services/statistics", verifyToken, isAdmin, getServiceStatistics);
+
+// Thống kê người dùng: ?period=7days|month|year
+router.get("/users/statistics", verifyToken, isAdmin, getUserStatistics);
+
+// Thống kê đánh giá: ?period=7days|month|year
+router.get("/reviews/statistics", verifyToken, isAdmin, getReviewStatistics);
+
+// Thống kê khuyến mãi và voucher: ?period=7days|month|year
+router.get("/promotions/statistics", verifyToken, isAdmin, getPromotionStatistics);
+
+// Thống kê doanh thu chi tiết: ?period=7days|month|year
+router.get("/revenue/statistics", verifyToken, isAdmin, getRevenueStatistics);
 
 export default router;
