@@ -37,6 +37,7 @@
     "node-cron": "^4.2.1",
     "node-fetch": "^3.3.2",
     "nodemailer": "^7.0.9",
+    "pdfkit": "^0.17.2",
     "request": "^2.88.2",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1"

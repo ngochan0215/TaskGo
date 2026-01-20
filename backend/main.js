@@ -23,6 +23,7 @@ import transactionRoutes from "./routes/transaction.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import chatRoutes from "./routes/chat.route.js";
 import reviewRoutes from "./routes/review.route.js";
+import reportRoutes from "./routes/report.route.js";
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/discount", discountRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api/notification", notificationRoutes);
 app.use("/api/review", reviewRoutes);
+app.use("/api/report", reportRoutes);
 
 voucherStatusCron();
 //orderStatusCron();
