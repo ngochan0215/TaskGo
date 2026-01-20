@@ -30,7 +30,7 @@ class AppHeader extends HTMLElement {
             <div class="flex items-center gap-2">
                 <button id="notification-btn" class="w-9 h-9 flex items-center justify-center bg-white/40 rounded-full hover:bg-white/60 transition relative">
                     <span class="material-symbols-outlined text-[#111827]">notifications</span>
-                    ${active === 'notification' ? '<span class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-white"></span>' : ''}
+                    ${active === 'notification' ? '<span class="absolute top-2 right-2.5 w-2 h-2"></span>' : ''}
                 </button>
                 <button id="menu-btn" class="p-2 focus:outline-none flex items-center bg-white/40 rounded-lg hover:bg-white/60 transition text-[#111827]">
                     <span id="menu-icon" class="material-symbols-outlined">menu</span>
@@ -50,11 +50,11 @@ class AppHeader extends HTMLElement {
                     </div>
                 </div>
 
-                <a href="../customer/customer_home.html" class="${getLinkClass('home')}">Trang chủ</a>
-                <a href="../customer/customer_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
-                <a href="../chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
-                <a href="../notification.html" class="${getLinkClass('notification')}">Thông báo</a>
-                <a href="../profile.html" class="${getLinkClass('profile')}">Tài khoản</a>
+                <a href="../templates/customer/customer_home.html" class="${getLinkClass('home')}">Trang chủ</a>
+                <a href="../templates/customer/customer_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
+                <a href="../templates/chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
+                <a href="../templates/notification.html" class="${getLinkClass('notification')}">Thông báo</a>
+                <a href="../templates/customer/profile.html" class="${getLinkClass('profile')}">Tài khoản</a>
 
                 <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
                     <span class="material-symbols-outlined">logout</span> Đăng xuất
@@ -113,11 +113,11 @@ class AppHeader extends HTMLElement {
                 });
             } catch (err) {}
             localStorage.removeItem("token");
-            window.location.href = "../auth/login-signup.html";
+            window.location.href = "../templates/auth/login-signup.html";
         });
     }
     const notiBtn = this.querySelector("#notification-btn");
-    if (notiBtn) notiBtn.addEventListener("click", () => window.location.href = "../notification.html");
+    if (notiBtn) notiBtn.addEventListener("click", () => window.location.href = "../templates/notification.html");
   }
 }
 
