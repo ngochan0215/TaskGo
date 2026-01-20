@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>TaskGo Admin</title>
+    <title>TaskGo Admin - Quản lý Voucher</title>
 
     <!-- <script src="https://cdn.tailwindcss.com"></script> -->
     <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
@@ -24,7 +24,7 @@
 
   </head>
 
-  <body class="admin-shell">
+  <body class="admin-shell min-h-screen">
     <div id="backdrop" class="backdrop" onclick="closeSidebar()"></div>
 
     <aside id="sidebarMobile" class="sidebar-mobile closed lg:hidden">
@@ -248,17 +248,17 @@
               </div>
             </div>
 
-            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <table class="w-full text-left border-collapse">
+            <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse table-fixed min-w-[800px]">
                     <thead class="bg-slate-50 border-b border-gray-100">
                         <tr>
-                            <th class="p-4 font-semibold text-slate-700">Mã voucher</th>
-                            <th class="p-4 font-semibold text-slate-700">Tên</th>
-                            <th class="p-4 font-semibold text-slate-700">Giảm giá</th>
-                            <th class="p-4 font-semibold text-slate-700">Áp dụng cho</th>
-                            <th class="p-4 font-semibold text-slate-700">Thời hạn</th>
-                            <th class="p-4 font-semibold text-slate-700">Trạng thái</th>
-                            <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Mã voucher</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Tên</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Giảm giá</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Áp dụng cho</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Thời hạn</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest">Trạng thái</th>
+                            <th class="p-4 font-semibold text-slate-700 tracking-widest text-center">Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="data-table-body">
