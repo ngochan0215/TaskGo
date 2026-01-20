@@ -28,7 +28,7 @@ class TaskerHeader extends HTMLElement {
             <div class="flex items-center gap-2">
                 <button id="notification-btn" class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
                     <span class="material-symbols-outlined text-[#111827]">notifications</span>
-                    ${active === 'notification' ? '<span class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>' : ''}
+                    ${active === 'notification' ? '<span class="absolute top-2 right-2.5 w-2 h-2"></span>' : ''}
                 </button>
                 <button id="menu-btn" class="p-2 focus:outline-none flex items-center bg-white/20 rounded-lg hover:bg-white/40 transition text-[#111827]">
                     <span id="menu-icon" class="material-symbols-outlined">menu</span>
@@ -54,14 +54,14 @@ class TaskerHeader extends HTMLElement {
                     </div>
                 </div>
 
-                <a href="./tasker_home.html" class="${getLinkClass('home')}">Trang chủ</a>
-                <a href="./profile.html" class="${getLinkClass('profile')}">Profile cá nhân</a>
-                <a href="./tasker_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
-                <a href="./tasker_earnings.html" class="${getLinkClass('earnings')}">Thu nhập</a>
-                <a href="./work_schedule.html" class="${getLinkClass('schedule')}">Lịch làm việc</a>
-                <a href="./tasker_chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
+                <a href="../tasker/tasker_home.html" class="${getLinkClass('home')}">Trang chủ</a>
+                <a href="../tasker/profile.html" class="${getLinkClass('profile')}">Profile cá nhân</a>
+                <a href="../tasker/tasker_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
+                <a href="../tasker/tasker_earnings.html" class="${getLinkClass('earnings')}">Thu nhập</a>
+                <a href="../tasker/work_schedule.html" class="${getLinkClass('schedule')}">Lịch làm việc</a>
+                <a href="./tasker/tasker_chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
 
-                <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
+                <a href="" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
                     <span class="material-symbols-outlined">logout</span> Đăng xuất
                 </a>
             </nav>
