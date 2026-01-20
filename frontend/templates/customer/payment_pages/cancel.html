@@ -1,272 +1,283 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thanh toán thất bại - TaskGo</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
 
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 100%;
-            padding: 40px;
-            text-align: center;
-            animation: slideIn 0.5s ease-out;
-        }
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 100%;
+        padding: 40px;
+        text-align: center;
+        animation: slideIn 0.5s ease-out;
+      }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-30px);
         }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-        .error-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: scaleIn 0.6s ease-out 0.2s both;
-        }
+      .error-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: scaleIn 0.6s ease-out 0.2s both;
+      }
 
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
+      @keyframes scaleIn {
+        from {
+          transform: scale(0);
         }
+        to {
+          transform: scale(1);
+        }
+      }
 
-        .error-icon svg {
-            width: 50px;
-            height: 50px;
-            stroke: white;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: xmark 0.6s ease-out 0.5s forwards;
-        }
+      .error-icon svg {
+        width: 50px;
+        height: 50px;
+        stroke: white;
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        fill: none;
+        stroke-dasharray: 100;
+        stroke-dashoffset: 100;
+        animation: xmark 0.6s ease-out 0.5s forwards;
+      }
 
-        @keyframes xmark {
-            to {
-                stroke-dashoffset: 0;
-            }
+      @keyframes xmark {
+        to {
+          stroke-dashoffset: 0;
         }
+      }
 
-        h1 {
-            color: #ef4444;
-            font-size: 28px;
-            margin-bottom: 15px;
-            font-weight: 600;
-        }
+      h1 {
+        color: #ef4444;
+        font-size: 28px;
+        margin-bottom: 15px;
+        font-weight: 600;
+      }
 
-        .message {
-            color: #6b7280;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
+      .message {
+        color: #6b7280;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 25px;
+      }
 
-        .order-info {
-            background: #f3f4f6;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 25px;
-            text-align: left;
-        }
+      .order-info {
+        background: #f3f4f6;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+        text-align: left;
+      }
 
-        .order-info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e5e7eb;
-        }
+      .order-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5e7eb;
+      }
 
-        .order-info-item:last-child {
-            border-bottom: none;
-        }
+      .order-info-item:last-child {
+        border-bottom: none;
+      }
 
-        .order-info-label {
-            color: #6b7280;
-            font-size: 14px;
-        }
+      .order-info-label {
+        color: #6b7280;
+        font-size: 14px;
+      }
 
-        .order-info-value {
-            color: #1f2937;
-            font-weight: 600;
-            font-size: 14px;
-        }
+      .order-info-value {
+        color: #1f2937;
+        font-weight: 600;
+        font-size: 14px;
+      }
 
-        .loader {
-            border: 3px solid #f3f4f6;
-            border-top: 3px solid #f5576c;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
+      .loader {
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #f5576c;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
 
-        .status-message {
-            color: #6b7280;
-            font-size: 14px;
-            margin-top: 15px;
-        }
+      .status-message {
+        color: #6b7280;
+        font-size: 14px;
+        margin-top: 15px;
+      }
 
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
+      .btn-group {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
 
-        .btn {
-            display: inline-block;
-            padding: 14px 30px;
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-        }
+      .btn {
+        display: inline-block;
+        padding: 14px 30px;
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+      }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
+      .btn-primary {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
 
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
-        }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+      }
 
-        .btn-secondary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
+      .btn-secondary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
 
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
-        }
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+      }
 
-        .error-message {
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            display: none;
-        }
+      .error-message {
+        background: #fee2e2;
+        color: #dc2626;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        display: none;
+      }
 
-        .hidden {
-            display: none;
-        }
+      .hidden {
+        display: none;
+      }
 
-        .reasons {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            text-align: left;
-        }
+      .reasons {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+        text-align: left;
+      }
 
-        .reasons h3 {
-            color: #92400e;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
+      .reasons h3 {
+        color: #92400e;
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
 
-        .reasons ul {
-            color: #78350f;
-            font-size: 14px;
-            margin-left: 20px;
-        }
+      .reasons ul {
+        color: #78350f;
+        font-size: 14px;
+        margin-left: 20px;
+      }
 
-        .reasons li {
-            margin-bottom: 5px;
-        }
+      .reasons li {
+        margin-bottom: 5px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="error-icon">
-            <svg viewBox="0 0 52 52">
-                <line x1="16" y1="16" x2="36" y2="36"/>
-                <line x1="36" y1="16" x2="16" y2="36"/>
-            </svg>
-        </div>
-        
-        <h1>Thanh toán thất bại!</h1>
-        <p class="message">Giao dịch của bạn không thể hoàn tất. Vui lòng thử lại hoặc liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn.</p>
-        
-        <div class="order-info hidden" id="orderInfo">
-            <div class="order-info-item">
-                <span class="order-info-label">Mã đơn hàng:</span>
-                <span class="order-info-value" id="orderId">-</span>
-            </div>
-            <div class="order-info-item">
-                <span class="order-info-label">Trạng thái:</span>
-                <span class="order-info-value" style="color: #ef4444;">Thanh toán thất bại</span>
-            </div>
-        </div>
+      <div class="error-icon">
+        <svg viewBox="0 0 52 52">
+          <line x1="16" y1="16" x2="36" y2="36" />
+          <line x1="36" y1="16" x2="16" y2="36" />
+        </svg>
+      </div>
 
-        <div class="reasons">
-            <h3>Các nguyên nhân có thể:</h3>
-            <ul>
-                <li>Số dư tài khoản không đủ</li>
-                <li>Thông tin thẻ không chính xác</li>
-                <li>Hạn mức giao dịch đã vượt quá</li>
-                <li>Bạn đã hủy giao dịch</li>
-                <li>Lỗi kết nối mạng</li>
-            </ul>
-        </div>
+      <h1>Thanh toán thất bại!</h1>
+      <p class="message">
+        Giao dịch của bạn không thể hoàn tất. Vui lòng thử lại hoặc liên hệ hỗ
+        trợ nếu vấn đề vẫn tiếp diễn.
+      </p>
 
-        <div class="error-message" id="errorMessage"></div>
-        
-        <div id="loadingSection">
-            <div class="loader"></div>
-            <p class="status-message">Đang cập nhật trạng thái giao dịch...</p>
+      <div class="order-info hidden" id="orderInfo">
+        <div class="order-info-item">
+          <span class="order-info-label">Mã đơn hàng:</span>
+          <span class="order-info-value" id="orderId">-</span>
         </div>
+        <div class="order-info-item">
+          <span class="order-info-label">Trạng thái:</span>
+          <span class="order-info-value" style="color: #ef4444"
+            >Thanh toán thất bại</span
+          >
+        </div>
+      </div>
 
-        <!-- <div class="hidden" id="actionSection">
+      <div class="reasons">
+        <h3>Các nguyên nhân có thể:</h3>
+        <ul>
+          <li>Số dư tài khoản không đủ</li>
+          <li>Thông tin thẻ không chính xác</li>
+          <li>Hạn mức giao dịch đã vượt quá</li>
+          <li>Bạn đã hủy giao dịch</li>
+          <li>Lỗi kết nối mạng</li>
+        </ul>
+      </div>
+
+      <div class="error-message" id="errorMessage"></div>
+
+      <div id="loadingSection">
+        <div class="loader"></div>
+        <p class="status-message">Đang cập nhật trạng thái giao dịch...</p>
+      </div>
+
+      <!-- <div class="hidden" id="actionSection">
             <div class="btn-group">
                 <a href="/customer/book_now.html" class="btn btn-primary">Thử lại</a>
                 <a href="/customer/customer_home.html" class="btn btn-secondary">Về trang chủ</a>
@@ -276,57 +287,60 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
-        import { initSocket } from "../../js/socket.js";
+      import { initSocket } from "../../js/socket.js";
 
-        initSocket();
+      initSocket();
     </script>
     <script>
-        // Lấy orderId từ URL query params
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('orderCode') || urlParams.get('orderId') || urlParams.get('cancel');
+      // Lấy orderId từ URL query params
+      const urlParams = new URLSearchParams(window.location.search);
+      const orderId =
+        urlParams.get("orderCode") ||
+        urlParams.get("orderId") ||
+        urlParams.get("cancel");
 
-        async function updateFailedTransaction() {
-            if (!orderId) {
-                showError('Không tìm thấy mã đơn hàng');
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/transaction/${orderId}/failed`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    // Hiển thị thông tin đơn hàng
-                    document.getElementById('orderId').textContent = orderId;
-                    document.getElementById('orderInfo').classList.remove('hidden');
-                    document.getElementById('loadingSection').classList.add('hidden');
-                    // document.getElementById('actionSection').classList.remove('hidden');
-                } else {
-                    showError(data.error || 'Có lỗi xảy ra khi cập nhật giao dịch');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Không thể kết nối đến server. Vui lòng thử lại sau.');
-            }
+      async function updateFailedTransaction() {
+        if (!orderId) {
+          showError("Không tìm thấy mã đơn hàng");
+          return;
         }
 
-        function showError(message) {
-            document.getElementById('errorMessage').textContent = message;
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('loadingSection').classList.add('hidden');
-            document.getElementById('actionSection').classList.remove('hidden');
-        }
+        try {
+          const response = await fetch(`/api/transaction/${orderId}/failed`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
 
-        // Tự động gọi API khi trang load
-        window.addEventListener('DOMContentLoaded', () => {
-            updateFailedTransaction();
-        });
+          const data = await response.json();
+
+          if (response.ok) {
+            // Hiển thị thông tin đơn hàng
+            document.getElementById("orderId").textContent = orderId;
+            document.getElementById("orderInfo").classList.remove("hidden");
+            document.getElementById("loadingSection").classList.add("hidden");
+            // document.getElementById('actionSection').classList.remove('hidden');
+          } else {
+            showError(data.error || "Có lỗi xảy ra khi cập nhật giao dịch");
+          }
+        } catch (error) {
+          console.error("Error:", error);
+          showError("Không thể kết nối đến server. Vui lòng thử lại sau.");
+        }
+      }
+
+      function showError(message) {
+        document.getElementById("errorMessage").textContent = message;
+        document.getElementById("errorMessage").style.display = "block";
+        document.getElementById("loadingSection").classList.add("hidden");
+        document.getElementById("actionSection").classList.remove("hidden");
+      }
+
+      // Tự động gọi API khi trang load
+      window.addEventListener("DOMContentLoaded", () => {
+        updateFailedTransaction();
+      });
     </script>
-</body>
+  </body>
 </html>

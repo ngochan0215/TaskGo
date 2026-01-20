@@ -8,7 +8,7 @@ import { pushNotification } from "../services/notification.service.js";
 export const voucherStatusCron = () => {
 
   // chạy mỗi ngày lúc 0h
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("0 0 * * *", async () => {
     try {
       const now = new Date();
 
@@ -55,7 +55,7 @@ export const voucherStatusCron = () => {
 export const discountStatusCron = () => {
 
   // chạy mỗi ngày lúc 0h
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("0 0 * * *", async () => {
     try {
       const now = new Date();
 

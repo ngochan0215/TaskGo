@@ -647,3 +647,4 @@
 
       window.closePromoModal = closePromoModal;
       window.copyPromoCode = copyPromoCode;
+      window.copyPromoCodeStatic = copyPromoCodeStatic;

@@ -131,6 +131,10 @@
     @apply -translate-x-full;
   }
 
+  .hover-text-red-400 {
+    @apply hover:text-red-400;
+  }
+
   .backdrop {
     @apply fixed inset-0 z-40 bg-black/40 hidden;
   }

@@ -2,11 +2,11 @@ import {
     acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService,
     cashOutForTasker, getCashoutInfo, availableCashout,
-    getTaskerAcceptanceRate, getTaskerEarningsService
+    getTaskerAcceptanceRate, getTaskerEarningsService, changeTaskerStatus
 } from "../services/taskers.service.js";
 import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
-import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review } from "../models/index.js";
+import { User, Order, Notification, Customer, Tasker, Receipt, OrderStatusLog, Account, Review, Chat } from "../models/index.js";
 import { pushNotification } from "../services/notification.service.js";
 import { changeOrderStatus, getOrderByIdService, getAvailableOrdersForTaskerService, getAllOrdersByTaskerIdService, getWorkScheduleService } from "../services/order.service.js";
 import { markReceiptPaidService } from "./receipt.controller.js";
@@ -351,6 +351,13 @@ export const confirmComplete = async (req, res) => {
     await User.updateOne(
       { _id: req.userId },
       { $inc: { reputation_score: reputationDelta } },
+      { session }
+    );
+
+    // Update chat's status
+    await Chat.updateOne(
+      { order_id: orderId },
+      { $set: { status: "completed"}},
       { session }
     );
     

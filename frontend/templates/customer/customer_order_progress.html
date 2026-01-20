@@ -82,10 +82,45 @@
     style="background-color: #f3f4f6"
     class="text-[#111827] min-h-screen flex flex-col"
   >
-    <!-- Shared header injected here -->
-    <div id="app-header"></div>
+    <nav class="sticky top-0 z-[100] bg-white shadow-sm">
+      <header
+        style="background-color: #a5b4fc"
+        class="flex items-center justify-between px-4 py-3 shadow-md"
+      >
+        <div class="flex items-center gap-3">
+          <a
+            href="./customer_activity.html"
+            class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]"
+          >
+            <span class="material-symbols-outlined text-[20px]"
+              >arrow_back</span
+            >
+          </a>
+          <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">
+            Chi tiết đơn hàng
+          </h1>
+        </div>
 
-    <main class="flex-grow p-4 md:py-6 md:px-6 pb-24">
+        <div class="flex items-center gap-2">
+          <a
+            id="headerPhoneLink"
+            href="tel:0909123123"
+            class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
+          >
+            <span class="material-symbols-outlined text-[#111827]">call</span>
+          </a>
+          <button
+            id="headerChatBtn"
+            class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
+            onclick="openChat()"
+          >
+            <span class="material-symbols-outlined text-[#111827]">chat</span>
+          </button>
+        </div>
+      </header>
+    </nav>
+
+    <main class="flex-grow p-4 md:py-6 md:px-6">
       <div
         class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
       >
@@ -143,9 +178,8 @@
                       <span
                         id="taskerReputation"
                         class="text-xs text-primary-600 font-medium"
+                        >Điểm: —</span
                       >
-                        Điểm: —
-                      </span>
                     </div>
                   </div>
 
@@ -154,7 +188,6 @@
                       id="chatBtn"
                       onclick="openChat()"
                       class="flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-2 rounded-full font-bold text-xs hover:bg-blue-100 transition shadow-sm active:scale-95 border border-blue-200"
-                      type="button"
                     >
                       <span class="material-symbols-outlined text-[18px]"
                         >chat</span
@@ -177,7 +210,6 @@
                       id="favoriteBtn"
                       onclick="toggleFavorite()"
                       class="flex items-center gap-1.5 bg-pink-50 text-pink-700 px-3 py-2 rounded-full font-bold text-xs hover:bg-pink-100 transition shadow-sm active:scale-95 border border-pink-200"
-                      type="button"
                     >
                       <span
                         id="favoriteIcon"
@@ -202,10 +234,9 @@
               >
               Chi tiết dịch vụ
             </h3>
-            <div
-              id="serviceDetails"
-              class="border-t border-gray-200 pt-3"
-            ></div>
+            <div id="serviceDetails" class="border-t border-gray-200 pt-3">
+              <!-- Content will be rendered by JavaScript -->
+            </div>
           </div>
 
           <!-- Address Details -->
@@ -218,10 +249,9 @@
               >
               Địa chỉ làm việc
             </h3>
-            <div
-              id="addressDetails"
-              class="border-t border-gray-200 pt-3"
-            ></div>
+            <div id="addressDetails" class="border-t border-gray-200 pt-3">
+              <!-- Content will be rendered by JavaScript -->
+            </div>
           </div>
 
           <!-- Payment Details -->
@@ -234,10 +264,9 @@
               >
               Thông tin thanh toán
             </h3>
-            <div
-              id="paymentDetails"
-              class="border-t border-gray-200 pt-3"
-            ></div>
+            <div id="paymentDetails" class="border-t border-gray-200 pt-3">
+              <!-- Content will be rendered by JavaScript -->
+            </div>
           </div>
 
           <!-- Customer Note -->
@@ -256,14 +285,18 @@
             <div
               id="orderNote"
               class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-gray-700 text-sm italic"
-            ></div>
+            >
+              <!-- Content will be rendered by JavaScript -->
+            </div>
           </div>
 
           <!-- Review Section -->
           <div
             id="reviewSection"
             class="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 hidden"
-          ></div>
+          >
+            <!-- Content will be rendered by JavaScript -->
+          </div>
         </div>
 
         <div class="lg:col-span-5 relative">
@@ -277,13 +310,12 @@
               <span
                 id="statusBadge"
                 class="px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-bold rounded-full uppercase tracking-wide"
+                >Đang tải...</span
               >
-                Đang tải...
-              </span>
             </div>
 
             <div class="relative pl-2 mb-8" id="timeline-container">
-              <!-- Pending -->
+              <!-- Pending step -->
               <div class="step-item relative flex gap-4 pb-8" id="step-pending">
                 <div class="flex flex-col items-center relative z-10">
                   <div
@@ -309,8 +341,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- Assigned -->
+              <!-- Assigned step -->
               <div
                 class="step-item relative flex gap-4 pb-8 hidden"
                 id="step-assigned"
@@ -339,8 +370,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- Accepted -->
+              <!-- Accepted step -->
               <div
                 class="step-item relative flex gap-4 pb-8 hidden"
                 id="step-accepted"
@@ -369,8 +399,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- Departed -->
+              <!-- Departed step -->
               <div
                 class="step-item relative flex gap-4 pb-8"
                 id="step-departed"
@@ -399,8 +428,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- Arrived -->
+              <!-- Arrived step -->
               <div class="step-item relative flex gap-4 pb-8" id="step-arrived">
                 <div class="flex flex-col items-center relative z-10">
                   <div
@@ -426,8 +454,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- In progress -->
+              <!-- In Progress step -->
               <div
                 class="step-item relative flex gap-4 pb-8"
                 id="step-in-progress"
@@ -456,8 +483,7 @@
                   </p>
                 </div>
               </div>
-
-              <!-- Completed -->
+              <!-- Completed step -->
               <div class="step-item relative flex gap-4" id="step-completed">
                 <div class="flex flex-col items-center relative z-10">
                   <div
@@ -484,6 +510,7 @@
               </div>
             </div>
 
+            <!-- Review Reminder Section (for customer reviewing tasker) -->
             <div
               id="reviewReminderSection"
               class="hidden mb-4 bg-amber-50 border border-amber-200 rounded-xl p-4"
@@ -507,7 +534,6 @@
                   <button
                     id="openReviewBtn"
                     class="w-full py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs transition"
-                    type="button"
                   >
                     Đánh giá ngay
                   </button>
@@ -515,6 +541,7 @@
               </div>
             </div>
 
+            <!-- Review Display Section (if already reviewed) -->
             <div
               id="reviewDisplaySection"
               class="hidden mb-4 bg-green-50 border border-green-200 rounded-xl p-4"
@@ -532,10 +559,9 @@
                   <p class="font-bold text-green-900 text-sm mb-2">
                     Đã đánh giá
                   </p>
-                  <div
-                    id="reviewDisplayContent"
-                    class="text-xs text-green-700"
-                  ></div>
+                  <div id="reviewDisplayContent" class="text-xs text-green-700">
+                    <!-- Review content will be inserted here -->
+                  </div>
                 </div>
               </div>
             </div>
@@ -544,7 +570,6 @@
               <button
                 id="main-action-btn"
                 class="w-full py-3.5 rounded-xl font-bold text-white text-sm shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 transition-all active:scale-95 hidden"
-                type="button"
               >
                 <span
                   id="btn-icon"
@@ -556,7 +581,6 @@
               <button
                 id="cancel-btn"
                 class="w-full mt-3 py-2 text-red-500 font-bold text-xs hover:bg-red-50 rounded-lg transition hidden"
-                type="button"
               >
                 Huỷ đơn
               </button>
@@ -566,78 +590,221 @@
       </div>
     </main>
 
-    <!-- Shared footer injected here -->
-    <div id="app-footer"></div>
+    <footer class="mt-auto py-6 border-t border-gray-200 bg-white">
+      <div class="text-center text-xs text-gray-400">
+        &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
+      </div>
+    </footer>
 
-    <!-- Shared layout init + keep custom header buttons -->
-    <script type="module">
-      import { initLayout } from "../js/ui/shared-layout.js";
-
-      const token = localStorage.getItem("token");
-      const systemRole = localStorage.getItem("system_role");
-
-      if (!token) {
-        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-        window.location.href = "../auth/login-signup.html";
-        throw new Error("No token");
-      }
-      if (systemRole && systemRole !== "customer") {
-        alert("Bạn không có quyền truy cập trang này.");
-        window.location.href = "../auth/login-signup.html";
-        throw new Error("Wrong role");
-      }
-
-      // Inject shared header/footer
-      initLayout({
-        role: "customer",
-        title: "Chi tiết đơn hàng",
-        active: "activity",
-      });
-
-      // Override header to keep page-specific buttons (back/phone/chat)
-      const appHeader = document.getElementById("app-header");
-      if (appHeader) {
-        appHeader.innerHTML = `
-          <nav class="sticky top-0 z-[100] bg-white shadow-sm">
-            <header
-              id="page-header"
-              style="background-color: #a5b4fc"
-              class="flex items-center justify-between px-4 py-3 shadow-md"
+    <!-- Tasker Info Modal -->
+    <div id="taskerModal" class="fixed inset-0 z-50 hidden">
+      <div
+        class="absolute inset-0 bg-black/40"
+        onclick="closeTaskerModal()"
+      ></div>
+      <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div
+          class="mt-20 w-full max-w-sm bg-white rounded-xl shadow-lg border border-gray-100"
+        >
+          <div
+            class="px-4 py-3 border-b border-gray-100 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-gray-400"
+                >person</span
+              >
+              <div class="font-bold text-gray-800">Thông tin Tasker</div>
+            </div>
+            <button
+              class="text-gray-400 hover:text-gray-700"
+              type="button"
+              onclick="closeTaskerModal()"
             >
-              <div class="flex items-center gap-3">
-                <a
-                  href="./customer_activity.html"
-                  class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]"
-                >
-                  <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                </a>
-                <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">
-                  Chi tiết đơn hàng
-                </h1>
-              </div>
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
 
-              <div class="flex items-center gap-2">
-                <a
-                  id="headerPhoneLink"
-                  href="tel:0909123123"
-                  class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
+          <div class="p-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex flex-col items-center mb-4">
+              <img
+                id="modal-tasker-avatar"
+                src=""
+                alt="Avatar"
+                class="w-20 h-20 rounded-full object-cover mb-2 border-2 border-primary-500"
+              />
+              <h3
+                id="modal-tasker-name"
+                class="text-xl font-bold text-dark-900"
+              ></h3>
+              <div
+                class="flex items-center text-yellow-500 text-sm font-medium mt-1"
+              >
+                <div
+                  id="modal-tasker-stars"
+                  class="flex text-yellow-500 text-sm"
+                ></div>
+                <span id="modal-tasker-rating" class="ml-1"></span>
+                <span
+                  class="text-gray-400 ml-1"
+                  id="modal-tasker-reviews"
+                ></span>
+              </div>
+            </div>
+
+            <div class="space-y-3 text-sm">
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Điểm uy tín:</span>
+                <span
+                  id="modal-tasker-reputation"
+                  class="font-medium text-dark-900"
+                  >—</span
                 >
-                  <span class="material-symbols-outlined text-[#111827]">call</span>
-                </a>
+              </div>
+              <div class="border-b border-gray-100 pb-2">
+                <span class="text-gray-500 block mb-2">Chuyên môn:</span>
+                <div id="modal-tasker-skills" class="flex flex-wrap gap-2">
+                  <span class="text-xs text-gray-400">Đang tải...</span>
+                </div>
+              </div>
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Số việc đã làm:</span>
+                <span id="modal-tasker-jobs" class="font-medium text-dark-900"
+                  >—</span
+                >
+              </div>
+              <div class="flex justify-between border-b border-gray-100 pb-2">
+                <span class="text-gray-500">Khu vực:</span>
+                <span
+                  id="modal-tasker-location"
+                  class="font-medium text-dark-900"
+                  >—</span
+                >
+              </div>
+              <div>
+                <span class="text-gray-500 block mb-1">Giới thiệu:</span>
+                <p
+                  id="modal-tasker-bio"
+                  class="text-gray-700 italic bg-gray-50 p-2 rounded"
+                >
+                  —
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Modal -->
+    <div id="reviewModal" class="fixed inset-0 z-50 hidden">
+      <div
+        class="absolute inset-0 bg-black/40"
+        onclick="closeReviewModal()"
+      ></div>
+      <div class="relative w-full h-full flex items-center justify-center p-4">
+        <div
+          class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100"
+        >
+          <div
+            class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-gray-400">star</span>
+              <div class="font-bold text-gray-800">Đánh giá Tasker</div>
+            </div>
+            <button
+              class="text-gray-400 hover:text-gray-700"
+              type="button"
+              onclick="closeReviewModal()"
+            >
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div class="p-5 space-y-4">
+            <div>
+              <label
+                class="text-xs font-bold text-gray-500 uppercase mb-2 block"
+                >Đánh giá</label
+              >
+              <div id="ratingStars" class="flex items-center gap-1">
                 <button
-                  id="headerChatBtn"
-                  class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
-                  onclick="openChat()"
                   type="button"
+                  class="rating-star text-3xl text-gray-300 hover:text-yellow-400 transition"
+                  data-rating="1"
                 >
-                  <span class="material-symbols-outlined text-[#111827]">chat</span>
+                  ★
+                </button>
+                <button
+                  type="button"
+                  class="rating-star text-3xl text-gray-300 hover:text-yellow-400 transition"
+                  data-rating="2"
+                >
+                  ★
+                </button>
+                <button
+                  type="button"
+                  class="rating-star text-3xl text-gray-300 hover:text-yellow-400 transition"
+                  data-rating="3"
+                >
+                  ★
+                </button>
+                <button
+                  type="button"
+                  class="rating-star text-3xl text-gray-300 hover:text-yellow-400 transition"
+                  data-rating="4"
+                >
+                  ★
+                </button>
+                <button
+                  type="button"
+                  class="rating-star text-3xl text-gray-300 hover:text-yellow-400 transition"
+                  data-rating="5"
+                >
+                  ★
                 </button>
               </div>
-            </header>
-          </nav>
-        `;
-      }
-    </script>
+              <p id="ratingText" class="text-xs text-gray-500 mt-2">
+                Chọn số sao đánh giá
+              </p>
+            </div>
+
+            <div>
+              <label
+                class="text-xs font-bold text-gray-500 uppercase mb-2 block"
+                >Nhận xét (tùy chọn)</label
+              >
+              <textarea
+                id="reviewComment"
+                rows="4"
+                class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                placeholder="Chia sẻ trải nghiệm của bạn..."
+              ></textarea>
+            </div>
+          </div>
+
+          <div
+            class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
+          >
+            <button
+              class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+              type="button"
+              onclick="closeReviewModal()"
+            >
+              Hủy
+            </button>
+            <button
+              id="submitReviewBtn"
+              class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
+              type="button"
+              onclick="submitReview()"
+            >
+              Gửi đánh giá
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="../js/customer_order_progress.js"></script>
   </body>
