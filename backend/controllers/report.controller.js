@@ -1,178 +1,341 @@
-import db from "../models";
+import Order from "../models/orders.js";
+import Receipt from "../models/receipts.js";
+import Customer from "../models/customers.js";
+import Tasker from "../models/taskers.js";
 import PDFDocument from "pdfkit";
 
+const WEEKDAY_LABELS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+function getPeriodRange(period) {
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (period === "7days") {
+    const currentStart = new Date(todayStart);
+    currentStart.setDate(currentStart.getDate() - 6);
+    currentStart.setHours(0, 0, 0, 0);
+    const currentEnd = new Date(todayStart);
+    currentEnd.setDate(currentEnd.getDate() + 1);
+    currentEnd.setHours(0, 0, 0, 0);
+    const previousEnd = currentStart;
+    const previousStart = new Date(previousEnd);
+    previousStart.setDate(previousStart.getDate() - 7);
+    return {
+      currentStart,
+      currentEnd,
+      previousStart,
+      previousEnd,
+    };
+  }
+
+  // month
+  const currentStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const currentEnd = new Date(now);
+  currentEnd.setDate(currentEnd.getDate() + 1);
+  currentEnd.setHours(0, 0, 0, 0);
+  const previousStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousEnd = currentStart; // exclusive end: 1st of this month 00:00
+  return {
+    currentStart,
+    currentEnd,
+    previousStart,
+    previousEnd,
+  };
+}
+
 /**
- * Tổng số user, tasker, customer
+ * Dashboard tổng hợp cho admin home
+ * GET /api/report/dashboard?period=month|7days
+ */
+export async function getDashboard(req, res) {
+  try {
+    const period = (req.query.period || "month") === "7days" ? "7days" : "month";
+    const { currentStart, currentEnd, previousStart, previousEnd } = getPeriodRange(period);
+
+    // ---- 1. Revenue: từ Receipt status=success ----
+    const [revCur, revPrev, revChart] = await Promise.all([
+      Receipt.aggregate([
+        { $match: { status: "success", created_at: { $gte: currentStart, $lt: currentEnd } } },
+        { $group: { _id: null, total: { $sum: "$total_amount" } } },
+      ]),
+      Receipt.aggregate([
+        { $match: { status: "success", created_at: { $gte: previousStart, $lt: previousEnd } } },
+        { $group: { _id: null, total: { $sum: "$total_amount" } } },
+      ]),
+      (() => {
+        const end = new Date();
+        const start = new Date(end);
+        start.setDate(start.getDate() - 6);
+        start.setHours(0, 0, 0, 0);
+        return Receipt.aggregate([
+          { $match: { status: "success", created_at: { $gte: start, $lte: end } } },
+          {
+            $group: {
+              _id: { $dateToString: { format: "%Y-%m-%d", date: "$created_at" } },
+              amount: { $sum: "$total_amount" },
+            },
+          },
+        ]);
+      })(),
+    ]);
+
+    const totalRevenue = revCur[0]?.total ?? 0;
+    const prevRevenue = revPrev[0]?.total ?? 0;
+    const revenueChangePercent =
+      prevRevenue > 0 ? Math.round(((totalRevenue - prevRevenue) / prevRevenue) * 100) : (totalRevenue > 0 ? 100 : 0);
+
+    // 7 ngày cho biểu đồ (điền 0 cho ngày không có dữ liệu)
+    const chartMap = new Map((revChart || []).map((r) => [r._id, r.amount]));
+    const revenueByWeek = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const key = d.toISOString().slice(0, 10);
+      const day = d.getDay();
+      revenueByWeek.push({
+        date: key,
+        label: WEEKDAY_LABELS[day],
+        amount: chartMap.get(key) ?? 0,
+      });
+    }
+
+    // ---- 2. Đơn hàng mới (trong kỳ, bỏ cancelled) ----
+    const [ordersCur, ordersPrev] = await Promise.all([
+      Order.countDocuments({
+        created_at: { $gte: currentStart, $lt: currentEnd },
+        status: { $ne: "cancelled" },
+      }),
+      Order.countDocuments({
+        created_at: { $gte: previousStart, $lt: previousEnd },
+        status: { $ne: "cancelled" },
+      }),
+    ]);
+    const newOrders = ordersCur;
+    const newOrdersChangePercent =
+      ordersPrev > 0 ? Math.round(((ordersCur - ordersPrev) / ordersPrev) * 100) : (ordersCur > 0 ? 100 : 0);
+
+    // ---- 3. Khách hàng: tổng + % thay đổi (khách mới trong kỳ vs kỳ trước) ----
+    const [totalCustomers, custCur, custPrev] = await Promise.all([
+      Customer.countDocuments(),
+      Customer.countDocuments({ created_at: { $gte: currentStart, $lt: currentEnd } }),
+      Customer.countDocuments({ created_at: { $gte: previousStart, $lt: previousEnd } }),
+    ]);
+    const customersChangePercent =
+      custPrev > 0 ? Math.round(((custCur - custPrev) / custPrev) * 100) : (custCur > 0 ? 100 : 0);
+
+    // ---- 4. Tasker hoạt động: status=working ----
+    const activeTaskers = await Tasker.countDocuments({ status: "working" });
+    const activeTaskersChangePercent = 0; // không lưu lịch sử trạng thái nên giữ 0
+
+    // ---- 5. Top dịch vụ (nhóm theo Service qua task_id -> Task -> service_id) ----
+    const topAgg = await Order.aggregate([
+      { $match: { status: { $ne: "cancelled" } } },
+      { $lookup: { from: "tasks", localField: "task_id", foreignField: "_id", as: "t" } },
+      { $unwind: { path: "$t", preserveNullAndEmptyArrays: false } },
+      { $lookup: { from: "services", localField: "t.service_id", foreignField: "_id", as: "s" } },
+      { $unwind: { path: "$s", preserveNullAndEmptyArrays: false } },
+      { $group: { _id: "$s._id", name: { $first: "$s.category_name" }, count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 5 },
+    ]);
+    const totalOrdersForTop = topAgg.reduce((s, x) => s + x.count, 0);
+    const topServices = topAgg.map((x) => ({
+      name: x.name,
+      percent: totalOrdersForTop > 0 ? Math.round((x.count / totalOrdersForTop) * 100) : 0,
+    }));
+
+    // ---- 6. Đơn hàng mới nhất (bỏ cancelled) ----
+    const latest = await Order.find({ status: { $ne: "cancelled" } })
+      .sort({ created_at: -1 })
+      .limit(10)
+      .populate("customer_id", "full_name")
+      .select("_id task_snapshot status final_amount")
+      .lean();
+
+    const statusMap = {
+      pending: "Tìm tasker",
+      assigned: "Đã gán",
+      accepted: "Đang thực hiện",
+      departed: "Đang thực hiện",
+      arrived: "Đang thực hiện",
+      in_progress: "Đang thực hiện",
+      awaiting_payment: "Chờ thanh toán",
+      completed: "Hoàn thành",
+      cancelled: "Đã hủy",
+    };
+
+    const latestOrders = (latest || []).map((o) => ({
+      id: o._id.toString(),
+      idDisplay: `#DH${o._id.toString().slice(-6).toUpperCase()}`,
+      customerName: o.customer_id?.full_name || "N/A",
+      serviceName: o.task_snapshot?.name
+        ? `${o.task_snapshot.name}${o.task_snapshot.unit ? ` (${o.quantity || 1} ${o.task_snapshot.unit})` : ""}`.trim()
+        : "N/A",
+      status: statusMap[o.status] || o.status,
+      statusKey: o.status,
+      amount: o.final_amount ?? 0,
+    }));
+
+    res.json({
+      success: true,
+      updatedAt: new Date().toISOString(),
+      period,
+      totalRevenue,
+      revenueChangePercent,
+      newOrders,
+      newOrdersChangePercent,
+      totalCustomers,
+      customersChangePercent,
+      activeTaskers,
+      activeTaskersChangePercent,
+      revenueByWeek,
+      topServices,
+      latestOrders,
+    });
+  } catch (err) {
+    console.error("getDashboard error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+}
+
+/**
+ * Tổng số customer, tasker (dùng Mongoose)
  */
 export async function getCounts(req, res) {
   try {
-    const [userCount, taskerCount, customerCount] = await Promise.all([
-      db.users.count(),
-      db.taskers.count(),
-      db.customers.count(),
+    const [taskerCount, customerCount] = await Promise.all([
+      Tasker.countDocuments(),
+      Customer.countDocuments(),
     ]);
-
-    res.json({ userCount, taskerCount, customerCount });
+    res.json({ success: true, taskerCount, customerCount });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
 /**
- * Tổng số đơn hàng, đơn hoàn thành, đơn bị hủy
+ * Tổng số đơn, đơn hoàn thành, đơn hủy (Mongoose)
  */
 export async function getOrderStats(req, res) {
   try {
-    const totalOrders = await db.orders.count();
-    const completedOrders = await db.orders.count({
-      where: { status: "completed" },
-    });
-    const cancelledOrders = await db.orders.count({
-      where: { status: "cancelled" },
-    });
-
-    res.json({ totalOrders, completedOrders, cancelledOrders });
+    const [totalOrders, completedOrders, cancelledOrders] = await Promise.all([
+      Order.countDocuments(),
+      Order.countDocuments({ status: "completed" }),
+      Order.countDocuments({ status: "cancelled" }),
+    ]);
+    res.json({ success: true, totalOrders, completedOrders, cancelledOrders });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
 /**
- * Doanh thu theo ngày / tháng / năm
+ * Doanh thu theo ngày/tháng/năm (Mongoose, từ Receipt success)
  */
 export async function getRevenue(req, res) {
   try {
     const { type = "day" } = req.query;
 
-    let groupBy;
+    let groupExpr;
     if (type === "month") {
-      groupBy = db.sequelize.fn(
-        "DATE_FORMAT",
-        db.sequelize.col("createdAt"),
-        "%Y-%m"
-      );
+      groupExpr = { $dateToString: { format: "%Y-%m", date: "$created_at" } };
     } else if (type === "year") {
-      groupBy = db.sequelize.fn("YEAR", db.sequelize.col("createdAt"));
+      groupExpr = { $year: "$created_at" };
     } else {
-      groupBy = db.sequelize.fn("DATE", db.sequelize.col("createdAt"));
+      groupExpr = { $dateToString: { format: "%Y-%m-%d", date: "$created_at" } };
     }
 
-    const revenue = await db.orders.findAll({
-      attributes: [
-        [groupBy, "period"],
-        [db.sequelize.fn("SUM", db.sequelize.col("total")), "totalRevenue"],
-      ],
-      where: { status: "completed" },
-      group: ["period"],
-      order: [[db.sequelize.literal("period"), "DESC"]],
-      raw: true,
-    });
+    const revenue = await Receipt.aggregate([
+      { $match: { status: "success" } },
+      { $group: { _id: groupExpr, totalRevenue: { $sum: "$total_amount" } } },
+      { $sort: { _id: -1 } },
+    ]);
 
-    res.json(revenue);
+    res.json({ success: true, data: revenue });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
 /**
- * Số lượng tasker đang hoạt động
+ * Số tasker đang hoạt động: status=working (Mongoose)
  */
 export async function getActiveTaskers(req, res) {
   try {
-    const activeTaskers = await db.taskers.count({
-      where: { status: "active" },
-    });
-
-    res.json({ activeTaskers });
+    const activeTaskers = await Tasker.countDocuments({ status: "working" });
+    res.json({ success: true, activeTaskers });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
 /**
- * Thống kê số lượng đơn theo trạng thái
+ * Thống kê đơn theo trạng thái (Mongoose)
  */
 export async function getOrderStatusStats(req, res) {
   try {
-    const stats = await db.orders.findAll({
-      attributes: [
-        "status",
-        [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"],
-      ],
-      group: ["status"],
-      raw: true,
-    });
-
-    res.json(stats);
+    const stats = await Order.aggregate([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+    ]);
+    res.json({ success: true, data: stats });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
 /**
- * Xuất báo cáo tổng hợp PDF
+ * Xuất báo cáo PDF (Mongoose)
  */
 export async function exportReportPdf(req, res) {
   try {
-    const [userCount, taskerCount, customerCount] = await Promise.all([
-      db.users.count(),
-      db.taskers.count(),
-      db.customers.count(),
+    const [taskerCount, customerCount, totalOrders, completedOrders, cancelledOrders, activeTaskers, statusStats] =
+      await Promise.all([
+        Tasker.countDocuments(),
+        Customer.countDocuments(),
+        Order.countDocuments(),
+        Order.countDocuments({ status: "completed" }),
+        Order.countDocuments({ status: "cancelled" }),
+        Tasker.countDocuments({ status: "working" }),
+        Order.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
+      ]);
+
+    const rev = await Receipt.aggregate([
+      { $match: { status: "success" } },
+      { $group: { _id: null, total: { $sum: "$total_amount" } } },
     ]);
-
-    const totalOrders = await db.orders.count();
-    const completedOrders = await db.orders.count({
-      where: { status: "completed" },
-    });
-    const cancelledOrders = await db.orders.count({
-      where: { status: "cancelled" },
-    });
-    const activeTaskers = await db.taskers.count({
-      where: { status: "active" },
-    });
-
-    const orderStatusStats = await db.orders.findAll({
-      attributes: [
-        "status",
-        [db.sequelize.fn("COUNT", db.sequelize.col("id")), "count"],
-      ],
-      group: ["status"],
-      raw: true,
-    });
+    const totalRevenue = rev[0]?.total ?? 0;
 
     const doc = new PDFDocument();
-
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=report.pdf"
-    );
-
+    res.setHeader("Content-Disposition", 'attachment; filename="report.pdf"');
     doc.pipe(res);
 
     doc.fontSize(20).text("Báo cáo tổng hợp hệ thống", { align: "center" });
     doc.moveDown();
-
-    doc.fontSize(14).text(`Tổng số người dùng: ${userCount}`);
-    doc.text(`Tổng số tasker: ${taskerCount}`);
-    doc.text(`Tổng số khách hàng: ${customerCount}`);
-
+    doc.fontSize(12).text(`Ngày xuất: ${new Date().toLocaleString("vi-VN")}`);
     doc.moveDown();
+
+    doc.fontSize(14).text(`Tổng số tasker: ${taskerCount}`);
+    doc.text(`Tổng số khách hàng: ${customerCount}`);
+    doc.text(`Tasker hoạt động: ${activeTaskers}`);
+    doc.moveDown();
+
     doc.text(`Tổng số đơn hàng: ${totalOrders}`);
     doc.text(`Đơn hoàn thành: ${completedOrders}`);
-    doc.text(`Đơn bị hủy: ${cancelledOrders}`);
-
+    doc.text(`Đơn hủy: ${cancelledOrders}`);
+    doc.text(`Tổng doanh thu (đã thanh toán): ${Number(totalRevenue).toLocaleString("vi-VN")} VNĐ`);
     doc.moveDown();
-    doc.text(`Số lượng tasker hoạt động: ${activeTaskers}`);
 
-    doc.moveDown();
     doc.text("Thống kê đơn theo trạng thái:");
-    orderStatusStats.forEach((stat) => {
-      doc.text(`- ${stat.status}: ${stat.count}`);
+    (statusStats || []).forEach((s) => {
+      doc.text(`  - ${s._id}: ${s.count}`);
     });
 
     doc.end();
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("exportReportPdf error:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 }

@@ -199,14 +199,14 @@
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-50">
                     <div>
                         <div class="text-xl font-bold text-gray-800">Tổng quan hệ thống</div>
-                        <div class="text-sm text-gray-600 mt-1">Cập nhật lúc: 08:30 - 08/01/2026</div>
+                        <div id="dashboard-updated" class="text-sm text-gray-600 mt-1">Cập nhật lúc: --</div>
                     </div>
                     <div class="flex gap-2">
-                        <select class="text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 outline-none focus:border-primary-400">
-                            <option>Tháng này</option>
-                            <option>7 ngày qua</option>
+                        <select id="period-select" class="text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2 outline-none focus:border-primary-400">
+                            <option value="month">Tháng này</option>
+                            <option value="7days">7 ngày qua</option>
                         </select>
-                        <button class="bg-primary-500 hover:bg-primary-400 text-white px-4 py-2 rounded text-sm font-medium transition flex items-center gap-2">
+                        <button id="btn-export" type="button" class="bg-primary-500 hover:bg-primary-400 text-white px-4 py-2 rounded text-sm font-medium transition flex items-center gap-2">
                             <span class="material-symbols-outlined text-[18px]">download</span> Xuất báo cáo
                         </button>
                     </div>
@@ -218,40 +218,40 @@
                             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary-500 shadow-sm border border-gray-100">
                                 <span class="material-symbols-outlined">payments</span>
                             </div>
-                            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+12%</span>
+                            <span id="card-revenue-change" class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">0%</span>
                         </div>
                         <div class="text-gray-600 text-sm">Tổng doanh thu</div>
-                        <div class="text-2xl font-bold text-gray-800">128.5 Tr</div>
+                        <div id="card-revenue" class="text-2xl font-bold text-gray-800">--</div>
                     </div>
                     <div class="p-4 rounded-lg border border-gray-100 bg-gray-50">
                         <div class="flex justify-between items-start mb-2">
                             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm border border-gray-100">
                                 <span class="material-symbols-outlined">receipt_long</span>
                             </div>
-                            <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">+5%</span>
+                            <span id="card-orders-change" class="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">0%</span>
                         </div>
                         <div class="text-gray-600 text-sm">Đơn hàng mới</div>
-                        <div class="text-2xl font-bold text-gray-800">842</div>
+                        <div id="card-orders" class="text-2xl font-bold text-gray-800">--</div>
                     </div>
                     <div class="p-4 rounded-lg border border-gray-100 bg-gray-50">
                         <div class="flex justify-between items-start mb-2">
                             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-orange-500 shadow-sm border border-gray-100">
                                 <span class="material-symbols-outlined">group</span>
                             </div>
-                            <span class="text-xs font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">-2%</span>
+                            <span id="card-customers-change" class="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">0%</span>
                         </div>
                         <div class="text-gray-600 text-sm">Khách hàng</div>
-                        <div class="text-2xl font-bold text-gray-800">1.250</div>
+                        <div id="card-customers" class="text-2xl font-bold text-gray-800">--</div>
                     </div>
                     <div class="p-4 rounded-lg border border-gray-100 bg-gray-50">
                         <div class="flex justify-between items-start mb-2">
                             <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-purple-500 shadow-sm border border-gray-100">
                                 <span class="material-symbols-outlined">badge</span>
                             </div>
-                            <span class="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">0%</span>
+                            <span id="card-taskers-change" class="text-xs font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">0%</span>
                         </div>
                         <div class="text-gray-600 text-sm">Tasker hoạt động</div>
-                        <div class="text-2xl font-bold text-gray-800">45</div>
+                        <div id="card-taskers" class="text-2xl font-bold text-gray-800">--</div>
                     </div>
                 </div>
 
@@ -261,18 +261,16 @@
                             <span class="material-symbols-outlined text-gray-500">bar_chart</span>
                             Biểu đồ doanh thu tuần
                         </h3>
-                        <div class="h-64 border border-gray-100 rounded-lg p-4 flex items-end justify-between gap-2 bg-gray-50">
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[40%]"></div>
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[60%]"></div>
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[30%]"></div>
-                            <div class="w-full bg-primary-500 hover:bg-primary-400 transition-all rounded-t h-[80%] relative group">
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition">Max</div>
-                            </div>
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[55%]"></div>
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[45%]"></div>
-                            <div class="w-full bg-primary-200 hover:bg-primary-400 transition-all rounded-t h-[70%]"></div>
+                        <div id="chart-revenue-bars" class="h-64 border border-gray-100 rounded-lg p-4 flex items-end justify-between gap-2 bg-gray-50">
+                            <div class="w-full bg-primary-200 rounded-t h-[30%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[50%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[40%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[70%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[60%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[45%]"></div>
+                            <div class="w-full bg-primary-200 rounded-t h-[55%]"></div>
                         </div>
-                        <div class="flex justify-between mt-2 px-2 text-xs text-gray-500 font-semibold">
+                        <div id="chart-revenue-labels" class="flex justify-between mt-2 px-2 text-xs text-gray-500 font-semibold">
                             <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
                         </div>
                     </div>
@@ -282,43 +280,8 @@
                             <span class="material-symbols-outlined text-gray-500">pie_chart</span>
                             Top dịch vụ
                         </h3>
-                        <div class="space-y-4 border border-gray-100 rounded-lg p-4 bg-gray-50 h-[280px] overflow-y-auto">
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Dọn dẹp nhà</span>
-                                    <span class="font-bold">45%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-primary-500 h-full w-[45%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Đi chợ hộ</span>
-                                    <span class="font-bold">30%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-blue-500 h-full w-[30%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Vệ sinh máy lạnh</span>
-                                    <span class="font-bold">15%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-orange-500 h-full w-[15%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span class="text-gray-700 font-medium">Giặt ủi</span>
-                                    <span class="font-bold">10%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-purple-500 h-full w-[10%]"></div>
-                                </div>
-                            </div>
+                        <div id="top-services" class="space-y-4 border border-gray-100 rounded-lg p-4 bg-gray-50 h-[280px] overflow-y-auto">
+                            <div class="text-sm text-gray-400 text-center py-8">Đang tải...</div>
                         </div>
                     </div>
                 </div>
@@ -326,7 +289,7 @@
                 <div class="mt-8">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="font-bold text-gray-800 text-lg">Đơn hàng mới nhất</h3>
-                        <a href="#" class="text-sm text-primary-500 hover:underline font-medium">Xem tất cả</a>
+                        <a href="./admin_manageorders.html" class="text-sm text-primary-500 hover:underline font-medium">Xem tất cả</a>
                     </div>
                     <div class="overflow-x-auto border border-gray-100 rounded-lg">
                         <table class="w-full text-left border-collapse">
@@ -339,28 +302,8 @@
                                 <th class="px-4 py-3 border-b border-gray-100 text-right">Giá trị</th>
                             </tr>
                             </thead>
-                            <tbody class="text-sm text-gray-700 divide-y divide-gray-100">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium">#DH092</td>
-                                <td class="px-4 py-3">Nguyễn Văn A</td>
-                                <td class="px-4 py-3">Dọn dẹp nhà (2h)</td>
-                                <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-700">Tìm tasker</span></td>
-                                <td class="px-4 py-3 text-right font-bold">120.000đ</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium">#DH091</td>
-                                <td class="px-4 py-3">Trần Thị B</td>
-                                <td class="px-4 py-3">Đi chợ hộ</td>
-                                <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">Đang thực hiện</span></td>
-                                <td class="px-4 py-3 text-right font-bold">200.000đ</td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-4 py-3 font-medium">#DH090</td>
-                                <td class="px-4 py-3">Lê Hoàng C</td>
-                                <td class="px-4 py-3">Vệ sinh sofa</td>
-                                <td class="px-4 py-3"><span class="px-2 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">Hoàn thành</span></td>
-                                <td class="px-4 py-3 text-right font-bold">450.000đ</td>
-                            </tr>
+                            <tbody id="table-latest-orders" class="text-sm text-gray-700 divide-y divide-gray-100">
+                                <tr><td colspan="5" class="px-4 py-6 text-center text-gray-400">Đang tải...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -371,35 +314,6 @@
     </div>
 </div>
 
-<script>
-    const token = localStorage.getItem("token");
-    if (!token) {
-        alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-        window.location.href = "../auth/login-signup.html";
-    }
-
-    const role = localStorage.getItem("system_role");
-    const _id = localStorage.getItem("user_id");
-    console.log("USER: ", role + " " + _id);
-    console.log("TOKEN: ", token);
-
-    if (role !== "admin") {
-        alert("Bạn không phải Admin. Không có quyền truy cập.");
-        window.location.href = "../auth/login-signup.html";
-    }
-
-    const sidebarMobile = document.getElementById("sidebarMobile");
-    const backdrop = document.getElementById("backdrop");
-
-    function openSidebar() {
-      sidebarMobile.classList.remove("-translate-x-full");
-      backdrop.classList.remove("hidden");
-    }
-
-    function closeSidebar() {
-      sidebarMobile.classList.add("-translate-x-full");
-      backdrop.classList.add("hidden");
-    }
-</script>
+<script src="../js/admin_home.js"></script>
 </body>
 </html>

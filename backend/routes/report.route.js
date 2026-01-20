@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getDashboard,
   getCounts,
   getOrderStats,
   getRevenue,
@@ -7,26 +8,30 @@ import {
   getOrderStatusStats,
   exportReportPdf,
 } from "../controllers/report.controller.js";
+import { verifyToken } from "../middleware/verifyToken.js";
 import { isAdmin } from "../middleware/verifyRole.js";
 
 const router = express.Router();
 
-// Tổng số user, tasker, customer
-router.get("/counts", isAdmin, getCounts);
+// Dashboard tổng hợp cho admin home: ?period=month|7days
+router.get("/dashboard", verifyToken, isAdmin, getDashboard);
 
-// Tổng số đơn hàng, đơn hoàn thành, đơn bị hủy
-router.get("/orders", isAdmin, getOrderStats);
+// Tổng số tasker, customer
+router.get("/counts", verifyToken, isAdmin, getCounts);
 
-// Doanh thu theo ngày/tháng/năm
-router.get("/revenue", isAdmin, getRevenue);
+// Tổng số đơn, đơn hoàn thành, đơn hủy
+router.get("/orders", verifyToken, isAdmin, getOrderStats);
 
-// Số lượng tasker hoạt động
-router.get("/active-taskers", isAdmin, getActiveTaskers);
+// Doanh thu theo ngày/tháng/năm: ?type=day|month|year
+router.get("/revenue", verifyToken, isAdmin, getRevenue);
 
-// Thống kê số lượng đơn theo trạng thái
-router.get("/order-status", isAdmin, getOrderStatusStats);
+// Số tasker hoạt động (status=working)
+router.get("/active-taskers", verifyToken, isAdmin, getActiveTaskers);
 
-// Xuất báo cáo tổng hợp ra file PDF
-router.get("/export-pdf", isAdmin, exportReportPdf);
+// Thống kê đơn theo trạng thái
+router.get("/order-status", verifyToken, isAdmin, getOrderStatusStats);
+
+// Xuất báo cáo PDF
+router.get("/export-pdf", verifyToken, isAdmin, exportReportPdf);
 
 export default router;

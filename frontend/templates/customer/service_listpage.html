@@ -162,9 +162,11 @@
                 const originalPrice = task.pricing || 0;
                 const finalPrice = hasDiscount ? discountInfo.final_price : originalPrice;
                 const discountAmount = hasDiscount ? discountInfo.discount_amount : 0;
-                const discountPercent = hasDiscount && originalPrice > 0 
-                  ? Math.round((discountAmount / originalPrice) * 100) 
-                  : 0;
+                const discountPercent = hasDiscount && discountInfo.discount_percent !== undefined
+                  ? discountInfo.discount_percent
+                  : (hasDiscount && originalPrice > 0 
+                    ? Math.round((discountAmount / originalPrice) * 100) 
+                    : 0);
 
                 return `
                   <a href="${detailPage}?id=${task._id}&price=${finalPrice}"

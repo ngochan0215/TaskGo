@@ -78,6 +78,15 @@
         -webkit-box-orient: vertical;
         overflow: hidden;
       }
+
+      #promo-list {
+        -ms-overflow-style: none;  
+        scrollbar-width: none;     
+      }
+
+      #promo-list::-webkit-scrollbar {
+        display: none;            
+      }
     </style>
   </head>
 
@@ -192,108 +201,9 @@
           id="promo-list"
           class="flex overflow-x-auto space-x-4 pb-2 -mx-4 px-4"
         >
-          <div
-            class="flex-shrink-0 w-[280px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-          >
-            <div class="p-4 relative">
-              <div
-                class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20"
-                style="background: #5c956c"
-              ></div>
-              <p class="text-xs font-bold text-gray-500 uppercase">Ưu đãi</p>
-              <h3 class="text-lg font-black text-dark-900 mt-1">
-                Giảm 20% lần đầu
-              </h3>
-              <p class="text-sm text-gray-600 mt-1">
-                Áp dụng cho đơn đầu tiên khi đặt dịch vụ.
-              </p>
-
-              <div class="mt-4 flex items-center justify-between">
-                <span
-                  class="text-xs font-bold px-3 py-1 rounded-full bg-primary-100 text-primary-500 border border-primary-200"
-                >
-                  NEWUSER20
-                </span>
-                <button
-                  type="button"
-                  data-copy="NEWUSER20"
-                  class="text-sm font-bold text-white px-4 py-2 rounded-xl shadow-sm"
-                  style="background: #3b5f43"
-                >
-                  Copy mã
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="flex-shrink-0 w-[280px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-          >
-            <div class="p-4 relative">
-              <div
-                class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20"
-                style="background: #ffbe18"
-              ></div>
-              <p class="text-xs font-bold text-gray-500 uppercase">Combo</p>
-              <h3 class="text-lg font-black text-dark-900 mt-1">
-                Giảm 15% gói tuần
-              </h3>
-              <p class="text-sm text-gray-600 mt-1">
-                Đặt 3+ lần/tuần để được giảm giá.
-              </p>
-
-              <div class="mt-4 flex items-center justify-between">
-                <span
-                  class="text-xs font-bold px-3 py-1 rounded-full bg-yellow-50 text-yellow-700 border border-yellow-200"
-                >
-                  WEEK15
-                </span>
-                <button
-                  type="button"
-                  data-copy="WEEK15"
-                  class="text-sm font-bold text-white px-4 py-2 rounded-xl shadow-sm"
-                  style="background: #3b5f43"
-                >
-                  Copy mã
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="flex-shrink-0 w-[280px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"
-          >
-            <div class="p-4 relative">
-              <div
-                class="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-20"
-                style="background: #12a327"
-              ></div>
-              <p class="text-xs font-bold text-gray-500 uppercase">
-                Flash sale
-              </p>
-              <h3 class="text-lg font-black text-dark-900 mt-1">
-                Giảm 50K giờ vàng
-              </h3>
-              <p class="text-sm text-gray-600 mt-1">
-                Khung giờ 12:00–14:00 mỗi ngày.
-              </p>
-
-              <div class="mt-4 flex items-center justify-between">
-                <span
-                  class="text-xs font-bold px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200"
-                >
-                  HAPPY50
-                </span>
-                <button
-                  type="button"
-                  data-copy="HAPPY50"
-                  class="text-sm font-bold text-white px-4 py-2 rounded-xl shadow-sm"
-                  style="background: #3b5f43"
-                >
-                  Copy mã
-                </button>
-              </div>
-            </div>
+          <div class="flex-shrink-0 w-full text-center py-8 text-gray-400 text-sm">
+            <span class="material-symbols-outlined text-4xl mb-2 block">local_activity</span>
+            <p>Đang tải chương trình khuyến mãi...</p>
           </div>
         </div>
       </section>
@@ -407,6 +317,75 @@
       </div>
     </div>
 
+    <!-- Promotion Detail Modal -->
+    <div id="promo-modal" class="modal">
+      <div class="modal-content" style="max-width: 600px;">
+        <span class="close-modal" onclick="closePromoModal()">&times;</span>
+        
+        <div class="mb-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span id="promo-modal-type-badge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
+            <span id="promo-modal-code" class="text-lg font-bold text-primary-500 font-mono"></span>
+          </div>
+          <h3 id="promo-modal-name" class="text-2xl font-black text-dark-900 mb-2"></h3>
+          <p id="promo-modal-description" class="text-sm text-gray-600 mb-4"></p>
+        </div>
+
+        <div class="space-y-3 text-sm border-t border-gray-100 pt-4">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500">Giá trị khuyến mãi:</span>
+            <span id="promo-modal-discount" class="font-bold text-lg text-primary-500"></span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-500">Thời gian:</span>
+            <span id="promo-modal-dates" class="font-medium text-dark-900 text-right"></span>
+          </div>
+
+          <div id="promo-modal-conditions" class="border-t border-gray-100 pt-3 space-y-2">
+            <p class="text-gray-500 font-semibold mb-2">Điều kiện áp dụng:</p>
+            <div id="promo-modal-conditions-list" class="space-y-1"></div>
+          </div>
+
+          <div id="promo-modal-eligibility" class="border-t border-gray-100 pt-3">
+            <div id="promo-modal-eligibility-status" class="mb-2"></div>
+            <div id="promo-modal-eligibility-reasons" class="text-xs space-y-1"></div>
+          </div>
+
+          <div id="promo-modal-voucher-info" class="border-t border-gray-100 pt-3 space-y-2 hidden">
+            <div class="flex justify-between">
+              <span class="text-gray-500">Số lượng còn lại:</span>
+              <span id="promo-modal-remaining" class="font-medium text-dark-900"></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-500">Bạn đã dùng:</span>
+              <span id="promo-modal-used-by-user" class="font-medium text-dark-900"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-100 flex gap-2">
+          <button
+            id="promo-modal-copy-btn"
+            type="button"
+            onclick="copyPromoCode()"
+            class="flex-1 text-sm font-bold text-white px-4 py-2.5 rounded-xl shadow-sm hover:opacity-90 transition"
+            style="background: #3b5f43"
+          >
+            <span class="material-symbols-outlined text-sm align-middle mr-1">content_copy</span>
+            Copy mã
+          </button>
+          <button
+            type="button"
+            onclick="closePromoModal()"
+            class="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Shared footer injected here -->
     <div id="app-footer"></div>
 
@@ -421,352 +400,7 @@
       initSocket();
     </script>
 
-    <script>
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Vui lòng đăng nhập");
-        window.location.href = "../auth/login-signup.html";
-      }
+    <script type="module" src="../js/customer_home.js"></script>
 
-      const role = localStorage.getItem("system_role");
-      console.log("User role:", role);
-      if (role !== "customer") {
-        alert("Bạn không có quyền truy cập trang này. Vui lòng đăng nhập lại.");
-        window.location.href = "../auth/login-signup.html";
-      }
-
-      const TASK_DETAIL_MAP = {
-        cleaning_washing_machine:
-          "./detail_pages/cleaning_washing_machine.html",
-        cleaning_house: "./detail_pages/cleaning_house.html",
-        cleaning_air_conditioner:
-          "./detail_pages/cleaning_air_conditioner.html",
-        caring_elderly: "./detail_pages/takecare_of_elder.html",
-        caring_thesick: "./detail_pages/takecare_of_sickpeople.html",
-        caring_children: "./detail_pages/babysitting.html",
-        shopping: "./detail_pages/market.html",
-        cooking: "./detail_pages/cooking.html",
-        active: "#",
-      };
-
-      // Copy promo codes
-      document.querySelectorAll("[data-copy]").forEach((btn) => {
-        btn.addEventListener("click", async () => {
-          const code = btn.getAttribute("data-copy");
-          try {
-            await navigator.clipboard.writeText(code);
-            alert(`Đã copy mã: ${code}`);
-          } catch (e) {
-            alert(`Không copy được tự động. Mã: ${code}`);
-          }
-        });
-      });
-
-      async function loadCustomerStats() {
-        try {
-          const statsRes = await fetch(
-            "http://localhost:3000/api/order/statistics/completed-cancelled",
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
-          const pointsRes = await fetch(
-            "http://localhost:3000/api/user/reputation-score",
-            { headers: { Authorization: `Bearer ${token}` } },
-          );
-
-          if (statsRes.status === 401 || pointsRes.status === 401) {
-            localStorage.removeItem("token");
-            alert("Token hết hạn. Vui lòng đăng nhập lại.");
-            window.location.href = "../auth/login-signup.html";
-            return;
-          }
-
-          const statsJson = await statsRes.json();
-          const pointsJson = await pointsRes.json();
-
-          const { completed_orders, cancelled_orders } = statsJson.data || {};
-          document.getElementById("customer-points").textContent =
-            pointsJson.points ?? 0;
-          document.getElementById("customer-completed-orders").textContent =
-            completed_orders ?? 0;
-          document.getElementById("customer-cancelled-orders").textContent =
-            cancelled_orders ?? 0;
-        } catch (err) {
-          console.error("Load customer stats error:", err);
-        }
-      }
-
-      async function loadFavoriteTasks() {
-        try {
-          const res = await fetch(
-            "http://localhost:3000/api/task/favorite/by-user",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-
-          if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Phiên đăng nhập hết hạn");
-            window.location.href = "../auth/login-signup.html";
-            return;
-          }
-
-          const json = await res.json();
-          const container = document.getElementById("favorite-services");
-
-          if (!json.success || !json.data || json.data.length === 0) {
-            container.innerHTML = `
-              <div class="col-span-2 text-center py-8 text-gray-400 text-sm">
-                <span class="material-symbols-outlined text-4xl mb-2 block">favorite_border</span>
-                <p>Bạn chưa có dịch vụ yêu thích</p>
-                <p class="text-xs mt-1">Đặt dịch vụ để xem ở đây</p>
-              </div>
-            `;
-            return;
-          }
-
-          container.innerHTML = "";
-          json.data.forEach((task) => {
-            const detailPage = TASK_DETAIL_MAP[task.task_type] || "#";
-            const div = document.createElement("div");
-            div.className =
-              "bg-white rounded-xl shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow";
-            div.onclick = () => {
-              window.location.href = `${detailPage}?id=${task.task_id}&price=${task.pricing}`;
-            };
-
-            const avatarImg = task.avatar_url
-              ? `<img src="${task.avatar_url}" class="w-full h-full object-cover rounded-lg">`
-              : `<span class="material-symbols-outlined text-4xl text-primary-500">design_services</span>`;
-
-            const price = task.pricing
-              ? `<p class="text-xs font-semibold text-primary-500 mt-1">${Number(task.pricing).toLocaleString("vi-VN")}đ/${task.unit === "hour" ? "giờ" : "gói"}</p>`
-              : "";
-
-            div.innerHTML = `
-              <div class="w-full h-32 bg-primary-100 rounded-lg mb-2 flex items-center justify-center overflow-hidden">
-                ${avatarImg}
-              </div>
-              <p class="text-sm font-medium text-dark-900 line-clamp-2">${task.task_name || "Dịch vụ"}</p>
-              ${price}
-              <p class="text-xs text-gray-500 mt-1">Đã đặt ${task.total_orders} lần</p>
-            `;
-            container.appendChild(div);
-          });
-        } catch (err) {
-          console.error("Load favorite tasks error:", err);
-        }
-      }
-
-      async function loadPopularTasks() {
-        try {
-          const res = await fetch(
-            "http://localhost:3000/api/task/top-popular/by-orders",
-          );
-          const json = await res.json();
-          const serviceList = document.getElementById("service-list");
-
-          if (!json.success || !json.data || json.data.length === 0) {
-            serviceList.innerHTML = `
-              <div class="col-span-full text-center py-8 text-gray-400 text-sm">
-                <p>Không có dịch vụ phổ biến</p>
-              </div>
-            `;
-            return;
-          }
-
-          serviceList.innerHTML = "";
-          json.data.forEach((task) => {
-            const detailPage = TASK_DETAIL_MAP[task.task_type] || "#";
-            const div = document.createElement("div");
-            div.className =
-              "service-item relative cursor-pointer hover:opacity-90 transition-opacity";
-            div.onclick = () => {
-              window.location.href = `${detailPage}?id=${task.task_id}&price=${task.pricing}`;
-            };
-
-            const avatarImg = task.avatar_url
-              ? `<img src="${task.avatar_url}" class="w-full h-full object-cover rounded-xl">`
-              : `<span class="material-symbols-outlined text-5xl text-primary-500">design_services</span>`;
-
-            const price = task.pricing
-              ? `<p class="text-xs text-primary-500 font-semibold mt-1">${Number(task.pricing).toLocaleString("vi-VN")}đ/${task.unit === "hour" ? "giờ" : "gói"}</p>`
-              : "";
-
-            div.innerHTML = `
-              <div class="w-full h-48 bg-primary-100 rounded-xl flex items-center justify-center relative overflow-hidden">
-                ${avatarImg}
-                <div class="absolute top-2 right-2 bg-primary-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                  ${task.total_orders} đơn
-                </div>
-              </div>
-              <p class="mt-1 text-sm font-medium text-dark-900">${task.task_name || "Dịch vụ"}</p>
-              ${price}
-            `;
-            serviceList.appendChild(div);
-          });
-        } catch (err) {
-          console.error("Load popular tasks error:", err);
-        }
-      }
-
-      async function loadFavoriteTaskers() {
-        try {
-          const res = await fetch(
-            "http://localhost:3000/api/user/favorites/taskers",
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-
-          if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Phiên đăng nhập hết hạn");
-            window.location.href = "../auth/login-signup.html";
-            return;
-          }
-
-          const json = await res.json();
-          const container = document.getElementById("favorite-taskers-list");
-          container.innerHTML = "";
-
-          if (!json.data || json.data.length === 0) {
-            container.innerHTML = `<p class="text-sm text-gray-400 px-4">Bạn chưa có tasker yêu thích</p>`;
-            return;
-          }
-
-          json.data.forEach((item) => {
-            const tasker = item.tasker;
-            const user = item.user;
-            const reviews = item.reviews;
-            const avatar =
-              user.avatar_url ||
-              "https://api.dicebear.com/9.x/bottts/svg?seed=Julia";
-
-            const card = document.createElement("div");
-            card.className =
-              "flex-shrink-0 w-24 flex flex-col items-center cursor-pointer group";
-            card.onclick = () =>
-              openTaskerModal({
-                name: user.full_name,
-                avatar,
-                rating: reviews.average_rating || 0,
-                reviews: reviews.review_count || 0,
-                skills: tasker.skills || [],
-                reputation_score: user.reputation_score || 0,
-                jobs: tasker.total_completed_orders || 0,
-                location: tasker.working_area?.full_address || "—",
-                bio: tasker.introduction || "",
-              });
-
-            card.innerHTML = `
-              <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md group-hover:border-primary-500 transition-colors">
-                <img src="${avatar}" class="w-full h-full object-cover">
-              </div>
-              <p class="text-xs font-medium text-center mt-2 text-dark-900 group-hover:text-primary-500 truncate w-full">
-                ${user.full_name}
-              </p>
-              <div class="flex items-center text-[10px] text-gray-500">
-                <span class="material-symbols-outlined text-[10px] text-yellow-500 mr-0.5">star</span>
-                ${reviews.average_rating || 0}
-              </div>
-            `;
-            container.appendChild(card);
-          });
-        } catch (err) {
-          console.error("Load favorite taskers error:", err);
-        }
-      }
-
-      const modal = document.getElementById("tasker-modal");
-      const closeModalBtn = document.querySelector(".close-modal");
-
-      async function openTaskerModal(tasker) {
-        document.getElementById("modal-tasker-avatar").src = tasker.avatar;
-        document.getElementById("modal-tasker-name").textContent = tasker.name;
-        document.getElementById("modal-tasker-rating").textContent =
-          tasker.rating;
-        document.getElementById("modal-tasker-reviews").textContent =
-          `(${tasker.reviews} đánh giá)`;
-        document.getElementById("modal-tasker-reputation").textContent =
-          tasker.reputation_score || 0;
-        document.getElementById("modal-tasker-jobs").textContent =
-          `${tasker.jobs} việc`;
-        document.getElementById("modal-tasker-location").textContent =
-          tasker.location;
-        document.getElementById("modal-tasker-bio").textContent = tasker.bio;
-
-        await loadTaskerSkills(tasker.skills || []);
-        modal.classList.add("show");
-      }
-
-      async function loadTaskerSkills(skillIds) {
-        const skillsContainer = document.getElementById("modal-tasker-skills");
-
-        if (!skillIds || skillIds.length === 0) {
-          skillsContainer.innerHTML =
-            '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>';
-          return;
-        }
-
-        skillsContainer.innerHTML =
-          '<span class="text-xs text-gray-400">Đang tải...</span>';
-
-        try {
-          const res = await fetch("http://localhost:3000/api/task/all", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          if (res.status === 401) {
-            localStorage.removeItem("token");
-            alert("Phiên đăng nhập hết hạn");
-            window.location.href = "../auth/login-signup.html";
-            return;
-          }
-
-          const json = await res.json();
-          if (!json.success || !json.tasks) {
-            skillsContainer.innerHTML =
-              '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
-            return;
-          }
-
-          const taskMap = new Map();
-          json.tasks.forEach((t) => taskMap.set(t._id, t.task_name));
-
-          const skillNames = skillIds
-            .map((id) => {
-              const taskId = typeof id === "object" ? id.toString() : id;
-              return taskMap.get(taskId);
-            })
-            .filter(Boolean);
-
-          skillsContainer.innerHTML =
-            skillNames.length === 0
-              ? '<span class="text-xs text-gray-400">Chưa có chuyên môn</span>'
-              : skillNames
-                  .map(
-                    (name) =>
-                      `<span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full border border-primary-200">${name}</span>`,
-                  )
-                  .join("");
-        } catch (err) {
-          console.error("Load tasker skills error:", err);
-          skillsContainer.innerHTML =
-            '<span class="text-xs text-gray-400">Không thể tải chuyên môn</span>';
-        }
-      }
-
-      if (closeModalBtn)
-        closeModalBtn.onclick = () => modal.classList.remove("show");
-      window.onclick = (event) => {
-        if (event.target === modal) modal.classList.remove("show");
-      };
-
-      loadCustomerStats();
-      loadFavoriteTaskers();
-      loadFavoriteTasks();
-      loadPopularTasks();
-    </script>
   </body>
 </html>
