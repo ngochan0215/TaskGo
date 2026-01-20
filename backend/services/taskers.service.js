@@ -827,6 +827,7 @@ export async function cashOutForTasker(userId) {
             orderCodeFromResult = orderCode.split('_')[1];
         } catch (payOutError) {
             // Revert payout status back to pending if payOut fails
+            console.log(payOutError);
             await PayoutTasker.updateMany(
                 { _id: { $in: payoutIds } },
                 { status: 'pending' }
