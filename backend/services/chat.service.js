@@ -63,7 +63,7 @@ export async function fetchChat(orderId, userId, checkActive = false) {
 
   // Check Status 
   if (checkActive && chat.status === "completed") {
-    throw new Error("chat_closed_after_order_completion");
+    throw new Error("Đơn hàng đã hoàn thành, không thể tiếp tục trò chuyện");
   }
 
   // Check Permission

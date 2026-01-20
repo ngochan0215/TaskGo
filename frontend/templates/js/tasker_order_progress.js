@@ -1332,7 +1332,7 @@ function openChat() {
         alert("Không tìm thấy đơn hàng");
         return;
     }
-    window.location.href = `./tasker_chat.html?orderId=${orderId}`;
+    window.location.href = `../chat.html?orderId=${orderId}`;
 }
 
 // Setup review modal event listeners

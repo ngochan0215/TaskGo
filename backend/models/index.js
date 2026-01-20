@@ -23,9 +23,11 @@ import Review from "./reviews.js";
 import Address from "./addresses.js";
 import PayoutTasker from "./payoutTasker.js";
 
+import Chat from "./chats.js";
+
 export {
     Account, User, Customer, Tasker, FavoriteTasker,
     Discount, Voucher, VoucherUsage, Transaction, TaskerEarning,
     Order, OrderStatusLog, Receipt, Address, TaskerStatusLog,
-    Service, Task, Message, Notification, Review, PayoutTasker,
+    Service, Task, Message, Notification, Review, PayoutTasker, Chat,
 };

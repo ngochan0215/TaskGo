@@ -28,7 +28,7 @@ export default function registerChatHandlers(io) {
         // Create new chat if there's none yet for order with valid status
         if (
           !targetChat &&
-          (order.status === "accepted" || order.status === "in_progress")
+          (order.status === "accepted" || order.status === "assigned" || order.status === "departed" || order.status === "arrived" || order.status === "in_progress")
         ) {
           targetChat = await createNewChatForOrder(order._id);
         }
@@ -82,11 +82,11 @@ export default function registerChatHandlers(io) {
           if (typeof ack === "function")
             return ack({ ok: false, error: "chat_not_found" });
           return;
-        } else if (targetChat.status === "inactive") {
+        } else if (targetChat.status === "completed") {
           if (typeof ack === "function")
             return ack({
               ok: false,
-              error: "chat_closed_after_order_completion",
+              error: "Đơn hàng đã hoàn thành, không thể tiếp tục trò chuyện!",
             });
           return;
         }

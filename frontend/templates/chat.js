@@ -13,7 +13,7 @@ const state = {
     partnerAvatar: null,
     partnerName: null,
     callState: 'idle', // idle, calling, connected
-    editingMessageId: null, // Currently editing message ID
+    editingMessageId: null, 
     incomingCallOrderId: null,
     // Search state
     isSearching: false,
@@ -110,7 +110,7 @@ let socket;
 function initSocket() {
     if (!state.token) {
         alert("Vui lòng đăng nhập");
-        window.location.href = '/login.html';
+        window.location.href = '/frontend/templates/auth/login-signup.html';
         return;
     }
 
@@ -311,7 +311,7 @@ async function loadChatHistory(cursor = null) {
         state.nextCursor = res.nextCursor; 
 
         if (!cursor) {
-            // === INITIAL LOAD ===
+            // INITIAL LOAD
             // Clear everything except the loader
             els.loadingHistory.classList.add('hidden');
             
@@ -417,7 +417,7 @@ function sendMessage() {
         content: content
     }, (ack) => {
         if (!ack.ok) {
-            alert("Gửi lỗi: " + ack.error);
+            alert(ack.error);
         }
     });
 
@@ -616,7 +616,7 @@ function setupEventListeners() {
         clearTimeout(state.typingTimeout);
         state.typingTimeout = setTimeout(() => {
             socket.emit('stop-typing', { target_order_id: state.currentOrderId });
-        }, 1000);
+        }, 3000);
     });
 
     // Call UI Logic
@@ -739,7 +739,7 @@ function updateBackButton() {
     if (backButton && state.currentOrderId) {
         if (state.userRole === 'tasker') {
             // Path for Taskers
-            backButton.href = `../../tasker_order_progress.html?orderId=${state.currentOrderId}`;
+            backButton.href = `./tasker/tasker_order_progress.html`;
         } else {
             // Path for Customers
             backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
