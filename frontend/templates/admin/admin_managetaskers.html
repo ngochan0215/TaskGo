@@ -2,299 +2,466 @@
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>TaskGo Admin</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>TaskGo Admin</title>
 
-    <!-- <script src="https://cdn.tailwindcss.com"></script> -->
-    <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
+  <link rel="stylesheet" type="text/css" href="../../public/css/output.css">
 
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
-    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+  <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 
 </head>
 
-<body class="admin-shell">
-    <div id="backdrop" class="backdrop" onclick="closeSidebar()"></div>
+<body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+  <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
 
-    <aside id="sidebarMobile" class="sidebar-mobile closed lg:hidden">
-        <div class="sidebar-brand">
-            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
-            </div>
+  <aside id="sidebarMobile"
+    class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
+    <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+      <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+        <span class="text-primary-500 font-bold text-xs"><img src="../../public/images/taskgo-logo.png"
+            alt="TaskGo logo" class="w-9 h-9 object-contain" /></span>
+      </div>
+      <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+    </div>
 
-            <div class="sidebar-brand-title">Admin</div>
+    <nav class="p-3 flex-1 space-y-1">
+      <a class="sidebar-link" href="./admin_home.html">
+        <span class="material-symbols-outlined">home</span>
+        Trang chủ
+      </a>
+
+      <a class="sidebar-link" href="./admin_managecustomers.html">
+        <span class="material-symbols-outlined">person</span>
+        Quản lý Customer
+      </a>
+
+      <a class="sidebar-link active" href="./admin_managetaskers.html">
+        <span class="material-symbols-outlined">badge</span>
+        Quản lý Tasker
+      </a>
+
+      <a class="sidebar-link" href="./admin_manageservices.html">
+        <span class="material-symbols-outlined">design_services</span>
+        Quản lý Dịch vụ
+      </a>
+
+      <a class="sidebar-link" href="./admin_manageorders.html">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        Quản lý Đơn hàng
+      </a>
+
+      <a class="sidebar-link" href="./admin_manageinvoices.html">
+        <span class="material-symbols-outlined">payments</span>
+        Quản lý Hóa đơn
+      </a>
+
+      <a class="sidebar-link" href="./admin_managereviews.html">
+        <span class="material-symbols-outlined">rate_review</span>
+        Quản lý Đánh giá
+      </a>
+
+      <a class="sidebar-link" href="./admin_managediscounts.html">
+        <span class="material-symbols-outlined">percent_discount</span>
+        Quản lý Khuyến mãi
+      </a>
+
+      <a class="sidebar-link" href="./admin_managevouchers.html">
+        <span class="material-symbols-outlined">local_activity</span>
+        Quản lý Voucher
+      </a>
+
+      <a class="sidebar-link" href="./admin_report.html">
+        <span class="material-symbols-outlined">bar_chart</span>
+        Báo cáo Thống kê
+      </a>
+
+      <a class="sidebar-link" href="#">
+        <span class="material-symbols-outlined">settings</span>
+        Cài đặt
+      </a>
+    </nav>
+    <div class="p-3 border-t border-white/10">
+      <a class="sidebar-link hover-text-red-400" href="#">
+        <span class="material-symbols-outlined">logout</span>
+        Đăng xuất
+      </a>
+    </div>
+  </aside>
+
+  <div class="flex min-h-screen">
+    <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+      <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
         </div>
+        <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+      </div>
 
-        <nav class="sidebar-nav">
-            <a class="sidebar-link" href="./admin_home.html">
-                <span class="material-symbols-outlined">home</span>
-                Trang chủ
-            </a>
+      <nav class="p-3 flex-1 space-y-1">
+        <a class="sidebar-link" href="./admin_home.html">
+          <span class="material-symbols-outlined">home</span>
+          Trang chủ
+        </a>
 
-            <a class="sidebar-link" href="./admin_managecustomers.html">
-                <span class="material-symbols-outlined">person</span>
-                Quản lý Customer
-            </a>
+        <a class="sidebar-link" href="./admin_managecustomers.html">
+          <span class="material-symbols-outlined">person</span>
+          Quản lý Customer
+        </a>
 
-            <a class="sidebar-link active" href="./admin_managetaskers.html">
-                <span class="material-symbols-outlined">badge</span>
-                Quản lý Tasker
-            </a>
+        <a class="sidebar-link active" href="./admin_managetaskers.html">
+          <span class="material-symbols-outlined">badge</span>
+          Quản lý Tasker
+        </a>
 
-            <a class="sidebar-link" href="./admin_manageservices.html">
-                <span class="material-symbols-outlined">design_services</span>
-                Quản lý Dịch vụ
-            </a>
+        <a class="sidebar-link" href="./admin_manageservices.html">
+          <span class="material-symbols-outlined">design_services</span>
+          Quản lý Dịch vụ
+        </a>
 
-            <a class="sidebar-link" href="./admin_manageorders.html">
-                <span class="material-symbols-outlined">shopping_bag</span>
-                Quản lý Đơn hàng
-            </a>
+        <a class="sidebar-link" href="./admin_manageorders.html">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          Quản lý Đơn hàng
+        </a>
 
-            <a class="sidebar-link" href="#">
-                <span class="material-symbols-outlined">bar_chart</span>
-                Quản lý Doanh thu
-            </a>
+        <a class="sidebar-link" href="./admin_manageinvoices.html">
+          <span class="material-symbols-outlined">payments</span>
+          Quản lý Hóa đơn
+        </a>
 
-            <a class="sidebar-link" href="./admin_managediscounts.html">
-                <span class="material-symbols-outlined">percent_discount</span>
-                Quản lý Khuyến mãi
-            </a>
+        <a class="sidebar-link" href="./admin_managereviews.html">
+          <span class="material-symbols-outlined">rate_review</span>
+          Quản lý Đánh giá
+        </a>
 
-            <a class="sidebar-link" href="./admin_managevouchers.html">
-                <span class="material-symbols-outlined">local_activity</span>
-                Quản lý Voucher
-            </a>
+        <a class="sidebar-link" href="./admin_managediscounts.html">
+          <span class="material-symbols-outlined">percent_discount</span>
+          Quản lý Khuyến mãi
+        </a>
 
-            <a class="sidebar-link" href="#">
-                <span class="material-symbols-outlined">settings</span>
-                Cài đặt
-            </a>
-        </nav>
+        <a class="sidebar-link" href="./admin_managevouchers.html">
+          <span class="material-symbols-outlined">local_activity</span>
+          Quản lý Voucher
+        </a>
 
-        <div class="sidebar-footer">
-            <a class="sidebar-link" href="#">
-                <span class="material-symbols-outlined">logout</span>
-                Đăng xuất
-            </a>
-        </div>
+        <a class="sidebar-link" href="./admin_report.html">
+          <span class="material-symbols-outlined">bar_chart</span>
+          Báo cáo Thống kê
+        </a>
+
+        <a class="sidebar-link" href="#">
+          <span class="material-symbols-outlined">settings</span>
+          Cài đặt
+        </a>
+      </nav>
+
+      <div class="p-3 border-t border-white/10">
+        <a class="sidebar-link hover-text-red-400" href="#">
+          <span class="material-symbols-outlined">logout</span>
+          Đăng xuất
+        </a>
+      </div>
     </aside>
 
-    <div class="admin-layout">
-        <aside class="sidebar hidden lg:flex">
-            <div class="sidebar-brand">
-                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                    <img src="../../public/images/img.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
-                </div>
+    <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+      <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+        <div class="flex items-center gap-3 min-w-0">
+          <button
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden"
+            type="button" onclick="openSidebar()">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
 
-                <div class="sidebar-brand-title">TaskGo Admin</div>
-            </div>
-
-            <nav class="sidebar-nav">
-                <a class="sidebar-link" href="./admin_home.html">
-                    <span class="material-symbols-outlined">home</span>
-                    Trang chủ
-                </a>
-
-                <a class="sidebar-link" href="./admin_managecustomers.html">
-                    <span class="material-symbols-outlined">person</span>
-                    Quản lý Customer
-                </a>
-
-                <a class="sidebar-link active" href="./admin_managetaskers.html">
-                    <span class="material-symbols-outlined">badge</span>
-                    Quản lý Tasker
-                </a>
-
-                <a class="sidebar-link" href="./admin_manageservices.html">
-                    <span class="material-symbols-outlined">design_services</span>
-                    Quản lý Dịch vụ
-                </a>
-
-                <a class="sidebar-link" href="./admin_manageorders.html">
-                    <span class="material-symbols-outlined">shopping_bag</span>
-                    Quản lý Đơn hàng
-                </a>
-
-                <a class="sidebar-link" href="#">
-                    <span class="material-symbols-outlined">bar_chart</span>
-                    Quản lý Doanh thu
-                </a>
-
-                <a class="sidebar-link" href="./admin_managediscounts.html">
-                    <span class="material-symbols-outlined">percent_discount</span>
-                    Quản lý Khuyến mãi
-                </a>
-
-                <a class="sidebar-link" href="./admin_managevouchers.html">
-                    <span class="material-symbols-outlined">local_activity</span>
-                    Quản lý Voucher
-                </a>
-
-                <a class="sidebar-link" href="#">
-                    <span class="material-symbols-outlined">settings</span>
-                    Cài đặt
-                </a>
-            </nav>
-
-            <div class="sidebar-footer">
-                <a class="sidebar-link" href="#">
-                    <span class="material-symbols-outlined">logout</span>
-                    Đăng xuất
-                </a>
-            </div>
-        </aside>
-
-        <div class="main-area">
-            <header class="topbar">
-                <div class="topbar-left">
-                    <button class="topbar-btn lg:hidden" type="button" onclick="openSidebar()"
-                        aria-label="Open sidebar">
-                        <span class="material-symbols-outlined">menu</span>
-                    </button>
-
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="material-symbols-outlined">badge</span>
-                        <div class="topbar-title">Quản lý Tasker</div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <button class="topbar-btn" type="button">
-                        <span class="material-symbols-outlined">notifications</span>
-                        Thông báo
-                    </button>
-                </div>
-            </header>
-
-            <div class="content-wrap">
-                <div class="content-card">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="page-title">Quản lý Tasker</div>
-                        </div>
-                    </div>
-
-                    <!-- Table Content -->
-                    <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b border-gray-100">
-                                <tr>
-                                    <th class="p-4 font-semibold text-slate-700">Đối tác</th>
-                                    <th class="p-4 font-semibold text-slate-700">Kinh nghiệm</th>
-                                    <th class="p-4 font-semibold text-slate-700">Thu nhập/giờ</th>
-                                    <th class="p-4 font-semibold text-slate-700">Trạng thái tài khoản</th>
-                                    <th class="p-4 font-semibold text-slate-700">Trạng thái làm việc</th>
-                                    <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody id="data-table-body">
-                                <!-- Data will be injected here via JS -->
-                                <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
-                                    <td class="p-4 font-medium text-slate-800">Nguyễn Văn A</td>
-                                    <td class="p-4 max-w-[100px] font-medium text-slate-800">3 năm</td>
-                                    <td class="p-4 font-medium text-slate-800">100.000 VND/h</td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <select
-                                            class="text-xs font-bold w-full px-3 py-1.5 rounded-lg border-none bg-slate-50 focus:ring-2 focus:ring-gray-200 cursor-pointer transition-all">
-                                            <option value="pending" selected>ĐANG CHỜ DUYỆT</option>
-                                            <option value="working">ĐANG LÀM VIỆC</option>
-                                            <option value="resign">ĐÃ NGHỈ VIỆC</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <select
-                                            class="text-xs font-bold w-full px-3 py-1.5 min-w-[170px] rounded-lg border-none bg-slate-50 focus:ring-2 focus:ring-gray-200 cursor-pointer transition-all">
-                                            <option value="pending" selected>ĐANG CHỜ</option>
-                                            <option value="available">ĐANG RẢNH</option>
-                                            <option value="busy">ĐANG BẬN</option>
-                                            <option value="inactive">KHÔNG HOẠT ĐỘNG</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <div class="flex justify-center space-x-2">
-                                            <button title="Xem chi tiết"
-                                                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">visibility</span>
-                                            </button>
-                                            <button title="Chấp nhận"
-                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">verified</span>
-                                            </button>
-                                            <button title="Từ chối"
-                                                class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">verified_off</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
-                                    <td class="p-4 font-medium text-slate-800">Trần Thị B</td>
-                                    <td class="p-4 max-w-[100px] font-medium text-slate-800">2 năm</td>
-                                    <td class="p-4 font-medium text-slate-800">150.000 VND/h</td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <select
-                                            class="text-xs font-bold w-full px-3 py-1.5 rounded-lg border-none bg-slate-50 focus:ring-2 focus:ring-gray-200 cursor-pointer transition-all">
-                                            <option value="pending" selected>ĐANG CHỜ DUYỆT</option>
-                                            <option value="working">ĐANG LÀM VIỆC</option>
-                                            <option value="resign">ĐÃ NGHỈ VIỆC</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-4 text-sm text-slate-600">
-                                        <select
-                                            class="text-xs font-bold w-full px-3 py-1.5 min-w-[170px] rounded-lg border-none bg-slate-50 focus:ring-2 focus:ring-gray-200 cursor-pointer transition-all">
-                                            <option value="pending" selected>ĐANG CHỜ</option>
-                                            <option value="available">ĐANG RẢNH</option>
-                                            <option value="busy">ĐANG BẬN</option>
-                                            <option value="inactive">KHÔNG HOẠT ĐỘNG</option>
-                                        </select>
-                                    </td>
-                                    <td class="p-4 text-center">
-                                        <div class="flex justify-center space-x-2">
-                                            <button title="Xem chi tiết"
-                                                class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">visibility</span>
-                                            </button>
-                                            <button title="Sửa"
-                                                class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined">edit</span>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined">badge</span>
+            <div class="font-semibold truncate">Quản lý Tasker</div>
+          </div>
         </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="hidden sm:inline">Thông báo</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+        <div class="content-card">
+          <div class="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <div class="page-title">Quản lý Tasker</div>
+            </div>
+          </div>
+
+          <!-- Filters and Search -->
+          <div class="mb-6 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div class="flex flex-wrap gap-3 items-center">
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-semibold text-gray-600">Trạng thái tài khoản:</label>
+                <select id="filterAccountStatus"
+                  class="text-sm rounded-lg border border-gray-200 bg-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option value="">Tất cả</option>
+                  <option value="active">ACTIVE</option>
+                  <option value="inactive">INACTIVE</option>
+                  <option value="banned">BANNED</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <label class="text-xs font-semibold text-gray-600">Trạng thái chính:</label>
+                <select id="filterMainStatus"
+                  class="text-sm rounded-lg border border-gray-200 bg-white px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500">
+                  <option value="">Tất cả</option>
+                  <option value="pending">ĐANG CHỜ DUYỆT</option>
+                  <option value="working">ĐANG LÀM VIỆC</option>
+                  <option value="resign">ĐÃ NGHỈ VIỆC</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 w-full md:w-auto">
+              <div class="relative flex-1 md:flex-initial">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm theo tên..."
+                  class="w-full md:w-64 pl-10 pr-4 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500" />
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+              </div>
+              <button onclick="clearFilters()"
+                class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
+                Xóa bộ lọc
+              </button>
+            </div>
+          </div>
+
+          <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-slate-50 border-b border-gray-100">
+                <tr>
+                  <th class="p-4 font-semibold text-slate-700">Đối tác</th>
+                  <th class="p-4 font-semibold text-slate-700">Kinh nghiệm</th>
+                  <th class="p-4 font-semibold text-slate-700">Thu nhập/giờ</th>
+                  <th class="p-4 font-semibold text-slate-700">Trạng thái tài khoản</th>
+                  <th class="p-4 font-semibold text-slate-700">Trạng thái làm việc</th>
+                  <th class="p-4 font-semibold text-slate-700 text-center">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="data-table-body">
+                <tr>
+                  <td colspan="6" class="px-4 py-8 text-center text-gray-500">Đang tải...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+            <p id="paginationInfo" class="text-sm text-gray-500">Hiển thị <span class="font-bold">0-0</span> trên <span
+                class="font-bold">0</span> tasker</p>
+            <div id="paginationButtons" class="flex gap-1">
+              <button onclick="previousPage()"
+                class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                <span class="material-symbols-outlined text-sm">chevron_left</span>
+              </button>
+              <button
+                class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">1</button>
+              <button onclick="nextPage()"
+                class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500">
+                <span class="material-symbols-outlined text-sm">chevron_right</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Tasker Detail/Edit Modal -->
+  <div id="modalTasker" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalTasker')"></div>
+    <div class="relative w-full h-full flex items-center justify-center p-4">
+      <div class="w-full max-w-3xl bg-white rounded-xl shadow-lg border border-gray-100 max-h-[90vh] overflow-y-auto">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-gray-400">badge</span>
+            <div class="font-bold text-gray-800" id="taskerModalTitle">Chi tiết Tasker</div>
+          </div>
+          <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalTasker')">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="p-5 space-y-4">
+          <!-- Avatar and Basic Info -->
+          <div class="border-b border-gray-200 pb-4">
+            <div class="flex items-center gap-4 mb-4">
+              <img id="taskerAvatar" src="https://api.dicebear.com/9.x/bottts/svg?seed=Tasker" alt="Avatar"
+                class="w-20 h-20 rounded-full object-cover border-2 border-gray-200" />
+              <div>
+                <h3 id="taskerFullName" class="text-lg font-bold text-gray-800"></h3>
+                <p id="taskerEmail" class="text-sm text-gray-500"></p>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Số điện thoại</label>
+                <div id="taskerPhone" class="mt-1 text-sm text-gray-800"></div>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">CCCD</label>
+                <div id="taskerCCCD" class="mt-1 text-sm text-gray-800"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin Tasker -->
+          <div class="border-b border-gray-200 pb-4">
+            <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Thông tin Tasker</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Kinh nghiệm (năm) *</label>
+                <input id="taskerWorkingYear" type="number" min="1" readonly
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" />
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Thu nhập/giờ (VNĐ) *</label>
+                <input id="taskerHourlyRate" type="number" min="0" readonly
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all" />
+              </div>
+              <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-500 uppercase">Giới thiệu</label>
+                <textarea id="taskerIntroduction" rows="3" readonly
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trạng thái -->
+          <div class="border-b border-gray-200 pb-4">
+            <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Trạng thái</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái tài khoản *</label>
+                <select id="taskerAccountStatus" disabled
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                  <option value="active">ACTIVE</option>
+                  <option value="inactive">INACTIVE</option>
+                  <option value="banned">BANNED</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái làm việc *</label>
+                <select id="taskerWorkingStatus" disabled
+                  class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                  <option value="pending">ĐANG CHỜ</option>
+                  <option value="available">ĐANG RẢNH</option>
+                  <option value="busy">ĐANG BẬN</option>
+                  <option value="offline">OFFLINE</option>
+                  <option value="paused">TẠM DỪNG</option>
+                  <option value="inactive">KHÔNG HOẠT ĐỘNG</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái chính</label>
+                <div id="taskerMainStatus" class="mt-1 text-sm font-medium"></div>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Số đơn đã hoàn thành</label>
+                <div id="taskerCompletedOrders" class="mt-1 text-sm text-gray-800"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Thông tin ngân hàng -->
+          <div>
+            <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Thông tin ngân hàng</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">Ngân hàng</label>
+                <div id="taskerBankName" class="mt-1 text-sm text-gray-800 font-medium">—</div>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 uppercase">BIN (6 số đầu)</label>
+                <div id="taskerBIN" class="mt-1 text-sm text-gray-800"></div>
+              </div>
+              <div class="md:col-span-2">
+                <label class="text-xs font-bold text-gray-500 uppercase">Số tài khoản</label>
+                <div id="taskerAccountNumber" class="mt-1 text-sm text-gray-800 font-mono"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2 sticky bottom-0 bg-white">
+          <button
+            class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+            type="button" onclick="closeModal('modalTasker')">
+            Đóng
+          </button>
+          <button id="btnApproveTasker"
+            class="px-4 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-green-600 transition hidden"
+            type="button" onclick="approveTasker()">
+            Duyệt Tasker
+          </button>
+          <button id="btnRejectTasker"
+            class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition hidden"
+            type="button" onclick="rejectTasker()">
+            Từ chối
+          </button>
+          <button id="btnSaveTasker"
+            class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition hidden"
+            type="button" onclick="saveTasker()">
+            Lưu thay đổi
+          </button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script>
-        const sidebarMobile = document.getElementById("sidebarMobile");
-        const backdrop = document.getElementById("backdrop");
+  <!-- Confirm Modal -->
+  <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalConfirm')"></div>
+    <div class="relative w-full h-full flex items-center justify-center p-4">
+      <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100">
+        <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div class="font-bold text-gray-800">Xác nhận</div>
+          <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalConfirm')">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div class="p-5">
+          <div id="confirmText" class="text-sm text-gray-700">Bạn chắc chắn muốn thực hiện hành động này?</div>
+        </div>
+        <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+          <button
+            class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+            type="button" onclick="closeModal('modalConfirm')">
+            Hủy
+          </button>
+          <button id="btnConfirmAction"
+            class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-600 transition"
+            type="button" onclick="confirmAction()">
+            Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        function openSidebar() {
-            sidebarMobile.classList.remove("closed");
-            backdrop.classList.add("show");
-        }
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+    <div class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+      <span class="material-symbols-outlined text-[18px]">info</span>
+      <span id="toastText">Thông báo</span>
+    </div>
+  </div>
 
-        function closeSidebar() {
-            sidebarMobile.classList.add("closed");
-            backdrop.classList.remove("show");
-        }
-    </script>
-    <script src="../js/admin_managetaskers.js"></script>
+  <script src="../js/admin_managetaskers.js"></script>
 </body>
 
 </html>

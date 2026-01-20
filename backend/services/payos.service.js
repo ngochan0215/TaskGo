@@ -94,7 +94,8 @@ export const payOut = async (payoutData, userId) => {
         status: 'pending',
         type: 'payout',
     });
-    const payoutBatch = await payOSpayout.payouts.batch.create({
+    try{
+        const payoutBatch = await payOSpayout.payouts.batch.create({
         referenceId,
         category: ['salary'],
         validateDestination: true,
@@ -108,8 +109,11 @@ export const payOut = async (payoutData, userId) => {
             }
         ],
     });
-
-    console.log('Payout ID:', payoutBatch.id);
+    }
+    catch (error){
+        console.error('Error creating payout batch:', error);
+        throw error;
+    }
     return "payout_" +rand;
 }
 

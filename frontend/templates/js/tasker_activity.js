@@ -47,6 +47,27 @@ const paymentMethodMap = {
   ewallet: "Ví TaskGo"
 };
 
+const tabs = ['tabCurrentWorking', 'tabScheduled', 'tabHistory'];
+const sections = ['currentWorkingSection', 'scheduledSection', 'historySection'];
+tabs.forEach((tabId, index) => {
+        document.getElementById(tabId).addEventListener('click', () => {
+            tabs.forEach(t => {
+                const el = document.getElementById(t);
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.className = "flex-1 py-2.5 rounded-xl text-sm font-bold text-gray-500 hover:text-[#3730A3] hover:bg-gray-50 transition-all";
+            });
+
+            const activeEl = document.getElementById(tabId);
+            activeEl.style.backgroundColor = '#E0E7FF';
+            activeEl.style.color = '#3730A3';
+            activeEl.className = "flex-1 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all";
+
+            sections.forEach(s => document.getElementById(s).classList.add('hidden'));
+            document.getElementById(sections[index]).classList.remove('hidden');
+        });
+    });
+
 // Format order ID (last 6 digits)
 function formatOrderId(orderId) {
   if (!orderId) return "—";

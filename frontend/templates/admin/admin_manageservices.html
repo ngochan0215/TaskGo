@@ -1,608 +1,472 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>TaskGo Admin - Quản lý dịch vụ</title>
 
-    <link rel="stylesheet" href="../../public/css/output.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <title>TaskGo Admin - Quản lý Dịch vụ</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200"
-    />
+  <link rel="stylesheet" href="../../public/css/output.css" />
 
-    <style>
-      .no-scrollbar::-webkit-scrollbar {
-        display: none;
-      }
-      .no-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-    </style>
-  </head>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+  <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 
-  <body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
-    <div
-      id="backdrop"
-      class="fixed inset-0 z-40 bg-black/40 hidden"
-      onclick="closeSidebar()"
-    ></div>
 
-    <aside
-      id="sidebarMobile"
-      class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden"
-    >
-      <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
-        <div
-          class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
-        >
-          <img
-            src="../../public/images/taskgo-logo.png"
-            alt="TaskGo logo"
-            class="w-full h-full object-contain p-1"
-          />
-        </div>
-        <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
-      </div>
+  <style>
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
 
-      <nav class="p-3 flex-1 space-y-1">
-          <a class="sidebar-link" 
-            href="./admin_home.html">
-              <span class="material-symbols-outlined">home</span>
-              Trang chủ
-          </a>
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_managecustomers.html">
-              <span class="material-symbols-outlined">person</span>
-              Quản lý Customer
-          </a>
+<body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
+  <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-              href="./admin_managetaskers.html">
-              <span class="material-symbols-outlined">badge</span>
-              Quản lý Tasker
-          </a>
-
-          <a class="sidebar-link active" href="./admin_manageservices.html">
-              <span class="material-symbols-outlined">design_services</span>
-              Quản lý Dịch vụ
-          </a>
-
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-              href="./admin_manageorders.html">
-              <span class="material-symbols-outlined">shopping_bag</span>
-              Quản lý Đơn hàng
-          </a>
-
-          <a class="sidebar-link" href="./admin_managediscounts.html">
-              <span class="material-symbols-outlined">percent_discount</span>
-              Quản lý Khuyến mãi
-          </a>
-
-          <a class="sidebar-link" href="./admin_managevouchers.html">
-              <span class="material-symbols-outlined">local_activity</span>
-              Quản lý Voucher
-          </a>
-
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-              <span class="material-symbols-outlined">bar_chart</span>
-              Quản lý Doanh thu
-          </a>
-
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-              <span class="material-symbols-outlined">settings</span>
-              Cài đặt
-          </a>
-      </nav>
-
-      <div class="p-3 border-t border-white/10">
-        <a
-          class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
-          href="#"
-        >
-          <span class="material-symbols-outlined">logout</span> Đăng xuất
-        </a>
-      </div>
-    </aside>
-
-    <div class="flex min-h-screen">
-      <aside
-        class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0"
-      >
+  <aside id="sidebarMobile"
+        class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
         <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
-          <div
-            class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden"
-          >
-            <img
-              src="../../public/images/taskgo-logo.png"
-              alt="TaskGo logo"
-              class="w-9 h-9 object-contain p-1"
-            />
-          </div>
-          <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                <span class="text-primary-500 font-bold text-xs"><img src="../../public/images/taskgo-logo.png"
+                        alt="TaskGo logo" class="w-9 h-9 object-contain" /></span>
+            </div>
+            <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
         </div>
 
         <nav class="p-3 flex-1 space-y-1">
-          <a class="sidebar-link" 
-            href="./admin_home.html">
-              <span class="material-symbols-outlined">home</span>
-              Trang chủ
-          </a>
+            <a class="sidebar-link" href="./admin_home.html">
+                <span class="material-symbols-outlined">home</span>
+                Trang chủ
+            </a>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_managecustomers.html">
-              <span class="material-symbols-outlined">person</span>
-              Quản lý Customer
-          </a>
+            <a class="sidebar-link" href="./admin_managecustomers.html">
+                <span class="material-symbols-outlined">person</span>
+                Quản lý Customer
+            </a>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-              href="./admin_managetaskers.html">
-              <span class="material-symbols-outlined">badge</span>
-              Quản lý Tasker
-          </a>
+            <a class="sidebar-link" href="./admin_managetaskers.html">
+                <span class="material-symbols-outlined">badge</span>
+                Quản lý Tasker
+            </a>
 
-          <a class="sidebar-link active" 
-              href="./admin_manageservices.html">
-              <span class="material-symbols-outlined">design_services</span>
-              Quản lý Dịch vụ
-          </a>
+            <a class="sidebar-link active" href="./admin_manageservices.html">
+                <span class="material-symbols-outlined">design_services</span>
+                Quản lý Dịch vụ
+            </a>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-              href="./admin_manageorders.html">
-              <span class="material-symbols-outlined">shopping_bag</span>
-              Quản lý Đơn hàng
-          </a>
+            <a class="sidebar-link" href="./admin_manageorders.html">
+                <span class="material-symbols-outlined">shopping_bag</span>
+                Quản lý Đơn hàng
+            </a>
 
-          <a class="sidebar-link" href="./admin_managediscounts.html">
-              <span class="material-symbols-outlined">percent_discount</span>
-              Quản lý Khuyến mãi
-          </a>
+            <a class="sidebar-link" href="./admin_manageinvoices.html">
+                <span class="material-symbols-outlined">payments</span>
+                Quản lý Hóa đơn
+            </a>
 
-          <a class="sidebar-link" href="./admin_managevouchers.html">
-              <span class="material-symbols-outlined">local_activity</span>
-              Quản lý Voucher
-          </a>
+            <a class="sidebar-link" href="./admin_managereviews.html">
+                <span class="material-symbols-outlined">rate_review</span>
+                Quản lý Đánh giá
+            </a>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-              <span class="material-symbols-outlined">bar_chart</span>
-              Quản lý Doanh thu
-          </a>
+            <a class="sidebar-link" href="./admin_managediscounts.html">
+                <span class="material-symbols-outlined">percent_discount</span>
+                Quản lý Khuyến mãi
+            </a>
 
-          <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-              <span class="material-symbols-outlined">settings</span>
-              Cài đặt
-          </a>
-      </nav>
+            <a class="sidebar-link" href="./admin_managevouchers.html">
+                <span class="material-symbols-outlined">local_activity</span>
+                Quản lý Voucher
+            </a>
 
+            <a class="sidebar-link" href="./admin_report.html">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Báo cáo Thống kê
+            </a>
+
+            <a class="sidebar-link" href="#">
+                <span class="material-symbols-outlined">settings</span>
+                Cài đặt
+            </a>
+        </nav>
         <div class="p-3 border-t border-white/10">
-          <a
-            class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition"
-            href="#"
-          >
-            <span class="material-symbols-outlined">logout</span>
-            Đăng xuất
-          </a>
+            <a class="sidebar-link hover-text-red-400" href="#">
+                <span class="material-symbols-outlined">logout</span>
+                Đăng xuất
+            </a>
         </div>
-      </aside>
+    </aside>
 
-      <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
-        <header
-          class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10"
-        >
-          <div class="flex items-center gap-3 min-w-0">
-            <button
-              class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden"
-              type="button"
-              onclick="openSidebar()"
-            >
-              <span class="material-symbols-outlined">menu</span>
-            </button>
+  <div class="flex min-h-screen">
+    <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+            <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+                </div>
+                <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+            </div>
 
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="material-symbols-outlined">design_services</span>
-              <div class="font-semibold truncate">Quản lý dịch vụ</div>
+            <nav class="p-3 flex-1 space-y-1">
+                <a class="sidebar-link" href="./admin_home.html">
+                    <span class="material-symbols-outlined">home</span>
+                    Trang chủ
+                </a>
+
+                <a class="sidebar-link" href="./admin_managecustomers.html">
+                    <span class="material-symbols-outlined">person</span>
+                    Quản lý Customer
+                </a>
+
+                <a class="sidebar-link" href="./admin_managetaskers.html">
+                    <span class="material-symbols-outlined">badge</span>
+                    Quản lý Tasker
+                </a>
+
+                <a class="sidebar-link active" href="./admin_manageservices.html">
+                    <span class="material-symbols-outlined">design_services</span>
+                    Quản lý Dịch vụ
+                </a>
+
+                <a class="sidebar-link" href="./admin_manageorders.html">
+                    <span class="material-symbols-outlined">shopping_bag</span>
+                    Quản lý Đơn hàng
+                </a>
+
+                <a class="sidebar-link" href="./admin_manageinvoices.html">
+                    <span class="material-symbols-outlined">payments</span>
+                    Quản lý Hóa đơn
+                </a>
+
+                <a class="sidebar-link" href="./admin_managereviews.html">
+                    <span class="material-symbols-outlined">rate_review</span>
+                    Quản lý Đánh giá
+                </a>
+
+                <a class="sidebar-link" href="./admin_managediscounts.html">
+                    <span class="material-symbols-outlined">percent_discount</span>
+                    Quản lý Khuyến mãi
+                </a>
+
+                <a class="sidebar-link" href="./admin_managevouchers.html">
+                    <span class="material-symbols-outlined">local_activity</span>
+                    Quản lý Voucher
+                </a>
+
+                <a class="sidebar-link" href="./admin_report.html">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    Báo cáo Thống kê
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    Cài đặt
+                </a>
+            </nav>
+
+            <div class="p-3 border-t border-white/10">
+                <a class="sidebar-link hover-text-red-400" href="#">
+                    <span class="material-symbols-outlined">logout</span>
+                    Đăng xuất
+                </a>
+            </div>
+        </aside>
+
+    <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+      <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+        <div class="flex items-center gap-3 min-w-0">
+          <button
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden"
+            type="button" onclick="openSidebar()">
+            <span class="material-symbols-outlined">menu</span>
+          </button>
+
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="material-symbols-outlined">design_services</span>
+            <div class="font-semibold truncate">Quản lý Dịch vụ</div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm"
+            type="button">
+            <span class="material-symbols-outlined">notifications</span>
+            <span class="hidden sm:inline">Thông báo</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]">
+          <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <div class="text-base font-semibold text-gray-800">
+                Quản lý Dịch vụ
+              </div>
+              <div class="text-sm text-gray-600">
+                Danh sách loại dịch vụ & dịch vụ trong hệ thống
+              </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div class="relative w-full sm:w-[360px]">
+                <span
+                  class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                <input id="searchInput" type="text" placeholder="Tìm theo tên / mô tả..."
+                  class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full bg-gray-50 focus:bg-white transition-all" />
+              </div>
+
+              <div class="inline-flex rounded-xl bg-gray-100 p-1 no-scrollbar overflow-x-auto">
+                <button id="tabCategories"
+                  class="px-3 py-2 text-sm rounded-lg bg-white shadow-sm text-gray-900 font-semibold whitespace-nowrap"
+                  type="button" onclick="switchTab('categories')">
+                  Loại dịch vụ
+                </button>
+                <button id="tabServices"
+                  class="px-3 py-2 text-sm rounded-lg text-gray-700 hover:bg-white/70 transition whitespace-nowrap"
+                  type="button" onclick="switchTab('services')">
+                  Dịch vụ
+                </button>
+              </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
-            <button
-              class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm"
-              type="button"
-            >
-              <span class="material-symbols-outlined">notifications</span>
-              <span class="hidden sm:inline">Thông báo</span>
-            </button>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
+            <div class="p-4 rounded-lg bg-emerald-50 border border-emerald-100">
+              <p class="text-xs text-emerald-600 font-bold uppercase mb-1">
+                Tổng loại dịch vụ
+              </p>
+              <p id="statCategories" class="text-2xl font-bold text-gray-800">
+                0
+              </p>
+            </div>
+            <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+              <p class="text-xs text-blue-600 font-bold uppercase mb-1">
+                Tổng dịch vụ
+              </p>
+              <p id="statServices" class="text-2xl font-bold text-gray-800">
+                0
+              </p>
+            </div>
+            <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+              <p class="text-xs text-green-600 font-bold uppercase mb-1">
+                Đang hoạt động
+              </p>
+              <p id="statActive" class="text-2xl font-bold text-gray-800">
+                0
+              </p>
+            </div>
+            <div class="p-4 rounded-lg bg-red-50 border border-red-100">
+              <p class="text-xs text-red-600 font-bold uppercase mb-1">
+                Tạm ngưng
+              </p>
+              <p id="statInactive" class="text-2xl font-bold text-gray-800">
+                0
+              </p>
+            </div>
           </div>
-        </header>
 
-        <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
-          <div
-            class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]"
-          >
-            <div
-              class="flex flex-col md:flex-row md:items-start md:justify-between gap-4"
-            >
-              <div>
-                <div class="text-base font-semibold text-gray-800">
-                  Quản lý dịch vụ
-                </div>
-                <div class="text-sm text-gray-600">
-                  Danh sách loại dịch vụ & dịch vụ trong hệ thống
-                </div>
-              </div>
-
-              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <div class="relative w-full sm:w-[360px]">
-                  <span
-                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"
-                    >search</span
-                  >
-                  <input
-                    id="searchInput"
-                    type="text"
-                    placeholder="Tìm theo tên / mô tả..."
-                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full bg-gray-50 focus:bg-white transition-all"
-                  />
-                </div>
-
-                <div
-                  class="inline-flex rounded-xl bg-gray-100 p-1 no-scrollbar overflow-x-auto"
-                >
-                  <button
-                    id="tabCategories"
-                    class="px-3 py-2 text-sm rounded-lg bg-white shadow-sm text-gray-900 font-semibold whitespace-nowrap"
-                    type="button"
-                    onclick="switchTab('categories')"
-                  >
-                    Loại dịch vụ
-                  </button>
-                  <button
-                    id="tabServices"
-                    class="px-3 py-2 text-sm rounded-lg text-gray-700 hover:bg-white/70 transition whitespace-nowrap"
-                    type="button"
-                    onclick="switchTab('services')"
-                  >
-                    Dịch vụ
-                  </button>
-                </div>
-              </div>
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+            <div id="hintText" class="text-sm text-gray-600">
+              Quản lý danh mục (loại) dịch vụ
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 my-6">
-              <div
-                class="p-4 rounded-lg bg-emerald-50 border border-emerald-100"
-              >
-                <p class="text-xs text-emerald-600 font-bold uppercase mb-1">
-                  Tổng loại dịch vụ
-                </p>
-                <p id="statCategories" class="text-2xl font-bold text-gray-800">
-                  0
-                </p>
+            <div class="flex flex-wrap items-center gap-2">
+              <div id="serviceFilters" class="hidden flex-wrap items-center gap-2">
+                <select id="filterCategory"
+                  class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all">
+                  <option value="all">Tất cả loại</option>
+                </select>
+
+                <select id="filterStatus"
+                  class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all">
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
               </div>
-              <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                <p class="text-xs text-blue-600 font-bold uppercase mb-1">
-                  Tổng dịch vụ
-                </p>
-                <p id="statServices" class="text-2xl font-bold text-gray-800">
-                  0
-                </p>
-              </div>
-              <div class="p-4 rounded-lg bg-green-50 border border-green-100">
-                <p class="text-xs text-green-600 font-bold uppercase mb-1">
-                  Đang hoạt động
-                </p>
-                <p id="statActive" class="text-2xl font-bold text-gray-800">
-                  0
-                </p>
-              </div>
-              <div class="p-4 rounded-lg bg-red-50 border border-red-100">
-                <p class="text-xs text-red-600 font-bold uppercase mb-1">
-                  Tạm ngưng
-                </p>
-                <p id="statInactive" class="text-2xl font-bold text-gray-800">
-                  0
-                </p>
-              </div>
+
+              <button id="btnAddCategory" data-admin-only="1"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
+                type="button" onclick="openCategoryModal('add')">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Thêm loại dịch vụ
+              </button>
+
+              <button id="btnAddService" data-admin-only="1"
+                class="hidden inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
+                type="button" onclick="openServiceModal('add')">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Thêm dịch vụ
+              </button>
+
+              <button
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
+                type="button" onclick="resetUI()">
+                <span class="material-symbols-outlined text-[18px]">refresh</span>
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <div id="panelCategories">
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                  <tr>
+                    <th class="px-4 py-3 border-b border-gray-200">
+                      Tên loại
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200">ID</th>
+                    <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Trạng thái
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="categoriesBody" class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"></tbody>
+              </table>
             </div>
 
-            <div
-              class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4"
-            >
-              <div id="hintText" class="text-sm text-gray-600">
-                Quản lý danh mục (loại) dịch vụ
-              </div>
-
-              <div class="flex flex-wrap items-center gap-2">
-                <div
-                  id="serviceFilters"
-                  class="hidden flex-wrap items-center gap-2"
-                >
-                  <select
-                    id="filterCategory"
-                    class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all"
-                  >
-                    <option value="all">Tất cả loại</option>
-                  </select>
-
-                  <select
-                    id="filterStatus"
-                    class="py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:outline-none focus:border-primary-500 transition-all"
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-
+            <div class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+              <p class="text-sm text-gray-500">
+                Hiển thị <span id="catRange" class="font-bold">0</span> trên
+                <span id="catTotal" class="font-bold">0</span> loại dịch vụ
+              </p>
+              <div class="flex gap-1">
                 <button
-                  id="btnAddCategory"
-                  data-admin-only="1"
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
-                  type="button"
-                  onclick="openCategoryModal('add')"
-                >
-                  <span class="material-symbols-outlined text-[18px]">add</span>
-                  Thêm loại dịch vụ
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                  disabled>
+                  <span class="material-symbols-outlined text-sm">chevron_left</span>
                 </button>
-
                 <button
-                  id="btnAddService"
-                  data-admin-only="1"
-                  class="hidden inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition whitespace-nowrap"
-                  type="button"
-                  onclick="openServiceModal('add')"
-                >
-                  <span class="material-symbols-outlined text-[18px]">add</span>
-                  Thêm dịch vụ
+                  class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">
+                  1
                 </button>
-
                 <button
-                  class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition whitespace-nowrap"
-                  type="button"
-                  onclick="resetUI()"
-                >
-                  <span class="material-symbols-outlined text-[18px]"
-                    >refresh</span
-                  >
-                  Reset
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                  disabled>
+                  <span class="material-symbols-outlined text-sm">chevron_right</span>
                 </button>
               </div>
             </div>
+          </div>
 
-            <div id="panelCategories">
-              <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-left border-collapse">
-                  <thead
-                    class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
-                  >
-                    <tr>
-                      <th class="px-4 py-3 border-b border-gray-200">
-                        Tên loại
-                      </th>
-                      <th class="px-4 py-3 border-b border-gray-200">ID</th>
-                      <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
-                      <th
-                        class="px-4 py-3 border-b border-gray-200 text-center"
-                      >
-                        Trạng thái
-                      </th>
-                      <th
-                        class="px-4 py-3 border-b border-gray-200 text-center"
-                      >
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    id="categoriesBody"
-                    class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
-                  ></tbody>
-                </table>
-              </div>
-
-              <div
-                class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4"
-              >
-                <p class="text-sm text-gray-500">
-                  Hiển thị <span id="catRange" class="font-bold">0</span> trên
-                  <span id="catTotal" class="font-bold">0</span> loại dịch vụ
-                </p>
-                <div class="flex gap-1">
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
-                    disabled
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_left</span
-                    >
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
-                  >
-                    1
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
-                    disabled
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_right</span
-                    >
-                  </button>
-                </div>
-              </div>
+          <div id="panelServices" class="hidden">
+            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+              <table class="w-full text-left border-collapse">
+                <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                  <tr>
+                    <th class="px-4 py-3 border-b border-gray-200">
+                      Tên dịch vụ
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200">Loại</th>
+                    <th class="px-4 py-3 border-b border-gray-200">Đơn vị</th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-right">
+                      Giá cơ bản
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Trạng thái
+                    </th>
+                    <th class="px-4 py-3 border-b border-gray-200 text-center">
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="servicesBody" class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"></tbody>
+              </table>
             </div>
 
-            <div id="panelServices" class="hidden">
-              <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                <table class="w-full text-left border-collapse">
-                  <thead
-                    class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold"
-                  >
-                    <tr>
-                      <th class="px-4 py-3 border-b border-gray-200">
-                        Tên dịch vụ
-                      </th>
-                      <th class="px-4 py-3 border-b border-gray-200">Loại</th>
-                      <th class="px-4 py-3 border-b border-gray-200">Đơn vị</th>
-                      <th class="px-4 py-3 border-b border-gray-200 text-right">
-                        Giá cơ bản
-                      </th>
-                      <th class="px-4 py-3 border-b border-gray-200">Mô tả</th>
-                      <th
-                        class="px-4 py-3 border-b border-gray-200 text-center"
-                      >
-                        Trạng thái
-                      </th>
-                      <th
-                        class="px-4 py-3 border-b border-gray-200 text-center"
-                      >
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    id="servicesBody"
-                    class="text-sm text-gray-700 divide-y divide-gray-100 bg-white"
-                  ></tbody>
-                </table>
-              </div>
-
-              <div
-                class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4"
-              >
-                <p class="text-sm text-gray-500">
-                  Hiển thị <span id="srvRange" class="font-bold">0</span> trên
-                  <span id="srvTotal" class="font-bold">0</span> dịch vụ
-                </p>
-                <div class="flex gap-1">
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
-                    disabled
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_left</span
-                    >
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm"
-                  >
-                    1
-                  </button>
-                  <button
-                    class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
-                    disabled
-                  >
-                    <span class="material-symbols-outlined text-sm"
-                      >chevron_right</span
-                    >
-                  </button>
-                </div>
+            <div class="flex items-center justify-between border-t border-gray-200 pt-4 mt-4">
+              <p class="text-sm text-gray-500">
+                Hiển thị <span id="srvRange" class="font-bold">0</span> trên
+                <span id="srvTotal" class="font-bold">0</span> dịch vụ
+              </p>
+              <div class="flex gap-1">
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"
+                  disabled>
+                  <span class="material-symbols-outlined text-sm">chevron_left</span>
+                </button>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">
+                  1
+                </button>
+                <button
+                  class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                  disabled>
+                  <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </button>
               </div>
             </div>
+          </div>
 
-            <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
-              <div
-                class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2"
-              >
-                <span class="material-symbols-outlined text-[18px]">info</span>
-                <span id="toastText">Thông báo</span>
-              </div>
+          <div id="toast" class="fixed bottom-4 right-4 z-50 hidden">
+            <div class="bg-gray-900 text-white text-sm px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">info</span>
+              <span id="toastText">Thông báo</span>
             </div>
+          </div>
 
-            <div id="modalCategory" class="fixed inset-0 z-50 hidden">
-              <div
-                class="absolute inset-0 bg-black/40"
-                onclick="closeModal('modalCategory')"
-              ></div>
-              <div
-                class="relative w-full h-full flex items-center justify-center p-4"
-              >
-                <div
-                  class="w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-100"
-                >
-                  <div
-                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
-                  >
-                    <div class="flex items-center gap-2">
-                      <span class="material-symbols-outlined text-gray-400"
-                        >category</span
-                      >
-                      <div class="font-bold text-gray-800" id="catModalTitle">
-                        Thêm loại dịch vụ
-                      </div>
+          <div id="modalCategory" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalCategory')"></div>
+            <div class="relative w-full h-full flex items-center justify-center p-4">
+              <div class="w-full max-w-xl bg-white rounded-xl shadow-lg border border-gray-100">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gray-400">category</span>
+                    <div class="font-bold text-gray-800" id="catModalTitle">
+                      Thêm loại dịch vụ
                     </div>
-                    <button
-                      class="text-gray-400 hover:text-gray-700"
-                      type="button"
-                      onclick="closeModal('modalCategory')"
-                    >
-                      <span class="material-symbols-outlined">close</span>
-                    </button>
+                  </div>
+                  <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalCategory')">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+
+                <div class="p-5 space-y-4">
+                  <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Tên loại</label>
+                    <input id="catName"
+                      class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                      placeholder="Ví dụ: House Cleaning" />
                   </div>
 
-                  <div class="p-5 space-y-4">
-                    <div>
-                      <label class="text-xs font-bold text-gray-500 uppercase"
-                        >Tên loại</label
-                      >
-                      <input
-                        id="catName"
-                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        placeholder="Ví dụ: House Cleaning"
-                      />
-                    </div>
+                  <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Mô tả</label>
+                    <textarea id="catDesc" rows="3"
+                      class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                      placeholder="Mô tả ngắn..."></textarea>
+                  </div>
 
-                    <div>
-                      <label class="text-xs font-bold text-gray-500 uppercase"
-                        >Mô tả</label
-                      >
-                      <textarea
-                        id="catDesc"
-                        rows="3"
-                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        placeholder="Mô tả ngắn..."
-                      ></textarea>
+                  <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Avatar</label>
+                    <div class="mt-1 flex items-center gap-2">
+                      <input id="catAvatarFile" type="file" accept="image/jpeg,image/jpg,image/png,image/webp"
+                        class="hidden" onchange="handleCategoryAvatarChange(event)" />
+                      <button type="button" onclick="$('catAvatarFile').click()"
+                        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 transition">
+                        Chọn ảnh
+                      </button>
+                      <span id="catAvatarFileName" class="text-xs text-gray-500"></span>
+                      <img id="catAvatarPreview" src="" alt="" class="hidden w-12 h-12 rounded-lg object-cover" />
                     </div>
-
-                    <div>
-                      <label class="text-xs font-bold text-gray-500 uppercase"
-                        >Avatar</label
-                      >
-                      <div class="mt-1 flex items-center gap-2">
-                        <input
-                          id="catAvatarFile"
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/webp"
-                          class="hidden"
-                          onchange="handleCategoryAvatarChange(event)"
-                        />
-                        <button
-                          type="button"
-                          onclick="$('catAvatarFile').click()"
-                          class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 transition"
-                        >
-                          Chọn ảnh
-                        </button>
-                        <span id="catAvatarFileName" class="text-xs text-gray-500"></span>
-                        <img id="catAvatarPreview" src="" alt="" class="hidden w-12 h-12 rounded-lg object-cover" />
-                      </div>
-                      <input
-                        id="catAvatarUrl"
-                        type="hidden"
-                      />
-                    </div>
-                    <!-- <div>
+                    <input id="catAvatarUrl" type="hidden" />
+                  </div>
+                  <!-- <div>
                       <label class="text-xs font-bold text-gray-500 uppercase"
                         >Avatar URL</label
                       >
@@ -614,247 +478,156 @@
                       />
                     </div> -->
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Trạng thái</label
-                        >
-                        <select
-                          id="catStatus"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái</label>
+                      <select id="catStatus"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
                     </div>
                   </div>
+                </div>
 
-                  <div
-                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
-                  >
-                    <button
-                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
-                      type="button"
-                      onclick="closeModal('modalCategory')"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
-                      type="button"
-                      onclick="saveCategory()"
-                    >
-                      Lưu
-                    </button>
-                  </div>
+                <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <button
+                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                    type="button" onclick="closeModal('modalCategory')">
+                    Hủy
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
+                    type="button" onclick="saveCategory()">
+                    Lưu
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div id="modalService" class="fixed inset-0 z-50 hidden">
-              <div
-                class="absolute inset-0 bg-black/40"
-                onclick="closeModal('modalService')"
-              ></div>
-              <div
-                class="relative w-full h-full flex items-center justify-center p-4"
-              >
-                <div
-                  class="w-full max-w-2xl bg-white rounded-xl shadow-lg border border-gray-100"
-                >
-                  <div
-                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
-                  >
-                    <div class="flex items-center gap-2">
-                      <span class="material-symbols-outlined text-gray-400"
-                        >design_services</span
-                      >
-                      <div class="font-bold text-gray-800" id="srvModalTitle">
-                        Thêm dịch vụ
-                      </div>
+          <div id="modalService" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalService')"></div>
+            <div class="relative w-full h-full flex items-center justify-center p-4">
+              <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg border border-gray-100">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-gray-400">design_services</span>
+                    <div class="font-bold text-gray-800" id="srvModalTitle">
+                      Thêm dịch vụ
                     </div>
-                    <button
-                      class="text-gray-400 hover:text-gray-700"
-                      type="button"
-                      onclick="closeModal('modalService')"
-                    >
-                      <span class="material-symbols-outlined">close</span>
-                    </button>
                   </div>
+                  <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalService')">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
 
-                  <div class="p-5 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Tên dịch vụ</label
-                        >
-                        <input
-                          id="srvName"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                          placeholder="Ví dụ: Dọn dẹp nhà cơ bản"
-                        />
-                      </div>
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Loại dịch vụ</label
-                        >
-                        <select
-                          id="srvCategory"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        ></select>
-                      </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Đơn vị</label
-                        >
-                        <select
-                          id="srvUnit"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        >
-                          <option value="hour">Giờ</option>
-                          <option value="job">Gói</option>
-                          <option value="time">Lần</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Giá cơ bản</label
-                        >
-                        <input
-                          id="srvPrice"
-                          type="number"
-                          min="0"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                          placeholder="Ví dụ: 150000"
-                        />
-                      </div>
-                      <div>
-                        <label class="text-xs font-bold text-gray-500 uppercase"
-                          >Trạng thái</label
-                        >
-                        <select
-                          id="srvStatus"
-                          class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        >
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
-                      </div>
-                    </div>
-
+                <div class="p-5 space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label class="text-xs font-bold text-gray-500 uppercase"
-                        >Mô tả</label
-                      >
-                      <textarea
-                        id="srvDesc"
-                        rows="3"
+                      <label class="text-xs font-bold text-gray-500 uppercase">Tên dịch vụ</label>
+                      <input id="srvName"
                         class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
-                        placeholder="Mô tả ngắn..."
-                      ></textarea>
+                        placeholder="Ví dụ: Dọn dẹp nhà cơ bản" />
                     </div>
-
                     <div>
-                      <label class="text-xs font-bold text-gray-500 uppercase"
-                        >Avatar</label
-                      >
-                      <div class="mt-1 flex items-center gap-2">
-                        <input
-                          id="srvAvatarFile"
-                          type="file"
-                          accept="image/jpeg,image/jpg,image/png,image/webp"
-                          class="hidden"
-                          onchange="handleServiceAvatarChange(event)"
-                        />
-                        <button
-                          type="button"
-                          onclick="$('srvAvatarFile').click()"
-                          class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 transition"
-                        >
-                          Chọn ảnh
-                        </button>
-                        <span id="srvAvatarFileName" class="text-xs text-gray-500"></span>
-                        <img id="srvAvatarPreview" src="" alt="" class="hidden w-12 h-12 rounded-lg object-cover" />
-                      </div>
-                      <input
-                        id="srvAvatarUrl"
-                        type="hidden"
-                      />
+                      <label class="text-xs font-bold text-gray-500 uppercase">Loại dịch vụ</label>
+                      <select id="srvCategory"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"></select>
                     </div>
                   </div>
 
-                  <div
-                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
-                  >
-                    <button
-                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
-                      type="button"
-                      onclick="closeModal('modalService')"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
-                      type="button"
-                      onclick="saveService()"
-                    >
-                      Lưu
-                    </button>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase">Đơn vị</label>
+                      <select id="srvUnit"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                        <option value="hour">Giờ</option>
+                        <option value="job">Gói</option>
+                        <option value="time">Lần</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase">Giá cơ bản</label>
+                      <input id="srvPrice" type="number" min="0"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                        placeholder="Ví dụ: 150000" />
+                    </div>
+                    <div>
+                      <label class="text-xs font-bold text-gray-500 uppercase">Trạng thái</label>
+                      <select id="srvStatus"
+                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
                   </div>
+
+                  <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Mô tả</label>
+                    <textarea id="srvDesc" rows="3"
+                      class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+                      placeholder="Mô tả ngắn..."></textarea>
+                  </div>
+
+                  <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase">Avatar</label>
+                    <div class="mt-1 flex items-center gap-2">
+                      <input id="srvAvatarFile" type="file" accept="image/jpeg,image/jpg,image/png,image/webp"
+                        class="hidden" onchange="handleServiceAvatarChange(event)" />
+                      <button type="button" onclick="$('srvAvatarFile').click()"
+                        class="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-600 transition">
+                        Chọn ảnh
+                      </button>
+                      <span id="srvAvatarFileName" class="text-xs text-gray-500"></span>
+                      <img id="srvAvatarPreview" src="" alt="" class="hidden w-12 h-12 rounded-lg object-cover" />
+                    </div>
+                    <input id="srvAvatarUrl" type="hidden" />
+                  </div>
+                </div>
+
+                <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <button
+                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                    type="button" onclick="closeModal('modalService')">
+                    Hủy
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-primary-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-primary-400 transition"
+                    type="button" onclick="saveService()">
+                    Lưu
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
-              <div
-                class="absolute inset-0 bg-black/40"
-                onclick="closeModal('modalConfirm')"
-              ></div>
-              <div
-                class="relative w-full h-full flex items-center justify-center p-4"
-              >
-                <div
-                  class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100"
-                >
-                  <div
-                    class="px-5 py-4 border-b border-gray-100 flex items-center justify-between"
-                  >
-                    <div class="font-bold text-gray-800">Xác nhận</div>
-                    <button
-                      class="text-gray-400 hover:text-gray-700"
-                      type="button"
-                      onclick="closeModal('modalConfirm')"
-                    >
-                      <span class="material-symbols-outlined">close</span>
-                    </button>
+          <div id="modalConfirm" class="fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/40" onclick="closeModal('modalConfirm')"></div>
+            <div class="relative w-full h-full flex items-center justify-center p-4">
+              <div class="w-full max-w-md bg-white rounded-xl shadow-lg border border-gray-100">
+                <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div class="font-bold text-gray-800">Xác nhận</div>
+                  <button class="text-gray-400 hover:text-gray-700" type="button" onclick="closeModal('modalConfirm')">
+                    <span class="material-symbols-outlined">close</span>
+                  </button>
+                </div>
+                <div class="p-5">
+                  <div id="confirmText" class="text-sm text-gray-700">
+                    Bạn chắc chắn muốn xóa?
                   </div>
-                  <div class="p-5">
-                    <div id="confirmText" class="text-sm text-gray-700">
-                      Bạn chắc chắn muốn xóa?
-                    </div>
-                  </div>
-                  <div
-                    class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2"
-                  >
-                    <button
-                      class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
-                      type="button"
-                      onclick="closeModal('modalConfirm')"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition"
-                      type="button"
-                      onclick="confirmDelete()"
-                    >
-                      Xóa
-                    </button>
-                  </div>
+                </div>
+                <div class="px-5 py-4 border-t border-gray-100 flex items-center justify-end gap-2">
+                  <button
+                    class="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+                    type="button" onclick="closeModal('modalConfirm')">
+                    Hủy
+                  </button>
+                  <button
+                    class="px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-600 transition"
+                    type="button" onclick="confirmDelete()">
+                    Xóa
+                  </button>
                 </div>
               </div>
             </div>
@@ -862,7 +635,9 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <script src="../js/admin_manageservice.js"></script>
-  </body>
+  <script src="../js/admin_manageservice.js"></script>
+</body>
+
 </html>

@@ -10,6 +10,7 @@ const customerSchema = new mongoose.Schema(
 
     BIN: {type: String }, //6 số đầu của thẻ ngân hàng
     account_number: {type: String }, //số tài khoản ngân hàng (không phải số thẻ nhé)
+    bank_shortName: {type: String }, //mã ngân hàng (key từ API bankcodes)
   },
   { 
     timestamps: { createdAt: "created_at", updatedAt: "updated_at" }, 

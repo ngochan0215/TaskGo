@@ -42,8 +42,8 @@ router.put("/reviews/:order_id/edit", verifyToken, editReview);
 
 // receipt
 router.post("/receipt/add", verifyToken, createReceipt);
-router.get("/receipt/:id", verifyToken, getReceiptById);
 router.get("/receipt/all", verifyToken, getAllReceipts);
+router.get("/receipt/:id", verifyToken, getReceiptById);
 router.patch("/receipt/:id/status", verifyToken, isAdmin, updateReceiptStatus);
 router.post("/receipt/:id/paid", verifyToken, isAdmin, markReceiptPaid);
 

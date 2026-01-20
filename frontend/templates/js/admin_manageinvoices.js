@@ -1,4 +1,4 @@
-const API_URL = `${typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : 'http://localhost:3000/api'}/orders`;
+const API_URL = 'http://localhost:3000/api/order';
 
 let allInvoices = [];
 let filteredInvoices = [];

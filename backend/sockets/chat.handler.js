@@ -28,7 +28,7 @@ export default function registerChatHandlers(io) {
         // Create new chat if there's none yet for order with valid status
         if (
           !targetChat &&
-          (order.status === "accepted" || order.status === "in_progress")
+          (order.status === "accepted" || order.status === "assigned" || order.status === "departed" || order.status === "arrived" || order.status === "in_progress")
         ) {
           targetChat = await createNewChatForOrder(order._id);
         }
@@ -82,11 +82,11 @@ export default function registerChatHandlers(io) {
           if (typeof ack === "function")
             return ack({ ok: false, error: "chat_not_found" });
           return;
-        } else if (targetChat.status === "inactive") {
+        } else if (targetChat.status === "completed") {
           if (typeof ack === "function")
             return ack({
               ok: false,
-              error: "chat_closed_after_order_completion",
+              error: "Đơn hàng đã hoàn thành, không thể tiếp tục trò chuyện!",
             });
           return;
         }
@@ -128,7 +128,15 @@ export default function registerChatHandlers(io) {
         };
 
         // Emit to everyone in chat room
-        io.to(`chat:${targetChat._id}`).emit("receive-message", payloadToEmit);
+        // io.to(`chat:${targetChat._id}`).emit("receive-message", payloadToEmit);
+        
+        // Send to every participant's personal "User Room"
+        // This ensures they get the message even if they are looking at a different order
+        if (targetChat.participants && targetChat.participants.length > 0) {
+            targetChat.participants.forEach((p) => {
+                io.to(`user:${p.user_id}`).emit("receive-message", payloadToEmit);
+            });
+        }
 
       } catch (err) {
         console.error("send-message error", err);

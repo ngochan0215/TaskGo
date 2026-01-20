@@ -9,7 +9,9 @@ import fetch from "node-fetch";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron } from "./jobs/cronJobStatus.js";
+import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron, 
+  discountStatusCron,
+} from "./jobs/cronJobStatus.js";
 import '../backend/jobs/transactionStatusJob.js'; 
 
 import authRoutes from "./routes/auth.route.js";
@@ -22,6 +24,8 @@ import discountRoutes from "./routes/discount.route.js";
 import transactionRoutes from "./routes/transaction.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import chatRoutes from "./routes/chat.route.js";
+import reviewRoutes from "./routes/review.route.js";
+import reportRoutes from "./routes/report.route.js";
 
 dotenv.config();
 
@@ -49,8 +53,11 @@ app.use("/api/tasker", taskerRoutes);
 app.use("/api/discount", discountRoutes);
 app.use("/api/transaction", transactionRoutes);
 app.use("/api/notification", notificationRoutes);
+app.use("/api/review", reviewRoutes);
+app.use("/api/report", reportRoutes);
 
 voucherStatusCron();
+discountStatusCron();
 //orderStatusCron();
 scheduledTaskReminderCron();
 

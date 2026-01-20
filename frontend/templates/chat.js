@@ -4,6 +4,7 @@ const SOCKET_URL = "http://localhost:3000";
 const state = {
     token: localStorage.getItem('token'),
     userId: localStorage.getItem('user_id'),
+    userRole: localStorage.getItem('system_role'),
     currentOrderId: new URLSearchParams(window.location.search).get('orderId'),
     currentChatId: null,
     typingTimeout: null,
@@ -12,7 +13,7 @@ const state = {
     partnerAvatar: null,
     partnerName: null,
     callState: 'idle', // idle, calling, connected
-    editingMessageId: null, // Currently editing message ID
+    editingMessageId: null, 
     incomingCallOrderId: null,
     // Search state
     isSearching: false,
@@ -109,7 +110,7 @@ let socket;
 function initSocket() {
     if (!state.token) {
         alert("Vui lòng đăng nhập");
-        window.location.href = '/login.html';
+        window.location.href = '/frontend/templates/auth/login-signup.html';
         return;
     }
 
@@ -130,12 +131,16 @@ function initSocket() {
     });
 
     socket.on('receive-message', (payload) => {
-        // Only append if it belongs to current chat
-        if (payload.chat_id === state.currentChatId) {
+        const isCurrentChat = state.currentChatId && payload.chat_id === state.currentChatId;
+
+        updateSidebarConversation(payload, isCurrentChat);
+
+        if (isCurrentChat) {
             appendMessageToUI(payload);
-            //scrollToBottom();
+            scrollToBottom();
+            
             socket.emit('mark-read', { target_order_id: state.currentOrderId });
-        }
+        } 
     });
 
     socket.on('start-typing', () => {
@@ -226,6 +231,9 @@ function initSocket() {
 // MAIN LOGIC
 
 async function init() {
+    renderUserInterface();
+    updateBackButton();
+
     initSocket();
     setupEventListeners();
     
@@ -303,7 +311,7 @@ async function loadChatHistory(cursor = null) {
         state.nextCursor = res.nextCursor; 
 
         if (!cursor) {
-            // === INITIAL LOAD ===
+            // INITIAL LOAD
             // Clear everything except the loader
             els.loadingHistory.classList.add('hidden');
             
@@ -409,7 +417,7 @@ function sendMessage() {
         content: content
     }, (ack) => {
         if (!ack.ok) {
-            alert("Gửi lỗi: " + ack.error);
+            alert(ack.error);
         }
     });
 
@@ -523,7 +531,8 @@ function createMessageElement(msg) {
 
 function createSidebarItem(chat, isActive) {
     const div = document.createElement('div');
-    
+    div.dataset.chatId = chat._id || chat.id;
+
     // Formatting classes
     const activeClass = isActive ? "bg-green-50 border-l-4 border-green-500" : "hover:bg-gray-50 border-l-4 border-transparent";
     div.className = `flex gap-3 p-3 rounded-xl cursor-pointer transition ${activeClass}`;
@@ -607,7 +616,7 @@ function setupEventListeners() {
         clearTimeout(state.typingTimeout);
         state.typingTimeout = setTimeout(() => {
             socket.emit('stop-typing', { target_order_id: state.currentOrderId });
-        }, 1000);
+        }, 3000);
     });
 
     // Call UI Logic
@@ -724,10 +733,54 @@ function escapeHtml(text) {
 }
 
 function updateBackButton() {
+    // This finds the correct button (Sidebar button for Customer, Top Nav button for Tasker)
     const backButton = document.getElementById('backButton');
+    
     if (backButton && state.currentOrderId) {
-        backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
+        if (state.userRole === 'tasker') {
+            // Path for Taskers
+            backButton.href = `./tasker/tasker_order_progress.html`;
+        } else {
+            // Path for Customers
+            backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
+        }
     }
+}
+
+function renderUserInterface() {
+    if (state.userRole !== 'tasker') return;
+
+    // Hide Customer Elements
+    const appHeader = document.querySelector('app-header');
+    const appFooter = document.querySelector('app-footer');
+    
+    // Hide components instead of removing to prevent script errors if they are referenced elsewhere
+    if (appHeader) appHeader.style.display = 'none';
+    if (appFooter) appFooter.style.display = 'none';
+
+    // Hide the Sidebar Back Button
+    const sidebarBackBtn = document.querySelector('aside #backButton');
+    if (sidebarBackBtn) {
+        sidebarBackBtn.id = "hiddenSidebarButton"; // Rename ID to avoid conflict with new button
+        sidebarBackBtn.style.display = 'none';
+    }
+
+    // Inject Tasker Header 
+    const taskerNavHTML = `
+        <nav class="sticky top-0 z-[100] bg-white shadow-sm">
+            <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
+                <div class="flex items-center gap-3">
+                    <a id="backButton" href="#" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
+                        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                    </a>
+                    <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Tin nhắn</h1>
+                </div>
+            </header>
+        </nav>
+    `;
+
+    // Insert at the very top of the body, before <main>
+    document.body.insertAdjacentHTML('afterbegin', taskerNavHTML);
 }
 
 // MESSAGE EDIT & DELETE FUNCTIONS
@@ -1488,6 +1541,48 @@ async function handleIceCandidate(candidate) {
         }
     } catch (err) {
         console.error('Error adding ICE candidate:', err);
+    }
+}
+
+function updateSidebarConversation(payload, isViewed) {
+    // Try to find the existing sidebar item
+    const sidebarItem = document.querySelector(`[data-chat-id="${payload.chat_id}"]`);
+
+    if (sidebarItem) {
+        const timeSpan = sidebarItem.querySelector('span.text-\\[10px\\]');
+        if (timeSpan) {
+            timeSpan.textContent = new Date(payload.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Update Message Preview
+        const previewP = sidebarItem.querySelector('p:last-child');
+        const nameP = sidebarItem.querySelector('p:first-child'); // The Partner Name
+
+        if (previewP) {
+            const isMe = String(payload.sender_id) === String(state.userId);
+            const prefix = isMe ? "Bạn: " : "";
+            previewP.textContent = prefix + payload.content;
+            
+            // It should be BOLD if: It is NOT viewed AND I am NOT the sender
+            const shouldBeBold = !isViewed && !isMe;
+
+            if (shouldBeBold) {
+                previewP.className = "text-xs text-green-600 font-semibold truncate";
+                if (nameP) nameP.className = "text-dark-900 font-bold text-sm truncate";
+            } else {
+                previewP.className = "text-xs text-gray-500 truncate";
+                if (nameP) nameP.className = "text-gray-500 text-sm truncate";
+            }
+        }
+
+        // Move this conversation to the top of the list
+        const list = document.getElementById('conversations-list');
+        // insertBefore(item, firstChild) moves an existing element to the top
+        list.insertBefore(sidebarItem, list.firstChild);
+
+    } else {
+        // If the chat isn't in the sidebar yet (e.g., new order), reload list
+        loadSidebarConversations();
     }
 }
 

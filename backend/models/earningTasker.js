@@ -56,7 +56,6 @@ const earningTaskerSchema = new mongoose.Schema({
 });
 
 earningTaskerSchema.index({ tasker_id: 1, created_at: -1 });
-earningTaskerSchema.index({ status: 1 });
 earningTaskerSchema.index({ completed_at: -1 });
 
 export const TaskerEarning = mongoose.models.TaskerEarning || mongoose.model("TaskerEarning", earningTaskerSchema);
