@@ -354,14 +354,14 @@
       loadDashboard("month");
       var sel = document.getElementById("period-select");
       if (sel) sel.addEventListener("change", onPeriodChange);
-      var btn = document.getElementById("btn-export");
+      //var btn = document.getElementById("btn-export");
       if (btn) btn.addEventListener("click", exportReport);
     });
   } else {
     loadDashboard("month");
     var sel = document.getElementById("period-select");
     if (sel) sel.addEventListener("change", onPeriodChange);
-    var btn = document.getElementById("btn-export");
+    //var btn = document.getElementById("btn-export");
     if (btn) btn.addEventListener("click", exportReport);
   }
 })();
