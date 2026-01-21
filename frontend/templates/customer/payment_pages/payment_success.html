@@ -23,11 +23,12 @@
       type="image/x-icon"
       href="../../../public/favicons/favicon.ico"
     />
+    <script src="../../../components/cus_header.js" defer></script>
+    <script src="../../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <div id="app-header"></div>
-
+    <app-header active="home" heading="Thanh toán thành công"></app-header>
     <main class="p-4 space-y-4 pb-32">
       <div
         class="bg-white rounded-xl shadow-md p-4 space-y-2 text-base text-center"
@@ -68,16 +69,7 @@
       </div>
     </main>
 
-    <div id="app-footer"></div>
-
-    <script type="module">
-      import { initLayout } from "../../js/ui/shared-layout.js";
-      initLayout({
-        role: "customer",
-        title: "Dịch vụ của bạn",
-        active: "activity",
-      });
-    </script>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">

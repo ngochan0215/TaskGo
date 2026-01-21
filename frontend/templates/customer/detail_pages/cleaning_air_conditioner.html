@@ -22,13 +22,14 @@
       type="image/x-icon"
       href="../../../public/favicons/favicon.ico"
     />
+    
+<script src="../../../components/cus_header.js" defer></script>
+<script src="../../../components/cus_footer.js" defer></script
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <!-- ✅ Shared header -->
-    <div id="app-header"></div>
+    <app-header active="home" heading="Chi tiết dịch vụ"></app-header>
 
-    <!-- ✅ GIỮ NGUYÊN UI MAIN -->
     <main class="p-4 space-y-4 pb-20">
       <!-- Cleaning house sections -->
       <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
@@ -264,18 +265,7 @@
       </div>
     </main>
 
-    <!-- ✅ Shared footer -->
-    <div id="app-footer"></div>
-
-    <!-- ✅ Inject shared header/footer -->
-    <script type="module">
-      import { initLayout } from "../../js/ui/shared-layout.js";
-      initLayout({
-        role: "customer",
-        title: "Chi tiết dịch vụ",
-        active: "home",
-      });
-    </script>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
@@ -283,7 +273,6 @@
       initSocket();
     </script>
 
-    <!-- ✅ GIỮ NGUYÊN SCRIPT -->
     <script>
       const AIRCON_TYPES = {
         wall: { label: "Treo tường", baseMultiplier: 1 },
