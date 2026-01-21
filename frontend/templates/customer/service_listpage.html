@@ -19,24 +19,20 @@
       type="image/x-icon"
       href="../../public/favicons/favicon.ico"
     />
+    <script src="../../components/cus_header.js" defer></script>
+    <script src="../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <!-- Shared header injected here -->
-    <div id="app-header"></div>
-
+    <app-header
+      active="service_listpage"
+      heading="Danh sách dịch vụ"
+    ></app-header>
     <main class="p-4 space-y-4 pb-20 flex-grow">
       <div id="service-list" class="space-y-6"></div>
     </main>
 
-    <!-- Shared footer injected here -->
-    <div id="app-footer"></div>
-
-    <!-- Shared layout init -->
-    <script type="module">
-      import { initLayout } from "../js/ui/shared-layout.js";
-      initLayout({ role: "customer", title: "Danh sách dịch vụ", active: "" });
-    </script>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
@@ -63,8 +59,10 @@
         active: "#",
       };
 
-    const API_URL = "http://localhost:3000/api/task/service/all?task_status=active";
-    const DISCOUNT_API_URL = "http://localhost:3000/api/discount/services/prices";
+      const API_URL =
+        "http://localhost:3000/api/task/service/all?task_status=active";
+      const DISCOUNT_API_URL =
+        "http://localhost:3000/api/discount/services/prices";
 
       async function loadServices() {
         const token = localStorage.getItem("token");
@@ -95,48 +93,48 @@
           const data = await res.json();
           if (!data.success) return;
 
-        // Collect all task IDs
-        const allTaskIds = [];
-        data.services.forEach(service => {
-          if (service.tasks && service.tasks.length > 0) {
-            service.tasks.forEach(task => {
-              allTaskIds.push(task._id);
-            });
-          }
-        });
-
-        // Get prices with discount
-        let discountPrices = {};
-        if (allTaskIds.length > 0) {
-          try {
-            const discountRes = await fetch(DISCOUNT_API_URL, {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                task_ids: allTaskIds
-              })
-            });
-
-            if (discountRes.ok) {
-              const discountData = await discountRes.json();
-              if (discountData.success && discountData.services) {
-                discountData.services.forEach(item => {
-                  discountPrices[item.task_id] = item;
-                });
-              }
+          // Collect all task IDs
+          const allTaskIds = [];
+          data.services.forEach((service) => {
+            if (service.tasks && service.tasks.length > 0) {
+              service.tasks.forEach((task) => {
+                allTaskIds.push(task._id);
+              });
             }
-          } catch (discountErr) {
-            console.error("Error loading discount prices:", discountErr);
-            // Continue without discount prices
-          }
-        }
+          });
 
-        // Render services with discount prices
-        const container = document.getElementById("service-list");
-        container.innerHTML = "";
+          // Get prices with discount
+          let discountPrices = {};
+          if (allTaskIds.length > 0) {
+            try {
+              const discountRes = await fetch(DISCOUNT_API_URL, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  task_ids: allTaskIds,
+                }),
+              });
+
+              if (discountRes.ok) {
+                const discountData = await discountRes.json();
+                if (discountData.success && discountData.services) {
+                  discountData.services.forEach((item) => {
+                    discountPrices[item.task_id] = item;
+                  });
+                }
+              }
+            } catch (discountErr) {
+              console.error("Error loading discount prices:", discountErr);
+              // Continue without discount prices
+            }
+          }
+
+          // Render services with discount prices
+          const container = document.getElementById("service-list");
+          container.innerHTML = "";
 
           data.services.forEach((service) => {
             if (!service.tasks || service.tasks.length === 0) return;
@@ -157,26 +155,36 @@
                     const detailPage = TASK_DETAIL_MAP[task.task_type];
                     if (!detailPage) return "";
 
-                const discountInfo = discountPrices[task._id];
-                const hasDiscount = discountInfo && discountInfo.has_discount;
-                const originalPrice = task.pricing || 0;
-                const finalPrice = hasDiscount ? discountInfo.final_price : originalPrice;
-                const discountAmount = hasDiscount ? discountInfo.discount_amount : 0;
-                const discountPercent = hasDiscount && discountInfo.discount_percent !== undefined
-                  ? discountInfo.discount_percent
-                  : (hasDiscount && originalPrice > 0 
-                    ? Math.round((discountAmount / originalPrice) * 100) 
-                    : 0);
+                    const discountInfo = discountPrices[task._id];
+                    const hasDiscount =
+                      discountInfo && discountInfo.has_discount;
+                    const originalPrice = task.pricing || 0;
+                    const finalPrice = hasDiscount
+                      ? discountInfo.final_price
+                      : originalPrice;
+                    const discountAmount = hasDiscount
+                      ? discountInfo.discount_amount
+                      : 0;
+                    const discountPercent =
+                      hasDiscount && discountInfo.discount_percent !== undefined
+                        ? discountInfo.discount_percent
+                        : hasDiscount && originalPrice > 0
+                          ? Math.round((discountAmount / originalPrice) * 100)
+                          : 0;
 
-                return `
+                    return `
                   <a href="${detailPage}?id=${task._id}&price=${finalPrice}"
                     class="flex flex-col items-center space-y-1 text-black relative">
 
-                    ${hasDiscount ? `
+                    ${
+                      hasDiscount
+                        ? `
                       <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">
                         -${discountPercent}%
                       </span>
-                    ` : ''}
+                    `
+                        : ""
+                    }
 
                         <span class="material-symbols-outlined
                                     text-primary-500 p-4 mb-3
@@ -186,7 +194,9 @@
 
                     <span>${task.task_name}</span>
                     <div class="flex flex-col items-center">
-                      ${hasDiscount ? `
+                      ${
+                        hasDiscount
+                          ? `
                         <span class="text-xs text-gray-400 line-through">
                           ${Number(originalPrice).toLocaleString()}đ
                         </span>
@@ -194,16 +204,19 @@
                           ${Number(finalPrice).toLocaleString()}đ /
                           ${UNIT_MAP[task.unit] || task.unit}
                         </span>
-                      ` : `
+                      `
+                          : `
                         <span class="text-sm text-gray-500">
                           ${Number(originalPrice).toLocaleString()}đ /
                           ${UNIT_MAP[task.unit] || task.unit}
                         </span>
-                      `}
+                      `
+                      }
                     </div>
                   </a>
                 `;
-              }).join("")}
+                  })
+                  .join("")}
             </div>
           `;
 
