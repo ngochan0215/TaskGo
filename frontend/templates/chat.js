@@ -469,7 +469,7 @@ function createMessageElement(msg) {
     
     // Action buttons for own messages (only if not deleted)
     const actionButtons = (isMe && !isDeleted) ? `
-        <div class="message-actions opacity-0 group-hover:opacity-100 flex items-center gap-2 mr-2 transition-opacity duration-200">
+        <div class="message-actions opacity-0 hover:opacity-100 flex items-center gap-2 mr-2 transition-opacity duration-200">
             <button onclick="openEditModal('${msg.id || msg._id}', this)" class="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-700 transition" title="Chỉnh sửa">
                 <span class="material-symbols-outlined text-[16px]">edit</span>
             </button>
@@ -538,7 +538,7 @@ function createSidebarItem(chat, isActive) {
     div.className = `flex gap-3 p-3 rounded-xl cursor-pointer transition ${activeClass}`;
     
     // Handle date formatting
-    const date = new Date(chat.updated_at);
+    const date = new Date(chat.last_message.sent_at || chat.updated_at);
     const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     // Handle last message preview
@@ -583,6 +583,8 @@ function createSidebarItem(chat, isActive) {
             state.nextCursor = null; // Reset pagination
             state.isLoadingHistory = false;
             
+            socket.emit('mark-read', { target_order_id: chat.order_id }); 
+
             // Reload UI
             loadSidebarConversations(); 
             loadChatHistory(null); 

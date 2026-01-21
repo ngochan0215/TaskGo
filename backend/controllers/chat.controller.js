@@ -163,7 +163,7 @@ export const getAllChats = async (req, res) => {
     })
     .populate({
       path: "last_message",
-      select: "content message_type createdAt sender_id", // Get message preview
+      select: "content message_type sent_at sender_id", // Get message preview
       model: "Message"
     })
     .populate({
@@ -210,7 +210,7 @@ export const getAllChats = async (req, res) => {
           content: chat.last_message.message_type === 'text' 
             ? chat.last_message.content 
             : `[${chat.last_message.message_type}]`, 
-          created_at: chat.last_message.createdAt,
+          sent_at: chat.last_message.sent_at,
           is_sender: String(chat.last_message.sender_id) === userId
         } : null,
 
