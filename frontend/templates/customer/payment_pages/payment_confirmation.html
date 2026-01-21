@@ -35,10 +35,12 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+    <script src="../../../components/cus_header.js" defer></script>
+    <script src="../../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <div id="app-header"></div>
+    <app-header active="home" heading="Xác nhận thanh toán"></app-header>
 
     <main class="p-4 space-y-4 pb-32">
       <div class="bg-white rounded-xl shadow-md p-4 space-y-2">
@@ -118,7 +120,7 @@
       </div>
     </main>
 
-    <div id="app-footer"></div>
+    <app-footer></app-footer>
 
     <div
       id="addressModal"
