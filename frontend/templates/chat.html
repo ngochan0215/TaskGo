@@ -44,6 +44,31 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+
+          /* Search highlight animation */
+      @keyframes searchHighlight {
+        0%,
+        100% {
+          background-color: transparent;
+        }
+        25%,
+        75% {
+          background-color: rgba(253, 224, 71, 0.5);
+        }
+      }
+      .search-highlight {
+        animation: searchHighlight 2s ease-in-out;
+        border-radius: 0.5rem;
+        width: 100%;
+      }
+      /* Line clamp for search results */
+      .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
   </style>
 
   <script>
