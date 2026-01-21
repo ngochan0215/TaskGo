@@ -733,7 +733,6 @@ function escapeHtml(text) {
 }
 
 function updateBackButton() {
-    // This finds the correct button (Sidebar button for Customer, Top Nav button for Tasker)
     const backButton = document.getElementById('backButton');
     
     if (backButton && state.currentOrderId) {
@@ -1066,6 +1065,7 @@ function createSearchResultItem(msg) {
     });
     
     // Determine avatar
+    // Under normal circumstances, the server will send back avatar information too
     const avatarUrl = msg.sender?.avatar_url 
         || (isMe 
             ? 'https://api.dicebear.com/9.x/bottts/svg?seed=Me' 
@@ -1127,7 +1127,6 @@ async function jumpToMessage(messageId) {
     }
     
     // Message not in DOM, need to load history until we find it
-    // This is a simplified approach - load all messages then find
     await loadMessagesUntilFound(messageId);
 }
 
