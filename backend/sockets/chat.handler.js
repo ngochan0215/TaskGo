@@ -265,8 +265,8 @@ export default function registerChatHandlers(io) {
           chat_id: chatId,
           sender_id: { $ne: userId }, // Message from the other person
         })
-          .select("_id createdAt")
-          .sort({ createdAt: -1 }) // Get the newest one
+          .select("_id sent_at")
+          .sort({ sent_at: -1 }) // Get the newest one
           .lean();
 
         if (!latestMessage) {
@@ -278,14 +278,22 @@ export default function registerChatHandlers(io) {
         const currentTime = new Date();
 
         const updateResult = await Chat.updateOne(
-          { _id: chatId, "participants.user_id": userId, "participants.last_seen_message_id": { $ne: latestMessage._id },},
-          {
-            $set: {
-              "participants.$.last_seen_message_id": latestMessage._id,
-              "participants.$.last_seen_at": currentTime,
-            },
-          }
-        );
+  {
+    _id: chatId,
+    participants: {
+      $elemMatch: {
+        user_id: userId,
+        last_seen_message_id: { $ne: latestMessage._id }
+      }
+    }
+  },
+  {
+    $set: {
+      "participants.$.last_seen_message_id": latestMessage._id,
+      "participants.$.last_seen_at": currentTime,
+    },
+  }
+);
 
         // Notify the other participant that their message was read
         if (updateResult.modifiedCount > 0) {
