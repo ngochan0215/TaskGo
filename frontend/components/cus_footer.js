@@ -9,6 +9,7 @@ class AppFooter extends HTMLElement {
                             <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
                             <div class="flex gap-1.5">
                                 <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#HTML</span>
+                                <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#JS</span>
                                 <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
                             </div>
                         </div>
