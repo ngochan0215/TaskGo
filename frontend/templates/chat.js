@@ -323,7 +323,7 @@ async function loadChatHistory(cursor = null) {
             els.headerName.innerText = `Đơn hàng #${state.currentOrderId.slice(-6).toUpperCase()}`;
             
             if (res.conversation && res.conversation.partner) {
-                const { full_name, avatar_url, reputation_score } = res.conversation.partner;
+                const { full_name, avatar_url, average_rating } = res.conversation.partner;
                 const orderInfo = res.order;
 
                 state.partnerAvatar = avatar_url;
@@ -344,15 +344,15 @@ async function loadChatHistory(cursor = null) {
                     els.headerName.innerText = full_name;
                 }
                 
-                if (reputation_score !== undefined) {
+                if (average_rating !== undefined) {
                      els.headerScore.innerHTML = `
                         <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[9px] font-bold flex items-center">
-                            ${reputation_score.toFixed(1)} 
+                            ${Number(average_rating).toFixed(1)}  
                             <span class="material-symbols-outlined text-[10px] ml-0.5">star</span>
                         </span>
                     `;
                 } else {
-                    els.headerScore.innerHTML = "";
+                    els.headerScore.innerHTML = "Chưa có đánh giá";
                 }
 
                 // Update Avatar

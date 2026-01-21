@@ -352,6 +352,18 @@
     </div>
 
     <script>
+        const token = localStorage.getItem("token");
+        if (!token) {
+            alert("Vui lòng đăng nhập!");
+            window.location.href = "../auth/login-signup.html";
+        }
+
+        const role = localStorage.getItem("system_role");
+        if (role !== "admin") {
+            alert("Bạn không phải Admin. Không có quyền truy cập.");
+            window.location.href = "../auth/login-signup.html";
+        }
+
         const sidebarMobile = document.getElementById("sidebarMobile");
         const backdrop = document.getElementById("backdrop");
 
@@ -420,7 +432,6 @@
         // Load review statistics
         async function loadStatistics() {
             try {
-                const token = localStorage.getItem("token");
                 if (!token) {
                     alert("Vui lòng đăng nhập!");
                     window.location.href = "../auth/login-signup.html";
@@ -524,7 +535,6 @@
         // Fetch all reviews from API
         async function loadReviews() {
             try {
-                const token = localStorage.getItem("token");
                 if (!token) {
                     alert("Vui lòng đăng nhập!");
                     window.location.href = "../auth/login-signup.html";
@@ -678,7 +688,6 @@
         // View review detail
         async function viewReviewDetail(reviewId) {
             try {
-                const token = localStorage.getItem("token");
                 const response = await fetch(`${API_URL}/${reviewId}`, {
                     method: "GET",
                     headers: {
@@ -795,7 +804,6 @@
             }
 
             try {
-                const token = localStorage.getItem("token");
                 const response = await fetch(`${API_URL}/${reviewId}/status`, {
                     method: "PUT",
                     headers: {
@@ -828,7 +836,6 @@
             }
 
             try {
-                const token = localStorage.getItem("token");
                 const response = await fetch(`${API_URL}/${reviewId}`, {
                     method: "DELETE",
                     headers: {

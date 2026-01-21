@@ -1,4 +1,16 @@
 // Sidebar functions
+const token = localStorage.getItem("token");
+if (!token) {
+    alert("Vui lòng đăng nhập!");
+    window.location.href = "../auth/login-signup.html";
+}
+
+const role = localStorage.getItem("system_role");
+if (role !== "admin") {
+    alert("Bạn không phải Admin. Không có quyền truy cập.");
+    window.location.href = "../auth/login-signup.html";
+}
+
 const sidebarMobile = document.getElementById("sidebarMobile");
 const backdrop = document.getElementById("backdrop");
 
@@ -198,13 +210,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 // Fetch all orders from API
 async function loadOrders() {
     try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            alert("Vui lòng đăng nhập!");
-            window.location.href = "../auth/login-signup.html";
-            return;
-        }
-
         const response = await fetch(`${API_URL}/all`, {
             method: "GET",
             headers: {
@@ -239,8 +244,6 @@ async function loadOrders() {
 // Load order trends (7 days)
 async function loadOrderTrends() {
     try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
 
         const response = await fetch(`${API_URL}/statistics/trends`, {
             headers: { "Authorization": `Bearer ${token}` }
@@ -433,7 +436,6 @@ function applyFilters() {
 // View order detail
 async function viewOrderDetail(orderId) {
     try {
-        const token = localStorage.getItem("token");
         const response = await fetch(`${API_URL}/detail/${orderId}`, {
             method: "GET",
             headers: {
@@ -621,7 +623,6 @@ async function deleteOrder(orderId) {
     }
 
     try {
-        const token = localStorage.getItem("token");
         const response = await fetch(`${API_URL}/delete/${orderId}`, {
             method: "DELETE",
             headers: {
@@ -692,6 +693,39 @@ function goToPage(page) {
     currentPage = page;
     renderOrders();
 }
+
+const logoutBtn = document.querySelectorAll(".logout-btn");
+logoutBtn.forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("system_role");
+
+                alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                window.location.href = "../auth/login-signup.html";
+            } else {
+                alert("Đăng xuất thất bại. Vui lòng thử lại.");
+            }
+        } catch (err) {
+            console.error("LOGOUT ERROR:", err);
+            alert("Có lỗi xảy ra khi đăng xuất.");
+        }
+    });
+});
 
 // Expose functions to window for onclick handlers
 window.openSidebar = openSidebar;

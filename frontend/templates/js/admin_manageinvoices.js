@@ -1,13 +1,23 @@
 const API_URL = 'http://localhost:3000/api/order';
 
+const token = localStorage.getItem("token");
+if (!token) {
+    alert("Vui lòng đăng nhập!");
+    window.location.href = "../auth/login-signup.html";
+}
+
+const role = localStorage.getItem("system_role");
+if (role !== "admin") {
+    alert("Bạn không phải Admin. Không có quyền truy cập.");
+    window.location.href = "../auth/login-signup.html";
+}
+
 let allInvoices = [];
 let filteredInvoices = [];
 let currentPage = 1;
 const itemsPerPage = 8;
 let currentFilter = 'all';
 let currentInvId = null;
-
-const getToken = () => localStorage.getItem("token"); 
 
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
@@ -29,7 +39,6 @@ const mapStatus = (backendStatus) => {
 
 async function fetchInvoices() {
     try {
-        const token = getToken();
         if (!token) {
             alert("Vui lòng đăng nhập lại!");
             window.location.href = "../auth/login-signup.html";
@@ -68,7 +77,6 @@ async function fetchInvoices() {
 
 async function updateInvoiceStatus(id, newStatus) {
     try {
-        const token = getToken();
         await axios.patch(`${API_URL}/receipt/${id}/status`, 
             { status: newStatus },
             { headers: { Authorization: `Bearer ${token}` } }
@@ -87,7 +95,6 @@ async function updateInvoiceStatus(id, newStatus) {
 
 async function markInvoiceAsPaid(id) {
     try {
-        const token = getToken();
         await axios.post(`${API_URL}/receipt/${id}/paid`, 
             { transaction_id: `CASH-${Date.now()}` }, 
             { headers: { Authorization: `Bearer ${token}` } }
@@ -347,6 +354,40 @@ function renderPagination() {
         container.appendChild(btn);
     }
 }
+
+// logic đăng xuất
+const logoutBtn = document.querySelectorAll(".logout-btn");
+logoutBtn.forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+
+        try {
+            const res = await fetch("http://localhost:3000/api/auth/logout", {
+                method: "POST",
+                credentials: "include",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user_id");
+                localStorage.removeItem("system_role");
+
+                alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                window.location.href = "../auth/login-signup.html";
+            } else {
+                alert("Đăng xuất thất bại. Vui lòng thử lại.");
+            }
+        } catch (err) {
+            console.error("LOGOUT ERROR:", err);
+            alert("Có lỗi xảy ra khi đăng xuất.");
+        }
+    });
+});
 
 function closeDetailModal() { document.getElementById('detailModal').classList.add('hidden'); }
 function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }

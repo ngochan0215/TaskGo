@@ -15,10 +15,10 @@ const orderSchema = new mongoose.Schema(
 
     discount_id: { type: mongoose.Schema.Types.ObjectId, ref: "Discount" },
     discount_snapshot: {
+      code: String,
       name: String,
       description: String,
-      percentage: Number,
-      appliedAt: { type: Date, default: Date.now },
+      discount_amount: Number,
     },
 
     voucher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Voucher" },

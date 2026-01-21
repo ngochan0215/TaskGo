@@ -2,6 +2,8 @@ import Message from "../models/messages.js";
 import Chat from "../models/chats.js";
 import User from "../models/users.js";
 import Order from "../models/orders.js";
+import Review from "../models/reviews.js";
+import Account from "../models/accounts.js";
 import mongoose from "mongoose";
 import { fetchChat } from "../services/chat.service.js";
 
@@ -27,8 +29,39 @@ export const getMessagesByOrder = async (req, res) => {
 
     // Fetch partner's details
     const partner = await User.findById(otherParticipant.user_id)
-        .select("full_name avatar_url reputation_score")
+        .select("full_name avatar_url")
         .lean();
+
+    // Get partner's account to determine role
+    const partnerAccount = await Account.findOne({ user_id: partner._id })
+        .select("role")
+        .lean();
+
+    // Get partner's average_rating from reviews
+    const partnerRole = partnerAccount?.role || "customer";
+    // For reviews: if partner is tasker, reviewee_role is "tasker" (customer reviews tasker)
+    // If partner is customer, reviewee_role is "customer" (tasker reviews customer)
+    const revieweeRole = partnerRole === "tasker" ? "tasker" : "customer";
+
+    const reviewStats = await Review.aggregate([
+        {
+            $match: {
+                reviewee_id: partner._id,
+                reviewee_role: revieweeRole,
+                status: "visible"
+            }
+        },
+        {
+            $group: {
+                _id: "$reviewee_id",
+                average_rating: { $avg: "$rating" }
+            }
+        }
+    ]);
+
+    const averageRating = reviewStats.length > 0 && reviewStats[0].average_rating
+        ? Number(reviewStats[0].average_rating.toFixed(1))
+        : 0.0;
 
     const order = await Order.findById(orderId)
         .select("task_snapshot _id") // Get the task name and ID
@@ -71,7 +104,7 @@ export const getMessagesByOrder = async (req, res) => {
               id: partner._id,
               full_name: partner.full_name,
               avatar_url: partner.avatar_url || "https://api.dicebear.com/9.x/bottts/svg?seed=Julia", 
-              reputation_score: partner.reputation_score,
+              average_rating: averageRating,
           }
       },
       order: {
