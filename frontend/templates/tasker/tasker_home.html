@@ -29,57 +29,14 @@
             background-color: #3730A3;
         }
     </style>
+
+    <script src="../../components/tasker_header.js" defer></script>
+    <script src="../../components/tasker_footer.js" defer></script>
 </head>
 
 <body style="background-color: #E0E7FF;" class="text-[#111827] min-h-screen flex flex-col">
 
-<nav class="sticky top-0 z-[100] bg-white shadow-sm">
-    <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
-        <div class="flex items-center gap-3">
-            <div class="logo-icon flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm">
-                <img src="../../public/images/taskgo-logo.png" onerror="this.src='/public/images/taskgo-logo.png'" alt="TaskGo icon" class="object-contain">
-            </div>
-            <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Trang chủ</h1>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <button id="notification-btn" class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition relative">
-                <span class="material-symbols-outlined text-[#111827]">notifications</span>
-                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-[#A5B4FC]"></span>
-            </button>
-            <button id="menu-btn" class="p-2 focus:outline-none flex items-center bg-white/20 rounded-lg hover:bg-white/40 transition text-[#111827]">
-                <span id="menu-icon" class="material-symbols-outlined">menu</span>
-            </button>
-        </div>
-    </header>
-
-    <div id="menu-overlay" class="menu-hamburger absolute top-full left-0 w-full bg-white shadow-xl transition-all duration-300 -translate-y-[150%] z-40 border-t border-gray-100 opacity-0 pointer-events-none">
-        <nav class="flex flex-col p-6 space-y-6 text-[#111827] font-bold max-w-7xl mx-auto">
-            <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
-                <div class="w-12 h-12 rounded-full overflow-hidden border border-[#A5B4FC] bg-[#E0E7FF]">
-                    <img
-                        id="menuAvatar"
-                        src="https://api.dicebear.com/9.x/bottts/svg?seed=George"
-                        alt="User avatar"
-                        class="w-full h-full object-cover"
-                    />
-                </div>
-                <div>
-                    <p class="text-lg">Nguyễn Văn A</p>
-                    <p class="text-xs font-medium text-gray-500">ID: #TK8821</p>
-                </div>
-            </div>
-            <a href="./tasker_home.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Trang chủ</a>
-            <a href="./profile.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Profile cá nhân</a>
-            <a href="./tasker_activity.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Hoạt động</a>
-            <a href="./tasker_earnings.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Thu nhập</a>
-            <a href="./work_schedule.html" class="block py-2 text-gray-600 hover:text-[#3730A3]">Lịch làm việc</a>
-            <a href="#" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
-                <span class="material-symbols-outlined">logout</span> Đăng xuất
-            </a>
-        </nav>
-    </div>
-</nav>
+<tasker-header active="home" heading="Trang chủ"></tasker-header>
 
 <main class="flex-grow p-4 md:p-8">
     <div class="max-w-7xl mx-auto space-y-6">
@@ -133,7 +90,7 @@
                             <button id="cashoutBtn" class="bg-white text-[#3730A3] text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm border border-[#C7D2FE] hover:bg-white/50 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled>
                                 <span id="cashoutBtnText">Rút ngay</span>
                                 <svg id="cashoutSpinner" xmlns="http://www.w3.org/2000/svg" class="hidden ml-2 h-4 w-4 text-[#3730A3]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v4m0 8v4m8-8h-4M4 12H0" />
                                 </svg>
                             </button>
                         </div>
@@ -142,8 +99,11 @@
 
                         <div class="grid grid-cols-2 gap-3 pt-1">
                             <div class="text-center p-2 bg-gray-50 rounded-lg border border-gray-100">
-                                <span class="block text-lg font-bold text-gray-800">4.9 <span class="text-[#FFBE18] text-sm">★</span></span>
-                                <span class="text-[9px] text-gray-400 font-bold uppercase">Uy tín</span>
+                                <span class="block text-lg font-bold text-gray-800">
+                                    <span id="rating-value">--</span>
+                                    <span class="text-[#FFBE18] text-sm">★</span>
+                                </span>
+                                <span class="text-[9px] text-gray-400 font-bold uppercase">Đánh giá</span>
                             </div>
                             <div class="text-center p-2 bg-gray-50 rounded-lg border border-gray-100">
                                 <span id="acceptanceRate" class="block text-lg font-bold text-gray-800">—</span>
@@ -180,7 +140,6 @@
                     </div>
                 </div>
 
-
                 <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" id="job-list">
                 </div>
 
@@ -191,47 +150,7 @@
     </div>
 </main>
 
-<footer style="background-color: #A5B4FC;" class="border-t border-indigo-300 py-8 mt-auto text-[#111827]">
-    <div class="max-w-5xl mx-auto px-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            <div class="flex flex-col justify-center space-y-3">
-                <div class="space-y-1">
-                    <h4 class="text-[10px] font-bold text-indigo-900/60 uppercase tracking-tighter">Frontend</h4>
-                    <div class="flex gap-1.5">
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#HTML</span>
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#TailwindCSS</span>
-                    </div>
-                </div>
-                <div class="space-y-1">
-                    <h4 class="text-[10px] font-bold text-indigo-900/60 uppercase tracking-tighter">Backend & Database</h4>
-                    <div class="flex flex-wrap gap-1.5">
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#NodeJS</span>
-                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#MongoDB</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="md:border-x border-indigo-300 px-8 text-center flex flex-col justify-center space-y-2">
-                <div class="flex justify-center items-center space-x-2">
-                    <span class="text-xl font-black tracking-tighter text-[#111827]">TaskGo</span>
-                </div>
-                <p class="text-xs font-bold text-indigo-900 uppercase">Công nghệ Web và ứng dụng</p>
-                <p class="text-[11px] font-medium text-indigo-800">SE347.Q14 - NHÓM 8</p>
-            </div>
-
-            <div class="flex flex-col justify-between md:items-end text-center md:text-right py-1">
-                <div class="space-y-1">
-                    <h4 class="text-[10px] font-bold text-indigo-900/60 uppercase tracking-tighter">Giảng viên hướng dẫn</h4>
-                    <p class="text-sm font-bold text-[#111827]">ThS. Trần Thị Hồng Yến</p>
-                    <p class="text-[10px] text-indigo-800 font-medium">Đại học Công nghệ Thông tin - ĐHQG TP.HCM</p>
-                </div>
-                <div class="mt-4 md:mt-0">
-                    <p class="text-[10px] text-indigo-900/60 font-bold uppercase tracking-widest">© 2025 NHÓM 8 • UIT</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</footer>
+<tasker-footer></tasker-footer>
 
 <div id="workingAreaModal"
      class="fixed inset-0 bg-black/40 hidden items-center justify-center z-[120] p-4">
@@ -320,9 +239,9 @@
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script type="module">
-  import { initSocket } from "../js/socket.js";
+    import { initSocket } from "../js/socket.js";
 
-  initSocket();
+    initSocket();
 </script>
 <script src="../js/tasker_home.js"></script>
 

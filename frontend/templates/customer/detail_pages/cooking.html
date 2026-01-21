@@ -1,365 +1,430 @@
 <!doctype html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskGo - Chi tiết dịch vụ</title>
-    <link rel="stylesheet" type="text/css" href="../../../public/css/output.css">
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../../../public/css/output.css"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../../public/favicons/favicon.ico"
+    />
     <style>
-        body { font-family: 'Montserrat', sans-serif; }
-        .active-btn { background-color:#60bd80 !important; color: white !important; } /* Thay đổi mã màu theo brand của bạn */
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+      .active-btn {
+        background-color: #60bd80 !important;
+        color: white !important;
+      }
     </style>
-</head>
+  </head>
 
-<body class="bg-gray-100 min-h-screen">
-    <header class="bg-primary-200 py-4 sticky top-0 z-10 shadow-sm">
-        <div class="flex items-center justify-between px-4">
-            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href="#"><img src="../../../public/images/taskgo-logo.png" alt="Logo"></a>
-            </div>
-            <h1 class="font-bold text-xl text-gray-800">Chi tiết dịch vụ</h1>
-            <div class="w-10 h-10 flex items-center justify-center">
-                <a href="#"><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-            </div>
-        </div>
-    </header>
+  <body class="bg-gray-100 min-h-screen font-montserrat flex flex-col">
+    <div id="app-header"></div>
 
     <main class="p-4 space-y-4 pb-28">
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-6">
-            <div class="border-b pb-2">
-                <h2 class="text-2xl font-bold text-primary-600">Nấu ăn gia đình</h2>
-                <p class="text-sm text-gray-500 mt-1">Dịch vụ nấu ăn cho gia đình từ 2-8 người, chuẩn vị 3 miền.</p>
-                <p class="text-sm text-gray-500 mt-1">Nguyên liệu nấu ăn do khách hàng chuẩn bị (hoặc trả tiền cho tasker đi chợ).</p>
-            </div>
-
-            <section class="space-y-3">
-                <h3 class="text-lg font-bold text-gray-800">Số người ăn</h3>
-                <div class="flex items-center justify-center space-x-6 bg-gray-50 p-3 rounded-lg">
-                    <button class="quantity-action-btn w-10 h-10 flex items-center justify-center border-2 border-primary-500 text-primary-500 rounded-full font-bold text-2xl hover:bg-primary-50" data-action="decrease">&minus;</button>
-                    <span id="people-count" class="text-2xl font-bold text-gray-800 w-8 text-center">2</span>
-                    <button class="quantity-action-btn w-10 h-10 flex items-center justify-center border-2 border-primary-500 text-primary-500 rounded-full font-bold text-2xl hover:bg-primary-50" data-action="increase">&plus;</button>
-                </div>
-            </section>
-
-            <section class="space-y-3">
-                <h3 class="text-lg font-bold text-gray-800">Số món ăn</h3>
-                <div class="flex space-x-3" id="dish-selection">
-                    <button class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium active-btn" data-value="2">2 món</button>
-                    <button class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium" data-value="3">3 món</button>
-                    <button class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium" data-value="4">4 món</button>
-                </div>
-            </section>
-
-            <section class="space-y-3">
-                <h3 class="text-lg font-bold text-gray-800">Khẩu vị</h3>
-                <div class="flex space-x-3" id="flavor-selection">
-                    <button class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium active-btn">Bắc</button>
-                    <button class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium">Trung</button>
-                    <button class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium">Nam</button>
-                </div>
-            </section>
-
-            <section class="space-y-3">
-                <h3 class="text-lg font-bold text-gray-800">Dịch vụ thêm</h3>
-                
-                <div class="flex items-center justify-between bg-primary-50 p-4 rounded-xl border border-primary-100">
-                    <div class="flex items-center space-x-3">
-                        <input type="checkbox" id="dessert-service" class="w-6 h-6 accent-primary-600 cursor-pointer">
-                        <div>
-                            <label for="dessert-service" class="font-bold text-gray-800 cursor-pointer">Tráng miệng</label>
-                            <p class="text-xs text-gray-500">Hỗ trợ rửa và gọt trái cây</p>
-                        </div>
-                    </div>
-                    <span class="text-sm font-bold text-primary-600">+10.000đ</span>
-                </div>
-
-                <div class="flex items-center justify-between bg-primary-50 p-4 rounded-xl border border-primary-100">
-                    <div class="flex items-center space-x-3">
-                        <input type="checkbox" id="grocery-service" class="w-6 h-6 accent-primary-600 cursor-pointer">
-                        <div>
-                            <label for="grocery-service" class="font-bold text-gray-800 cursor-pointer">Người làm đi chợ</label>
-                            <p class="text-xs text-gray-500">Thanh toán theo hóa đơn thực tế</p>
-                        </div>
-                    </div>
-                    <span class="text-sm font-bold text-primary-600">+30.000đ</span>
-                </div>
-            </section>
-
-            <section class="space-y-3">
-                <h3 class="text-lg font-bold text-gray-800">Tên các món ăn</h3>
-                <textarea rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
-                    placeholder="Ví dụ: Cá kho tộ, canh chua, rau muống xào..."></textarea>
-            </section>
-
-            <div id="price-summary" class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform">
-                <div>
-                    <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
-                    <p id="total-price" class="text-2xl font-bold">0đ</p>
-                    <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
-                </div>
-                <span class="material-symbols-outlined text-4xl">payments</span>
-            </div>
-
-            <!-- <div class="flex space-x-4">
-                <button class="flex-1 py-4 bg-primary-400 text-primary rounded-xl font-bold shadow-lg active:scale-95 transition-all">Đặt ngay</button>
-                <button class="flex-1 py-4 border-2 border-primary-600 text-primary-600 rounded-xl font-bold active:scale-95 transition-all">Đặt lịch trước</button>
-            </div> -->
-            <div class="flex space-x-4">
-                <button onclick="handleBookingNow()" class="flex-1 text-center py-3 rounded-xl font-bold bg-primary-500 text-white hover:bg-primary-600
-                    active:scale-95 transition-all duration-200 shadow-lg"> Đặt ngay 
-                </button>
-                <button onclick="handleScheduledBooking()" class="flex-1 text-center py-3 rounded-xl font-bold border-2 border-primary-500 text-primary-500
-                    hover:bg-primary-100 active:scale-95 transition-all duration-200"> Đặt lịch trước 
-            </button>
-            </div>
-
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-6">
+        <div class="border-b pb-2">
+          <h2 class="text-2xl font-bold text-primary-600">Nấu ăn gia đình</h2>
+          <p class="text-sm text-gray-500 mt-1">
+            Dịch vụ nấu ăn cho gia đình từ 2-8 người, chuẩn vị 3 miền.
+          </p>
+          <p class="text-sm text-gray-500 mt-1">
+            Nguyên liệu nấu ăn do khách hàng chuẩn bị (hoặc trả tiền cho tasker
+            đi chợ).
+          </p>
         </div>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-gray-800">Số người ăn</h3>
+          <div
+            class="flex items-center justify-center space-x-6 bg-gray-50 p-3 rounded-lg"
+          >
+            <button
+              class="quantity-action-btn w-10 h-10 flex items-center justify-center border-2 border-primary-500 text-primary-500 rounded-full font-bold text-2xl hover:bg-primary-50"
+              data-action="decrease"
+            >
+              &minus;
+            </button>
+            <span
+              id="people-count"
+              class="text-2xl font-bold text-gray-800 w-8 text-center"
+              >2</span
+            >
+            <button
+              class="quantity-action-btn w-10 h-10 flex items-center justify-center border-2 border-primary-500 text-primary-500 rounded-full font-bold text-2xl hover:bg-primary-50"
+              data-action="increase"
+            >
+              &plus;
+            </button>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-gray-800">Số món ăn</h3>
+          <div class="flex space-x-3" id="dish-selection">
+            <button
+              class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium active-btn"
+              data-value="2"
+            >
+              2 món
+            </button>
+            <button
+              class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium"
+              data-value="3"
+            >
+              3 món
+            </button>
+            <button
+              class="dish-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium"
+              data-value="4"
+            >
+              4 món
+            </button>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-gray-800">Khẩu vị</h3>
+          <div class="flex space-x-3" id="flavor-selection">
+            <button
+              class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium active-btn"
+            >
+              Bắc
+            </button>
+            <button
+              class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium"
+            >
+              Trung
+            </button>
+            <button
+              class="flavor-btn flex-1 py-2 border border-primary-500 rounded-lg text-primary-500 font-medium"
+            >
+              Nam
+            </button>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-gray-800">Dịch vụ thêm</h3>
+
+          <div
+            class="flex items-center justify-between bg-primary-50 p-4 rounded-xl border border-primary-100"
+          >
+            <div class="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="dessert-service"
+                class="w-6 h-6 accent-primary-600 cursor-pointer"
+              />
+              <div>
+                <label
+                  for="dessert-service"
+                  class="font-bold text-gray-800 cursor-pointer"
+                  >Tráng miệng</label
+                >
+                <p class="text-xs text-gray-500">Hỗ trợ rửa và gọt trái cây</p>
+              </div>
+            </div>
+            <span class="text-sm font-bold text-primary-600">+10.000đ</span>
+          </div>
+
+          <div
+            class="flex items-center justify-between bg-primary-50 p-4 rounded-xl border border-primary-100"
+          >
+            <div class="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="grocery-service"
+                class="w-6 h-6 accent-primary-600 cursor-pointer"
+              />
+              <div>
+                <label
+                  for="grocery-service"
+                  class="font-bold text-gray-800 cursor-pointer"
+                  >Người làm đi chợ</label
+                >
+                <p class="text-xs text-gray-500">
+                  Thanh toán theo hóa đơn thực tế
+                </p>
+              </div>
+            </div>
+            <span class="text-sm font-bold text-primary-600">+30.000đ</span>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-lg font-bold text-gray-800">Tên các món ăn</h3>
+          <textarea
+            rows="4"
+            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none transition-all"
+            placeholder="Ví dụ: Cá kho tộ, canh chua, rau muống xào..."
+          ></textarea>
+        </section>
+
+        <div
+          id="price-summary"
+          class="flex justify-between items-center bg-primary-400 rounded-xl p-4 text-primary transition-all duration-300 transform"
+        >
+          <div>
+            <p class="text-xs opacity-80">Tổng tiền tạm tính</p>
+            <p id="total-price" class="text-2xl font-bold">0đ</p>
+            <p id="totalTimeText" class="text-xs mt-1 opacity-90">1 giờ</p>
+          </div>
+          <span class="material-symbols-outlined text-4xl">payments</span>
+        </div>
+
+        <div class="flex space-x-4">
+          <button
+            onclick="handleBookingNow()"
+            class="flex-1 text-center py-3 rounded-xl font-bold bg-primary-500 text-white hover:bg-primary-600 active:scale-95 transition-all duration-200 shadow-lg"
+          >
+            Đặt ngay
+          </button>
+          <button
+            onclick="handleScheduledBooking()"
+            class="flex-1 text-center py-3 rounded-xl font-bold border-2 border-primary-500 text-primary-500 hover:bg-primary-100 active:scale-95 transition-all duration-200"
+          >
+            Đặt lịch trước
+          </button>
+        </div>
+      </div>
     </main>
 
-    <footer>
-        <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-            <div class="flex justify-around py-2 text-base">
-                <a href="#" class="flex flex-col items-center text-white">
-                    <span class="material-symbols-outlined text-4xl">house</span>
-                    Trang chủ
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">news</span>
-                    Hoạt động
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">chat</span>
-                    Tin nhắn
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                    Thông báo
-                </a>
-            </div>
-        </nav>
-    </footer>
+    <div id="app-footer"></div>
+
+    <script type="module">
+      import { initLayout } from "../../js/ui/shared-layout.js";
+      initLayout({
+        role: "customer",
+        title: "Chi tiết dịch vụ",
+        active: "home",
+      });
+    </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
-        import { initSocket } from "../../js/socket.js";
-
-        initSocket();
+      import { initSocket } from "../../js/socket.js";
+      initSocket();
     </script>
 
     <script>
-        const MIN_PEOPLE = 1;
-        const MAX_PEOPLE = 8;
-        const urlParams = new URLSearchParams(window.location.search);
-        const basePrice = Number(urlParams.get("price")) || 150000; // Giá mặc định nếu không có tham số
-        
-        // khởi tạo biến lưu các thông tin task cho snapshot trong order
-        const task_id = urlParams.get("id");
-        let task_name = "";
-        let task_unit = "";
+      const MIN_PEOPLE = 1;
+      const MAX_PEOPLE = 8;
+      const urlParams = new URLSearchParams(window.location.search);
+      const basePrice = Number(urlParams.get("price")) || 150000;
 
-        let total = basePrice;
+      const task_id = urlParams.get("id");
+      let task_name = "";
+      let task_unit = "";
+
+      let total = basePrice;
+
+      let state = {
+        people: 2,
+        dishes: 2,
+        dessert: false,
+        grocery: false,
+      };
+
+      const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+
+      function renderTotalTime(minutes) {
+        const h = Math.floor(minutes / 60);
+        const m = minutes % 60;
+        let text = h > 0 ? `${h} giờ ` : "";
+        if (m > 0) text += `${m} phút`;
+        document.getElementById("totalTimeText").textContent = text.trim();
+      }
+
+      function calcTotal() {
+        total = basePrice;
         let minutes = 60;
 
-        let state = {
-            people: 2,
-            dishes: 2,
-            dessert: false,
-            grocery: false
+        if (state.dishes > 2) {
+          const extra = state.dishes - 2;
+          total += extra * 20000;
+          minutes += extra * 30;
+        }
+
+        if (state.people > 4) {
+          total += 100000;
+          minutes += 30;
+        }
+
+        if (state.dessert) {
+          total += 10000;
+          minutes += 15;
+        }
+        if (state.grocery) {
+          total += 30000;
+          minutes += 45;
+        }
+
+        document.getElementById("total-price").textContent =
+          formatCurrency(total);
+        renderTotalTime(minutes);
+      }
+
+      function animatePrice() {
+        const box = document.getElementById("price-summary");
+        box.classList.add("scale-105");
+        setTimeout(() => box.classList.remove("scale-105"), 150);
+      }
+
+      document.querySelectorAll(".quantity-action-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const action = btn.dataset.action;
+          if (action === "decrease" && state.people > MIN_PEOPLE)
+            state.people--;
+          if (action === "increase" && state.people < MAX_PEOPLE)
+            state.people++;
+          document.getElementById("people-count").textContent = state.people;
+          animatePrice();
+          calcTotal();
+        });
+      });
+
+      document.querySelectorAll(".dish-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".dish-btn")
+            .forEach((b) => b.classList.remove("active-btn"));
+          btn.classList.add("active-btn");
+          state.dishes = parseInt(btn.dataset.value);
+          animatePrice();
+          calcTotal();
+        });
+      });
+
+      document.querySelectorAll(".flavor-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".flavor-btn")
+            .forEach((b) => b.classList.remove("active-btn"));
+          btn.classList.add("active-btn");
+        });
+      });
+
+      document
+        .getElementById("dessert-service")
+        .addEventListener("change", (e) => {
+          state.dessert = e.target.checked;
+          animatePrice();
+          calcTotal();
+        });
+
+      document
+        .getElementById("grocery-service")
+        .addEventListener("change", (e) => {
+          state.grocery = e.target.checked;
+          animatePrice();
+          calcTotal();
+        });
+
+      async function getTaskDetail() {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Vui lòng đăng nhập");
+            location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const res = await fetch(`http://localhost:3000/api/task/${task_id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert(
+              "Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.",
+            );
+            window.location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const data = await res.json();
+          if (!data.success) return;
+
+          task_name = data.task.task_name;
+          task_unit = data.task.unit;
+        } catch (err) {
+          console.error("Load services failed", err);
+        }
+      }
+
+      getTaskDetail();
+
+      function initBookingDraft(bookingType) {
+        const selectedFlavor =
+          document.querySelector(".flavor-btn.active-btn")?.textContent ||
+          "Bắc";
+        const dishList = document.querySelector("textarea").value.trim();
+
+        let totalMinutes = 60;
+        if (state.dishes > 2) totalMinutes += (state.dishes - 2) * 30;
+        if (state.people > 4) totalMinutes += 30;
+        if (state.dessert) totalMinutes += 15;
+        if (state.grocery) totalMinutes += 45;
+
+        const bookingDraft = {
+          task_id: task_id,
+          type: bookingType,
+          base_amount: total,
+          final_amount: total,
+
+          task_snapshot: {
+            code: "COOKING",
+            name: task_name,
+            pricing: basePrice,
+            unit: task_unit,
+          },
+
+          task_payload: {
+            people: state.people,
+            dishes: state.dishes,
+            flavor: selectedFlavor,
+            has_dessert: state.dessert,
+            do_grocery: state.grocery,
+            total_time: totalMinutes,
+            dish_list: dishList,
+          },
+          note: "",
         };
 
-        const formatCurrency = (v) => v.toLocaleString("vi-VN") + "đ";
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        console.log("BOOKING DRAFT: ", bookingDraft);
+      }
 
-        function renderTotalTime(minutes) {
-            const h = Math.floor(minutes / 60);
-            const m = minutes % 60;
-            let text = h > 0 ? `${h} giờ ` : "";
-            if (m > 0) text += `${m} phút`;
-            document.getElementById("totalTimeText").textContent = text.trim();
-        }
+      function handleBookingNow() {
+        initBookingDraft("immediate");
+        window.location.href = "../book_now.html";
+      }
 
-        function calcTotal() {
-            total = basePrice;
-            let minutes = 60;
+      function handleScheduledBooking() {
+        initBookingDraft("scheduled");
+        window.location.href = "../scheduled.html";
+      }
 
-            // Logic Số món: Thêm mỗi món trên 2 là +20k và +30phút
-            if (state.dishes > 2) {
-                const extra = state.dishes - 2;
-                total += extra * 20000;
-                minutes += extra * 30;
-            }
-
-            // Logic Số người: Từ người thứ 5 trở đi phụ phí 50k và +30phút
-            if (state.people > 4) {
-                total += 100000;
-                minutes += 30;
-            }
-
-            // Dịch vụ thêm
-            if (state.dessert) {
-                total += 10000;
-                minutes += 15;
-            }
-            if (state.grocery) {
-                total += 30000;
-                minutes += 45;
-            }
-
-            document.getElementById("total-price").textContent = formatCurrency(total);
-            renderTotalTime(minutes);
-        }
-
-        function animatePrice() {
-            const box = document.getElementById("price-summary");
-            box.classList.add("scale-105");
-            setTimeout(() => box.classList.remove("scale-105"), 150);
-        }
-
-        document.querySelectorAll(".quantity-action-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                const action = btn.dataset.action;
-                if (action === "decrease" && state.people > MIN_PEOPLE) state.people--;
-                if (action === "increase" && state.people < MAX_PEOPLE) state.people++;
-                document.getElementById("people-count").textContent = state.people;
-                animatePrice();
-                calcTotal();
-            });
-        });
-
-        document.querySelectorAll(".dish-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".dish-btn").forEach(b => b.classList.remove("active-btn"));
-                btn.classList.add("active-btn");
-                state.dishes = parseInt(btn.dataset.value);
-                animatePrice();
-                calcTotal();
-            });
-        });
-
-        document.querySelectorAll(".flavor-btn").forEach(btn => {
-            btn.addEventListener("click", () => {
-                document.querySelectorAll(".flavor-btn").forEach(b => b.classList.remove("active-btn"));
-                btn.classList.add("active-btn");
-            });
-        });
-
-        document.getElementById("dessert-service").addEventListener("change", (e) => {
-            state.dessert = e.target.checked;
-            animatePrice();
-            calcTotal();
-        });
-
-        document.getElementById("grocery-service").addEventListener("change", (e) => {
-            state.grocery = e.target.checked;
-            animatePrice();
-            calcTotal();
-        });
-
-        async function getTaskDetail() {
-            try {
-                const token = localStorage.getItem("token");
-                if (!token) {
-                    alert("Vui lòng đăng nhập");
-                    location.href = "../../auth/login-signup.html";
-                    return;
-                }
-
-                const res = await fetch(`http://localhost:3000/api/task/${task_id}`, 
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                console.log("TOKEN: ", token);
-
-                if (res.status === 401) {
-                    localStorage.removeItem("token");
-                    alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-                    window.location.href = "../../auth/login-signup.html";
-                    return;
-                }
-
-                const data = await res.json();
-                console.log("TASK DETAIL: ", data.task);
-                if (!data.success) return;
-
-                task_name = data.task.task_name;
-                task_unit = data.task.unit;
-
-            } catch (err) {
-                console.error("Load services failed", err);
-            }
-        }
-
-        getTaskDetail();
-
-        function initBookingDraft(bookingType) {
-            const selectedFlavor = document.querySelector(".flavor-btn.active-btn")?.textContent || "Bắc";
-
-            // danh sách món ăn
-            const dishList = document.querySelector("textarea").value.trim();
-
-            let totalMinutes = 60;
-            if (state.dishes > 2) {
-                totalMinutes += (state.dishes - 2) * 30;
-            }
-
-            if (state.people > 4) {
-                totalMinutes += 30;
-            }
-
-            if (state.dessert) totalMinutes += 15;
-            if (state.grocery) totalMinutes += 45;
-
-            const bookingDraft = {
-                task_id: task_id,
-                type: bookingType,
-                base_amount: total,
-                final_amount: total,
-
-                task_snapshot: {
-                    code: "COOKING",
-                    name: task_name,
-                    pricing: basePrice,
-                    unit: task_unit
-                },
-                
-                task_payload: {
-                    people: state.people,
-                    dishes: state.dishes,
-                    flavor: selectedFlavor,
-                    has_dessert: state.dessert,
-                    do_grocery: state.grocery,
-                    total_time: totalMinutes,
-                    dish_list: dishList
-                },
-                note: ""
-            };
-
-            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-            console.log("BOOKING DRAFT: ", bookingDraft);
-        }
-
-        function handleBookingNow() {
-            initBookingDraft("immediate");
-            window.location.href = "../book_now.html";
-        }
-
-        function handleScheduledBooking() {
-            initBookingDraft("scheduled");
-            window.location.href = "../scheduled.html";
-        }
-        
-        calcTotal();
-        window.handleBookingNow = handleBookingNow;
-        window.handleScheduledBooking = handleScheduledBooking;
-
+      calcTotal();
+      window.handleBookingNow = handleBookingNow;
+      window.handleScheduledBooking = handleScheduledBooking;
     </script>
-</body>
+  </body>
 </html>

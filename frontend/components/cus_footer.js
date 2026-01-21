@@ -8,7 +8,7 @@ class AppFooter extends HTMLElement {
                         <div class="space-y-1">
                             <h4 class="text-[10px] font-bold text-dark-900/40 uppercase tracking-tighter">Frontend</h4>
                             <div class="flex gap-1.5">
-                                <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#ReactJS</span>
+                                <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#HTML</span>
                                 <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-primary-300 text-primary-600">#TailwindCSS</span>
                             </div>
                         </div>
@@ -23,7 +23,6 @@ class AppFooter extends HTMLElement {
 
                     <div class="md:border-x border-primary-300 px-8 text-center flex flex-col justify-center space-y-2">
                         <div class="flex justify-center items-center space-x-2">
-                            <img src="../public/images/taskgo-logo.png" alt="Logo" class="w-6 h-6 opacity-60">
                             <span class="text-lg font-black tracking-tighter text-dark-900">TaskGo</span>
                         </div>
                         <p class="text-xs font-bold text-dark-900 uppercase">Công nghệ Web và ứng dụng</p>

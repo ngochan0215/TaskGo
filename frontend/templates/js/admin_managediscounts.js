@@ -1,15 +1,18 @@
 const sidebarMobile = document.getElementById("sidebarMobile");
 const backdrop = document.getElementById("backdrop");
 
-function openSidebar() {
-  sidebarMobile.classList.remove("closed");
-  backdrop.classList.add("show");
-}
-
-function closeSidebar() {
-  sidebarMobile.classList.add("closed");
-  backdrop.classList.remove("show");
-}
+if (sidebarMobile) {
+    window.openSidebar = function () {
+      sidebarMobile.classList.remove("-translate-x-full");
+      if (backdrop) backdrop.classList.remove("hidden");
+    };
+  }
+  if (backdrop) {
+    window.closeSidebar = function () {
+      if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
+      backdrop.classList.add("hidden");
+    };
+  }
 
 const $ = (id) => document.getElementById(id);
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,135 +11,70 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200"/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,200..700,0..1,-50..200" />
+    <link rel="icon" type="image/x-icon" href="../../public/favicons/favicon.ico">
 
     <style>
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 
 <body class="font-montserrat min-h-screen bg-gray-200 text-gray-800">
 
-<div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
+    <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
 
-<aside id="sidebarMobile" class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
-    <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
-        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-            <img src="../../public/images/taskgo-logo.png" alt="Logo" class="w-full h-full object-contain p-1">
-        </div>
-        <div class="font-semibold text-sm tracking-wide">Admin</div>
-    </div>
-
-    <nav class="p-3 flex-1 space-y-1">
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_home.html">
-            <span class="material-symbols-outlined">home</span>
-            Trang chủ
-        </a>
-
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_managecustomers.html">
-            <span class="material-symbols-outlined">person</span>
-            Quản lý Customer
-        </a>
-
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_managetaskers.html">
-            <span class="material-symbols-outlined">badge</span>
-            Quản lý Tasker
-        </a>
-
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-            href="./admin_manageservices.html">
-            <span class="material-symbols-outlined">design_services</span>
-            Quản lý Dịch vụ
-        </a>
-
-        <a class="sidebar-link active" 
-            href="./admin_manageorders.html">
-            <span class="material-symbols-outlined">shopping_bag</span>
-            Quản lý Đơn hàng
-        </a>
-
-        <a class="sidebar-link" 
-            href="./admin_manageinvoices.html">
-            <span class="material-symbols-outlined">payments</span>
-            Quản lý Hóa đơn
-        </a>
-
-        <a class="sidebar-link" 
-            href="./admin_managereviews.html">
-            <span class="material-symbols-outlined">rate_review</span>
-            Quản lý Đánh giá
-        </a>
-
-        <a class="sidebar-link" href="./admin_managediscounts.html">
-            <span class="material-symbols-outlined">percent_discount</span>
-            Quản lý Khuyến mãi
-        </a>
-
-        <a class="sidebar-link" href="./admin_managevouchers.html">
-            <span class="material-symbols-outlined">local_activity</span>
-            Quản lý Voucher
-        </a>
-
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-            <span class="material-symbols-outlined">bar_chart</span>
-            Quản lý Doanh thu
-        </a>
-        
-        <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
-            <span class="material-symbols-outlined">settings</span>
-            Cài đặt
-        </a>
-    </nav>
-</aside>
-
-<div class="flex min-h-screen">
-
-    <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+    <aside id="sidebarMobile"
+        class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
         <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
             <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain p-1"/>
+                <span class="text-primary-500 font-bold text-xs"><img src="../../public/images/taskgo-logo.png"
+                        alt="TaskGo logo" class="w-9 h-9 object-contain" /></span>
             </div>
             <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
         </div>
 
         <nav class="p-3 flex-1 space-y-1">
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-                href="./admin_home.html">
+            <a class="sidebar-link" href="./admin_home.html">
                 <span class="material-symbols-outlined">home</span>
                 Trang chủ
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-                href="./admin_managecustomers.html">
+            <a class="sidebar-link" href="./admin_managecustomers.html">
                 <span class="material-symbols-outlined">person</span>
                 Quản lý Customer
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-                href="./admin_managetaskers.html">
+            <a class="sidebar-link" href="./admin_managetaskers.html">
                 <span class="material-symbols-outlined">badge</span>
                 Quản lý Tasker
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" 
-                href="./admin_manageservices.html">
+            <a class="sidebar-link" href="./admin_manageservices.html">
                 <span class="material-symbols-outlined">design_services</span>
                 Quản lý Dịch vụ
             </a>
 
-            <a class="sidebar-link active" 
-                href="./admin_manageorders.html">
+            <a class="sidebar-link active" href="./admin_manageorders.html">
                 <span class="material-symbols-outlined">shopping_bag</span>
                 Quản lý Đơn hàng
             </a>
 
-            <a class="sidebar-link" 
-                href="./admin_managereviews.html">
+            <a class="sidebar-link" href="./admin_manageinvoices.html">
+                <span class="material-symbols-outlined">payments</span>
+                Quản lý Hóa đơn
+            </a>
+
+            <a class="sidebar-link" href="./admin_managereviews.html">
                 <span class="material-symbols-outlined">rate_review</span>
                 Quản lý Đánh giá
             </a>
@@ -153,181 +89,281 @@
                 Quản lý Voucher
             </a>
 
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+            <a class="sidebar-link" href="./admin_report.html">
                 <span class="material-symbols-outlined">bar_chart</span>
-                Quản lý Doanh thu
+                Báo cáo Thống kê
             </a>
-            
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-white hover:bg-white/10 transition" href="#">
+
+            <a class="sidebar-link" href="#">
                 <span class="material-symbols-outlined">settings</span>
                 Cài đặt
             </a>
         </nav>
-
         <div class="p-3 border-t border-white/10">
-            <a class="w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-white/85 hover:text-red-400 hover:bg-white/10 transition" href="#">
+            <a class="sidebar-link hover-text-red-400" href="#">
                 <span class="material-symbols-outlined">logout</span>
                 Đăng xuất
             </a>
         </div>
     </aside>
 
-    <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
+    <div class="flex min-h-screen">
 
-        <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
-            <div class="flex items-center gap-3 min-w-0">
-                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden" type="button" onclick="openSidebar()">
-                    <span class="material-symbols-outlined">menu</span>
-                </button>
+        <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
+            <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+                    <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+                </div>
+                <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+            </div>
 
-                <div class="flex items-center gap-2 min-w-0">
+            <nav class="p-3 flex-1 space-y-1">
+                <a class="sidebar-link" href="./admin_home.html">
+                    <span class="material-symbols-outlined">home</span>
+                    Trang chủ
+                </a>
+
+                <a class="sidebar-link" href="./admin_managecustomers.html">
+                    <span class="material-symbols-outlined">person</span>
+                    Quản lý Customer
+                </a>
+
+                <a class="sidebar-link" href="./admin_managetaskers.html">
+                    <span class="material-symbols-outlined">badge</span>
+                    Quản lý Tasker
+                </a>
+
+                <a class="sidebar-link" href="./admin_manageservices.html">
+                    <span class="material-symbols-outlined">design_services</span>
+                    Quản lý Dịch vụ
+                </a>
+
+                <a class="sidebar-link active" href="./admin_manageorders.html">
                     <span class="material-symbols-outlined">shopping_bag</span>
-                    <div class="font-semibold truncate">Quản lý Đơn hàng</div>
-                </div>
+                    Quản lý Đơn hàng
+                </a>
+
+                <a class="sidebar-link" href="./admin_manageinvoices.html">
+                    <span class="material-symbols-outlined">payments</span>
+                    Quản lý Hóa đơn
+                </a>
+
+                <a class="sidebar-link" href="./admin_managereviews.html">
+                    <span class="material-symbols-outlined">rate_review</span>
+                    Quản lý Đánh giá
+                </a>
+
+                <a class="sidebar-link" href="./admin_managediscounts.html">
+                    <span class="material-symbols-outlined">percent_discount</span>
+                    Quản lý Khuyến mãi
+                </a>
+
+                <a class="sidebar-link" href="./admin_managevouchers.html">
+                    <span class="material-symbols-outlined">local_activity</span>
+                    Quản lý Voucher
+                </a>
+
+                <a class="sidebar-link" href="./admin_report.html">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    Báo cáo Thống kê
+                </a>
+
+                <a class="sidebar-link" href="#">
+                    <span class="material-symbols-outlined">settings</span>
+                    Cài đặt
+                </a>
+            </nav>
+
+            <div class="p-3 border-t border-white/10">
+                <a class="sidebar-link hover-text-red-400" href="#">
+                    <span class="material-symbols-outlined">logout</span>
+                    Đăng xuất
+                </a>
             </div>
+        </aside>
 
-            <div class="flex items-center gap-2">
-                <button class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
-                    <span class="material-symbols-outlined">notifications</span>
-                    <span class="hidden sm:inline">Thông báo</span>
-                </button>
-            </div>
-        </header>
+        <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
 
-        <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+            <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
+                <div class="flex items-center gap-3 min-w-0">
+                    <button
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm lg:hidden"
+                        type="button" onclick="openSidebar()">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]">
-
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng đơn hàng</p>
-                        <p id="totalOrders" class="text-2xl font-bold text-gray-800">0</p>
-                    </div>
-                    <div class="p-4 rounded-lg bg-green-50 border border-green-100">
-                        <p class="text-xs text-green-600 font-bold uppercase mb-1">Hoàn thành</p>
-                        <p id="completedOrders" class="text-2xl font-bold text-gray-800">0 <span class="text-xs font-medium opacity-80">(0%)</span></p>
-                    </div>
-                    <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
-                        <p class="text-xs text-yellow-600 font-bold uppercase mb-1">Đang diễn ra</p>
-                        <p id="ongoingOrders" class="text-2xl font-bold text-gray-800">0 <span class="text-xs font-medium opacity-80">(0%)</span></p>
-                    </div>
-                    <div class="p-4 rounded-lg bg-red-50 border border-red-100">
-                        <p class="text-xs text-red-600 font-bold uppercase mb-1">Đã hủy</p>
-                        <p id="cancelledOrders" class="text-2xl font-bold text-gray-800">0 <span class="text-xs font-medium opacity-80">(0%)</span></p>
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="material-symbols-outlined">shopping_bag</span>
+                        <div class="font-semibold truncate">Quản lý Đơn hàng</div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="lg:col-span-2 border border-gray-100 rounded-lg p-4">
-                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
-                            <span class="material-symbols-outlined text-gray-400 text-lg">show_chart</span>
-                            Xu hướng đơn hàng (7 ngày qua)
-                        </h3>
-                        <div id="trendsChart" class="h-48 flex items-end justify-between gap-2 px-2">
-                            <!-- Chart bars will be inserted here dynamically -->
+                <div class="flex items-center gap-2">
+                    <button
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="hidden sm:inline">Thông báo</span>
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-5 scroll-smooth">
+
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 min-h-[520px]">
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div class="p-4 rounded-lg bg-blue-50 border border-blue-100">
+                            <p class="text-xs text-blue-600 font-bold uppercase mb-1">Tổng đơn hàng</p>
+                            <p id="totalOrders" class="text-2xl font-bold text-gray-800">0</p>
                         </div>
-                        <div id="trendsLabels" class="flex justify-between mt-2 text-[10px] text-gray-400 uppercase font-bold px-1">
-                            <!-- Day labels will be inserted here -->
+                        <div class="p-4 rounded-lg bg-green-50 border border-green-100">
+                            <p class="text-xs text-green-600 font-bold uppercase mb-1">Hoàn thành</p>
+                            <p id="completedOrders" class="text-2xl font-bold text-gray-800">0 <span
+                                    class="text-xs font-medium opacity-80">(0%)</span></p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-yellow-50 border border-yellow-100">
+                            <p class="text-xs text-yellow-600 font-bold uppercase mb-1">Đang diễn ra</p>
+                            <p id="ongoingOrders" class="text-2xl font-bold text-gray-800">0 <span
+                                    class="text-xs font-medium opacity-80">(0%)</span></p>
+                        </div>
+                        <div class="p-4 rounded-lg bg-red-50 border border-red-100">
+                            <p class="text-xs text-red-600 font-bold uppercase mb-1">Đã hủy</p>
+                            <p id="cancelledOrders" class="text-2xl font-bold text-gray-800">0 <span
+                                    class="text-xs font-medium opacity-80">(0%)</span></p>
                         </div>
                     </div>
 
-                    <div class="border border-gray-100 rounded-lg p-4 flex flex-col justify-center">
-                        <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
-                            <span class="material-symbols-outlined text-gray-400 text-lg">pie_chart</span>
-                            Tỷ lệ trạng thái
-                        </h3>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-green-600 font-medium">Hoàn thành</span>
-                                    <span id="statusCompletedPercent" class="font-bold">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div id="statusCompletedBar" class="bg-green-500 h-full w-[0%]"></div>
-                                </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <div class="lg:col-span-2 border border-gray-100 rounded-lg p-4">
+                            <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-400 text-lg">show_chart</span>
+                                Xu hướng đơn hàng (7 ngày qua)
+                            </h3>
+                            <div id="trendsChart" class="h-48 flex items-end justify-between gap-2 px-2">
+                                <!-- Chart bars will be inserted here dynamically -->
                             </div>
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-yellow-600 font-medium">Đang diễn ra</span>
-                                    <span id="statusInProgressPercent" class="font-bold">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div id="statusInProgressBar" class="bg-yellow-500 h-full w-[0%]"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-xs mb-1">
-                                    <span class="text-red-600 font-medium">Đã hủy</span>
-                                    <span id="statusCancelledPercent" class="font-bold">0%</span>
-                                </div>
-                                <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
-                                    <div id="statusCancelledBar" class="bg-red-500 h-full w-[0%]"></div>
-                                </div>
+                            <div id="trendsLabels"
+                                class="flex justify-between mt-2 text-[10px] text-gray-400 uppercase font-bold px-1">
+                                <!-- Day labels will be inserted here -->
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                    <div class="flex gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
-                        <button onclick="filterByStatus('')" class="filter-btn px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition" data-status="">Tất cả</button>
-                        <button onclick="filterByStatus('completed')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap" data-status="completed">Hoàn thành</button>
-                        <button onclick="filterByStatus('in_progress')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap" data-status="in_progress">Đang diễn ra</button>
-                        <button onclick="filterByStatus('cancelled')" class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-red-500 hover:text-red-600 transition whitespace-nowrap" data-status="cancelled">Đã hủy</button>
-                    </div>
-
-                    <div class="flex items-center gap-2">
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
-                            <input id="searchInput" type="text" placeholder="Tìm kiếm mã đơn, tên..." class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full md:w-64 bg-gray-50 focus:bg-white transition-all" onkeyup="handleSearch()">
-                        </div>
-                        <button class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500" title="Lọc nâng cao">
-                            <span class="material-symbols-outlined text-lg">filter_list</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto border border-gray-200 rounded-lg">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
-                        <tr>
-                            <th class="px-4 py-3 border-b border-gray-200">Mã ĐH</th>
-                            <th class="px-4 py-3 border-b border-gray-200">Khách hàng</th>
-                            <th class="px-4 py-3 border-b border-gray-200">Dịch vụ</th>
-                            <th class="px-4 py-3 border-b border-gray-200">Thời gian</th>
-                            <th class="px-4 py-3 border-b border-gray-200 text-right">Giá trị</th>
-                            <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
-                            <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
-                        </tr>
-                        </thead>
-                        <tbody id="ordersTableBody" class="text-sm text-gray-700 divide-y divide-gray-100 bg-white">
-                        <!-- Orders will be loaded here -->
-                        <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-400">
-                                <div class="flex flex-col items-center gap-2">
-                                    <span class="material-symbols-outlined text-4xl">hourglass_empty</span>
-                                    <p>Đang tải dữ liệu...</p>
+                        <div class="border border-gray-100 rounded-lg p-4 flex flex-col justify-center">
+                            <h3 class="font-bold text-gray-700 mb-4 text-sm flex items-center gap-2">
+                                <span class="material-symbols-outlined text-gray-400 text-lg">pie_chart</span>
+                                Tỷ lệ trạng thái
+                            </h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-green-600 font-medium">Hoàn thành</span>
+                                        <span id="statusCompletedPercent" class="font-bold">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div id="statusCompletedBar" class="bg-green-500 h-full w-[0%]"></div>
+                                    </div>
                                 </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex items-center justify-between border-t border-gray-200 pt-4">
-                    <p id="paginationInfo" class="text-sm text-gray-500">Hiển thị <span class="font-bold">0-0</span> trên <span class="font-bold">0</span> đơn hàng</p>
-                    <div id="paginationButtons" class="flex gap-1">
-                        <button onclick="previousPage()" class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">1</button>
-                        <button onclick="nextPage()" class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-yellow-600 font-medium">Đang diễn ra</span>
+                                        <span id="statusInProgressPercent" class="font-bold">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div id="statusInProgressBar" class="bg-yellow-500 h-full w-[0%]"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-xs mb-1">
+                                        <span class="text-red-600 font-medium">Đã hủy</span>
+                                        <span id="statusCancelledPercent" class="font-bold">0%</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                        <div id="statusCancelledBar" class="bg-red-500 h-full w-[0%]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                        <div class="flex gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar">
+                            <button onclick="filterByStatus('')"
+                                class="filter-btn px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-lg shadow-sm whitespace-nowrap hover:bg-gray-700 transition"
+                                data-status="">Tất cả</button>
+                            <button onclick="filterByStatus('completed')"
+                                class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-green-500 hover:text-green-600 transition whitespace-nowrap"
+                                data-status="completed">Hoàn thành</button>
+                            <button onclick="filterByStatus('in_progress')"
+                                class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-yellow-500 hover:text-yellow-600 transition whitespace-nowrap"
+                                data-status="in_progress">Đang diễn ra</button>
+                            <button onclick="filterByStatus('cancelled')"
+                                class="filter-btn px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:border-red-500 hover:text-red-600 transition whitespace-nowrap"
+                                data-status="cancelled">Đã hủy</button>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <div class="relative">
+                                <span
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+                                <input id="searchInput" type="text" placeholder="Tìm kiếm mã đơn, tên..."
+                                    class="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-primary-500 w-full md:w-64 bg-gray-50 focus:bg-white transition-all"
+                                    onkeyup="handleSearch()">
+                            </div>
+                            <button class="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-500"
+                                title="Lọc nâng cao">
+                                <span class="material-symbols-outlined text-lg">filter_list</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-500 text-xs uppercase font-semibold">
+                                <tr>
+                                    <th class="px-4 py-3 border-b border-gray-200">Mã ĐH</th>
+                                    <th class="px-4 py-3 border-b border-gray-200">Khách hàng</th>
+                                    <th class="px-4 py-3 border-b border-gray-200">Dịch vụ</th>
+                                    <th class="px-4 py-3 border-b border-gray-200">Thời gian</th>
+                                    <th class="px-4 py-3 border-b border-gray-200 text-right">Giá trị</th>
+                                    <th class="px-4 py-3 border-b border-gray-200 text-center">Trạng thái</th>
+                                    <th class="px-4 py-3 border-b border-gray-200 text-center">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody" class="text-sm text-gray-700 divide-y divide-gray-100 bg-white">
+                                <!-- Orders will be loaded here -->
+                                <tr>
+                                    <td colspan="7" class="px-4 py-8 text-center text-gray-400">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span class="material-symbols-outlined text-4xl">hourglass_empty</span>
+                                            <p>Đang tải dữ liệu...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex items-center justify-between border-t border-gray-200 pt-4">
+                        <p id="paginationInfo" class="text-sm text-gray-500">Hiển thị <span class="font-bold">0-0</span>
+                            trên <span class="font-bold">0</span> đơn hàng</p>
+                        <div id="paginationButtons" class="flex gap-1">
+                            <button onclick="previousPage()"
+                                class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50"><span
+                                    class="material-symbols-outlined text-sm">chevron_left</span></button>
+                            <button
+                                class="w-8 h-8 flex items-center justify-center rounded bg-primary-500 text-white font-bold text-sm">1</button>
+                            <button onclick="nextPage()"
+                                class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500"><span
+                                    class="material-symbols-outlined text-sm">chevron_right</span></button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="../js/admin_manageorders.js"></script>
+    <script src="../js/admin_manageorders.js"></script>
 </body>
+
 </html>

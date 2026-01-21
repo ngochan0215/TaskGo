@@ -469,7 +469,7 @@
             const data = await res.json();
             if (!data.success) return;
 
-            const { user, tasker, account } = data;
+            const { user, tasker, account, reviews } = data;
 
             // menu hamburger
             const menuName = document.querySelector('#menu-overlay p.text-lg');
@@ -566,14 +566,13 @@
             }
 
             // điểm uy tín
-            const reputationEl = document.querySelector('.text-lg.font-bold.text-gray-800');
-            if (reputationEl) {
-                reputationEl.innerHTML = `
-                    ${user.reputation_score || '--'} 
-                    <span class="text-[#FFBE18] text-sm">★</span>
-                `;
+            const ratingEl = document.getElementById("rating-value");
+            if (ratingEl) {
+                const rating = reviews && reviews.average_rating
+                    ? Number(reviews.average_rating).toFixed(1)
+                    : "0.0";
+                ratingEl.textContent = rating;
             }
-
             // working_area
             if (tasker?.working_area) {
                 waState.full_address = tasker.working_area.full_address || "";

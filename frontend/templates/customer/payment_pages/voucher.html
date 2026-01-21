@@ -1,331 +1,333 @@
 <!doctype html>
 <html>
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TaskGo</title>
-    <link rel="stylesheet" type="text/css" href="../../../public/css/output.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
-</head>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="../../../public/css/output.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="../../../public/favicons/favicon.ico"
+    />
+  </head>
 
-<body class="bg-primary-100 min-h-screen font-montserrat">
-    <header class="bg-primary-200 py-4">
-        <div class="flex items-center justify-between px-4">
-            <div class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70">
-                <a href=""><img src="../../../public/images/taskgo-logo.png" alt=""></a>
-            </div>
-
-            <h1 class="font-bold text-xl text-dark-900">Dịch vụ của bạn</h1>
-            <div class="w-10 h-10 flex items-center justify-center">
-                <a href=""><span class="material-symbols-outlined text-primary-500 text-4xl">menu</span></a>
-            </div>
-        </div>
-    </header>
+  <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
+    <div id="app-header"></div>
 
     <main class="p-4 space-y-4 pb-32">
-        <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
-            <div class="flex justify-between items-center relative">
-                <a href="payment.html" class="text-gray-100 font-medium hover:text-primary-darker">
-                    Thoát
-                </a>
-                <h2 class="text-lg font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2">
-                    Tìm khuyến mãi
-                </h2>
-                <a href="payment.html" class="text-secondary-100 font-bold">
-                    Lưu
-                </a>
-            </div>
-            <div class="flex justify-between items-center space-x-4">
-                <input type="text" placeholder="Nhập mã khuyến mãi" class="flex-1 p-3 border border-gray-300 rounded-xl 
-                    focus:outline-none focus:ring-2 focus:ring-primary-500" />
-            </div>
-            <p class="text-dark-900 font-medium pt-2">Ưu đãi của bạn</p>
-
-            <div id="discountSummary"
-                class="hidden bg-primary-50 rounded-xl p-4 space-y-1 transition-all">
-                <p class="text-sm text-gray-100">
-                    Giảm giá:
-                    <span id="discountValue" class="font-semibold text-secondary-100"></span>
-                </p>
-                <p class="text-sm text-gray-100">
-                    Tổng sau giảm:
-                    <span id="finalAmount" class="font-bold text-dark-900"></span>
-                </p>
-            </div>
-
-            <button id="cancelVoucherBtn"
-                class="hidden w-full mt-2 py-3 rounded-xl border border-red-300
-                    text-red-500 font-semibold hover:bg-red-50 transition">
-                Hủy áp dụng khuyến mãi
-            </button>
-
-            <div class="space-y-3" id="voucherList">
-            </div>
+      <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
+        <div class="flex justify-between items-center relative">
+          <a
+            href="payment.html"
+            class="text-gray-100 font-medium hover:text-primary-darker"
+          >
+            Thoát
+          </a>
+          <h2
+            class="text-lg font-bold text-gray-800 absolute left-1/2 transform -translate-x-1/2"
+          >
+            Tìm khuyến mãi
+          </h2>
+          <a href="payment.html" class="text-secondary-100 font-bold"> Lưu </a>
         </div>
+
+        <div class="flex justify-between items-center space-x-4">
+          <input
+            type="text"
+            placeholder="Nhập mã khuyến mãi"
+            class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+
+        <p class="text-dark-900 font-medium pt-2">Ưu đãi của bạn</p>
+
+        <div
+          id="discountSummary"
+          class="hidden bg-primary-50 rounded-xl p-4 space-y-1 transition-all"
+        >
+          <p class="text-sm text-gray-100">
+            Giảm giá:
+            <span
+              id="discountValue"
+              class="font-semibold text-secondary-100"
+            ></span>
+          </p>
+          <p class="text-sm text-gray-100">
+            Tổng sau giảm:
+            <span id="finalAmount" class="font-bold text-dark-900"></span>
+          </p>
+        </div>
+
+        <button
+          id="cancelVoucherBtn"
+          class="hidden w-full mt-2 py-3 rounded-xl border border-red-300 text-red-500 font-semibold hover:bg-red-50 transition"
+        >
+          Hủy áp dụng khuyến mãi
+        </button>
+
+        <div class="space-y-3" id="voucherList"></div>
+      </div>
     </main>
 
-    <footer>
-        <nav class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl">
-            <div class="flex justify-around py-2 text-base">
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">house</span>
-                    Trang chủ
-                </a>
-                <a href="#" class="flex flex-col items-center text-white">
-                    <span class="material-symbols-outlined text-4xl">news</span>
-                    Hoạt động
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">chat</span>
-                    Tin nhắn
-                </a>
-                <a href="#" class="flex flex-col items-center text-primary-500">
-                    <span class="material-symbols-outlined text-4xl">lightbulb</span>
-                    Thông báo
-                </a>
-            </div>
-        </nav>
-    </footer>
+    <div id="app-footer"></div>
+
+    <script type="module">
+      import { initLayout } from "../../js/ui/shared-layout.js";
+      initLayout({
+        role: "customer",
+        title: "Dịch vụ của bạn",
+        active: "activity",
+      });
+    </script>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
-        import { initSocket } from "../../js/socket.js";
-
-        initSocket();
+      import { initSocket } from "../../js/socket.js";
+      initSocket();
     </script>
-    
+
     <script>
-        const voucherDraft = JSON.parse(localStorage.getItem("voucherDraft"));
-        if (!voucherDraft) {
-            alert("Không có dữ liệu thanh toán");
-            location.href = "./payment.html";
+      const voucherDraft = JSON.parse(localStorage.getItem("voucherDraft"));
+      if (!voucherDraft) {
+        alert("Không có dữ liệu thanh toán");
+        location.href = "./payment.html";
+      }
+      console.log("VOUCHER DRAFT: ", voucherDraft);
+      const TOTAL_AMOUNT = voucherDraft.base_amount;
+
+      let bestVoucherCode = null;
+      let bestVoucherName = "";
+      let bestVoucherDescription = "";
+
+      async function loadVouchers() {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) {
+            alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
+            window.location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const res = await fetch(
+            "http://localhost:3000/api/discount/voucher/eligible-list",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({ total_amount: TOTAL_AMOUNT }),
+            },
+          );
+
+          console.log("TOKEN: ", token);
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            alert(
+              "Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.",
+            );
+            window.location.href = "../../auth/login-signup.html";
+            return;
+          }
+
+          const result = await res.json();
+          const list = document.getElementById("voucherList");
+          list.innerHTML = "";
+
+          if (!result.success || result.total === 0) {
+            list.innerHTML = `
+              <p class="text-gray-100 text-sm text-center">
+                Không có khuyến mãi phù hợp
+              </p>
+            `;
+            return;
+          }
+
+          const bestVoucher = result.vouchers.reduce(
+            (best, v) =>
+              !best || v.discount_preview > best.discount_preview ? v : best,
+            null,
+          );
+
+          bestVoucherCode = bestVoucher.code;
+
+          result.vouchers.forEach((v) => {
+            list.innerHTML += renderVoucherItem(v, v.code === bestVoucherCode);
+          });
+
+          const bestRadio = document.querySelector(
+            `input[value="${bestVoucherCode}"]`,
+          );
+          if (bestRadio) {
+            bestRadio.checked = true;
+            handleVoucherSelect(bestRadio);
+          }
+
+          bindVoucherEvents();
+        } catch (err) {
+          console.error(err);
         }
-        console.log("VOUCHER DRAFT: ", voucherDraft);
-        const TOTAL_AMOUNT = voucherDraft.base_amount;
+      }
 
-        let bestVoucherCode = null;
-        let bestVoucherName = "";
-        let bestVoucherDescription = "";
+      function renderVoucherItem(voucher, isBest = false) {
+        return `
+          <label class="voucher-item flex justify-between items-center bg-white rounded-xl
+            shadow-md p-4 cursor-pointer border transition-all duration-300
+            hover:border-primary-500 hover:shadow-lg"
+            data-discount="${voucher.discount_preview}"
+            data-code="${voucher.code}"
+            data-name="${voucher.name}"
+            data-id="${voucher._id}"
+            data-description="${voucher.description || ""}">
 
-        async function loadVouchers() {
-            try {
-                const token = localStorage.getItem("token");
-                if (!token) {
-                    alert("Chưa đăng nhập! Vui lòng đăng nhập để truy cập.");
-                    window.location.href = "../../auth/login-signup.html";
-                    return;
-                }
+            <div class="flex items-start space-x-3">
+              <div class="bg-primary-100 text-primary-500 rounded-full p-2">
+                <span class="material-symbols-outlined">sell</span>
+              </div>
 
-                const res = await fetch("http://localhost:3000/api/discount/voucher/eligible-list", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ total_amount: TOTAL_AMOUNT })
-                });
-
-                console.log("TOKEN: ", token);
-
-                if (res.status === 401) {
-                    localStorage.removeItem("token");
-                    alert("Token đã hết hạn hoặc không hợp lệ! Vui lòng đăng nhập lại.");
-                    window.location.href = "../../auth/login-signup.html";
-                    return;
-                }
-
-                const result = await res.json();
-                const list = document.getElementById("voucherList");
-                list.innerHTML = "";
-
-                if (!result.success || result.total === 0) {
-                    list.innerHTML = `
-                        <p class="text-gray-100 text-sm text-center">
-                            Không có khuyến mãi phù hợp
-                        </p>
-                    `;
-                    return;
-                }
-
-                // tìm voucher tốt nhất
-                const bestVoucher = result.vouchers.reduce((best, v) =>
-                    !best || v.discount_preview > best.discount_preview ? v : best
-                , null);
-
-                bestVoucherCode = bestVoucher.code;
-
-                result.vouchers.forEach(v => {
-                    list.innerHTML += renderVoucherItem(
-                        v,
-                        v.code === bestVoucherCode
-                    );
-                });
-
-                // auto tick voucher tốt nhất
-                const bestRadio = document.querySelector(
-                    `input[value="${bestVoucherCode}"]`
-                );
-                if (bestRadio) {
-                    bestRadio.checked = true;
-                    handleVoucherSelect(bestRadio);
-                }
-
-                bindVoucherEvents();
-
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        function renderVoucherItem(voucher, isBest = false) {
-            return `
-            <label class="voucher-item flex justify-between items-center bg-white rounded-xl 
-                shadow-md p-4 cursor-pointer border transition-all duration-300
-                hover:border-primary-500 hover:shadow-lg"
-                data-discount="${voucher.discount_preview}"
-                data-code="${voucher.code}"
-                data-name="${voucher.name}"
-                data-id="${voucher._id}"
-                data-description="${voucher.description || ""}">
-
-                <div class="flex items-start space-x-3">
-                    <div class="bg-primary-100 text-primary-500 rounded-full p-2">
-                        <span class="material-symbols-outlined">sell</span>
-                    </div>
-
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <p class="text-xs text-gray-100 font-medium">
-                                ${voucher.code}
-                            </p>
-                            ${isBest ? `
-                                <span class="bg-secondary-100 text-white text-xs px-2 py-0.5 rounded-full">
-                                    Tốt nhất
-                                </span>` : ""}
-                        </div>
-
-                        <p class="text-sm font-semibold text-dark-900">
-                            ${voucher.name}
-                        </p>
-
-                        <p class="text-xs text-gray-100 mt-1">
-                            Tiết kiệm 
-                            <span class="text-secondary-100 font-semibold">
-                                ${voucher.discount_preview.toLocaleString()}đ
-                            </span>
-                        </p>
-                    </div>
+              <div>
+                <div class="flex items-center space-x-2">
+                  <p class="text-xs text-gray-100 font-medium">
+                    ${voucher.code}
+                  </p>
+                  ${
+                    isBest
+                      ? `
+                      <span class="bg-secondary-100 text-white text-xs px-2 py-0.5 rounded-full">
+                        Tốt nhất
+                      </span>`
+                      : ""
+                  }
                 </div>
 
-                <input type="radio"
-                    name="promo"
-                    value="${voucher.code}"
-                    class="promo-radio h-5 w-5 text-secondary-200 border-gray-400"/>
-            </label>
-            `;
-        }
+                <p class="text-sm font-semibold text-dark-900">
+                  ${voucher.name}
+                </p>
 
-        function bindVoucherEvents() {
-            document.querySelectorAll(".promo-radio").forEach(radio => {
-                radio.addEventListener("change", () => {
-                    handleVoucherSelect(radio);
-                });
-            });
-        }
+                <p class="text-xs text-gray-100 mt-1">
+                  Tiết kiệm
+                  <span class="text-secondary-100 font-semibold">
+                    ${voucher.discount_preview.toLocaleString()}đ
+                  </span>
+                </p>
+              </div>
+            </div>
 
-        function handleVoucherSelect(radio) {
-            const label = radio.closest(".voucher-item");
-            const discount = Number(label.dataset.discount);
-            const voucherId = label.dataset.id;
-            const voucherCode = label.dataset.code;
-            const voucherName = label.dataset.name;
-            const voucherDescription = label.dataset.description;
+            <input type="radio"
+              name="promo"
+              value="${voucher.code}"
+              class="promo-radio h-5 w-5 text-secondary-200 border-gray-400"/>
+          </label>
+        `;
+      }
 
-            // animation chọn
-            document.querySelectorAll(".voucher-item").forEach(item => {
-                item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
-            });
+      function bindVoucherEvents() {
+        document.querySelectorAll(".promo-radio").forEach((radio) => {
+          radio.addEventListener("change", () => {
+            handleVoucherSelect(radio);
+          });
+        });
+      }
 
-            label.classList.add(
-                "ring-2",
-                "ring-secondary-100",
-                "scale-[1.02]"
-            );
+      function handleVoucherSelect(radio) {
+        const label = radio.closest(".voucher-item");
+        const discount = Number(label.dataset.discount);
+        const voucherId = label.dataset.id;
+        const voucherCode = label.dataset.code;
+        const voucherName = label.dataset.name;
+        const voucherDescription = label.dataset.description;
 
-            // hiển thị summary
-            const summary = document.getElementById("discountSummary");
-            const discountValue = document.getElementById("discountValue");
-            const finalAmount = document.getElementById("finalAmount");
-
-            summary.classList.remove("hidden");
-            cancelVoucherBtn.classList.remove("hidden");
-
-            discountValue.innerText = `-${discount.toLocaleString()}đ`;
-            finalAmount.innerText = `${(TOTAL_AMOUNT - discount).toLocaleString()}đ`;
-
-            // lưu vào voucherDraft để đọc lại ở UI thanh toán
-            localStorage.setItem("voucherDraft", JSON.stringify({
-                base_amount: TOTAL_AMOUNT,
-                voucher_code: voucherCode,
-                discount_amount: discount,
-                final_amount: TOTAL_AMOUNT - discount
-            }));
-
-            // lưu voucher snapshot vào bookingDraft
-            const rawBooking = localStorage.getItem("bookingDraft");
-            if (!rawBooking) return;
-
-            const bookingDraft = JSON.parse(rawBooking);
-
-            bookingDraft.voucher_id = voucherId; 
-            bookingDraft.voucher_snapshot = {
-                code: voucherCode,
-                name: voucherName,
-                description: voucherDescription,
-                discount_amount: discount,
-            };
-
-            bookingDraft.final_amount = voucherDraft.final_amount;
-            localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-            console.log("BOOKING DRAFT AFTER SAVING VOUCHER SNAPSHOT: ", bookingDraft);
-        }
-
-        loadVouchers();
-
-        const cancelVoucherBtn = document.getElementById("cancelVoucherBtn");
-
-        cancelVoucherBtn.addEventListener("click", () => {
-            document.querySelectorAll(".promo-radio").forEach(r => {
-                r.checked = false;
-            });
-
-            document.querySelectorAll(".voucher-item").forEach(item => {
-                item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
-            });
-
-            document.getElementById("discountSummary").classList.add("hidden");
-            cancelVoucherBtn.classList.add("hidden");
-
-            localStorage.removeItem("voucherDraft");
-
-            const rawBooking = localStorage.getItem("bookingDraft");
-            if (rawBooking) {
-                const bookingDraft = JSON.parse(rawBooking);
-
-                bookingDraft.voucher_id = null;
-                bookingDraft.voucher_snapshot = null;
-                bookingDraft.final_amount = bookingDraft.base_amount;
-
-                localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
-                console.log("BOOKING DRAFT AFTER CANCEL VOUCHER:", bookingDraft);
-            }
+        document.querySelectorAll(".voucher-item").forEach((item) => {
+          item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
         });
 
-    </script>
-</body>
+        label.classList.add("ring-2", "ring-secondary-100", "scale-[1.02]");
 
+        const summary = document.getElementById("discountSummary");
+        const discountValue = document.getElementById("discountValue");
+        const finalAmount = document.getElementById("finalAmount");
+
+        summary.classList.remove("hidden");
+        cancelVoucherBtn.classList.remove("hidden");
+
+        discountValue.innerText = `-${discount.toLocaleString()}đ`;
+        finalAmount.innerText = `${(TOTAL_AMOUNT - discount).toLocaleString()}đ`;
+
+        localStorage.setItem(
+          "voucherDraft",
+          JSON.stringify({
+            base_amount: TOTAL_AMOUNT,
+            voucher_code: voucherCode,
+            discount_amount: discount,
+            final_amount: TOTAL_AMOUNT - discount,
+          }),
+        );
+
+        const rawBooking = localStorage.getItem("bookingDraft");
+        if (!rawBooking) return;
+
+        const bookingDraft = JSON.parse(rawBooking);
+
+        bookingDraft.voucher_id = voucherId;
+        bookingDraft.voucher_snapshot = {
+          code: voucherCode,
+          name: voucherName,
+          description: voucherDescription,
+          discount_amount: discount,
+        };
+
+        bookingDraft.final_amount = voucherDraft.final_amount;
+        localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+        console.log(
+          "BOOKING DRAFT AFTER SAVING VOUCHER SNAPSHOT: ",
+          bookingDraft,
+        );
+      }
+
+      loadVouchers();
+
+      const cancelVoucherBtn = document.getElementById("cancelVoucherBtn");
+
+      cancelVoucherBtn.addEventListener("click", () => {
+        document.querySelectorAll(".promo-radio").forEach((r) => {
+          r.checked = false;
+        });
+
+        document.querySelectorAll(".voucher-item").forEach((item) => {
+          item.classList.remove("ring-2", "ring-secondary-100", "scale-[1.02]");
+        });
+
+        document.getElementById("discountSummary").classList.add("hidden");
+        cancelVoucherBtn.classList.add("hidden");
+
+        localStorage.removeItem("voucherDraft");
+
+        const rawBooking = localStorage.getItem("bookingDraft");
+        if (rawBooking) {
+          const bookingDraft = JSON.parse(rawBooking);
+
+          bookingDraft.voucher_id = null;
+          bookingDraft.voucher_snapshot = null;
+          bookingDraft.final_amount = bookingDraft.base_amount;
+
+          localStorage.setItem("bookingDraft", JSON.stringify(bookingDraft));
+          console.log("BOOKING DRAFT AFTER CANCEL VOUCHER:", bookingDraft);
+        }
+      });
+    </script>
+  </body>
 </html>
