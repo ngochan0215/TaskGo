@@ -30,10 +30,12 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
+    <script src="../../components/cus_header.js" defer></script>
+    <script src="../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat">
-    <div id="app-header"></div>
+    <app-header active="profile" heading="Tài khoản"></app-header>
 
     <main class="p-4 space-y-4 pb-20">
       <div class="flex flex-col items-center p-4 space-y-4">
@@ -162,9 +164,15 @@
           </h2>
 
           <div>
-            <label class="block mb-1 font-medium text-dark-900">Ngân hàng <span class="text-red-500">*</span></label>
-            <select id="bank-select" readonly disabled class="w-full p-3 border border-gray-300 rounded-lg
-                focus:ring-2 focus:ring-primary-500 outline-none bg-gray-50">
+            <label class="block mb-1 font-medium text-dark-900"
+              >Ngân hàng <span class="text-red-500">*</span></label
+            >
+            <select
+              id="bank-select"
+              readonly
+              disabled
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none bg-gray-50"
+            >
               <option value="">Đang tải danh sách ngân hàng...</option>
             </select>
           </div>
@@ -349,7 +357,7 @@
       </div>
     </div>
 
-    <div id="app-footer"></div>
+    <app-footer></app-footer>
 
     <script type="module">
       import { initLayout } from "../js/ui/shared-layout.js";

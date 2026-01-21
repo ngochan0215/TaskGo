@@ -12,12 +12,13 @@
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
   />
   <link rel="icon" type="image/x-icon" href="../../../public/favicons/favicon.ico">
+  <script src="../../../components/cus_header.js" defer></script>
+<script src="../../../components/cus_footer.js" defer></script>
 </head>
 
 <body class="bg-primary-100 min-h-screen font-montserrat">
 
-  <div id="app-header"></div>
-
+    <app-header active="home" heading="Chi tiết dịch vụ"></app-header>
   <main class="p-4 space-y-4 pb-20">
     <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
 
@@ -171,18 +172,7 @@
     </div>
   </main>
 
-  <!-- Mount Footer -->
-  <div id="app-footer"></div>
-
-  <!-- Init shared header/footer -->
-  <script type="module">
-    import { initLayout } from "../../js/ui/shared-layout.js";
-    initLayout({
-      role: "customer",
-      title: "Chi tiết dịch vụ",
-      active: "",
-    });
-  </script>
+    <app-footer></app-footer>
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script type="module">

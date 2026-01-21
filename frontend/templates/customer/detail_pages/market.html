@@ -22,29 +22,12 @@
       type="image/x-icon"
       href="../../../public/favicons/favicon.ico"
     />
+    <script src="../../../components/cus_header.js" defer></script>
+    <script src="../../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat">
-    <header class="bg-primary-200 py-4">
-      <div class="flex items-center justify-between px-4">
-        <div
-          class="text-primary-500 w-10 h-10 rounded-full bg-white flex items-center justify-center opacity-70"
-        >
-          <a href=""
-            ><img src="../../../public/images/taskgo-logo.png" alt=""
-          /></a>
-        </div>
-
-        <h1 class="font-bold text-xl text-dark-900">Chi tiết dịch vụ</h1>
-        <div class="w-10 h-10 flex items-center justify-center">
-          <a href=""
-            ><span class="material-symbols-outlined text-primary-500 text-4xl"
-              >menu</span
-            ></a
-          >
-        </div>
-      </div>
-    </header>
+    <app-header active="home" heading="Chi tiết dịch vụ"></app-header>
 
     <main class="p-4 space-y-4 pb-28">
       <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
@@ -175,30 +158,7 @@
       </div>
     </main>
 
-    <footer>
-      <nav
-        class="fixed bottom-0 left-0 right-0 bg-primary-200 border-t shadow-xl"
-      >
-        <div class="flex justify-around py-2 text-base">
-          <a href="#" class="flex flex-col items-center text-white">
-            <span class="material-symbols-outlined text-4xl">house</span>
-            Trang chủ
-          </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
-            <span class="material-symbols-outlined text-4xl">news</span>
-            Hoạt động
-          </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
-            <span class="material-symbols-outlined text-4xl">chat</span>
-            Tin nhắn
-          </a>
-          <a href="#" class="flex flex-col items-center text-primary-500">
-            <span class="material-symbols-outlined text-4xl">lightbulb</span>
-            Thông báo
-          </a>
-        </div>
-      </nav>
-    </footer>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
