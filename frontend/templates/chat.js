@@ -231,8 +231,8 @@ function initSocket() {
 // MAIN LOGIC
 
 async function init() {
-    renderUserInterface();
-    updateBackButton();
+  //  renderUserInterface();
+  //  updateBackButton();
 
     initSocket();
     setupEventListeners();
@@ -734,55 +734,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-function updateBackButton() {
-    const backButton = document.getElementById('backButton');
-    
-    if (backButton && state.currentOrderId) {
-        if (state.userRole === 'tasker') {
-            // Path for Taskers
-            backButton.href = `./tasker/tasker_order_progress.html`;
-        } else {
-            // Path for Customers
-            backButton.href = `./customer/customer_activity.html?orderId=${state.currentOrderId}`;
-        }
-    }
-}
 
-function renderUserInterface() {
-    if (state.userRole !== 'tasker') return;
-
-    // Hide Customer Elements
-    const appHeader = document.querySelector('app-header');
-    const appFooter = document.querySelector('app-footer');
-    
-    // Hide components instead of removing to prevent script errors if they are referenced elsewhere
-    if (appHeader) appHeader.style.display = 'none';
-    if (appFooter) appFooter.style.display = 'none';
-
-    // Hide the Sidebar Back Button
-    const sidebarBackBtn = document.querySelector('aside #backButton');
-    if (sidebarBackBtn) {
-        sidebarBackBtn.id = "hiddenSidebarButton"; // Rename ID to avoid conflict with new button
-        sidebarBackBtn.style.display = 'none';
-    }
-
-    // Inject Tasker Header 
-    const taskerNavHTML = `
-        <nav class="sticky top-0 z-[100] bg-white shadow-sm">
-            <header style="background-color: #A5B4FC;" class="flex items-center justify-between px-4 py-3 shadow-md">
-                <div class="flex items-center gap-3">
-                    <a id="backButton" href="#" class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]">
-                        <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                    </a>
-                    <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">Tin nhắn</h1>
-                </div>
-            </header>
-        </nav>
-    `;
-
-    // Insert at the very top of the body, before <main>
-    document.body.insertAdjacentHTML('afterbegin', taskerNavHTML);
-}
 
 // MESSAGE EDIT & DELETE FUNCTIONS
 
@@ -1590,5 +1542,5 @@ function updateSidebarConversation(payload, isViewed) {
 // Start
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    updateBackButton();
+   // updateBackButton();
 });
