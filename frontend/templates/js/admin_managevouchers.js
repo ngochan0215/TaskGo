@@ -2,17 +2,51 @@ const sidebarMobile = document.getElementById("sidebarMobile");
 const backdrop = document.getElementById("backdrop");
 
 if (sidebarMobile) {
-    window.openSidebar = function () {
-      sidebarMobile.classList.remove("-translate-x-full");
-      if (backdrop) backdrop.classList.remove("hidden");
-    };
-  }
-  if (backdrop) {
-    window.closeSidebar = function () {
-      if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
-      backdrop.classList.add("hidden");
-    };
-  }
+  window.openSidebar = function () {
+    sidebarMobile.classList.remove("-translate-x-full");
+    if (backdrop) backdrop.classList.remove("hidden");
+  };
+}
+if (backdrop) {
+  window.closeSidebar = function () {
+    if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
+    backdrop.classList.add("hidden");
+  };
+}
+
+// logic đăng xuất
+const logoutBtn = document.querySelectorAll(".logout-btn");
+logoutBtn.forEach((btn) => {
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("system_role");
+
+        alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+        window.location.href = "../auth/login-signup.html";
+      } else {
+        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error("LOGOUT ERROR:", err);
+      alert("Có lỗi xảy ra khi đăng xuất.");
+    }
+  });
+});
 
 const $ = (id) => document.getElementById(id);
 
@@ -41,11 +75,14 @@ let allVouchers = []; // Store all vouchers for client-side filtering
 
 async function loadServices() {
   try {
-    const res = await fetch(`${TASK_API_BASE}/service/all?status=active&task_status=active&limit=100`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const res = await fetch(
+      `${TASK_API_BASE}/service/all?status=active&task_status=active&limit=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     if (res.status === 401) {
       localStorage.removeItem("token");
@@ -56,10 +93,11 @@ async function loadServices() {
 
     const data = await res.json();
     if (data.success && data.services) {
-      allServices = data.services.filter(service => 
-        service.status === "active" && 
-        service.tasks && 
-        service.tasks.length > 0
+      allServices = data.services.filter(
+        (service) =>
+          service.status === "active" &&
+          service.tasks &&
+          service.tasks.length > 0,
       );
       renderServicesCheckboxes();
     }
@@ -73,7 +111,7 @@ async function loadServices() {
 
 function renderServicesCheckboxes() {
   const container = $("applicableModelContainer");
-  
+
   if (!allServices || allServices.length === 0) {
     container.innerHTML = `
       <div class="text-sm text-gray-500 text-center py-4">Không có dịch vụ nào</div>
@@ -82,13 +120,15 @@ function renderServicesCheckboxes() {
   }
 
   let html = '<div class="space-y-3">';
-  
-  allServices.forEach(service => {
+
+  allServices.forEach((service) => {
     const serviceId = service._id;
-    const activeTasks = service.tasks.filter(task => task.status === "active");
-    
+    const activeTasks = service.tasks.filter(
+      (task) => task.status === "active",
+    );
+
     if (activeTasks.length === 0) return;
-    
+
     html += `
       <div class="border border-gray-200 rounded-lg p-3 bg-white">
         <label class="flex items-center gap-2 cursor-pointer">
@@ -103,8 +143,8 @@ function renderServicesCheckboxes() {
         </label>
         <div class="ml-6 mt-2 space-y-1">
     `;
-    
-    activeTasks.forEach(task => {
+
+    activeTasks.forEach((task) => {
       const taskId = task._id;
       html += `
         <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
@@ -120,32 +160,38 @@ function renderServicesCheckboxes() {
         </label>
       `;
     });
-    
+
     html += `
         </div>
       </div>
     `;
   });
-  
-  html += '</div>';
+
+  html += "</div>";
   container.innerHTML = html;
 }
 
 function handleServiceCheckboxChange(checkbox, serviceId) {
   const isChecked = checkbox.checked;
-  const serviceTasks = document.querySelectorAll(`.task-checkbox[data-service-id="${serviceId}"]`);
-  
-  serviceTasks.forEach(taskCheckbox => {
+  const serviceTasks = document.querySelectorAll(
+    `.task-checkbox[data-service-id="${serviceId}"]`,
+  );
+
+  serviceTasks.forEach((taskCheckbox) => {
     taskCheckbox.checked = isChecked;
   });
 }
 
 function handleTaskCheckboxChange(checkbox) {
   const serviceId = checkbox.getAttribute("data-service-id");
-  const serviceCheckbox = document.querySelector(`.service-checkbox[data-id="${serviceId}"]`);
-  const serviceTasks = document.querySelectorAll(`.task-checkbox[data-service-id="${serviceId}"]`);
-  const allTasksChecked = Array.from(serviceTasks).every(cb => cb.checked);
-  
+  const serviceCheckbox = document.querySelector(
+    `.service-checkbox[data-id="${serviceId}"]`,
+  );
+  const serviceTasks = document.querySelectorAll(
+    `.task-checkbox[data-service-id="${serviceId}"]`,
+  );
+  const allTasksChecked = Array.from(serviceTasks).every((cb) => cb.checked);
+
   if (serviceCheckbox) {
     serviceCheckbox.checked = allTasksChecked;
   }
@@ -153,45 +199,53 @@ function handleTaskCheckboxChange(checkbox) {
 
 function getSelectedApplicableModels() {
   const selected = [];
-  
+
   // Get selected services
-  document.querySelectorAll(".service-checkbox:checked").forEach(checkbox => {
+  document.querySelectorAll(".service-checkbox:checked").forEach((checkbox) => {
     selected.push(checkbox.getAttribute("data-id"));
   });
-  
+
   // Get selected tasks
-  document.querySelectorAll(".task-checkbox:checked").forEach(checkbox => {
+  document.querySelectorAll(".task-checkbox:checked").forEach((checkbox) => {
     const serviceId = checkbox.getAttribute("data-service-id");
-    const serviceCheckbox = document.querySelector(`.service-checkbox[data-id="${serviceId}"]`);
-    
+    const serviceCheckbox = document.querySelector(
+      `.service-checkbox[data-id="${serviceId}"]`,
+    );
+
     // Only add task if its service is not already selected
     if (!serviceCheckbox || !serviceCheckbox.checked) {
       selected.push(checkbox.getAttribute("data-id"));
     }
   });
-  
+
   return selected;
 }
 
 function setSelectedApplicableModels(selectedIds) {
   if (!selectedIds || selectedIds.length === 0) return;
-  
+
   // Uncheck all first
-  document.querySelectorAll(".service-checkbox, .task-checkbox").forEach(cb => {
-    cb.checked = false;
-  });
-  
-  selectedIds.forEach(id => {
+  document
+    .querySelectorAll(".service-checkbox, .task-checkbox")
+    .forEach((cb) => {
+      cb.checked = false;
+    });
+
+  selectedIds.forEach((id) => {
     // Try to find as service
-    const serviceCheckbox = document.querySelector(`.service-checkbox[data-id="${id}"]`);
+    const serviceCheckbox = document.querySelector(
+      `.service-checkbox[data-id="${id}"]`,
+    );
     if (serviceCheckbox) {
       serviceCheckbox.checked = true;
       handleServiceCheckboxChange(serviceCheckbox, id);
       return;
     }
-    
+
     // Try to find as task
-    const taskCheckbox = document.querySelector(`.task-checkbox[data-id="${id}"]`);
+    const taskCheckbox = document.querySelector(
+      `.task-checkbox[data-id="${id}"]`,
+    );
     if (taskCheckbox) {
       taskCheckbox.checked = true;
       handleTaskCheckboxChange(taskCheckbox);
@@ -222,7 +276,7 @@ function formatDate(dateString) {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -239,9 +293,12 @@ function formatDateForInput(dateString) {
 
 function getStatusBadge(status) {
   const statusMap = {
-    upcoming: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">Sắp diễn ra</span>',
-    ongoing: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Đang hoạt động</span>',
-    finished: '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">Đã kết thúc</span>'
+    upcoming:
+      '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">Sắp diễn ra</span>',
+    ongoing:
+      '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700 border border-green-200">Đang hoạt động</span>',
+    finished:
+      '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-700 border border-gray-200">Đã kết thúc</span>',
   };
   return statusMap[status] || statusMap.finished;
 }
@@ -258,38 +315,39 @@ function getApplicableDisplay(applicable_model) {
   if (!applicable_model || applicable_model.length === 0) {
     return "Tất cả dịch vụ";
   }
-  
+
   // Try to find service/task names from allServices
   const names = [];
-  applicable_model.forEach(id => {
+  applicable_model.forEach((id) => {
     // Check if it's a service
-    const service = allServices.find(s => s._id === id);
+    const service = allServices.find((s) => s._id === id);
     if (service) {
       names.push(service.category_name);
       return;
     }
-    
+
     // Check if it's a task
     for (const s of allServices) {
-      const task = s.tasks?.find(t => t._id === id);
+      const task = s.tasks?.find((t) => t._id === id);
       if (task) {
         names.push(`${s.category_name} - ${task.task_name}`);
         return;
       }
     }
-    
+
     // Fallback to ID if not found
     names.push(id);
   });
-  
+
   return names.length > 0 ? names.join(", ") : applicable_model.join(", ");
 }
 
 async function loadVouchers() {
   try {
     // Check if we need to load all data for client-side search
-    const isSearchingByName = searchQuery && !/^[A-Z0-9]+$/.test(searchQuery.toUpperCase());
-    
+    const isSearchingByName =
+      searchQuery && !/^[A-Z0-9]+$/.test(searchQuery.toUpperCase());
+
     const params = new URLSearchParams();
     if (isSearchingByName) {
       // Load all data for client-side filtering
@@ -309,8 +367,8 @@ async function loadVouchers() {
 
     const res = await fetch(`${API_BASE}/voucher/all?${params.toString()}`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (res.status === 401) {
@@ -323,7 +381,7 @@ async function loadVouchers() {
     const data = await res.json();
     console.log("vouchers: ", data);
     const tbody = $("data-table-body");
-    
+
     if (!data.success || !data.data || data.data.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -340,13 +398,14 @@ async function loadVouchers() {
     let vouchers = data.data;
     if (isSearchingByName) {
       const queryLower = searchQuery.toLowerCase();
-      vouchers = vouchers.filter(v => 
-        v.name?.toLowerCase().includes(queryLower) ||
-        v.description?.toLowerCase().includes(queryLower)
+      vouchers = vouchers.filter(
+        (v) =>
+          v.name?.toLowerCase().includes(queryLower) ||
+          v.description?.toLowerCase().includes(queryLower),
       );
       allVouchers = vouchers;
       totalItems = vouchers.length;
-      
+
       // Client-side pagination
       const startIndex = (currentPage - 1) * itemsPerPage;
       const endIndex = startIndex + itemsPerPage;
@@ -366,14 +425,17 @@ async function loadVouchers() {
       return;
     }
 
-    tbody.innerHTML = vouchers.map(voucher => {
-      const discountDisplay = getDiscountDisplay(voucher.discount);
-      const applicableDisplay = getApplicableDisplay(voucher.applicable_model);
-      const beginDate = formatDate(voucher.begin_date);
-      const endDate = formatDate(voucher.end_date);
-      const statusBadge = getStatusBadge(voucher.status);
-      
-      return `
+    tbody.innerHTML = vouchers
+      .map((voucher) => {
+        const discountDisplay = getDiscountDisplay(voucher.discount);
+        const applicableDisplay = getApplicableDisplay(
+          voucher.applicable_model,
+        );
+        const beginDate = formatDate(voucher.begin_date);
+        const endDate = formatDate(voucher.end_date);
+        const statusBadge = getStatusBadge(voucher.status);
+
+        return `
         <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
           <td class="p-4 font-medium text-slate-800">${voucher.code || ""}</td>
           <td class="p-4 text-slate-600 text-sm">
@@ -406,7 +468,8 @@ async function loadVouchers() {
           </td>
         </tr>
       `;
-    }).join("");
+      })
+      .join("");
 
     updatePagination();
   } catch (err) {
@@ -425,18 +488,32 @@ async function openVoucherModal(mode, id) {
   currentVoucherId = id || null;
   const isViewMode = mode === "view";
   const isEditMode = mode === "edit";
-  
-  $("voucherModalTitle").textContent = 
-    mode === "add" ? "Thêm voucher" : 
-    mode === "view" ? "Chi tiết voucher" : 
-    "Sửa voucher";
+
+  $("voucherModalTitle").textContent =
+    mode === "add"
+      ? "Thêm voucher"
+      : mode === "view"
+        ? "Chi tiết voucher"
+        : "Sửa voucher";
 
   // Disable/enable fields based on mode
-  const fields = ["voucherCode", "voucherName", "voucherDescription", "voucherBeginDate", 
-    "voucherEndDate", "discountType", "discountValue", "maxDiscount", "totalQuantity", 
-    "perUserLimit", "ruleType", "minOrderValue", "applicableModel"];
-  
-  fields.forEach(fieldId => {
+  const fields = [
+    "voucherCode",
+    "voucherName",
+    "voucherDescription",
+    "voucherBeginDate",
+    "voucherEndDate",
+    "discountType",
+    "discountValue",
+    "maxDiscount",
+    "totalQuantity",
+    "perUserLimit",
+    "ruleType",
+    "minOrderValue",
+    "applicableModel",
+  ];
+
+  fields.forEach((fieldId) => {
     const field = $(fieldId);
     if (field) {
       field.disabled = isViewMode;
@@ -455,8 +532,10 @@ async function openVoucherModal(mode, id) {
 
   // Enable/disable checkboxes based on mode
   setTimeout(() => {
-    const checkboxes = document.querySelectorAll(".service-checkbox, .task-checkbox");
-    checkboxes.forEach(cb => {
+    const checkboxes = document.querySelectorAll(
+      ".service-checkbox, .task-checkbox",
+    );
+    checkboxes.forEach((cb) => {
       cb.disabled = isViewMode;
       if (isViewMode) {
         cb.parentElement.style.opacity = "0.6";
@@ -472,11 +551,11 @@ async function openVoucherModal(mode, id) {
     // Load voucher data
     fetch(`${API_BASE}/voucher/${id}`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.success && data.voucher) {
           const v = data.voucher;
           $("voucherCode").value = v.code || "";
@@ -492,12 +571,12 @@ async function openVoucherModal(mode, id) {
           $("ruleType").value = v.conditions?.rule_type || "GENERAL";
           $("minOrderValue").value = v.conditions?.min_order_value || "0";
           //$("applicableModel").value = Array.isArray(v.applicable_model) ? v.applicable_model.join(", ") : "";
-          
+
           setSelectedApplicableModels(v.applicable_model || []);
           updateMaxDiscountVisibility();
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading voucher:", err);
         toast("Không thể tải thông tin voucher");
       });
@@ -542,7 +621,9 @@ async function saveVoucher() {
   const end_date = $("voucherEndDate").value;
   const discountType = $("discountType").value;
   const discountValue = Number($("discountValue").value);
-  const maxDiscount = $("maxDiscount").value ? Number($("maxDiscount").value) : undefined;
+  const maxDiscount = $("maxDiscount").value
+    ? Number($("maxDiscount").value)
+    : undefined;
   const total_quantity = Number($("totalQuantity").value);
   const per_user_limit = Number($("perUserLimit").value);
   const rule_type = $("ruleType").value;
@@ -582,7 +663,7 @@ async function saveVoucher() {
 
   const discount = {
     type: discountType,
-    value: discountValue
+    value: discountValue,
   };
   if (discountType === "PERCENT" && maxDiscount) {
     discount.max_discount = maxDiscount;
@@ -590,12 +671,10 @@ async function saveVoucher() {
 
   const conditions = {
     rule_type: rule_type,
-    min_order_value: min_order_value
+    min_order_value: min_order_value,
   };
 
-  const applicable_model = applicableModel.length > 0
-    ? applicableModel
-    : [];
+  const applicable_model = applicableModel.length > 0 ? applicableModel : [];
 
   const payload = {
     code,
@@ -607,7 +686,8 @@ async function saveVoucher() {
     total_quantity,
     per_user_limit,
     conditions,
-    applicable_model: applicable_model.length > 0 ? applicable_model : undefined
+    applicable_model:
+      applicable_model.length > 0 ? applicable_model : undefined,
   };
 
   try {
@@ -618,9 +698,9 @@ async function saveVoucher() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
     } else {
       // Create
@@ -628,9 +708,9 @@ async function saveVoucher() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
     }
 
@@ -663,8 +743,8 @@ async function confirmDeleteVoucher() {
     const res = await fetch(`${API_BASE}/voucher/${deleteVoucherId}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await res.json();
@@ -694,21 +774,29 @@ function updatePagination() {
   const startIndex = totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  $("paginationInfo").innerHTML = 
+  $("paginationInfo").innerHTML =
     `Hiển thị <span class="font-bold">${startIndex}-${endIndex}</span> trên <span class="font-bold">${totalItems}</span> voucher`;
 
   const buttonsHTML = `
-    <button onclick="previousPage()" ${currentPage === 1 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+    <button onclick="previousPage()" ${currentPage === 1 ? "disabled" : ""} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
       <span class="material-symbols-outlined text-sm">chevron_left</span>
     </button>
-    ${Array.from({length: totalPages}, (_, i) => i + 1)
-      .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
-      .map(page => `
-        <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === currentPage ? 'bg-primary-500 text-white' : 'border border-gray-200 hover:bg-gray-50 text-gray-600'} font-bold text-sm">
+    ${Array.from({ length: totalPages }, (_, i) => i + 1)
+      .filter(
+        (page) =>
+          page === 1 ||
+          page === totalPages ||
+          Math.abs(page - currentPage) <= 1,
+      )
+      .map(
+        (page) => `
+        <button onclick="goToPage(${page})" class="w-8 h-8 flex items-center justify-center rounded ${page === currentPage ? "bg-primary-500 text-white" : "border border-gray-200 hover:bg-gray-50 text-gray-600"} font-bold text-sm">
           ${page}
         </button>
-      `).join('')}
-    <button onclick="nextPage()" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
+      `,
+      )
+      .join("")}
+    <button onclick="nextPage()" ${currentPage === totalPages || totalPages === 0 ? "disabled" : ""} class="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50 text-gray-500 disabled:opacity-50 disabled:cursor-not-allowed">
       <span class="material-symbols-outlined text-sm">chevron_right</span>
     </button>
   `;
@@ -757,14 +845,15 @@ function renderVouchersFromCache() {
     return;
   }
 
-  tbody.innerHTML = vouchers.map(voucher => {
-    const discountDisplay = getDiscountDisplay(voucher.discount);
-    const applicableDisplay = getApplicableDisplay(voucher.applicable_model);
-    const beginDate = formatDate(voucher.begin_date);
-    const endDate = formatDate(voucher.end_date);
-    const statusBadge = getStatusBadge(voucher.status);
-    
-    return `
+  tbody.innerHTML = vouchers
+    .map((voucher) => {
+      const discountDisplay = getDiscountDisplay(voucher.discount);
+      const applicableDisplay = getApplicableDisplay(voucher.applicable_model);
+      const beginDate = formatDate(voucher.begin_date);
+      const endDate = formatDate(voucher.end_date);
+      const statusBadge = getStatusBadge(voucher.status);
+
+      return `
       <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
         <td class="p-4 font-medium text-slate-800">${voucher.code || ""}</td>
         <td class="p-4 text-slate-600 text-sm">
@@ -797,7 +886,8 @@ function renderVouchersFromCache() {
         </td>
       </tr>
     `;
-  }).join("");
+    })
+    .join("");
 
   updatePagination();
 }
@@ -840,12 +930,15 @@ $("filterActive").addEventListener("change", () => {
   loadVouchers();
 });
 
-$("searchInput").addEventListener("input", debounce(() => {
-  searchQuery = $("searchInput").value.trim();
-  currentPage = 1;
-  allVouchers = []; // Clear cache when search changes
-  loadVouchers();
-}, 500));
+$("searchInput").addEventListener(
+  "input",
+  debounce(() => {
+    searchQuery = $("searchInput").value.trim();
+    currentPage = 1;
+    allVouchers = []; // Clear cache when search changes
+    loadVouchers();
+  }, 500),
+);
 
 function debounce(func, wait) {
   let timeout;
