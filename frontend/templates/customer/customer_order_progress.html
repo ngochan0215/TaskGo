@@ -76,6 +76,8 @@
         animation: subtle-pulse 2s infinite;
       }
     </style>
+<script src="../../components/cus_header.js" defer></script>
+<script src="../../components/cus_footer.js" defer></script>
   </head>
 
   <body
@@ -83,41 +85,7 @@
     class="text-[#111827] min-h-screen flex flex-col"
   >
     <nav class="sticky top-0 z-[100] bg-white shadow-sm">
-      <header
-        style="background-color: #a5b4fc"
-        class="flex items-center justify-between px-4 py-3 shadow-md"
-      >
-        <div class="flex items-center gap-3">
-          <a
-            href="./customer_activity.html"
-            class="flex-shrink-0 w-9 h-9 bg-white rounded-full p-1 flex items-center justify-center shadow-sm hover:bg-gray-50 transition text-[#3730A3]"
-          >
-            <span class="material-symbols-outlined text-[20px]"
-              >arrow_back</span
-            >
-          </a>
-          <h1 class="text-[#111827] font-bold text-lg uppercase tracking-wide">
-            Chi tiết đơn hàng
-          </h1>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <a
-            id="headerPhoneLink"
-            href="tel:0909123123"
-            class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
-          >
-            <span class="material-symbols-outlined text-[#111827]">call</span>
-          </a>
-          <button
-            id="headerChatBtn"
-            class="w-9 h-9 flex items-center justify-center bg-white/20 rounded-full hover:bg-white/40 transition"
-            onclick="openChat()"
-          >
-            <span class="material-symbols-outlined text-[#111827]">chat</span>
-          </button>
-        </div>
-      </header>
+      <app-header active="home" heading="Chi tiết đơn hàng"></app-header>
     </nav>
 
     <main class="flex-grow p-4 md:py-6 md:px-6">
@@ -590,12 +558,8 @@
       </div>
     </main>
 
-    <footer class="mt-auto py-6 border-t border-gray-200 bg-white">
-      <div class="text-center text-xs text-gray-400">
-        &copy; 2025 TaskGo - Nhóm 8 UIT. All rights reserved.
-      </div>
-    </footer>
-
+    <nav class="mt-6">
+      <app-footer></app-footer>
     <!-- Tasker Info Modal -->
     <div id="taskerModal" class="fixed inset-0 z-50 hidden">
       <div
