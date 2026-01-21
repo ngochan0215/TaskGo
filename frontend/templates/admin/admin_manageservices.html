@@ -33,152 +33,142 @@
   <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden" onclick="closeSidebar()"></div>
 
   <aside id="sidebarMobile"
-        class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
-        <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
-            <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                <span class="text-primary-500 font-bold text-xs"><img src="../../public/images/taskgo-logo.png"
-                        alt="TaskGo logo" class="w-9 h-9 object-contain" /></span>
-            </div>
-            <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
-        </div>
+    class="fixed inset-y-0 left-0 z-50 w-64 transform bg-gray-800 text-white transition-transform duration-200 -translate-x-full lg:hidden">
+    <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+      <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+        <span class="text-primary-500 font-bold text-xs"><img src="../../public/images/taskgo-logo.png"
+            alt="TaskGo logo" class="w-9 h-9 object-contain" /></span>
+      </div>
+      <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+    </div>
 
-        <nav class="p-3 flex-1 space-y-1">
-            <a class="sidebar-link" href="./admin_home.html">
-                <span class="material-symbols-outlined">home</span>
-                Trang chủ
-            </a>
+    <nav class="p-3 flex-1 space-y-1">
+      <a class="sidebar-link" href="./admin_home.html">
+        <span class="material-symbols-outlined">home</span>
+        Trang chủ
+      </a>
 
-            <a class="sidebar-link" href="./admin_managecustomers.html">
-                <span class="material-symbols-outlined">person</span>
-                Quản lý Customer
-            </a>
+      <a class="sidebar-link" href="./admin_managecustomers.html">
+        <span class="material-symbols-outlined">person</span>
+        Quản lý Customer
+      </a>
 
-            <a class="sidebar-link" href="./admin_managetaskers.html">
-                <span class="material-symbols-outlined">badge</span>
-                Quản lý Tasker
-            </a>
+      <a class="sidebar-link" href="./admin_managetaskers.html">
+        <span class="material-symbols-outlined">badge</span>
+        Quản lý Tasker
+      </a>
 
-            <a class="sidebar-link active" href="./admin_manageservices.html">
-                <span class="material-symbols-outlined">design_services</span>
-                Quản lý Dịch vụ
-            </a>
+      <a class="sidebar-link active" href="./admin_manageservices.html">
+        <span class="material-symbols-outlined">design_services</span>
+        Quản lý Dịch vụ
+      </a>
 
-            <a class="sidebar-link" href="./admin_manageorders.html">
-                <span class="material-symbols-outlined">shopping_bag</span>
-                Quản lý Đơn hàng
-            </a>
+      <a class="sidebar-link" href="./admin_manageorders.html">
+        <span class="material-symbols-outlined">shopping_bag</span>
+        Quản lý Đơn hàng
+      </a>
 
-            <a class="sidebar-link" href="./admin_manageinvoices.html">
-                <span class="material-symbols-outlined">payments</span>
-                Quản lý Hóa đơn
-            </a>
+      <a class="sidebar-link" href="./admin_manageinvoices.html">
+        <span class="material-symbols-outlined">payments</span>
+        Quản lý Hóa đơn
+      </a>
 
-            <a class="sidebar-link" href="./admin_managereviews.html">
-                <span class="material-symbols-outlined">rate_review</span>
-                Quản lý Đánh giá
-            </a>
+      <a class="sidebar-link" href="./admin_managereviews.html">
+        <span class="material-symbols-outlined">rate_review</span>
+        Quản lý Đánh giá
+      </a>
 
-            <a class="sidebar-link" href="./admin_managediscounts.html">
-                <span class="material-symbols-outlined">percent_discount</span>
-                Quản lý Khuyến mãi
-            </a>
+      <a class="sidebar-link" href="./admin_managediscounts.html">
+        <span class="material-symbols-outlined">percent_discount</span>
+        Quản lý Khuyến mãi
+      </a>
 
-            <a class="sidebar-link" href="./admin_managevouchers.html">
-                <span class="material-symbols-outlined">local_activity</span>
-                Quản lý Voucher
-            </a>
+      <a class="sidebar-link" href="./admin_managevouchers.html">
+        <span class="material-symbols-outlined">local_activity</span>
+        Quản lý Voucher
+      </a>
 
-            <a class="sidebar-link" href="./admin_report.html">
-                <span class="material-symbols-outlined">bar_chart</span>
-                Báo cáo Thống kê
-            </a>
+      <a class="sidebar-link" href="./admin_report.html">
+        <span class="material-symbols-outlined">bar_chart</span>
+        Báo cáo Thống kê
+      </a>
 
-            <a class="sidebar-link" href="#">
-                <span class="material-symbols-outlined">settings</span>
-                Cài đặt
-            </a>
-        </nav>
-        <div class="p-3 border-t border-white/10">
-            <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
-                <span class="material-symbols-outlined">logout</span>
-                Đăng xuất
-            </a>
-        </div>
-    </aside>
+    </nav>
+    <div class="p-3 border-t border-white/10">
+      <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
+        <span class="material-symbols-outlined">logout</span>
+        Đăng xuất
+      </a>
+    </div>
+  </aside>
 
   <div class="flex min-h-screen">
     <aside class="w-64 bg-gray-800 text-white hidden lg:flex flex-col shrink-0">
-            <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
-                <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
-                    <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
-                </div>
-                <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
-            </div>
+      <div class="h-14 px-5 flex items-center gap-3 border-b border-white/10">
+        <div class="w-9 h-9 rounded-full bg-white flex items-center justify-center overflow-hidden">
+          <img src="../../public/images/taskgo-logo.png" alt="TaskGo logo" class="w-9 h-9 object-contain" />
+        </div>
+        <div class="font-semibold text-sm tracking-wide">TaskGo Admin</div>
+      </div>
 
-            <nav class="p-3 flex-1 space-y-1">
-                <a class="sidebar-link" href="./admin_home.html">
-                    <span class="material-symbols-outlined">home</span>
-                    Trang chủ
-                </a>
+      <nav class="p-3 flex-1 space-y-1">
+        <a class="sidebar-link" href="./admin_home.html">
+          <span class="material-symbols-outlined">home</span>
+          Trang chủ
+        </a>
 
-                <a class="sidebar-link" href="./admin_managecustomers.html">
-                    <span class="material-symbols-outlined">person</span>
-                    Quản lý Customer
-                </a>
+        <a class="sidebar-link" href="./admin_managecustomers.html">
+          <span class="material-symbols-outlined">person</span>
+          Quản lý Customer
+        </a>
 
-                <a class="sidebar-link" href="./admin_managetaskers.html">
-                    <span class="material-symbols-outlined">badge</span>
-                    Quản lý Tasker
-                </a>
+        <a class="sidebar-link" href="./admin_managetaskers.html">
+          <span class="material-symbols-outlined">badge</span>
+          Quản lý Tasker
+        </a>
 
-                <a class="sidebar-link active" href="./admin_manageservices.html">
-                    <span class="material-symbols-outlined">design_services</span>
-                    Quản lý Dịch vụ
-                </a>
+        <a class="sidebar-link active" href="./admin_manageservices.html">
+          <span class="material-symbols-outlined">design_services</span>
+          Quản lý Dịch vụ
+        </a>
 
-                <a class="sidebar-link" href="./admin_manageorders.html">
-                    <span class="material-symbols-outlined">shopping_bag</span>
-                    Quản lý Đơn hàng
-                </a>
+        <a class="sidebar-link" href="./admin_manageorders.html">
+          <span class="material-symbols-outlined">shopping_bag</span>
+          Quản lý Đơn hàng
+        </a>
 
-                <a class="sidebar-link" href="./admin_manageinvoices.html">
-                    <span class="material-symbols-outlined">payments</span>
-                    Quản lý Hóa đơn
-                </a>
+        <a class="sidebar-link" href="./admin_manageinvoices.html">
+          <span class="material-symbols-outlined">payments</span>
+          Quản lý Hóa đơn
+        </a>
 
-                <a class="sidebar-link" href="./admin_managereviews.html">
-                    <span class="material-symbols-outlined">rate_review</span>
-                    Quản lý Đánh giá
-                </a>
+        <a class="sidebar-link" href="./admin_managereviews.html">
+          <span class="material-symbols-outlined">rate_review</span>
+          Quản lý Đánh giá
+        </a>
 
-                <a class="sidebar-link" href="./admin_managediscounts.html">
-                    <span class="material-symbols-outlined">percent_discount</span>
-                    Quản lý Khuyến mãi
-                </a>
+        <a class="sidebar-link" href="./admin_managediscounts.html">
+          <span class="material-symbols-outlined">percent_discount</span>
+          Quản lý Khuyến mãi
+        </a>
 
-                <a class="sidebar-link" href="./admin_managevouchers.html">
-                    <span class="material-symbols-outlined">local_activity</span>
-                    Quản lý Voucher
-                </a>
+        <a class="sidebar-link" href="./admin_managevouchers.html">
+          <span class="material-symbols-outlined">local_activity</span>
+          Quản lý Voucher
+        </a>
 
-                <a class="sidebar-link" href="./admin_report.html">
-                    <span class="material-symbols-outlined">bar_chart</span>
-                    Báo cáo Thống kê
-                </a>
+        <a class="sidebar-link" href="./admin_report.html">
+          <span class="material-symbols-outlined">bar_chart</span>
+          Báo cáo Thống kê
+        </a>
 
-                <a class="sidebar-link" href="#">
-                    <span class="material-symbols-outlined">settings</span>
-                    Cài đặt
-                </a>
-            </nav>
-
-            <div class="p-3 border-t border-white/10">
-                <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
-                    <span class="material-symbols-outlined">logout</span>
-                    Đăng xuất
-                </a>
-            </div>
-        </aside>
+      <div class="p-3 border-t border-white/10">
+        <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
+          <span class="material-symbols-outlined">logout</span>
+          Đăng xuất
+        </a>
+      </div>
+    </aside>
 
     <div class="flex-1 min-w-0 flex flex-col h-screen overflow-hidden">
       <header class="h-14 bg-gray-700 text-white flex items-center justify-between px-4 shrink-0 shadow-md z-10">
@@ -196,12 +186,11 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button
-            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm"
-            type="button">
+          <a href="./admin_notification.html"
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-white/10 hover:bg-white/15 transition text-sm">
             <span class="material-symbols-outlined">notifications</span>
             <span class="hidden sm:inline">Thông báo</span>
-          </button>
+          </a>
         </div>
       </header>
 
