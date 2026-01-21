@@ -20,6 +20,9 @@
       href="../../public/favicons/favicon.ico"
     />
 
+    <script src="../../components/cus_header.js" defer></script>
+    <script src="../../components/cus_footer.js" defer></script>
+
     <style>
       .modal {
         display: none;
@@ -80,21 +83,19 @@
       }
 
       #promo-list {
-        -ms-overflow-style: none;  
-        scrollbar-width: none;     
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
-
       #promo-list::-webkit-scrollbar {
-        display: none;            
+        display: none;
       }
     </style>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <!-- Shared header injected here -->
-    <div id="app-header"></div>
+    <app-header active="home" heading="Trang chủ"></app-header>
 
-    <main class="p-4 pb-20 flex-grow">
+    <main class="p-4 pb-6 flex-grow">
       <section class="mb-5">
         <div class="bg-white shadow-md rounded-2xl p-3 border border-gray-100">
           <div class="flex items-center gap-2">
@@ -404,49 +405,84 @@
       </div>
     </div>
 
-    <!-- Promotion Detail Modal -->
     <div id="promo-modal" class="modal">
-      <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-content" style="max-width: 600px">
         <span class="close-modal" onclick="closePromoModal()">&times;</span>
-        
+
         <div class="mb-4">
           <div class="flex items-center gap-2 mb-2">
-            <span id="promo-modal-type-badge" class="text-xs font-bold px-3 py-1 rounded-full"></span>
-            <span id="promo-modal-code" class="text-lg font-bold text-primary-500 font-mono"></span>
+            <span
+              id="promo-modal-type-badge"
+              class="text-xs font-bold px-3 py-1 rounded-full"
+            ></span>
+            <span
+              id="promo-modal-code"
+              class="text-lg font-bold text-primary-500 font-mono"
+            ></span>
           </div>
-          <h3 id="promo-modal-name" class="text-2xl font-black text-dark-900 mb-2"></h3>
-          <p id="promo-modal-description" class="text-sm text-gray-600 mb-4"></p>
+          <h3
+            id="promo-modal-name"
+            class="text-2xl font-black text-dark-900 mb-2"
+          ></h3>
+          <p
+            id="promo-modal-description"
+            class="text-sm text-gray-600 mb-4"
+          ></p>
         </div>
 
         <div class="space-y-3 text-sm border-t border-gray-100 pt-4">
           <div class="flex justify-between items-center">
             <span class="text-gray-500">Giá trị khuyến mãi:</span>
-            <span id="promo-modal-discount" class="font-bold text-lg text-primary-500"></span>
+            <span
+              id="promo-modal-discount"
+              class="font-bold text-lg text-primary-500"
+            ></span>
           </div>
 
           <div class="flex justify-between">
             <span class="text-gray-500">Thời gian:</span>
-            <span id="promo-modal-dates" class="font-medium text-dark-900 text-right"></span>
+            <span
+              id="promo-modal-dates"
+              class="font-medium text-dark-900 text-right"
+            ></span>
           </div>
 
-          <div id="promo-modal-conditions" class="border-t border-gray-100 pt-3 space-y-2">
+          <div
+            id="promo-modal-conditions"
+            class="border-t border-gray-100 pt-3 space-y-2"
+          >
             <p class="text-gray-500 font-semibold mb-2">Điều kiện áp dụng:</p>
             <div id="promo-modal-conditions-list" class="space-y-1"></div>
           </div>
 
-          <div id="promo-modal-eligibility" class="border-t border-gray-100 pt-3">
+          <div
+            id="promo-modal-eligibility"
+            class="border-t border-gray-100 pt-3"
+          >
             <div id="promo-modal-eligibility-status" class="mb-2"></div>
-            <div id="promo-modal-eligibility-reasons" class="text-xs space-y-1"></div>
+            <div
+              id="promo-modal-eligibility-reasons"
+              class="text-xs space-y-1"
+            ></div>
           </div>
 
-          <div id="promo-modal-voucher-info" class="border-t border-gray-100 pt-3 space-y-2 hidden">
+          <div
+            id="promo-modal-voucher-info"
+            class="border-t border-gray-100 pt-3 space-y-2 hidden"
+          >
             <div class="flex justify-between">
               <span class="text-gray-500">Số lượng còn lại:</span>
-              <span id="promo-modal-remaining" class="font-medium text-dark-900"></span>
+              <span
+                id="promo-modal-remaining"
+                class="font-medium text-dark-900"
+              ></span>
             </div>
             <div class="flex justify-between">
               <span class="text-gray-500">Bạn đã dùng:</span>
-              <span id="promo-modal-used-by-user" class="font-medium text-dark-900"></span>
+              <span
+                id="promo-modal-used-by-user"
+                class="font-medium text-dark-900"
+              ></span>
             </div>
           </div>
         </div>
@@ -459,7 +495,9 @@
             class="flex-1 text-sm font-bold text-white px-4 py-2.5 rounded-xl shadow-sm hover:opacity-90 transition"
             style="background: #3b5f43"
           >
-            <span class="material-symbols-outlined text-sm align-middle mr-1">content_copy</span>
+            <span class="material-symbols-outlined text-sm align-middle mr-1"
+              >content_copy</span
+            >
             Copy mã
           </button>
           <button
@@ -473,13 +511,7 @@
       </div>
     </div>
 
-    <!-- Shared footer injected here -->
-    <div id="app-footer"></div>
-
-    <script type="module">
-      import { initLayout } from "../js/ui/shared-layout.js";
-      initLayout({ role: "customer", title: "Trang chủ", active: "home" });
-    </script>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
@@ -488,6 +520,5 @@
     </script>
 
     <script type="module" src="../js/customer_home.js"></script>
-
   </body>
 </html>

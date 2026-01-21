@@ -19,11 +19,12 @@
       type="image/x-icon"
       href="../../public/favicons/favicon.ico"
     />
+    <script src="../../components/cus_header.js" defer></script>
+    <script src="../../components/cus_footer.js" defer></script>
   </head>
 
   <body class="bg-primary-100 min-h-screen font-montserrat flex flex-col">
-    <!-- Shared header injected here -->
-    <div id="app-header"></div>
+    <app-header active="scheduledBooking" heading="Đặt lịch trước"></app-header>
 
     <main class="p-4 space-y-4 pb-20 flex-grow">
       <div class="bg-white rounded-xl shadow-md p-4 space-y-4">
@@ -110,14 +111,7 @@
       </div>
     </main>
 
-    <!-- Shared footer injected here -->
-    <div id="app-footer"></div>
-
-    <!-- Shared layout init -->
-    <script type="module">
-      import { initLayout } from "../js/ui/shared-layout.js";
-      initLayout({ role: "customer", title: "Đặt lịch trước", active: "" });
-    </script>
+    <app-footer></app-footer>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
