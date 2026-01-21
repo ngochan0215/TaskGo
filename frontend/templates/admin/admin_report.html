@@ -118,7 +118,7 @@
             </a>
         </nav>
         <div class="p-3 border-t border-white/10">
-            <a class="sidebar-link hover-text-red-400" href="#">
+            <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
                 <span class="material-symbols-outlined">logout</span>
                 Đăng xuất
             </a>
@@ -192,7 +192,7 @@
             </nav>
 
             <div class="p-3 border-t border-white/10">
-                <a class="sidebar-link hover-text-red-400" href="#">
+                <a class="sidebar-link hover-text-red-400 logout-btn" href="#">
                     <span class="material-symbols-outlined">logout</span>
                     Đăng xuất
                 </a>
@@ -569,6 +569,41 @@
             document.getElementById("sidebarMobile").classList.add("-translate-x-full");
             document.getElementById("backdrop").classList.add("hidden");
         }
+
+        // logic đăng xuất
+        const logoutBtn = document.querySelectorAll(".logout-btn");
+        logoutBtn.forEach((btn) => {
+            btn.addEventListener("click", async (e) => {
+                e.preventDefault();
+
+                try {
+                    const res = await fetch("http://localhost:3000/api/auth/logout", {
+                        method: "POST",
+                        credentials: "include",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
+
+                    const data = await res.json();
+
+                    if (data.success) {
+                        localStorage.removeItem("token");
+                        localStorage.removeItem("user_id");
+                        localStorage.removeItem("system_role");
+
+                        alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+                        window.location.href = "../auth/login-signup.html";
+                    } else {
+                        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+                    }
+                } catch (err) {
+                    console.error("LOGOUT ERROR:", err);
+                    alert("Có lỗi xảy ra khi đăng xuất.");
+                }
+            });
+        });
+
         function switchTab(tabName) {
             // Hide all tabs
             document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));

@@ -14,6 +14,40 @@ if (backdrop) {
   };
 }
 
+// logic đăng xuất
+  const logoutBtn = document.querySelectorAll(".logout-btn");
+  logoutBtn.forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      try {
+        const res = await fetch("http://localhost:3000/api/auth/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user_id");
+          localStorage.removeItem("system_role");
+
+          alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+          window.location.href = "../auth/login-signup.html";
+        } else {
+          alert("Đăng xuất thất bại. Vui lòng thử lại.");
+        }
+      } catch (err) {
+        console.error("LOGOUT ERROR:", err);
+        alert("Có lỗi xảy ra khi đăng xuất.");
+      }
+    });
+  });
+
 const $ = (id) => document.getElementById(id);
 
 // Check authentication

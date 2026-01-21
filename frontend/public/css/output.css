@@ -4670,15 +4670,6 @@ header {
   .lg\:items-center {
     align-items: center;
   }
-
-  .lg\:p-6 {
-    padding: 1.5rem;
-  }
-
-  .lg\:px-6 {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
 }
 
 @media (min-width: 1280px) {

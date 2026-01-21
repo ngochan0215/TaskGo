@@ -2,17 +2,51 @@ const sidebarMobile = document.getElementById("sidebarMobile");
 const backdrop = document.getElementById("backdrop");
 
 if (sidebarMobile) {
-    window.openSidebar = function () {
-      sidebarMobile.classList.remove("-translate-x-full");
-      if (backdrop) backdrop.classList.remove("hidden");
-    };
-  }
-  if (backdrop) {
-    window.closeSidebar = function () {
-      if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
-      backdrop.classList.add("hidden");
-    };
-  }
+  window.openSidebar = function () {
+    sidebarMobile.classList.remove("-translate-x-full");
+    if (backdrop) backdrop.classList.remove("hidden");
+  };
+}
+if (backdrop) {
+  window.closeSidebar = function () {
+    if (sidebarMobile) sidebarMobile.classList.add("-translate-x-full");
+    backdrop.classList.add("hidden");
+  };
+}
+
+// logic đăng xuất
+const logoutBtn = document.querySelectorAll(".logout-btn");
+logoutBtn.forEach((btn) => {
+  btn.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("http://localhost:3000/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("system_role");
+
+        alert("Đăng xuất thành công. Bạn sẽ được chuyển về trang Đăng nhập.");
+        window.location.href = "../auth/login-signup.html";
+      } else {
+        alert("Đăng xuất thất bại. Vui lòng thử lại.");
+      }
+    } catch (err) {
+      console.error("LOGOUT ERROR:", err);
+      alert("Có lỗi xảy ra khi đăng xuất.");
+    }
+  });
+});
 
 const $ = (id) => document.getElementById(id);
 
@@ -34,11 +68,14 @@ let allServices = [];
 
 async function loadServices() {
   try {
-    const res = await fetch(`${TASK_API_BASE}/service/all?status=active&task_status=active&limit=100`, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    const res = await fetch(
+      `${TASK_API_BASE}/service/all?status=active&task_status=active&limit=100`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
 
     if (res.status === 401) {
       localStorage.removeItem("token");
@@ -49,10 +86,11 @@ async function loadServices() {
 
     const data = await res.json();
     if (data.success && data.services) {
-      allServices = data.services.filter(service => 
-        service.status === "active" && 
-        service.tasks && 
-        service.tasks.length > 0
+      allServices = data.services.filter(
+        (service) =>
+          service.status === "active" &&
+          service.tasks &&
+          service.tasks.length > 0,
       );
       renderServicesCheckboxes();
     }
@@ -66,7 +104,7 @@ async function loadServices() {
 
 function renderServicesCheckboxes() {
   const container = $("applicableModelContainer");
-  
+
   if (!allServices || allServices.length === 0) {
     container.innerHTML = `
       <div class="text-sm text-gray-500 text-center py-4">Không có dịch vụ nào</div>
@@ -75,13 +113,15 @@ function renderServicesCheckboxes() {
   }
 
   let html = '<div class="space-y-3">';
-  
-  allServices.forEach(service => {
+
+  allServices.forEach((service) => {
     const serviceId = service._id;
-    const activeTasks = service.tasks.filter(task => task.status === "active");
-    
+    const activeTasks = service.tasks.filter(
+      (task) => task.status === "active",
+    );
+
     if (activeTasks.length === 0) return;
-    
+
     html += `
       <div class="border border-gray-200 rounded-lg p-3 bg-white">
         <label class="flex items-center gap-2 cursor-pointer">
@@ -96,8 +136,8 @@ function renderServicesCheckboxes() {
         </label>
         <div class="ml-6 mt-2 space-y-1">
     `;
-    
-    activeTasks.forEach(task => {
+
+    activeTasks.forEach((task) => {
       const taskId = task._id;
       html += `
         <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
@@ -113,32 +153,38 @@ function renderServicesCheckboxes() {
         </label>
       `;
     });
-    
+
     html += `
         </div>
       </div>
     `;
   });
-  
-  html += '</div>';
+
+  html += "</div>";
   container.innerHTML = html;
 }
 
 function handleServiceCheckboxChange(checkbox, serviceId) {
   const isChecked = checkbox.checked;
-  const serviceTasks = document.querySelectorAll(`.task-checkbox[data-service-id="${serviceId}"]`);
-  
-  serviceTasks.forEach(taskCheckbox => {
+  const serviceTasks = document.querySelectorAll(
+    `.task-checkbox[data-service-id="${serviceId}"]`,
+  );
+
+  serviceTasks.forEach((taskCheckbox) => {
     taskCheckbox.checked = isChecked;
   });
 }
 
 function handleTaskCheckboxChange(checkbox) {
   const serviceId = checkbox.getAttribute("data-service-id");
-  const serviceCheckbox = document.querySelector(`.service-checkbox[data-id="${serviceId}"]`);
-  const serviceTasks = document.querySelectorAll(`.task-checkbox[data-service-id="${serviceId}"]`);
-  const allTasksChecked = Array.from(serviceTasks).every(cb => cb.checked);
-  
+  const serviceCheckbox = document.querySelector(
+    `.service-checkbox[data-id="${serviceId}"]`,
+  );
+  const serviceTasks = document.querySelectorAll(
+    `.task-checkbox[data-service-id="${serviceId}"]`,
+  );
+  const allTasksChecked = Array.from(serviceTasks).every((cb) => cb.checked);
+
   if (serviceCheckbox) {
     serviceCheckbox.checked = allTasksChecked;
   }
@@ -146,26 +192,30 @@ function handleTaskCheckboxChange(checkbox) {
 
 function getSelectedTaskIds() {
   const selected = [];
-  
+
   // Get selected tasks only (not services, as discount uses task_ids)
-  document.querySelectorAll(".task-checkbox:checked").forEach(checkbox => {
+  document.querySelectorAll(".task-checkbox:checked").forEach((checkbox) => {
     selected.push(checkbox.getAttribute("data-id"));
   });
-  
+
   return selected;
 }
 
 function setSelectedTaskIds(selectedIds) {
   if (!selectedIds || selectedIds.length === 0) return;
-  
+
   // Uncheck all first
-  document.querySelectorAll(".service-checkbox, .task-checkbox").forEach(cb => {
-    cb.checked = false;
-  });
-  
-  selectedIds.forEach(id => {
+  document
+    .querySelectorAll(".service-checkbox, .task-checkbox")
+    .forEach((cb) => {
+      cb.checked = false;
+    });
+
+  selectedIds.forEach((id) => {
     // Try to find as task
-    const taskCheckbox = document.querySelector(`.task-checkbox[data-id="${id}"]`);
+    const taskCheckbox = document.querySelector(
+      `.task-checkbox[data-id="${id}"]`,
+    );
     if (taskCheckbox) {
       taskCheckbox.checked = true;
       handleTaskCheckboxChange(taskCheckbox);
@@ -196,7 +246,7 @@ function formatDate(dateString) {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -231,31 +281,37 @@ function getDiscountDisplay(discount) {
 
 function getConditionsDisplay(conditions) {
   if (!conditions) return "Tất cả";
-  
+
   const parts = [];
-  
+
   if (conditions.min_order_value) {
-    parts.push(`Đơn tối thiểu: ${conditions.min_order_value.toLocaleString("vi-VN")}đ`);
+    parts.push(
+      `Đơn tối thiểu: ${conditions.min_order_value.toLocaleString("vi-VN")}đ`,
+    );
   }
-  
+
   if (conditions.customer_tiers && conditions.customer_tiers.length > 0) {
     parts.push(`Hạng: ${conditions.customer_tiers.join(", ")}`);
   }
-  
+
   if (conditions.days_of_week && conditions.days_of_week.length > 0) {
     const dayNames = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-    const days = conditions.days_of_week.map(d => dayNames[d] || d).join(", ");
+    const days = conditions.days_of_week
+      .map((d) => dayNames[d] || d)
+      .join(", ");
     parts.push(`Ngày: ${days}`);
   }
-  
+
   if (conditions.hours_range) {
-    parts.push(`Giờ: ${conditions.hours_range.from}:00 - ${conditions.hours_range.to}:00`);
+    parts.push(
+      `Giờ: ${conditions.hours_range.from}:00 - ${conditions.hours_range.to}:00`,
+    );
   }
-  
+
   if (conditions.task_ids && conditions.task_ids.length > 0) {
     parts.push(`${conditions.task_ids.length} dịch vụ`);
   }
-  
+
   return parts.length > 0 ? parts.join(" | ") : "Tất cả";
 }
 
@@ -263,8 +319,8 @@ async function loadDiscounts() {
   try {
     const res = await fetch(`${API_BASE}/all`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (res.status === 401) {
@@ -277,7 +333,7 @@ async function loadDiscounts() {
     const data = await res.json();
     console.log("discounts: ", data);
     const tbody = $("data-table-body");
-    
+
     if (!data.discounts || data.discounts.length === 0) {
       tbody.innerHTML = `
         <tr>
@@ -287,14 +343,15 @@ async function loadDiscounts() {
       return;
     }
 
-    tbody.innerHTML = data.discounts.map(discount => {
-      const discountDisplay = getDiscountDisplay(discount.discount);
-      const conditionsDisplay = getConditionsDisplay(discount.conditions);
-      const beginDate = formatDate(discount.begin_date);
-      const endDate = formatDate(discount.end_date);
-      const statusBadge = getStatusBadge(discount.status, discount.is_active);
-      
-      return `
+    tbody.innerHTML = data.discounts
+      .map((discount) => {
+        const discountDisplay = getDiscountDisplay(discount.discount);
+        const conditionsDisplay = getConditionsDisplay(discount.conditions);
+        const beginDate = formatDate(discount.begin_date);
+        const endDate = formatDate(discount.end_date);
+        const statusBadge = getStatusBadge(discount.status, discount.is_active);
+
+        return `
         <tr class="border-b border-gray-50 hover:bg-slate-50 transition-colors">
           <td class="p-4 font-medium text-slate-800">${discount.code || ""}</td>
           <td class="p-4 font-medium text-slate-800">${discount.name || ""}</td>
@@ -324,7 +381,8 @@ async function loadDiscounts() {
           </td>
         </tr>
       `;
-    }).join("");
+      })
+      .join("");
   } catch (err) {
     console.error("Error loading discounts:", err);
     toast("Không thể tải danh sách khuyến mãi");
@@ -335,18 +393,31 @@ async function openDiscountModal(mode, id) {
   currentDiscountId = id || null;
   const isViewMode = mode === "view";
   const isEditMode = mode === "edit";
-  
-  $("discountModalTitle").textContent = 
-    mode === "add" ? "Thêm khuyến mãi" : 
-    mode === "view" ? "Chi tiết khuyến mãi" : 
-    "Sửa khuyến mãi";
+
+  $("discountModalTitle").textContent =
+    mode === "add"
+      ? "Thêm khuyến mãi"
+      : mode === "view"
+        ? "Chi tiết khuyến mãi"
+        : "Sửa khuyến mãi";
 
   // Disable/enable fields based on mode
-  const fields = ["discountCode", "discountName", "discountDescription", "discountBeginDate", 
-    "discountEndDate", "discountPriority", "discountType", "discountValue", "maxDiscount", 
-    "minOrderValue", "hoursFrom", "hoursTo"];
-  
-  fields.forEach(fieldId => {
+  const fields = [
+    "discountCode",
+    "discountName",
+    "discountDescription",
+    "discountBeginDate",
+    "discountEndDate",
+    "discountPriority",
+    "discountType",
+    "discountValue",
+    "maxDiscount",
+    "minOrderValue",
+    "hoursFrom",
+    "hoursTo",
+  ];
+
+  fields.forEach((fieldId) => {
     const field = $(fieldId);
     if (field) {
       field.disabled = isViewMode;
@@ -360,8 +431,10 @@ async function openDiscountModal(mode, id) {
 
   // Disable checkboxes
   setTimeout(() => {
-    const checkboxes = document.querySelectorAll(".service-checkbox, .task-checkbox, .tier-checkbox, .day-checkbox");
-    checkboxes.forEach(cb => {
+    const checkboxes = document.querySelectorAll(
+      ".service-checkbox, .task-checkbox, .tier-checkbox, .day-checkbox",
+    );
+    checkboxes.forEach((cb) => {
       cb.disabled = isViewMode;
       if (isViewMode) {
         cb.parentElement.style.opacity = "0.6";
@@ -382,11 +455,11 @@ async function openDiscountModal(mode, id) {
     // Load discount data
     fetch(`${API_BASE}/${id}`, {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         if (data.success && data.data) {
           const d = data.data;
           $("discountCode").value = d.code || "";
@@ -401,25 +474,25 @@ async function openDiscountModal(mode, id) {
           $("minOrderValue").value = d.conditions?.min_order_value || "";
           $("hoursFrom").value = d.conditions?.hours_range?.from || "";
           $("hoursTo").value = d.conditions?.hours_range?.to || "";
-          
+
           // Set customer tiers
           const tiers = d.conditions?.customer_tiers || [];
           $("tierNew").checked = tiers.includes("NEW");
           $("tierLoyal").checked = tiers.includes("LOYAL");
           $("tierVip").checked = tiers.includes("VIP");
-          
+
           // Set days of week
           const days = d.conditions?.days_of_week || [];
-          document.querySelectorAll(".day-checkbox").forEach(cb => {
+          document.querySelectorAll(".day-checkbox").forEach((cb) => {
             cb.checked = days.includes(Number(cb.value));
           });
-          
+
           // Set task IDs
           setSelectedTaskIds(d.conditions?.task_ids || []);
           updateMaxDiscountVisibility();
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error loading discount:", err);
         toast("Không thể tải thông tin khuyến mãi");
       });
@@ -437,12 +510,14 @@ async function openDiscountModal(mode, id) {
     $("minOrderValue").value = "";
     $("hoursFrom").value = "";
     $("hoursTo").value = "";
-    
+
     // Reset checkboxes
     $("tierNew").checked = false;
     $("tierLoyal").checked = false;
     $("tierVip").checked = false;
-    document.querySelectorAll(".day-checkbox").forEach(cb => cb.checked = false);
+    document
+      .querySelectorAll(".day-checkbox")
+      .forEach((cb) => (cb.checked = false));
     setSelectedTaskIds([]);
     updateMaxDiscountVisibility();
   }
@@ -469,9 +544,15 @@ async function saveDiscount() {
   const priority = Number($("discountPriority").value) || 1;
   const discountType = $("discountType").value;
   const discountValue = Number($("discountValue").value);
-  const maxDiscount = $("maxDiscount").value ? Number($("maxDiscount").value) : undefined;
-  const min_order_value = $("minOrderValue").value ? Number($("minOrderValue").value) : undefined;
-  const hoursFrom = $("hoursFrom").value ? Number($("hoursFrom").value) : undefined;
+  const maxDiscount = $("maxDiscount").value
+    ? Number($("maxDiscount").value)
+    : undefined;
+  const min_order_value = $("minOrderValue").value
+    ? Number($("minOrderValue").value)
+    : undefined;
+  const hoursFrom = $("hoursFrom").value
+    ? Number($("hoursFrom").value)
+    : undefined;
   const hoursTo = $("hoursTo").value ? Number($("hoursTo").value) : undefined;
   const taskIds = getSelectedTaskIds();
 
@@ -483,7 +564,7 @@ async function saveDiscount() {
 
   // Get days of week
   const daysOfWeek = [];
-  document.querySelectorAll(".day-checkbox:checked").forEach(cb => {
+  document.querySelectorAll(".day-checkbox:checked").forEach((cb) => {
     daysOfWeek.push(Number(cb.value));
   });
 
@@ -521,7 +602,7 @@ async function saveDiscount() {
 
   const discount = {
     type: discountType,
-    value: discountValue
+    value: discountValue,
   };
   if (discountType === "PERCENT" && maxDiscount) {
     discount.max_discount = maxDiscount;
@@ -552,7 +633,7 @@ async function saveDiscount() {
     end_date,
     priority,
     discount,
-    conditions: Object.keys(conditions).length > 0 ? conditions : undefined
+    conditions: Object.keys(conditions).length > 0 ? conditions : undefined,
   };
 
   try {
@@ -563,9 +644,9 @@ async function saveDiscount() {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
     } else {
       // Create
@@ -573,9 +654,9 @@ async function saveDiscount() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
     }
 
@@ -606,8 +687,8 @@ async function confirmDeleteDiscount() {
     const res = await fetch(`${API_BASE}/${deleteDiscountId}`, {
       method: "DELETE",
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await res.json();
