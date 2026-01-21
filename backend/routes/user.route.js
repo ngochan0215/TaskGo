@@ -5,6 +5,7 @@ import { getUserProfile, changePassword, sendEmail,
     getMyFavoriteTaskers, addAddress, getMyAddresses, deleteAddress, setDefaultAddress,
     getUserPoints, getAUserProfile,
     updateTaskerProfile, updateCustomerProfile, 
+    addFavoriteTask, removeFavoriteTask, getMyFavoriteTasks,
 } from "../controllers/user.controller.js";
 import uploadAvatar from "../middleware/uploadAvatar.js";
 import { isCustomer } from "../middleware/verifyRole.js";
@@ -25,9 +26,15 @@ router.post("/profile/change-email/send-otp", verifyToken, sendEmail);
 router.post("/profile/change-email/verify-otp", verifyToken, verifyEmail);
 router.put("/profile/update-avatar", verifyToken, uploadAvatar.single("avatar"), updateAvatar);
 
+// tasker yêu thích
 router.post("/favorites/taskers/", verifyToken, isCustomer, addFavoriteTasker);
 router.delete("/favorites/taskers/:tasker_id", verifyToken, isCustomer, removeFavoriteTasker);
 router.get("/favorites/taskers", verifyToken, isCustomer, getMyFavoriteTaskers);
+
+// task yêu thích
+router.post("/favorites/tasks/", verifyToken, isCustomer, addFavoriteTask);
+router.delete("/favorites/tasks/:task_id", verifyToken, isCustomer, removeFavoriteTask);
+router.get("/favorites/tasks", verifyToken, isCustomer, getMyFavoriteTasks);
 
 router.post("/addresses/", verifyToken, addAddress);
 router.post("/tasker-signup/first-address", addAddress);

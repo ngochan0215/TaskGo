@@ -1,4 +1,6 @@
-import { User, Account, Tasker, Customer, FavoriteTasker, Address, Review } from "../models/index.js";
+import { User, Account, Tasker, Customer, FavoriteTasker, Address, Review,
+  FavoriteTask
+} from "../models/index.js";
 import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 import { sendVerificationEmailUpdateProfile } from "../gmail/email.js";
@@ -557,6 +559,123 @@ export const verifyEmail = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "Lỗi xác thực OTP", error: error.message });
   }
+};
+
+// Favorite Task Controllers
+export const addFavoriteTask = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { task_id, note } = req.body;
+
+    if (!task_id)
+      return res.status(400).json({ message: "Thiếu task_id" });
+
+    if (!mongoose.isValidObjectId(task_id))
+      return res.status(400).json({ message: "task_id không hợp lệ" });
+
+    const existed = await FavoriteTask.findOne({
+      user_id: userId,
+      task_id
+    });
+
+    if (existed)
+      return res.status(409).json({
+        message: "Task này đã nằm trong danh sách dịch vụ yêu thích"
+      });
+
+    const favorite = await FavoriteTask.create({
+      user_id: userId,
+      task_id,
+      note
+    });
+
+    return res.status(201).json({
+      message: "Thêm dịch vụ vào danh sách yêu thích thành công",
+      data: favorite
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Dịch vụ này đã nằm trong danh sách yêu thích"
+      });
+    }
+
+    return res.status(500).json({ message: "Lỗi server" + error.message });
+  }
+};
+
+export const removeFavoriteTask = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { task_id } = req.params;
+
+    if (!mongoose.isValidObjectId(task_id))
+      return res.status(400).json({ message: "task_id không hợp lệ" });
+
+    const deleted = await FavoriteTask.findOneAndDelete({
+      user_id: userId,
+      task_id
+    });
+
+    if (!deleted)
+      return res.status(404).json({
+        message: "Dịch vụ này không nằm trong danh sách yêu thích"
+      });
+
+    return res.json({
+      message: "Đã xóa dịch vụ khỏi danh sách yêu thích"
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Lỗi server" + error.message });
+  }
+};
+
+export const getMyFavoriteTasks = async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    // Lấy danh sách favorite task của người dùng
+    const favorites = await FavoriteTask.find({ user_id: userId })
+      .select("-__v -created_at -updated_at")
+      .populate({
+        path: "task_id",
+        select: "-__v -updated_at -created_at",
+      })
+      .sort({ created_at: -1 });
+
+    if (!favorites.length) {
+      return res.json({
+        total: 0,
+        data: []
+      });
+    }
+
+    return res.json({
+      total: favorites.length,
+      data: favorites
+    });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Lỗi server" + error.message });
+  }
+};
+
+export const checkFavoriteTask = async (req, res) => {
+  const userId = req.userId;
+  const { task_id } = req.params;
+
+  const exists = await FavoriteTask.exists({
+    user_id: userId,
+    task_id
+  });
+
+  res.json({ is_favorite: !!exists });
 };
 
 // Favorite Tasker Controllers

@@ -3,6 +3,7 @@ import User from "./users.js";
 import Customer from  "./customers.js";
 import Tasker from "./taskers.js";
 import FavoriteTasker from "./favoriteTaskers.js"
+import FavoriteTask from "./favoriteTasks.js"
 import TaskerStatusLog from "./taskerStatusLog.js";
 
 import Discount from "./discounts.js";
@@ -26,7 +27,7 @@ import PayoutTasker from "./payoutTasker.js";
 import Chat from "./chats.js";
 
 export {
-    Account, User, Customer, Tasker, FavoriteTasker,
+    Account, User, Customer, Tasker, FavoriteTasker, FavoriteTask,
     Discount, Voucher, VoucherUsage, Transaction, TaskerEarning,
     Order, OrderStatusLog, Receipt, Address, TaskerStatusLog,
     Service, Task, Message, Notification, Review, PayoutTasker, Chat,
