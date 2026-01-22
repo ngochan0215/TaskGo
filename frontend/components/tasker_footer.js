@@ -9,6 +9,7 @@ class TaskerFooter extends HTMLElement {
                         <h4 class="text-[10px] font-bold text-indigo-900/60 uppercase tracking-tighter">Frontend</h4>
                         <div class="flex gap-1.5">
                             <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#HTML</span>
+                                                        <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#JS</span>
                             <span class="px-2 py-0.5 bg-white/50 text-[10px] font-bold rounded border border-indigo-200 text-[#3730A3]">#TailwindCSS</span>
                         </div>
                     </div>

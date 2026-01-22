@@ -59,7 +59,7 @@ class TaskerHeader extends HTMLElement {
                 <a href="../tasker/tasker_activity.html" class="${getLinkClass('activity')}">Hoạt động</a>
                 <a href="../tasker/tasker_earnings.html" class="${getLinkClass('earning')}">Thu nhập</a>
                 <a href="../tasker/work_schedule.html" class="${getLinkClass('schedule')}">Lịch làm việc</a>
-                <a href="../tasker/tasker_chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
+                <a href="../chat.html" class="${getLinkClass('chat')}">Tin nhắn</a>
 
                 <a href="" id="logout-btn" class="pb-4 text-red-600 flex items-center gap-3 hover:bg-red-50 rounded-lg px-2 -ml-2 transition">
                     <span class="material-symbols-outlined">logout</span> Đăng xuất
