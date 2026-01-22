@@ -35,8 +35,9 @@ export const addReview = async (req, res) => {
       reviewer_id: reviewerId,
       reviewee_id: reviewee_id
     });
+    
     if (existed) {
-      return res.status(409).json({message: "Bạn đã đánh giá đơn hàng này rồi" });   
+      return res.status(409).json({message: "Bạn đã đánh giá đơn hàng này rồi (blabla)" });   
     }
 
     const review = await Review.create({
@@ -55,8 +56,66 @@ export const addReview = async (req, res) => {
 
   } catch (error) {
     if (error.code === 11000) {
+      // Kiểm tra xem có phải lỗi do index cũ không (reviewer_id_1_related_order_1)
+      const isOldIndexError = error.message && error.message.includes('related_order');
+      
+      if (isOldIndexError) {
+        // Index cũ đang gây conflict, thử drop và retry
+        try {
+          const collection = Review.collection;
+          const indexes = await collection.indexes();
+          
+          // Tìm và drop index cũ có chứa related_order
+          for (const idx of indexes) {
+            const keys = Object.keys(idx.key || {});
+            if (keys.includes('reviewer_id') && keys.includes('related_order') && 
+                !keys.includes('order_id') && !keys.includes('reviewee_id')) {
+              try {
+                const indexName = idx.name;
+                await collection.dropIndex(indexName);
+                console.log(`[Review] Dropped old index: ${indexName}`);
+                
+                // Retry create sau khi drop index
+                const retryReview = await Review.create({
+                  order_id,
+                  reviewer_id: reviewerId,
+                  reviewee_id,
+                  reviewee_role,
+                  rating,
+                  comment
+                });
+                
+                return res.status(201).json({
+                  message: "Đánh giá thành công",
+                  data: retryReview
+                });
+              } catch (dropError) {
+                console.error(`[Review] Error dropping index ${idx.name}:`, dropError);
+              }
+            }
+          }
+        } catch (dropError) {
+          console.error('[Review] Error handling old index:', dropError);
+        }
+      }
+      
+      // Nếu không phải lỗi index cũ, hoặc không drop được, trả về lỗi thông thường
+      // Kiểm tra lại xem có thực sự đã tồn tại review không
+      const checkExisted = await Review.findOne({
+        order_id,
+        reviewer_id: reviewerId,
+        reviewee_id
+      });
+      
+      if (checkExisted) {
+        return res.status(409).json({
+          message: "Bạn đã đánh giá người này cho đơn hàng này rồi"
+        });
+      }
+      
+      // Nếu không tìm thấy review đã tồn tại, có thể là race condition hoặc lỗi khác
       return res.status(409).json({
-        message: "Bạn đã đánh giá đơn hàng này rồi"
+        message: "Không thể tạo đánh giá. Vui lòng thử lại."
       });
     }
 

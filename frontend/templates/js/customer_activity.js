@@ -658,15 +658,18 @@ function openCancelReasonModal(orderId, penaltyAmount = 0) {
   // Show modal
   document.getElementById("cancelReasonModal").classList.remove("hidden");
   
-  // Listen for "other" selection
+  // Listen for "other" selection - remove old listeners first to avoid duplicates
+  const handleReasonChange = function() {
+    if (this.value === "other") {
+      document.getElementById("customReasonContainer").classList.remove("hidden");
+    } else {
+      document.getElementById("customReasonContainer").classList.add("hidden");
+    }
+  };
+  
   document.querySelectorAll('input[name="cancelReason"]').forEach(radio => {
-    radio.addEventListener("change", function() {
-      if (this.value === "other") {
-        document.getElementById("customReasonContainer").classList.remove("hidden");
-      } else {
-        document.getElementById("customReasonContainer").classList.add("hidden");
-      }
-    });
+    radio.removeEventListener("change", handleReasonChange);
+    radio.addEventListener("change", handleReasonChange);
   });
 }
 

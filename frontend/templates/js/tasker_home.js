@@ -611,8 +611,51 @@
                 console.warn("Load acceptance rate failed:", e);
             }
 
+            // Load weekly income
+            await loadWeeklyIncome();
+
         } catch (err) {
             console.error("LOAD TASKER HOME ERROR:", err);
+        }
+    }
+
+    // Load weekly income
+    async function loadWeeklyIncome() {
+        try {
+            const res = await fetch("http://localhost:3000/api/tasker/earnings/weekly", {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (res.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+
+            const data = await res.json();
+            if (res.ok && data.success && data.data) {
+                const weeklyIncome = data.data.weeklyIncome || 0;
+                
+                // Update weekly income in greeting section
+                const greetingSection = document.querySelector('p.text-indigo-100.text-sm');
+                if (greetingSection) {
+                    const formattedIncome = formatCurrency(weeklyIncome);
+                    greetingSection.innerHTML = `Thu nhập tuần này: <strong class="text-white text-lg">${formattedIncome}</strong>.`;
+                }
+
+                // Update progress bar (optional - you can set a target)
+                const progressBar = document.querySelector('.bg-\\[\\#FFD700\\]');
+                if (progressBar && data.data.orderCount) {
+                    // Example: 85% progress (you can adjust this logic)
+                    const progress = Math.min(85, (data.data.orderCount * 10)); // Simple calculation
+                    progressBar.style.width = `${progress}%`;
+                }
+            }
+        } catch (err) {
+            console.error("Load weekly income error:", err);
         }
     }
 
@@ -782,7 +825,11 @@
     }
 
     function formatCurrency(amount) {
-        return Number(amount || 0).toLocaleString("vi-VN") + "đ";
+        try {
+            return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(Number(amount || 0));
+        } catch (e) {
+            return Number(amount || 0).toLocaleString("vi-VN") + "đ";
+        }
     }
 
     function formatDateTime(dateString) {
@@ -1072,14 +1119,6 @@
     loadAvailableOrders();
 
     // Cashout UI logic: load amounts, handle cashout
-    function formatCurrency(amount) {
-        try {
-            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount || 0));
-        } catch (e) {
-            return amount;
-        }
-    }
-
     function showToast(message, type = 'info') {
         const toast = document.getElementById('toast');
         if (!toast) return;
@@ -1094,28 +1133,41 @@
 
     async function loadCashoutInfo() {
         try {
-            const [todayRes, availRes] = await Promise.all([
-                fetch('http://localhost:3000/api/tasker/cashOut', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+            const [earningRes, availRes] = await Promise.all([
+                fetch('http://localhost:3000/api/tasker/earnings?period=day&page=1&limit=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
                 fetch('http://localhost:3000/api/tasker/cashOut/available', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
             ]);
-            const todayJson = await todayRes.json();
-            const availJson = await availRes.json();
 
-            const today = todayJson && todayJson.success ? todayJson.data : 0;
+            // Earnings today
+            let today = 0;
+            if (earningRes.status === 401) {
+                localStorage.removeItem("token");
+                alert("Phiên đăng nhập hết hạn");
+                window.location.href = "../auth/login-signup.html";
+                return;
+            }
+            const earningJson = await earningRes.json();
+            if (earningRes.ok && earningJson.success && earningJson.totals) {
+                today = earningJson.totals.totalEarning || 0;
+            }
+
+            // Available balance
+            const availJson = await availRes.json();
             const available = availJson && availJson.success ? availJson.data : 0;
 
             const todayEl = document.getElementById('todayEarnings');
             const availEl = document.getElementById('availableBalance');
             const btn = document.getElementById('cashoutBtn');
+            const btnText = document.getElementById('cashoutBtnText');
 
             if (todayEl) todayEl.textContent = formatCurrency(today);
             if (availEl) availEl.textContent = formatCurrency(available);
 
             if (btn) {
-                if (!available || Number(available) <= 0) {
-                    btn.disabled = true;
-                } else {
-                    btn.disabled = false;
+                const canCashout = Number(available) > 0;
+                btn.disabled = !canCashout;
+                if (btnText) {
+                    btnText.textContent = canCashout ? 'Rút ngay' : 'Không có số dư';
                 }
             }
         } catch (err) {

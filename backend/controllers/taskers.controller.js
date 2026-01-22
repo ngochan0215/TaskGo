@@ -2,7 +2,7 @@ import {
     acceptTaskRequest, confirmDepartureService, denyTaskRequest,
     confirmArrivingService, confirmStartService, confirmCompleteService,
     cashOutForTasker, getCashoutInfo, availableCashout,
-    getTaskerAcceptanceRate, getTaskerEarningsService, changeTaskerStatus
+    getTaskerAcceptanceRate, getTaskerEarningsService, getTaskerWeeklyIncomeService, changeTaskerStatus
 } from "../services/taskers.service.js";
 import mongoose from "mongoose";
 import { getSocketInstance } from "../sockets/instance.js";
@@ -757,6 +757,27 @@ export const getTaskerEarnings = async (req, res) => {
         res.status(400).json({
             success: false,
             message: error.message || "Failed to get earnings"
+        });
+    }
+};
+
+// Get tasker weekly income (current week)
+export const getTaskerWeeklyIncome = async (req, res) => {
+    try {
+        const taskerUserId = req.userId;
+
+        const result = await getTaskerWeeklyIncomeService({
+            taskerUserId
+        });
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error.message || "Failed to get weekly income"
         });
     }
 };

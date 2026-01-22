@@ -285,6 +285,75 @@
       </div>
     </div>
 
+    <!-- Cancel Reason Modal -->
+    <div id="cancelReasonModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6">
+          <h3 class="text-lg font-bold text-dark-900 mb-4">Chọn lý do hủy đơn</h3>
+          
+          <div class="space-y-3 mb-4">
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="too_far" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Quá xa</span>
+            </label>
+            
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="busy" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Bận việc</span>
+            </label>
+            
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="price_not_ok" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Giá không phù hợp</span>
+            </label>
+            
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="time_not_suitable" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Thời gian không phù hợp</span>
+            </label>
+            
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="skill_not_match" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Kỹ năng không phù hợp</span>
+            </label>
+            
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input type="radio" name="cancelReason" value="other" class="w-4 h-4 text-primary-500">
+              <span class="text-sm text-dark-900">Lý do khác</span>
+            </label>
+          </div>
+          
+          <div id="customReasonContainer" class="hidden mb-4">
+            <label class="block text-sm font-medium text-dark-900 mb-2">Nhập lý do khác</label>
+            <textarea
+              id="customReasonText"
+              rows="3"
+              class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus:outline-none focus:border-primary-500 focus:bg-white transition-all"
+              placeholder="Nhập lý do hủy đơn..."
+            ></textarea>
+          </div>
+          
+          <div class="flex gap-2">
+            <button
+              type="button"
+              onclick="closeCancelReasonModal()"
+              class="flex-1 px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition"
+            >
+              Hủy
+            </button>
+            <button
+              id="confirmCancelBtn"
+              type="button"
+              onclick="confirmCancelWithReason()"
+              class="flex-1 px-4 py-2 bg-red-500 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-red-400 transition"
+            >
+              Xác nhận hủy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script type="module">
       import { initSocket } from "../js/socket.js";

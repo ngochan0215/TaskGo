@@ -9,7 +9,7 @@ import fetch from "node-fetch";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
 import { initSocket } from "./sockets/index.js";
-import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron, 
+import { voucherStatusCron, orderStatusCron, scheduledTaskReminderCron, overdueOrderNotificationCron,
   discountStatusCron,
 } from "./jobs/cronJobStatus.js";
 import '../backend/jobs/transactionStatusJob.js'; 
@@ -60,6 +60,7 @@ voucherStatusCron();
 discountStatusCron();
 //orderStatusCron();
 scheduledTaskReminderCron();
+overdueOrderNotificationCron();
 
 app.use("/api/chats", chatRoutes);
 

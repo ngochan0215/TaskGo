@@ -16,8 +16,9 @@ const reviewSchema = new mongoose.Schema(
   }
 );
 
-// Each pair of reviewer and order should have only one review
-reviewSchema.index({ reviewer_id: 1, order_id: 1 }, { unique: true });
+// Mỗi reviewer chỉ được đánh giá một review cho một người trong một order
+// (reviewer_id + order_id + reviewee_id) là duy nhất
+reviewSchema.index({ reviewer_id: 1, order_id: 1, reviewee_id: 1 }, { unique: true });
 
 const Review = mongoose.models.Review || mongoose.model("Review", reviewSchema);
 export default Review;

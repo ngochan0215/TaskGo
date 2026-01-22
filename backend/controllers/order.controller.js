@@ -169,7 +169,7 @@ export const getAllOrdersByCustomerId = async (req, res) => {
     const orders = await getAllOrdersByCustomerIdService({
       customerId,
       status,
-      category, // "upcoming" or "history"
+      category, 
       page: Number(page),
       limit: Number(limit),
     });

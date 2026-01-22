@@ -761,6 +761,8 @@ export async function cashOutForTasker(userId) {
             tasker_id: taskerId
         }).session(session);
 
+        console.log("Pending payout bills for tasker:", payoutBill);
+
         // Nếu không có pending payout, tạo batch mới từ available earnings
         if (!payoutBill.length) {
             const availableEarnings = await TaskerEarning.find({
@@ -775,6 +777,8 @@ export async function cashOutForTasker(userId) {
             }
 
             const totalAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
+            console.log("Total available earnings amount:", totalAmount);
+
             const completedDates = availableEarnings.map(e => new Date(e.completed_at));
             const periodStart = new Date(Math.min(...completedDates));
             const periodEnd = new Date(Math.max(...completedDates));
@@ -796,7 +800,15 @@ export async function cashOutForTasker(userId) {
             payoutBill = newPayoutBatch;
         }
 
-        const amount = payoutBill.reduce((sum, bill) => sum + bill.total_amount, 0);
+        //const amount = payoutBill.reduce((sum, bill) => sum + bill.total_amount, 0);
+        console.log("Calculating total payout amount for tasker...", payoutBill);
+        const amount = payoutBill.reduce((sum, bill) => {
+            console.log("Processing payout bill:", bill);
+            console.log("Bill amount:", bill.total_amount);
+            const amount = Number(bill.total_amount) || 0; 
+            return sum + Math.round(amount); // Math.round chỉ nhận 1 tham số
+        }, 0);
+        console.log("Total payout amount for tasker:", amount);
         if (amount <= 0) {
             await session.abortTransaction();
             throw new Error("Số tiền payout không hợp lệ");
@@ -1024,15 +1036,30 @@ export const availableCashout = async (userId) => {
             payout_id: { $exists: false }
         });
 
+        console.log("AVAILABLE EARNINGS:", availableEarnings);
+
         // Only include pending payouts (exclude processing ones as they are in progress)
         const pendingPayouts = await PayoutTasker.find({
             tasker_id: taskerId,
             status: 'pending'
         });
 
-        const availableAmount = availableEarnings.reduce((sum, earning) => sum + earning.earning_amount, 0);
-        const pendingAmount = pendingPayouts.reduce((sum, bill) => sum + bill.total_amount, 0);
+        console.log("PENDING PAYOUTS:", pendingPayouts);
 
+        const availableAmount = availableEarnings.reduce((sum, earning) => {
+            const amount = Number(earning.earning_amount) || 0;
+            return sum + amount;
+        }, 0);
+
+        // 2. Tính Pending Amount: Sửa Math.round và ép kiểu Number
+        const pendingAmount = pendingPayouts.reduce((sum, bill) => {
+            const amount = Number(bill.amount) || 0; 
+            return sum + Math.round(amount); // Math.round chỉ nhận 1 tham số
+        }, 0);
+
+        console.log("AVAILABLE AMOUNT:", availableAmount);
+        console.log("PENDING AMOUNT:", pendingAmount);
+        console.log("TOTAL CASHOUT AMOUNT:", availableAmount + pendingAmount);
         return availableAmount + pendingAmount;
     }
     catch (error) {
@@ -1211,6 +1238,51 @@ export const getTaskerEarningsService = async ({
                 total: result.length,
                 totalPages: Math.ceil(result.length / Number(limit))
             }
+        };
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
+
+// Get tasker weekly income (current week: Monday to today)
+export const getTaskerWeeklyIncomeService = async ({ taskerUserId }) => {
+    try {
+        const tasker = await Tasker.findOne({ user_id: taskerUserId });
+        if (!tasker) {
+            throw new Error('Tasker not found');
+        }
+        const taskerId = tasker._id;
+        
+        // Calculate current week start (Monday)
+        const now = new Date();
+        const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - diff);
+        weekStart.setUTCHours(0, 0, 0, 0);
+        
+        // Current time as week end
+        const weekEnd = new Date(now);
+        weekEnd.setUTCHours(23, 59, 59, 999);
+        
+        // Get earnings for current week
+        const earnings = await TaskerEarning.find({
+            tasker_id: taskerId,
+            status: { $in: ['pending', 'available', 'paid'] }, // Exclude cancelled
+            completed_at: { $gte: weekStart, $lte: weekEnd }
+        }).lean();
+        
+        // Calculate totals
+        const totalEarning = earnings.reduce((sum, earning) => sum + (earning.earning_amount || 0), 0);
+        const totalGross = earnings.reduce((sum, earning) => sum + (earning.gross_amount || 0), 0);
+        const orderCount = earnings.length;
+        
+        return {
+            weeklyIncome: totalEarning,
+            totalGross: totalGross,
+            orderCount: orderCount,
+            weekStart: weekStart,
+            weekEnd: weekEnd
         };
     } catch (error) {
         throw new Error(error.message);

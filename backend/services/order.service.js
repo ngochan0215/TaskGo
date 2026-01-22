@@ -87,7 +87,7 @@ export async function getAllOrdersByCustomerIdService({
     // Filter by category
     if (category === "current_working") {
       // Current working: orders in progress
-      q.status = { $in: ["accepted", "departed", "arrived", "in_progress"] };
+      q.status = { $in: ["pending", "accepted", "departed", "arrived", "in_progress"] };
     } else if (category === "scheduled") {
       // Scheduled: pending or assigned orders that are scheduled (type === "scheduled")
       q.status = { $in: ["pending", "assigned"] };
