@@ -1,6 +1,8 @@
 ## TASKGO DESCRIPTION
 A smart on-demand service platform that connects customers with trusted taskers for daily tasks such as cleaning, repairs, errands, and more. Fast, reliable, reasonable and convenient — get things done anytime, anywhere.
 
+You can try it here: https://taskgo-fe.onrender.com
+
 ## TECH STACK
 - Backend: Node.js, Express.js
 - Frontend: HTML5, Javascript, Tailwind CSS, CSS
