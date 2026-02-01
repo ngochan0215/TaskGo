@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 let addressMap = {};
 
 let addressState = {
@@ -86,7 +87,7 @@ function bindAddressSelect() {
 async function loadMyAddresses() {
     try {
         const res = await fetch(
-            "http://localhost:3000/api/user/addresses/my",
+            `${API_BASE}/api/user/addresses/my`,
             {
                 headers: {
                 Authorization: `Bearer ${token}`
@@ -514,7 +515,7 @@ async function createPaymentLink(orderId, receiptId) {
     };
 
     const res = await fetch(
-        `http://localhost:3000/api/transaction/paymentLink/${newOrder.customer_id}`,
+        `${API_BASE}/api/transaction/paymentLink/${newOrder.customer_id}`,
         {
             method: "POST",
             headers: {
@@ -539,7 +540,7 @@ async function createOrderReceipt() {
     const payload = { order_id, payment_method };
     console.log("PAYLOAD FOR RECEIPT: ", payload);
 
-    const res = await fetch("http://localhost:3000/api/order/receipt/add", {
+    const res = await fetch(`${API_BASE}/api/order/receipt/add`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -641,7 +642,7 @@ async function submitOrder() {
         console.warn("Cannot reuse existing orderCreated:", e);
     }
 
-    const res = await fetch("http://localhost:3000/api/order/create", {
+    const res = await fetch(`${API_BASE}/api/order/create`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

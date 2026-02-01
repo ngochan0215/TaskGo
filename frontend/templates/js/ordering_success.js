@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 // validate authorization
 let token = localStorage.getItem("token");
 if (!token) {
@@ -187,7 +188,7 @@ async function loadOrderDetails() {
   try {
     // Fetch order details from API
     const res = await fetch(
-      `http://localhost:3000/api/order/${orderId}/details`,
+      `${API_BASE}/api/order/${orderId}/details`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -434,7 +435,7 @@ async function findTaskerForOrder(orderId) {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/api/order/${orderId}/find-tasker`,
+      `${API_BASE}/api/order/${orderId}/find-tasker`,
       {
         method: "POST",
         headers: {

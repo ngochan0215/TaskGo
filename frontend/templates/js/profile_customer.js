@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 let isEditing = false;
 let addresses = [];
 
@@ -200,7 +201,7 @@ async function deleteAddress(addressId) {
 
   try {
     const res = await fetch(
-      `http://localhost:3000/api/user/addresses/${addressId}`,
+      `${API_BASE}/api/user/addresses/${addressId}`,
       {
         method: "DELETE",
         headers: {
@@ -556,7 +557,7 @@ async function saveAddress() {
   console.log("PAYLOAD IN SAVE ADDRESS: ", payload);
 
   try {
-    const res = await fetch("http://localhost:3000/api/user/addresses", {
+    const res = await fetch(`${API_BASE}/api/user/addresses`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -695,7 +696,7 @@ async function updateProfile() {
       (key) => payload[key] === "" && delete payload[key],
     );
 
-    const res = await fetch("http://localhost:3000/api/user/profile/update", {
+    const res = await fetch(`${API_BASE}/api/user/profile/update`, {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -772,7 +773,7 @@ async function updateAvatar(event) {
 // Fetch banks from MoMo API
 async function loadBanks() {
   try {
-    const response = await fetch("http://localhost:3000/api/momo/bankcodes");
+    const response = await fetch(`${API_BASE}/api/momo/bankcodes`);
     if (!response.ok) {
       throw new Error("Failed to fetch banks");
     }

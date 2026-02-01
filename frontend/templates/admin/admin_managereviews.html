@@ -376,7 +376,7 @@
                 e.preventDefault();
 
                 try {
-                    const res = await fetch("http://localhost:3000/api/auth/logout", {
+                    const res = await fetch(`${(typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000'}/api/auth/logout`, {
                         method: "POST",
                         credentials: "include",
                         headers: {
@@ -404,7 +404,7 @@
         });
 
         // API Configuration
-        const API_URL = "http://localhost:3000/api/review";
+        const API_URL = ((typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000') + "/api/review";
         let allReviews = [];
         let filteredReviews = [];
         let currentPage = 1;

@@ -172,6 +172,7 @@
     </script>
 
     <script>
+        const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
         // validate authorization
         let token = localStorage.getItem("token");
         if (!token) {
@@ -295,7 +296,7 @@
         // Fetch earnings
         async function fetchEarnings() {
             try {
-                let url = `http://localhost:3000/api/tasker/earnings?period=${currentPeriod}&page=${currentPage}&limit=10`;
+                let url = `${API_BASE}/api/tasker/earnings?period=${currentPeriod}&page=${currentPage}&limit=10`;
                 if (currentStartDate && currentEndDate) {
                     url += `&startDate=${currentStartDate}&endDate=${currentEndDate}`;
                 }
@@ -527,7 +528,7 @@
                 spinner.classList.remove('hidden');
                 text.textContent = 'Đang xử lý...';
 
-                const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+                const res = await fetch(`${API_BASE}/api/tasker/cashOut`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
                 });

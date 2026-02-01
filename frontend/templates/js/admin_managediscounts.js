@@ -21,7 +21,7 @@ logoutBtn.forEach((btn) => {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:3000/api/auth/logout", {
+      const res = await fetch(`${(typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000"}/api/auth/logout`, {
         method: "POST",
         credentials: "include",
         headers: {
@@ -59,8 +59,8 @@ if (!token || role !== "admin") {
   window.location.href = "../auth/login-signup.html";
 }
 
-const API_BASE = "http://localhost:3000/api/discount";
-const TASK_API_BASE = "http://localhost:3000/api/task";
+const API_BASE = ((typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000") + "/api/discount";
+const TASK_API_BASE = ((typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000") + "/api/task";
 
 let currentDiscountId = null;
 let deleteDiscountId = null;

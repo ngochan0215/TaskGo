@@ -25,7 +25,8 @@ function closeSidebar() {
 }
 
 // API Configuration
-const API_URL = "http://localhost:3000/api/order";
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+const API_URL = API_BASE + "/api/order";
 let allOrders = [];
 let filteredOrders = [];
 let currentPage = 1;
@@ -700,7 +701,7 @@ logoutBtn.forEach((btn) => {
         e.preventDefault();
 
         try {
-            const res = await fetch("http://localhost:3000/api/auth/logout", {
+            const res = await fetch(`${API_BASE}/api/auth/logout`, {
                 method: "POST",
                 credentials: "include",
                 headers: {

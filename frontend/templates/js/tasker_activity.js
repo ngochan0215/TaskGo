@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
 const taskerUserId = localStorage.getItem("user_id");
@@ -266,7 +267,7 @@ async function fetchOrders() {
   try {
     // Fetch current working orders
     const currentWorkingRes = await fetch(
-      `http://localhost:3000/api/tasker/orders?category=current_working&limit=100`,
+      `${API_BASE}/api/tasker/orders?category=current_working&limit=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -286,7 +287,7 @@ async function fetchOrders() {
 
     // Fetch history orders
     const historyRes = await fetch(
-      `http://localhost:3000/api/tasker/orders?category=history&limit=100`,
+      `${API_BASE}/api/tasker/orders?category=history&limit=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`

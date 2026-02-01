@@ -72,7 +72,7 @@
 
             try {
                 const res = await fetch(
-                    'http://localhost:3000/api/user/profile/change-email/send-otp',
+                    ((typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000') + '/api/user/profile/change-email/send-otp',
                     {
                         method: 'POST',
                         headers: {

@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 // ====== DOM ELEMENTS ======
 const tabLogin = document.getElementById('tab-login');
 const tabSignup = document.getElementById('tab-signup');
@@ -112,7 +113,7 @@ function handleLogin() {
     const password = document.getElementById("login-password").value;
 
     try {
-      const res = await fetch("http://localhost:3000/api/auth/login", {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -164,7 +165,7 @@ function handleSignup() {
     }
 
     try {
-      const res = await fetch("http://localhost:3000/api/auth/signup/customer", {
+      const res = await fetch(`${API_BASE}/api/auth/signup/customer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

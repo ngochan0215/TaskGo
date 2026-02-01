@@ -1,3 +1,4 @@
+    const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
     // validate authorization
     let token = localStorage.getItem("token");
     if (!token) {
@@ -83,7 +84,7 @@
             e.preventDefault();
 
             try {
-                const res = await fetch("http://localhost:3000/api/auth/logout", {
+                const res = await fetch(`${API_BASE}/api/auth/logout`, {
                     method: "POST",
                     credentials: "include",
                     headers: {
@@ -417,7 +418,7 @@
         btn.textContent = "Đang lưu...";
 
         try {
-            const res = await fetch("http://localhost:3000/api/user/profile/update/tasker", {
+            const res = await fetch(`${API_BASE}/api/user/profile/update/tasker`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -460,7 +461,7 @@
     // logic load thông tin tổng quát
     async function loadTaskerHome() {
         try {
-            const res = await fetch("http://localhost:3000/api/user/profile", {
+            const res = await fetch(`${API_BASE}/api/user/profile`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -500,7 +501,7 @@
 
                     try {
                         const res = await fetch(
-                            "http://localhost:3000/api/tasker/update/working-status",
+                            `${API_BASE}/api/tasker/update/working-status`,
                             {
                                 method: "PATCH",
                                 headers: {
@@ -597,7 +598,7 @@
 
             // acceptance rate
             try {
-                const rateRes = await fetch("http://localhost:3000/api/tasker/stats/acceptance-rate", {
+                const rateRes = await fetch(`${API_BASE}/api/tasker/stats/acceptance-rate`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const rateJson = await rateRes.json();
@@ -622,7 +623,7 @@
     // Load weekly income
     async function loadWeeklyIncome() {
         try {
-            const res = await fetch("http://localhost:3000/api/tasker/earnings/weekly", {
+            const res = await fetch(`${API_BASE}/api/tasker/earnings/weekly`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -797,7 +798,7 @@
     // Load available orders
     async function loadAvailableOrders() {
         try {
-            const res = await fetch("http://localhost:3000/api/tasker/orders/available", {
+            const res = await fetch(`${API_BASE}/api/tasker/orders/available`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -1134,7 +1135,7 @@
     async function loadCashoutInfo() {
         try {
             const [earningRes, availRes] = await Promise.all([
-                fetch('http://localhost:3000/api/tasker/earnings?period=day&page=1&limit=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+                fetch(`${API_BASE}/api/tasker/earnings?period=day&page=1&limit=1`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
                 fetch('http://localhost:3000/api/tasker/cashOut/available', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
             ]);
 
@@ -1190,7 +1191,7 @@
             spinner.classList.remove('hidden');
             text.textContent = 'Đang xử lý...';
 
-            const res = await fetch('http://localhost:3000/api/tasker/cashOut', {
+            const res = await fetch(`${API_BASE}/api/tasker/cashOut`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` }
             });

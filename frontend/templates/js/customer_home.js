@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 let token = localStorage.getItem("token");
 if (!token) {
   alert("Vui lòng đăng nhập");
@@ -78,7 +79,7 @@ function getTierName(tier) {
 
 async function loadPromotions() {
   try {
-    const res = await fetch("http://localhost:3000/api/discount/active", {
+    const res = await fetch(`${API_BASE}/api/discount/active`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -162,7 +163,7 @@ async function loadPromotions() {
 async function openPromoModal(id, type) {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/discount/detail/${type}/${id}`,
+      `${API_BASE}/api/discount/detail/${type}/${id}`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -372,12 +373,12 @@ window.onclick = (event) => {
 async function loadCustomerStats() {
   try {
     const statsRes = await fetch(
-      "http://localhost:3000/api/order/statistics/completed-cancelled",
+      `${API_BASE}/api/order/statistics/completed-cancelled`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
     const pointsRes = await fetch(
-      "http://localhost:3000/api/user/reputation-score",
+      `${API_BASE}/api/user/reputation-score`,
       { headers: { Authorization: `Bearer ${token}` } },
     );
 
@@ -414,7 +415,7 @@ async function loadCustomerStats() {
 
 async function loadFavoriteTasks() {
   try {
-    const res = await fetch("http://localhost:3000/api/task/favorite/by-user", {
+    const res = await fetch(`${API_BASE}/api/task/favorite/by-user`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -475,7 +476,7 @@ async function loadFavoriteTasks() {
 async function loadPopularTasks() {
   try {
     const res = await fetch(
-      "http://localhost:3000/api/task/top-popular/by-orders",
+      `${API_BASE}/api/task/top-popular/by-orders`,
     );
     const json = await res.json();
     const serviceList = document.getElementById("service-list");
@@ -527,7 +528,7 @@ async function loadPopularTasks() {
 async function loadFavoriteTaskers() {
   try {
     const res = await fetch(
-      "http://localhost:3000/api/user/favorites/taskers",
+      `${API_BASE}/api/user/favorites/taskers`,
       {
         headers: { Authorization: `Bearer ${token}` },
       },
@@ -625,7 +626,7 @@ async function loadTaskerSkills(skillIds) {
     '<span class="text-xs text-gray-400">Đang tải...</span>';
 
   try {
-    const res = await fetch("http://localhost:3000/api/task/all", {
+    const res = await fetch(`${API_BASE}/api/task/all`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -659,7 +660,7 @@ async function loadTaskerSkills(skillIds) {
         : skillNames
             .map(
               (name) =>
-                `<span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full border border-primary-200">${name}</span>`,
+                `<span class="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full border border-primary-200">${name}</span>",
             )
             .join("");
   } catch (err) {

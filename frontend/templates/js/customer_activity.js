@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
 const customerUserId = localStorage.getItem("user_id");
@@ -276,7 +277,7 @@ async function fetchOrders() {
 
     // Fetch scheduled orders
     const scheduledRes = await fetch(
-      `http://localhost:3000/api/order/customer/${customerUserId}?category=scheduled&limit=100`,
+      `${API_BASE}/api/order/customer/${customerUserId}?category=scheduled&limit=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -286,7 +287,7 @@ async function fetchOrders() {
 
     // Fetch history orders
     const historyRes = await fetch(
-      `http://localhost:3000/api/order/customer/${customerUserId}?category=history&limit=100`,
+      `${API_BASE}/api/order/customer/${customerUserId}?category=history&limit=100`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -726,7 +727,7 @@ async function confirmCancelWithReason() {
   
   try {
     const res = await fetch(
-      `http://localhost:3000/api/order/cancel/${pendingCancelOrderId}`,
+      `${API_BASE}/api/order/cancel/${pendingCancelOrderId}`,
       {
         method: "PUT",
         headers: {

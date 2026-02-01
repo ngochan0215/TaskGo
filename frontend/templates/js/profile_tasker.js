@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 let isEditing = false;
 let currentSkills = [];
 
@@ -76,7 +77,7 @@ editBtn.addEventListener("click", () => {
 });
 
 async function getTaskById(taskId) {
-  const res = await fetch(`http://localhost:3000/api/task/${taskId}`, {
+  const res = await fetch(`${API_BASE}/api/task/${taskId}`, {
     method: "GET",
     headers: {
       "Authorization": `Bearer ${token}`,
@@ -175,7 +176,7 @@ async function renderSkills(skillIds = []) {
 
 async function getAllTasks() {
     try {
-    const res = await fetch("http://localhost:3000/api/task/all?status=active", {
+    const res = await fetch(`${API_BASE}/api/task/all?status=active`, {
         method: "GET",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -244,7 +245,7 @@ function removeSkill(taskId) {
 async function loadUserProfile() {
     console.log("IS EDITING in load profile: ", isEditing);
     try {
-    const res = await fetch("http://localhost:3000/api/user/profile", {
+    const res = await fetch(`${API_BASE}/api/user/profile`, {
         method: "GET",
         headers: {
         "Authorization": `Bearer ${token}`,
@@ -716,7 +717,7 @@ async function updateProfile() {
 
     console.log("UPDATE PAYLOAD: ", payload);
 
-    const res = await fetch("http://localhost:3000/api/user/profile/update/tasker", {
+    const res = await fetch(`${API_BASE}/api/user/profile/update/tasker`, {
         method: "PUT",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -766,7 +767,7 @@ async function updateAvatar(event) {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const res = await fetch("http://localhost:3000/api/user/profile/update-avatar", {
+      const res = await fetch(`${API_BASE}/api/user/profile/update-avatar`, {
           method: "PUT",
           headers: {
           "Authorization": `Bearer ${token}`
@@ -793,7 +794,7 @@ async function updateAvatar(event) {
 // Fetch banks from MoMo API
 async function loadBanks() {
     try {
-        const response = await fetch("http://localhost:3000/api/momo/bankcodes");
+        const response = await fetch(`${API_BASE}/api/momo/bankcodes`);
         if (!response.ok) {
           throw new Error("Failed to fetch banks");
         }

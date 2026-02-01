@@ -315,7 +315,8 @@
             console.log("SIGN UP TASKER PAYLOAD: ", payload);
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/signup/tasker', {
+                const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
+                const response = await fetch(`${API_BASE}/api/auth/signup/tasker`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
@@ -353,7 +354,7 @@
         
         async function addAddress(addressPayload)  {
             try {
-                const response = await fetch('http://localhost:3000/api/user/tasker-signup/first-address', {
+                const response = await fetch(`${API_BASE}/api/user/tasker-signup/first-address`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(addressPayload),

@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 let token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
 const customerUserId = localStorage.getItem("user_id");
@@ -736,7 +737,7 @@ async function checkReview() {
 
   try {
     const res = await fetch(
-      `http://localhost:3000/api/order/reviews/${orderId}`,
+      `${API_BASE}/api/order/reviews/${orderId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -884,7 +885,7 @@ async function submitReview() {
 
   try {
     const res = await fetch(
-      "http://localhost:3000/api/order/reviews/add",
+      `${API_BASE}/api/order/reviews/add`,
       {
         method: "POST",
         headers: {
@@ -1021,7 +1022,7 @@ async function confirmCancelWithReason() {
   
   try {
     const res = await fetch(
-      `http://localhost:3000/api/order/cancel/${orderId}`,
+      `${API_BASE}/api/order/cancel/${orderId}`,
       {
         method: "PUT",
         headers: {
@@ -1195,7 +1196,7 @@ async function toggleFavorite() {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/user/favorites/taskers/${currentTaskerId}`,
+        `${API_BASE}/api/user/favorites/taskers/${currentTaskerId}`,
         {
           method: "DELETE",
           headers: {
@@ -1277,7 +1278,7 @@ async function toggleFavorite() {
 async function fetchTaskerProfile(taskerUserId) {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/user/show-public/profile`,
+      `${API_BASE}/api/user/show-public/profile`,
       {
         method: "POST",
         headers: {
@@ -1318,7 +1319,7 @@ async function loadTaskerSkillsForModal(skillIds) {
   skillsContainer.innerHTML = '<span class="text-xs text-gray-400">Đang tải...</span>';
 
   try {
-    const res = await fetch("http://localhost:3000/api/task/all", {
+    const res = await fetch(`${API_BASE}/api/task/all`, {
       headers: {
         Authorization: `Bearer ${token}`
       }

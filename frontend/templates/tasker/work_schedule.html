@@ -339,6 +339,7 @@
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
+        const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
         // Tạo header 24 giờ
         const hourHeader = document.getElementById('hour-labels');
         for (let i = 0; i < 24; i++) {
@@ -444,7 +445,7 @@
                 const endISO = endDate.toISOString();
                 
                 const response = await fetch(
-                    `http://localhost:3000/api/tasker/work-schedule?startDate=${startISO}&endDate=${endISO}`,
+                    `${API_BASE}/api/tasker/work-schedule?startDate=${startISO}&endDate=${endISO}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`
@@ -657,7 +658,7 @@
                 e.preventDefault();
 
                 try {
-                    const res = await fetch("http://localhost:3000/api/auth/logout", {
+                    const res = await fetch(`${API_BASE}/api/auth/logout`, {
                         method: "POST",
                         credentials: "include",
                         headers: {

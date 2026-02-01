@@ -185,7 +185,7 @@
             let response;
             if (flow === 'change-email') {
                 response = await fetch(
-                    'http://localhost:3000/api/user/profile/change-email/verify-otp',
+                    ((typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000') + '/api/user/profile/change-email/verify-otp',
                     {
                         method: 'POST',
                         headers: {
@@ -197,7 +197,8 @@
                 );
             }
             else {
-                response = await fetch("http://localhost:3000/api/auth/verify-email", {
+                const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
+                response = await fetch(`${API_BASE}/api/auth/verify-email`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"

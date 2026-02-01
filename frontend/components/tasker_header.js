@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 class TaskerHeader extends HTMLElement {
   connectedCallback() {
     const active = this.getAttribute("active");
@@ -95,7 +96,7 @@ class TaskerHeader extends HTMLElement {
         logoutBtn.addEventListener("click", async (e) => {
             e.preventDefault();
             try {
-                await fetch("http://localhost:3000/api/auth/logout", {
+                await fetch(`${API_BASE}/api/auth/logout`, {
                     method: "POST", headers: { Authorization: `Bearer ${this.token}` }
                 });
             } catch (err) {}
@@ -113,7 +114,7 @@ class TaskerHeader extends HTMLElement {
   async loadUserInfo() {
     if (!this.token) return;
     try {
-        const res = await fetch("http://localhost:3000/api/user/profile", {
+        const res = await fetch(`${API_BASE}/api/user/profile`, {
             headers: { Authorization: `Bearer ${this.token}` }
         });
         const data = await res.json();

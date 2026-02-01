@@ -1,3 +1,4 @@
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 const token = localStorage.getItem("token");
 const role = localStorage.getItem("system_role");
 const taskerUserId = localStorage.getItem("user_id");
@@ -239,7 +240,7 @@ function formatTime(dateString) {
 async function fetchOrderDetails() {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/tasker/order/${orderId}`,
+      `${API_BASE}/api/tasker/order/${orderId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -998,7 +999,7 @@ async function checkReview() {
 
   try {
     const res = await fetch(
-      `http://localhost:3000/api/order/reviews/${orderId}`,
+      `${API_BASE}/api/order/reviews/${orderId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`
@@ -1241,7 +1242,7 @@ async function init() {
 async function fetchCustomerProfile(customerUserId) {
   try {
     const res = await fetch(
-      `http://localhost:3000/api/user/show-public/profile`,
+      `${API_BASE}/api/user/show-public/profile`,
       {
         method: "POST",
         headers: {

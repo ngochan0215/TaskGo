@@ -21,7 +21,7 @@ if (backdrop) {
       e.preventDefault();
 
       try {
-        const res = await fetch("http://localhost:3000/api/auth/logout", {
+        const res = await fetch(`${(typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000"}/api/auth/logout`, {
           method: "POST",
           credentials: "include",
           headers: {
@@ -59,7 +59,7 @@ if (!token || role !== "admin") {
   window.location.href = "../auth/login-signup.html";
 }
 
-const API_BASE_URL = "http://localhost:3000/api/admin";
+const API_BASE_URL = ((typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000") + "/api/admin";
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("vi-VN", {
@@ -167,7 +167,7 @@ let bankData = null;
 // Load bank data
 async function loadBankData() {
   try {
-    const response = await fetch("http://localhost:3000/api/momo/bankcodes");
+    const response = await fetch(`${((typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000")}/api/momo/bankcodes`);
     if (response.ok) {
       bankData = await response.json();
     }

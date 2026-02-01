@@ -1,6 +1,7 @@
 // 1. CONFIGURATION & STATE
-const API_URL = "http://localhost:3000/api";
-const SOCKET_URL = "http://localhost:3000";
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+const API_URL = API_BASE + "/api";
+const SOCKET_URL = API_BASE;
 
 const state = {
     token: localStorage.getItem('token'),

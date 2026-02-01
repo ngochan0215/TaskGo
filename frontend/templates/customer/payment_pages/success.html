@@ -233,6 +233,7 @@
     </script>
 
     <script>
+      const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
       // Lấy orderId từ URL query params
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get("orderCode") || urlParams.get("orderId");
@@ -258,7 +259,7 @@
 
         try {
           const response = await fetch(
-            `http://localhost:3000/api/transaction/${orderId}/success`,
+            `${API_BASE}/api/transaction/${orderId}/success`,
             {
               method: "PATCH",
               headers: {

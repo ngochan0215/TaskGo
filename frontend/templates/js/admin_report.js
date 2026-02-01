@@ -13,7 +13,7 @@ if (role !== "admin") {
 let currentPeriod = "month";
 let charts = {};
 
-const API_BASE = "http://localhost:3000/api/report";
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL + "/api/report" : "http://localhost:3000/api/report";
 
 function formatCurrency(amount) {
   return new Intl.NumberFormat("vi-VN").format(amount || 0) + "đ";
