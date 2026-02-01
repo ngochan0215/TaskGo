@@ -4,7 +4,9 @@
   "description": "A smart on-demand service platform that connects customers with trusted taskers for daily tasks such as cleaning, repairs, errands, and more. Fast, reliable, reasonable and convenient — get things done anytime, anywhere.",
   "main": "main.js",
   "scripts": {
-    "dev": "nodemon main.js"
+    "local_dev": "nodemon main.js",
+    "dev": "node --watch main.js",
+    "start": "node main.js"
   },
   "repository": {
     "type": "git",
