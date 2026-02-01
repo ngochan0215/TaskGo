@@ -233,7 +233,7 @@
     </script>
 
     <script>
-      const API_BASE = (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : 'http://localhost:3000';
+      const API_BASE = window.API_BASE || (typeof window.CONFIG !== 'undefined' && window.CONFIG.API_BASE_URL ? window.CONFIG.API_BASE_URL : 'http://localhost:3000');
       // Lấy orderId từ URL query params
       const urlParams = new URLSearchParams(window.location.search);
       const orderId = urlParams.get("orderCode") || urlParams.get("orderId");
