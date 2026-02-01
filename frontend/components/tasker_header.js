@@ -1,4 +1,7 @@
-const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+// Chỉ gán window.API_BASE để tránh conflict với .js của trang (tasker_home.js, ...)
+window.API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL)
+  ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+
 class TaskerHeader extends HTMLElement {
   connectedCallback() {
     const active = this.getAttribute("active");
@@ -114,7 +117,7 @@ class TaskerHeader extends HTMLElement {
   async loadUserInfo() {
     if (!this.token) return;
     try {
-        const res = await fetch(`${API_BASE}/api/user/profile`, {
+        const res = await fetch(`${window.API_BASE}/api/user/profile`, {
             headers: { Authorization: `Bearer ${this.token}` }
         });
         const data = await res.json();

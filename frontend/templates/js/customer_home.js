@@ -1,4 +1,4 @@
-const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+const API_BASE = window.API_BASE || (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL ? window.CONFIG.API_BASE_URL : "http://localhost:3000");
 let token = localStorage.getItem("token");
 if (!token) {
   alert("Vui lòng đăng nhập");

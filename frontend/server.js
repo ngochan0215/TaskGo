@@ -14,6 +14,14 @@ const PORT = process.env.PORT || 3001;
 const API_BASE = process.env.API_URL || "http://localhost:3000";
 const escapedApiBase = API_BASE.replace(/"/g, '\\"');
 
+// ----- QUAN TRỌNG: xử lý / và /index.html TRƯỚC static để tránh "cannot GET" -----
+app.get("/", (req, res) => {
+  res.redirect(302, "./templates/auth/login-signup.html");
+});
+app.get("/index.html", (req, res) => {
+  res.redirect(302, "/templates/auth/login-signup.html");
+});
+
 // Dynamic config: override /templates/js/config.js so frontend uses API_URL in production
 app.get("/templates/js/config.js", (req, res) => {
   res.type("application/javascript");
@@ -22,7 +30,7 @@ app.get("/templates/js/config.js", (req, res) => {
   );
 });
 
-// Inject CONFIG into every HTML so all pages get API_BASE_URL without editing each file
+// Inject CONFIG into every HTML so all pages get API_BASE_URL (chỉ khi chạy server này)
 function injectConfigAndSend(req, res, filePath) {
   fs.readFile(filePath, "utf8", (err, data) => {
     if (err) {
@@ -47,17 +55,9 @@ app.use("/templates", express.static(path.join(__dirname, "templates")));
 app.use("/components", express.static(path.join(__dirname, "components")));
 app.use("/src", express.static(path.join(__dirname, "src")));
 
-// Root and index.html: redirect to login page
-app.get("/", (req, res) => {
-  res.redirect("/templates/auth/login-signup.html");
-});
-app.get("/index.html", (req, res) => {
-  res.redirect("/templates/auth/login-signup.html");
-});
-
-// Fallback for unknown routes -> redirect to login (avoid "cannot GET")
+// Fallback: mọi route không khớp ở trên -> redirect (tránh "cannot GET")
 app.use((req, res) => {
-  res.redirect("/templates/auth/login-signup.html");
+  res.redirect(302, "/templates/auth/login-signup.html");
 });
 
 app.listen(PORT, () => {

@@ -1,4 +1,4 @@
-const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+const API_BASE = window.API_BASE || (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL ? window.CONFIG.API_BASE_URL : "http://localhost:3000");
 const API_URL = API_BASE + "/api";
 const SOCKET_URL = API_BASE;
 

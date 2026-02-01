@@ -1,5 +1,4 @@
 ## TASKGO DESCRIPTION
-
 A smart on-demand service platform that connects customers with trusted taskers for daily tasks such as cleaning, repairs, errands, and more. Fast, reliable, reasonable and convenient — get things done anytime, anywhere.
 
 ## TECH STACK
@@ -14,9 +13,9 @@ git clone https://github.com/ngochan0215/TaskGo.git
 cd TaskGo
 ```
 ### 2. Run Backend
-You can either run the 3rd or the 4th command line after moving to server folder
+You can either run the 3rd or the 4th command line after moving to backend folder
 ```bash
-cd server
+cd backend
 npm install
 npm run dev  
 node --watch main.js
@@ -25,7 +24,7 @@ node --watch main.js
 ### 3. Run Frontend
 Remember to build the tailwind css configuration first
 ```bash
-cd client
+cd frontend
 npm install
 npm run build
 npm run dev

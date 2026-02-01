@@ -1,5 +1,9 @@
-const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
-// ====== DOM ELEMENTS ======
+const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) 
+? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+
+console.log("api url: ", window.CONFIG);
+
+// ====== DOM ELEMENTS =====`=
 const tabLogin = document.getElementById('tab-login');
 const tabSignup = document.getElementById('tab-signup');
 const gotoSignup = document.getElementById('goto-signup');

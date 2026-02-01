@@ -1,4 +1,5 @@
-const API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
+// Chỉ gán window.API_BASE để tránh conflict với .js của trang (customer_home.js, ...)
+window.API_BASE = (typeof window.CONFIG !== "undefined" && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : "http://localhost:3000";
 class AppHeader extends HTMLElement {
   connectedCallback() {
     const active = this.getAttribute("active");
@@ -82,7 +83,7 @@ class AppHeader extends HTMLElement {
   async loadUserInfo() {
     if (!this.token) return;
     try {
-      const res = await fetch(`${API_BASE}/api/user/profile`, {
+      const res = await fetch(`${window.API_BASE}/api/user/profile`, {
         headers: { Authorization: `Bearer ${this.token}` },
       });
       const data = await res.json();
@@ -173,7 +174,7 @@ class AppHeader extends HTMLElement {
       logoutBtn.addEventListener("click", async (e) => {
         e.preventDefault();
         try {
-          await fetch(`${API_BASE}/api/auth/logout`, {
+          await fetch(`${window.API_BASE}/api/auth/logout`, {
             method: "POST",
             headers: { Authorization: `Bearer ${this.token}` },
           });
