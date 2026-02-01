@@ -15,8 +15,7 @@ export const createPayment = async (transaction, userId) => {
         throw new Error("Invalid amount for PayOS payment");
     }
 
-    const description =
-        transaction.description ||
+    const description = transaction.description ||
         `Thanh toán đơn hàng ${transaction.order_id || transaction.orderId || orderCode}`;
 
     // chuẩn hóa items, nếu FE không gửi thì tạo 1 item mặc định
